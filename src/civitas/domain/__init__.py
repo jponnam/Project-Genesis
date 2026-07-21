@@ -6,3 +6,10 @@ may depend on domain; domain depends on nothing inside Civitas Lab.
 """
 
 from __future__ import annotations
+
+from civitas.domain.config import CANONICAL_SEED, SimulationConfig
+
+__all__ = [
+    "CANONICAL_SEED",
+    "SimulationConfig",
+]
