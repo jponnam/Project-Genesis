@@ -14,10 +14,12 @@ from civitas.domain import (
     Goal,
     GoalSet,
     Health,
+    Inventory,
     Location,
     LocationKind,
     Needs,
     Personality,
+    ResourceStack,
     SimulationConfig,
     World,
     default_world_map,
@@ -26,16 +28,49 @@ from civitas.engine import EventBus, WorldFactory
 from civitas.systems import PolicyConfig, UtilityPolicy
 
 
+def _agent_with_food(
+    *,
+    food_need: float,
+    water_need: float = 0.9,
+    quantity: int = 1,
+) -> Agent:
+    return Agent.create(
+        agent_id=0,
+        name="A",
+        needs=Needs(
+            food=food_need,
+            water=water_need,
+            energy=0.9,
+            social=0.9,
+            safety=0.9,
+        ),
+    ).model_copy(
+        update={
+            "inventory": Inventory(
+                stacks=(ResourceStack(resource="food", quantity=quantity),)
+            )
+        }
+    )
+
+
 def test_hungry_agent_selects_eat() -> None:
-    """Low food satisfaction yields eat as the top action."""
+    """Low food satisfaction with inventory food yields eat."""
+    agent = _agent_with_food(food_need=0.1)
+    choice = UtilityPolicy().select(agent)
+    assert choice.action is ActionKind.EAT
+    assert choice.utility > 0.0
+
+
+def test_hungry_agent_without_food_skips_eat() -> None:
+    """EAT is unavailable when the agent has no food inventory."""
     agent = Agent.create(
         agent_id=0,
         name="A",
         needs=Needs(food=0.1, water=0.9, energy=0.9, social=0.9, safety=0.9),
     )
     choice = UtilityPolicy().select(agent)
-    assert choice.action is ActionKind.EAT
-    assert choice.utility > 0.0
+    assert choice.action is not ActionKind.EAT
+    assert UtilityPolicy().score(agent, ActionKind.EAT) == 0.0
 
 
 def test_thirsty_agent_selects_drink() -> None:
@@ -79,11 +114,8 @@ def test_extraversion_raises_socialize_utility() -> None:
 
 def test_goal_bonus_can_tip_selection() -> None:
     """A matching high-priority goal can override raw need urgency."""
-    agent = Agent.create(
-        agent_id=0,
-        name="A",
-        needs=Needs(food=0.55, water=0.5, energy=0.9, social=0.9, safety=0.9),
-        personality=Personality(),
+    agent = _agent_with_food(food_need=0.55, water_need=0.5).model_copy(
+        update={"personality": Personality()}
     )
     # Without goals, water is slightly more urgent than food.
     policy = UtilityPolicy(PolicyConfig(goal_weight=0.5))
@@ -102,17 +134,17 @@ def test_tie_breaks_by_action_name() -> None:
     policy = UtilityPolicy(
         PolicyConfig(goal_weight=0.0, idle_weight=0.0, personality_floor=1.0)
     )
-    agent = Agent.create(
-        agent_id=0,
-        name="A",
-        needs=Needs(food=0.5, water=0.5, energy=1.0, social=1.0, safety=1.0),
-        personality=Personality(
-            openness=0.0,
-            conscientiousness=0.0,
-            extraversion=0.0,
-            agreeableness=0.0,
-            neuroticism=0.0,
-        ),
+    agent = _agent_with_food(food_need=0.5, water_need=0.5).model_copy(
+        update={
+            "needs": Needs(food=0.5, water=0.5, energy=1.0, social=1.0, safety=1.0),
+            "personality": Personality(
+                openness=0.0,
+                conscientiousness=0.0,
+                extraversion=0.0,
+                agreeableness=0.0,
+                neuroticism=0.0,
+            ),
+        }
     )
     # Food and water urgency are both 0.5; tie-break prefers 'drink' < 'eat'.
     assert policy.select(agent).action is ActionKind.DRINK
@@ -129,11 +161,7 @@ def test_select_rejects_dead_agent() -> None:
 
 def test_select_all_skips_dead_and_publishes_events() -> None:
     """select_all covers living agents only and emits ActionSelected."""
-    living = Agent.create(
-        agent_id=0,
-        name="A",
-        needs=Needs(food=0.1, water=0.9, energy=0.9, social=0.9, safety=0.9),
-    )
+    living = _agent_with_food(food_need=0.1)
     dead = Agent.create(agent_id=1, name="B").model_copy(
         update={"status": AgentStatus.DEAD, "health": Health(vitality=0.0)}
     )

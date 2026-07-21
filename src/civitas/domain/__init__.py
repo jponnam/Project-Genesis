@@ -51,6 +51,13 @@ from civitas.domain.events import (
     TickStarted,
     event_from_record,
 )
+from civitas.domain.food import (
+    DEFAULT_EAT_CONSUME_AMOUNT,
+    DEFAULT_EAT_RESTORE,
+    FOOD_RESOURCE,
+    apply_eat,
+    can_eat,
+)
 from civitas.domain.geography import (
     DEFAULT_MOVE_ENERGY_COST,
     adjacent_locations,
@@ -90,9 +97,12 @@ __all__ = [
     "ACTION_RESOURCE",
     "CAMP_LOCATION",
     "CANONICAL_SEED",
+    "DEFAULT_EAT_CONSUME_AMOUNT",
+    "DEFAULT_EAT_RESTORE",
     "DEFAULT_GATHER_AMOUNT",
     "DEFAULT_INITIAL_STOCK",
     "DEFAULT_MOVE_ENERGY_COST",
+    "FOOD_RESOURCE",
     "LOCATION_RESOURCE_KINDS",
     "RESOURCE_NEED",
     "ActionChoice",
@@ -139,7 +149,9 @@ __all__ = [
     "TickStarted",
     "World",
     "adjacent_locations",
+    "apply_eat",
     "apply_gather",
+    "can_eat",
     "can_enter",
     "clamp_unit",
     "default_world_map",

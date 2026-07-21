@@ -9,6 +9,7 @@ from civitas.domain import (
     AgentSpawned,
     LocationCreated,
     NeedDecayed,
+    ResourceConsumed,
     ResourceGathered,
     SimulationCompleted,
     SimulationConfig,
@@ -110,6 +111,21 @@ def test_agents_can_gather_during_engine_run() -> None:
     gathered = [event for event in result.events if isinstance(event, ResourceGathered)]
     assert gathered
     assert any(agent.inventory.stacks for agent in result.world.agents)
+
+
+def test_agents_can_eat_gathered_food_during_engine_run() -> None:
+    """After gathering food, hungry agents consume it via EAT."""
+    result = SimulationEngine().run(SimulationConfig(seed=42, ticks=50, agent_count=12))
+    eaten = [
+        event
+        for event in result.events
+        if isinstance(event, ResourceConsumed) and event.resource == "food"
+    ]
+    assert eaten
+    assert any(
+        isinstance(event, ResourceGathered) and event.resource == "food"
+        for event in result.events
+    )
 
 
 def test_run_accepts_external_event_bus() -> None:
