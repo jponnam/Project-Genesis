@@ -116,11 +116,10 @@ execution (`civitas run`) arrives in a later Phase 1 milestone.
 
 ## Current Milestone
 
-**Phase 1 — Milestone 12: Simulation Engine**
+**Phase 1 — Milestone 13: JSONL Event Storage**
 
-`SimulationEngine.run(config)` executes the deterministic tick loop:
-decay → select → execute, with lifecycle/tick events. Seed `42` yields
-identical worlds and event histories.
+Append-only `JsonlEventStore` with deterministic JSON encoding, sequence
+validation, and lossless replay of simulation event streams.
 
 ### Completed
 
@@ -136,6 +135,7 @@ identical worlds and event histories.
 - Milestone 10: Utility policy
 - Milestone 11: Action executor
 - Milestone 12: Simulation engine
+- Milestone 13: JSONL event storage
 - Testing / linting / formatting gates (established in Milestone 1)
 
 ## License
