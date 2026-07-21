@@ -5,6 +5,7 @@ from __future__ import annotations
 from civitas.domain import (
     ActionCompleted,
     ActionSelected,
+    AgentBorn,
     AgentMoved,
     AgentSpawned,
     LocationCreated,
@@ -19,6 +20,7 @@ from civitas.domain import (
     TickStarted,
 )
 from civitas.engine import EventBus, SimulationEngine
+from civitas.systems import BirthConfig, BirthSystem
 
 
 def test_seed_forty_two_runs_are_identical() -> None:
@@ -168,11 +170,12 @@ def test_run_accepts_external_event_bus() -> None:
     assert bus.next_sequence == len(bus.history)
 
 
-def test_final_world_population_preserved() -> None:
-    """Until birth/death, runs preserve roster size and aliveness."""
+def test_final_world_population_preserved_before_min_parent_age() -> None:
+    """Default min parent age keeps short runs at the initial roster size."""
     result = SimulationEngine().run(SimulationConfig(seed=42, ticks=4, agent_count=6))
     assert result.world.population_size == 6
     assert len(result.world.alive_agents()) == 6
+    assert not any(isinstance(event, AgentBorn) for event in result.events)
 
 
 def test_population_observed_each_tick_including_start() -> None:
@@ -185,3 +188,28 @@ def test_population_observed_each_tick_including_start() -> None:
     assert observed[0].tick.value == 0
     assert observed[-1].tick.value == 3
     assert all(event.total == 5 and event.alive == 5 for event in observed)
+
+
+def test_engine_births_grow_population_and_census() -> None:
+    """Births after actions grow the roster before the end-of-tick census."""
+    engine = SimulationEngine(
+        birth_system=BirthSystem(
+            BirthConfig(
+                min_parent_age_ticks=0,
+                min_food=0.0,
+                min_water=0.0,
+                min_energy=0.0,
+                parent_energy_cost=0.0,
+                max_births_per_tick=1,
+            )
+        )
+    )
+    result = engine.run(SimulationConfig(seed=42, ticks=3, agent_count=2))
+    born = [event for event in result.events if isinstance(event, AgentBorn)]
+    assert len(born) == 3
+    assert result.world.population_size == 5
+    observed = [
+        event for event in result.events if isinstance(event, PopulationObserved)
+    ]
+    assert observed[0].total == 2
+    assert observed[-1].total == 5

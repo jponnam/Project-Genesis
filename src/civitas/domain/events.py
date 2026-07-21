@@ -148,6 +148,15 @@ class PopulationObserved(DomainEvent):
     location_counts: tuple[tuple[int, int], ...] = ()
 
 
+class AgentBorn(DomainEvent):
+    """Emitted when a living parent produces a new agent."""
+
+    agent_id: AgentId
+    parent_id: AgentId
+    location_id: LocationId
+    name: NonEmptyStr
+
+
 CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     SimulationStarted,
     SimulationCompleted,
@@ -156,6 +165,7 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     LocationCreated,
     AgentSpawned,
     AgentMoved,
+    AgentBorn,
     ActionSelected,
     ActionCompleted,
     ResourceConsumed,
