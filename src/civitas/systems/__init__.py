@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from civitas.systems.actions import ActionConfig, ActionExecutor
 from civitas.systems.birth import BirthConfig, BirthSystem
+from civitas.systems.death import DeathConfig, DeathSystem
 from civitas.systems.energy import EnergyConfig, EnergySystem
 from civitas.systems.food import FoodConfig, FoodSystem
 from civitas.systems.gathering import GatheringConfig, GatheringSystem
@@ -24,6 +25,8 @@ __all__ = [
     "ActionExecutor",
     "BirthConfig",
     "BirthSystem",
+    "DeathConfig",
+    "DeathSystem",
     "EnergyConfig",
     "EnergySystem",
     "FoodConfig",
