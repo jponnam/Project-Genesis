@@ -8,8 +8,10 @@ may depend on domain; domain depends on nothing inside Civitas Lab.
 from __future__ import annotations
 
 from civitas.domain.config import CANONICAL_SEED, SimulationConfig
+from civitas.domain.time import Tick
 
 __all__ = [
     "CANONICAL_SEED",
     "SimulationConfig",
+    "Tick",
 ]

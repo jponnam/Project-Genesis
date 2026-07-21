@@ -116,17 +116,19 @@ execution (`civitas run`) arrives in a later Phase 1 milestone.
 
 ## Current Milestone
 
-**Phase 1 — Milestone 3: CLI**
+**Phase 1 — Milestone 4: Simulation Clock**
 
-Typer + Rich researcher CLI with `version`, `config show`, and
-`config fingerprint`. Thin adapter over `SimulationConfig` only — no
-simulation execution yet.
+Discrete, deterministic `SimulationClock` with immutable `Tick` values.
+Tick `0` is the initial world; a run with `ticks=N` performs N advances
+and finishes at tick `N`. No wall-clock time, no unseeded randomness.
 
 ### Completed
 
 - Milestone 1: Project structure, packaging, quality gates
 - Milestone 2: Simulation configuration models
 - Milestone 3: CLI skeleton (`civitas` entry point)
+- Milestone 4: Simulation clock (`Tick` + `SimulationClock`)
+- Testing / linting / formatting gates (established in Milestone 1)
 
 ## License
 
