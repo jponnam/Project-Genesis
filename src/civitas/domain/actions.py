@@ -52,8 +52,7 @@ ACTION_NEED_TARGET: dict[ActionKind, str | None] = {
     ActionKind.IDLE: None,
 }
 
-# Inventory resource required (EAT) or optionally consumed (DRINK until
-# the water milestone requires stock).
+# Inventory resource required for EAT and DRINK.
 ACTION_RESOURCE: dict[ActionKind, str | None] = {
     ActionKind.EAT: "food",
     ActionKind.DRINK: "water",

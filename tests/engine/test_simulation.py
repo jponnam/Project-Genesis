@@ -128,6 +128,21 @@ def test_agents_can_eat_gathered_food_during_engine_run() -> None:
     )
 
 
+def test_agents_can_drink_gathered_water_during_engine_run() -> None:
+    """After gathering water, thirsty agents consume it via DRINK."""
+    result = SimulationEngine().run(SimulationConfig(seed=42, ticks=50, agent_count=12))
+    drunk = [
+        event
+        for event in result.events
+        if isinstance(event, ResourceConsumed) and event.resource == "water"
+    ]
+    assert drunk
+    assert any(
+        isinstance(event, ResourceGathered) and event.resource == "water"
+        for event in result.events
+    )
+
+
 def test_run_accepts_external_event_bus() -> None:
     """Caller-supplied buses receive the full event history."""
     bus = EventBus()

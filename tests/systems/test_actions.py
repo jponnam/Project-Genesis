@@ -145,6 +145,12 @@ def test_execute_all_applies_in_agent_id_order() -> None:
             agent_id=1,
             name="B",
             needs=Needs(food=1.0, water=0.5, energy=1.0, social=1.0, safety=1.0),
+        ).model_copy(
+            update={
+                "inventory": Inventory(
+                    stacks=(ResourceStack(resource="water", quantity=1),)
+                )
+            }
         ),
     )
     world = World(
@@ -160,8 +166,57 @@ def test_execute_all_applies_in_agent_id_order() -> None:
     updated = ActionExecutor().execute_all(world, choices, bus=bus)
     assert updated.agents[0].needs.food == pytest.approx(0.75)
     assert updated.agents[1].needs.water == pytest.approx(0.80)
+    assert updated.agents[1].inventory.quantity("water") == 0
     completed = [event for event in bus.history if isinstance(event, ActionCompleted)]
     assert [event.agent_id.value for event in completed] == [0, 1]
+
+
+def test_drink_fails_without_inventory_water() -> None:
+    """Drinking without water fails and does not restore the water need."""
+    agent = Agent.create(
+        agent_id=0,
+        name="A",
+        needs=Needs(food=1.0, water=0.4, energy=1.0, social=1.0, safety=1.0),
+    )
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        agents=(agent,),
+    )
+    bus = EventBus()
+    updated = ActionExecutor().execute(world, _choice(0, ActionKind.DRINK), bus=bus)
+    assert updated.agents[0].needs.water == pytest.approx(0.4)
+    completed = [event for event in bus.history if isinstance(event, ActionCompleted)]
+    assert completed[0].success is False
+    assert not any(isinstance(event, ResourceConsumed) for event in bus.history)
+
+
+def test_drink_consumes_water_and_restores_need() -> None:
+    """DRINK consumes inventory water and restores the water need."""
+    agent = Agent.create(
+        agent_id=0,
+        name="A",
+        needs=Needs(food=1.0, water=0.4, energy=1.0, social=1.0, safety=1.0),
+    ).model_copy(
+        update={
+            "inventory": Inventory(
+                stacks=(ResourceStack(resource="water", quantity=2),)
+            )
+        }
+    )
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        agents=(agent,),
+    )
+    bus = EventBus()
+    updated = ActionExecutor().execute(world, _choice(0, ActionKind.DRINK), bus=bus)
+    assert updated.agents[0].needs.water == pytest.approx(0.70)
+    assert updated.agents[0].inventory.quantity("water") == 1
+    assert any(
+        isinstance(event, ResourceConsumed) and event.resource == "water"
+        for event in bus.history
+    )
 
 
 def test_restore_clamps_at_one() -> None:

@@ -1,8 +1,8 @@
 """Action executor: apply selected actions to world state.
 
 The executor mutates the world only through immutable ``World`` updates.
-It does not call the needs, movement, gathering, or policy systems;
-shared catalogs and domain helpers apply effects. Events include
+It does not call the needs, movement, gathering, food, water, or policy
+systems; shared catalogs and domain helpers apply effects. Events include
 ``ActionCompleted`` and, when applicable, ``NeedDecayed``,
 ``ResourceConsumed``, ``ResourceGathered``, or ``AgentMoved``.
 """
@@ -14,11 +14,14 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict, Field
 
 from civitas.domain import (
+    DEFAULT_DRINK_CONSUME_AMOUNT,
+    DEFAULT_DRINK_RESTORE,
     DEFAULT_EAT_CONSUME_AMOUNT,
     DEFAULT_EAT_RESTORE,
     DEFAULT_GATHER_AMOUNT,
     DEFAULT_MOVE_ENERGY_COST,
     FOOD_RESOURCE,
+    WATER_RESOURCE,
     ActionChoice,
     ActionCompleted,
     ActionKind,
@@ -26,6 +29,7 @@ from civitas.domain import (
     NeedDecayed,
     ResourceConsumed,
     ResourceGathered,
+    apply_drink,
     apply_eat,
     apply_gather,
     relocate,
@@ -47,7 +51,7 @@ class ActionConfig(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid", validate_default=True)
 
     eat: UnitInterval = DEFAULT_EAT_RESTORE
-    drink: UnitInterval = 0.30
+    drink: UnitInterval = DEFAULT_DRINK_RESTORE
     rest: UnitInterval = 0.20
     socialize: UnitInterval = 0.15
     seek_safety: UnitInterval = 0.10
@@ -55,6 +59,7 @@ class ActionConfig(BaseModel):
     move_energy_cost: UnitInterval = DEFAULT_MOVE_ENERGY_COST
     gather_amount: PositiveInt = DEFAULT_GATHER_AMOUNT
     eat_consume_amount: PositiveInt = DEFAULT_EAT_CONSUME_AMOUNT
+    drink_consume_amount: PositiveInt = DEFAULT_DRINK_CONSUME_AMOUNT
 
     def restore_for(self, action: ActionKind) -> float:
         """Return the need restoration amount for ``action``.
@@ -157,6 +162,8 @@ class ActionExecutor:
             return self._apply_move(agent, choice, world, bus)
         if action is ActionKind.EAT:
             return self._apply_eat(agent, world, bus)
+        if action is ActionKind.DRINK:
+            return self._apply_drink(agent, world, bus)
 
         need_name = ACTION_NEED_TARGET[action]
         if need_name is None:
@@ -231,6 +238,43 @@ class ActionExecutor:
                         need="food",
                         previous=previous_food,
                         current=updated.needs.food,
+                    )
+                )
+        return updated, True
+
+    def _apply_drink(
+        self,
+        agent: Agent,
+        world: World,
+        bus: EventBus | None,
+    ) -> tuple[Agent, bool]:
+        """Apply inventory-backed DRINK; emit consume/need events on success."""
+        previous_water = agent.needs.water
+        updated = apply_drink(
+            agent,
+            restore=self._config.drink,
+            amount=self._config.drink_consume_amount,
+        )
+        if updated is None:
+            return agent, False
+
+        if bus is not None:
+            bus.publish(
+                ResourceConsumed(
+                    tick=world.tick,
+                    agent_id=agent.agent_id,
+                    resource=WATER_RESOURCE,
+                    amount=self._config.drink_consume_amount,
+                )
+            )
+            if updated.needs.water != previous_water:
+                bus.publish(
+                    NeedDecayed(
+                        tick=world.tick,
+                        agent_id=agent.agent_id,
+                        need="water",
+                        previous=previous_water,
+                        current=updated.needs.water,
                     )
                 )
         return updated, True
