@@ -118,11 +118,13 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 2 — Milestone 7: Population**
+**Phase 2 — Milestone 8: Birth**
 
-Runtime population census (`PopulationCensus` / `PopulationSystem`) emits
-`PopulationObserved` each tick. `config.agent_count` is the initial size;
-roster length may diverge once birth/death arrive.
+System-driven birth (`BirthSystem` / `apply_birth`) adds agents when living
+parents meet age and need thresholds. Each birth emits `AgentBorn` and
+grows the roster beyond `config.agent_count`. Default minimum parent age
+keeps short runs flat; longer runs can grow until location capacity or an
+optional population ceiling stops further births.
 
 ### Completed
 
@@ -138,6 +140,7 @@ JSONL storage → `civitas run`
 - Milestone 5: Water
 - Milestone 6: Energy
 - Milestone 7: Population
+- Milestone 8: Birth
 
 ## License
 

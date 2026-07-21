@@ -8,6 +8,7 @@ import or call each other directly.
 from __future__ import annotations
 
 from civitas.systems.actions import ActionConfig, ActionExecutor
+from civitas.systems.birth import BirthConfig, BirthSystem
 from civitas.systems.energy import EnergyConfig, EnergySystem
 from civitas.systems.food import FoodConfig, FoodSystem
 from civitas.systems.gathering import GatheringConfig, GatheringSystem
@@ -21,6 +22,8 @@ __all__ = [
     "NEED_NAMES",
     "ActionConfig",
     "ActionExecutor",
+    "BirthConfig",
+    "BirthSystem",
     "EnergyConfig",
     "EnergySystem",
     "FoodConfig",

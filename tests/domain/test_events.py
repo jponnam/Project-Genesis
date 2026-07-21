@@ -8,6 +8,7 @@ from pydantic import ValidationError
 from civitas.domain import (
     ActionCompleted,
     ActionSelected,
+    AgentBorn,
     AgentId,
     AgentMoved,
     AgentSpawned,
@@ -216,3 +217,20 @@ def test_population_observed_round_trips() -> None:
     assert isinstance(restored, PopulationObserved)
     assert restored.alive == 9
     assert restored.location_counts == ((0, 6), (1, 4))
+
+
+def test_agent_born_round_trips() -> None:
+    """AgentBorn serializes parent/child identity losslessly."""
+    event = AgentBorn(
+        sequence=4,
+        tick=Tick(value=8),
+        agent_id=AgentId(value=3),
+        parent_id=AgentId(value=1),
+        location_id=LocationId(value=0),
+        name="Agent-3",
+    )
+    restored = event_from_record(event.to_record())
+    assert isinstance(restored, AgentBorn)
+    assert restored.agent_id == AgentId(value=3)
+    assert restored.parent_id == AgentId(value=1)
+    assert restored.name == "Agent-3"
