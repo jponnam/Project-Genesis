@@ -35,6 +35,12 @@ from civitas.domain.attributes import (
     Skills,
 )
 from civitas.domain.config import CANONICAL_SEED, SimulationConfig
+from civitas.domain.energy import (
+    DEFAULT_REST_RESTORE,
+    apply_rest,
+    can_rest,
+    spend_energy,
+)
 from civitas.domain.events import (
     ActionCompleted,
     ActionSelected,
@@ -111,6 +117,7 @@ __all__ = [
     "DEFAULT_GATHER_AMOUNT",
     "DEFAULT_INITIAL_STOCK",
     "DEFAULT_MOVE_ENERGY_COST",
+    "DEFAULT_REST_RESTORE",
     "FOOD_RESOURCE",
     "LOCATION_RESOURCE_KINDS",
     "RESOURCE_NEED",
@@ -162,9 +169,11 @@ __all__ = [
     "apply_drink",
     "apply_eat",
     "apply_gather",
+    "apply_rest",
     "can_drink",
     "can_eat",
     "can_enter",
+    "can_rest",
     "clamp_unit",
     "default_world_map",
     "deposits_for_kind",
@@ -175,5 +184,6 @@ __all__ = [
     "location_stock",
     "occupancy",
     "relocate",
+    "spend_energy",
     "with_deposit_quantity",
 ]

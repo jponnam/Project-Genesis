@@ -191,6 +191,44 @@ def test_drink_fails_without_inventory_water() -> None:
     assert not any(isinstance(event, ResourceConsumed) for event in bus.history)
 
 
+def test_rest_restores_energy_need() -> None:
+    """REST restores energy and emits NeedDecayed."""
+    agent = Agent.create(
+        agent_id=0,
+        name="A",
+        needs=Needs(food=1.0, water=1.0, energy=0.4, social=1.0, safety=1.0),
+    )
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        agents=(agent,),
+    )
+    bus = EventBus()
+    updated = ActionExecutor().execute(world, _choice(0, ActionKind.REST), bus=bus)
+    assert updated.agents[0].needs.energy == pytest.approx(0.60)
+    assert any(
+        isinstance(event, NeedDecayed) and event.need == "energy"
+        for event in bus.history
+    )
+    completed = [event for event in bus.history if isinstance(event, ActionCompleted)]
+    assert completed[0].success is True
+
+
+def test_rest_fails_when_energy_full() -> None:
+    """REST fails when energy is already full."""
+    agent = Agent.create(agent_id=0, name="A", needs=Needs())
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        agents=(agent,),
+    )
+    bus = EventBus()
+    updated = ActionExecutor().execute(world, _choice(0, ActionKind.REST), bus=bus)
+    assert updated.agents[0].needs.energy == 1.0
+    completed = [event for event in bus.history if isinstance(event, ActionCompleted)]
+    assert completed[0].success is False
+
+
 def test_drink_consumes_water_and_restores_need() -> None:
     """DRINK consumes inventory water and restores the water need."""
     agent = Agent.create(

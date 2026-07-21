@@ -1,9 +1,9 @@
 """Action executor: apply selected actions to world state.
 
 The executor mutates the world only through immutable ``World`` updates.
-It does not call the needs, movement, gathering, food, water, or policy
-systems; shared catalogs and domain helpers apply effects. Events include
-``ActionCompleted`` and, when applicable, ``NeedDecayed``,
+It does not call the needs, movement, gathering, food, water, energy, or
+policy systems; shared catalogs and domain helpers apply effects. Events
+include ``ActionCompleted`` and, when applicable, ``NeedDecayed``,
 ``ResourceConsumed``, ``ResourceGathered``, or ``AgentMoved``.
 """
 
@@ -20,6 +20,7 @@ from civitas.domain import (
     DEFAULT_EAT_RESTORE,
     DEFAULT_GATHER_AMOUNT,
     DEFAULT_MOVE_ENERGY_COST,
+    DEFAULT_REST_RESTORE,
     FOOD_RESOURCE,
     WATER_RESOURCE,
     ActionChoice,
@@ -32,6 +33,7 @@ from civitas.domain import (
     apply_drink,
     apply_eat,
     apply_gather,
+    apply_rest,
     relocate,
 )
 from civitas.domain.actions import ACTION_NEED_TARGET, ACTION_RESOURCE
@@ -52,7 +54,7 @@ class ActionConfig(BaseModel):
 
     eat: UnitInterval = DEFAULT_EAT_RESTORE
     drink: UnitInterval = DEFAULT_DRINK_RESTORE
-    rest: UnitInterval = 0.20
+    rest: UnitInterval = DEFAULT_REST_RESTORE
     socialize: UnitInterval = 0.15
     seek_safety: UnitInterval = 0.10
     idle: UnitInterval = Field(default=0.0, ge=0.0, le=1.0)
@@ -164,6 +166,8 @@ class ActionExecutor:
             return self._apply_eat(agent, world, bus)
         if action is ActionKind.DRINK:
             return self._apply_drink(agent, world, bus)
+        if action is ActionKind.REST:
+            return self._apply_rest(agent, world, bus)
 
         need_name = ACTION_NEED_TARGET[action]
         if need_name is None:
@@ -277,6 +281,30 @@ class ActionExecutor:
                         current=updated.needs.water,
                     )
                 )
+        return updated, True
+
+    def _apply_rest(
+        self,
+        agent: Agent,
+        world: World,
+        bus: EventBus | None,
+    ) -> tuple[Agent, bool]:
+        """Apply REST energy recovery; emit NeedDecayed on success."""
+        previous_energy = agent.needs.energy
+        updated = apply_rest(agent, restore=self._config.rest)
+        if updated is None:
+            return agent, False
+
+        if bus is not None and updated.needs.energy != previous_energy:
+            bus.publish(
+                NeedDecayed(
+                    tick=world.tick,
+                    agent_id=agent.agent_id,
+                    need="energy",
+                    previous=previous_energy,
+                    current=updated.needs.energy,
+                )
+            )
         return updated, True
 
     def _apply_move(
