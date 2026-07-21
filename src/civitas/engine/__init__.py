@@ -6,3 +6,10 @@ events but contains no domain-specific policy logic.
 """
 
 from __future__ import annotations
+
+from civitas.engine.clock import ClockError, SimulationClock
+
+__all__ = [
+    "ClockError",
+    "SimulationClock",
+]
