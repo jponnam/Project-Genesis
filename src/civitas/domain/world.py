@@ -12,7 +12,8 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from civitas.domain.agent import Agent
 from civitas.domain.config import SimulationConfig
-from civitas.domain.ids import AgentId
+from civitas.domain.ids import AgentId, LocationId
+from civitas.domain.location import Location
 from civitas.domain.time import Tick
 
 
@@ -22,6 +23,7 @@ class World(BaseModel):
     Attributes:
         config: Configuration used to construct this world.
         tick: Current discrete time (``0`` at construction).
+        locations: Places on the map, ordered by ascending ``location_id``.
         agents: Agents ordered by ascending ``agent_id``.
     """
 
@@ -29,11 +31,12 @@ class World(BaseModel):
 
     config: SimulationConfig
     tick: Tick = Field(default_factory=Tick)
+    locations: tuple[Location, ...] = ()
     agents: tuple[Agent, ...] = ()
 
     @model_validator(mode="after")
-    def agents_must_be_consistent(self) -> Self:
-        """Enforce population size, unique ids, and ascending id order."""
+    def world_must_be_consistent(self) -> Self:
+        """Enforce agent/location integrity constraints."""
         if len(self.agents) != self.config.agent_count:
             msg = (
                 f"world has {len(self.agents)} agents but "
@@ -41,13 +44,40 @@ class World(BaseModel):
             )
             raise ValueError(msg)
 
-        ids = [agent.agent_id.value for agent in self.agents]
-        if len(ids) != len(set(ids)):
+        agent_ids = [agent.agent_id.value for agent in self.agents]
+        if len(agent_ids) != len(set(agent_ids)):
             msg = "agent ids must be unique"
             raise ValueError(msg)
-        if ids != sorted(ids):
+        if agent_ids != sorted(agent_ids):
             msg = "agents must be ordered by ascending agent_id"
             raise ValueError(msg)
+
+        location_ids = [location.location_id.value for location in self.locations]
+        if len(location_ids) != len(set(location_ids)):
+            msg = "location ids must be unique"
+            raise ValueError(msg)
+        if location_ids != sorted(location_ids):
+            msg = "locations must be ordered by ascending location_id"
+            raise ValueError(msg)
+
+        known = set(location_ids)
+        if not known:
+            msg = "world must contain at least one location"
+            raise ValueError(msg)
+
+        for agent in self.agents:
+            if agent.location_id.value not in known:
+                msg = (
+                    f"agent {agent.agent_id.value} references unknown "
+                    f"location {agent.location_id.value}"
+                )
+                raise ValueError(msg)
+
+        coord_keys = {(loc.coordinates.x, loc.coordinates.y) for loc in self.locations}
+        if len(coord_keys) != len(self.locations):
+            msg = "location coordinates must be unique"
+            raise ValueError(msg)
+
         return self
 
     def agent_by_id(self, agent_id: AgentId | int) -> Agent | None:
@@ -57,6 +87,27 @@ class World(BaseModel):
             if agent.agent_id == target:
                 return agent
         return None
+
+    def location_by_id(self, location_id: LocationId | int) -> Location | None:
+        """Return the location with ``location_id``, or ``None`` if absent."""
+        target = (
+            location_id
+            if isinstance(location_id, LocationId)
+            else LocationId(value=location_id)
+        )
+        for location in self.locations:
+            if location.location_id == target:
+                return location
+        return None
+
+    def agents_at(self, location_id: LocationId | int) -> tuple[Agent, ...]:
+        """Return agents occupying ``location_id`` in stable id order."""
+        target = (
+            location_id
+            if isinstance(location_id, LocationId)
+            else LocationId(value=location_id)
+        )
+        return tuple(agent for agent in self.agents if agent.location_id == target)
 
     def alive_agents(self) -> tuple[Agent, ...]:
         """Return living agents in stable id order."""

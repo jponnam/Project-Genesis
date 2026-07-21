@@ -40,6 +40,7 @@ from civitas.domain.events import (
     ActionSelected,
     AgentSpawned,
     DomainEvent,
+    LocationCreated,
     NeedDecayed,
     ResourceConsumed,
     SimulationCompleted,
@@ -49,6 +50,13 @@ from civitas.domain.events import (
     event_from_record,
 )
 from civitas.domain.ids import AgentId, LocationId
+from civitas.domain.location import (
+    CAMP_LOCATION,
+    Coordinates,
+    Location,
+    LocationKind,
+    default_world_map,
+)
 from civitas.domain.numeric import clamp_unit
 from civitas.domain.time import Tick
 from civitas.domain.world import World
@@ -57,6 +65,7 @@ __all__ = [
     "ACTION_CATALOG",
     "ACTION_NEED_TARGET",
     "ACTION_RESOURCE",
+    "CAMP_LOCATION",
     "CANONICAL_SEED",
     "ActionChoice",
     "ActionCompleted",
@@ -69,13 +78,17 @@ __all__ = [
     "AgentStatus",
     "Belief",
     "Beliefs",
+    "Coordinates",
     "DomainEvent",
     "Goal",
     "GoalSet",
     "Health",
     "Inventory",
     "Knowledge",
+    "Location",
+    "LocationCreated",
     "LocationId",
+    "LocationKind",
     "Memory",
     "MemoryRecord",
     "NeedDecayed",
@@ -95,5 +108,6 @@ __all__ = [
     "TickStarted",
     "World",
     "clamp_unit",
+    "default_world_map",
     "event_from_record",
 ]

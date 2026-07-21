@@ -67,6 +67,16 @@ class TickCompleted(DomainEvent):
     """Emitted after all agents have been updated for a tick."""
 
 
+class LocationCreated(DomainEvent):
+    """Emitted when a location is added to the world map."""
+
+    location_id: LocationId
+    name: NonEmptyStr
+    x: int
+    y: int
+    kind: NonEmptyStr
+
+
 class AgentSpawned(DomainEvent):
     """Emitted when an agent is created in the world."""
 
@@ -113,6 +123,7 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     SimulationCompleted,
     TickStarted,
     TickCompleted,
+    LocationCreated,
     AgentSpawned,
     ActionSelected,
     ActionCompleted,

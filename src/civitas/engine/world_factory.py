@@ -3,6 +3,9 @@
 Identical configs (especially seed ``42``) must always produce identical
 worlds. Agent attribute sampling uses per-agent child RNG streams so an
 agent's traits depend only on ``(seed, agent_id)``, not on population size.
+
+The location map is a fixed canonical layout (no RNG) so geography stays
+stable across seeds while agent traits still vary with the seed.
 """
 
 from __future__ import annotations
@@ -12,6 +15,7 @@ from typing import TYPE_CHECKING
 from civitas.domain import (
     Agent,
     AgentSpawned,
+    LocationCreated,
     LocationId,
     Personality,
     SimulationStarted,
@@ -19,14 +23,15 @@ from civitas.domain import (
     World,
 )
 from civitas.domain.ids import AgentId
+from civitas.domain.location import CAMP_LOCATION, default_world_map
 from civitas.engine.rng import SeededRNG
 
 if TYPE_CHECKING:
     from civitas.domain import SimulationConfig
     from civitas.engine.event_bus import EventBus
 
-# Phase 1 places every agent at a single origin location.
-ORIGIN_LOCATION_ID: int = 0
+# All agents spawn at the camp until the movement milestone.
+ORIGIN_LOCATION_ID: int = CAMP_LOCATION.location_id.value
 
 # Inclusive starting money range sampled per agent.
 STARTING_MONEY_MIN: int = 0
@@ -46,11 +51,14 @@ class WorldFactory:
         Construction order is fixed:
 
         1. Optionally publish ``SimulationStarted`` at tick 0.
-        2. For each ``agent_id`` in ``0 .. agent_count-1``, spawn a child
-           RNG stream and sample personality + starting money.
-        3. Optionally publish ``AgentSpawned`` for each agent in id order.
+        2. Build the canonical location map; optionally publish
+           ``LocationCreated`` for each location in id order.
+        3. For each ``agent_id`` in ``0 .. agent_count-1``, spawn a child
+           RNG stream and sample personality + starting money at camp.
+        4. Optionally publish ``AgentSpawned`` for each agent in id order.
         """
         root_rng = SeededRNG.from_config(config)
+        locations = default_world_map()
         agents: list[Agent] = []
 
         if bus is not None:
@@ -63,6 +71,17 @@ class WorldFactory:
                     run_name=config.run_name,
                 )
             )
+            for location in locations:
+                bus.publish(
+                    LocationCreated(
+                        tick=Tick(value=0),
+                        location_id=location.location_id,
+                        name=location.name,
+                        x=location.coordinates.x,
+                        y=location.coordinates.y,
+                        kind=location.kind.value,
+                    )
+                )
 
         for agent_id in range(config.agent_count):
             agent = self._build_agent(root_rng=root_rng, agent_id=agent_id)
@@ -80,6 +99,7 @@ class WorldFactory:
         return World(
             config=config,
             tick=Tick(value=0),
+            locations=locations,
             agents=tuple(agents),
         )
 

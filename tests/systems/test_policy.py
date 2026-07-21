@@ -6,6 +6,7 @@ import pytest
 
 from civitas.domain import (
     ACTION_CATALOG,
+    CAMP_LOCATION,
     ActionKind,
     ActionSelected,
     Agent,
@@ -135,6 +136,7 @@ def test_select_all_skips_dead_and_publishes_events() -> None:
     )
     world = World(
         config=SimulationConfig(agent_count=2, seed=1),
+        locations=(CAMP_LOCATION,),
         agents=(living, dead),
     )
     bus = EventBus()

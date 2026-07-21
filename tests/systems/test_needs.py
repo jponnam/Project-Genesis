@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from civitas.domain import (
+    CAMP_LOCATION,
     Agent,
     AgentStatus,
     Health,
@@ -24,7 +25,7 @@ def _world_with_needs(*needs_list: Needs) -> World:
         for index, needs in enumerate(needs_list)
     )
     config = SimulationConfig(agent_count=len(agents), seed=1, ticks=10)
-    return World(config=config, agents=agents)
+    return World(config=config, locations=(CAMP_LOCATION,), agents=agents)
 
 
 def test_clamp_unit_bounds_and_rounding() -> None:
@@ -80,6 +81,7 @@ def test_apply_decay_skips_dead_agents() -> None:
     )
     world = World(
         config=SimulationConfig(agent_count=2, seed=1),
+        locations=(CAMP_LOCATION,),
         agents=(living, dead),
     )
     updated = NeedsSystem().apply_decay(world)

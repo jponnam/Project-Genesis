@@ -6,6 +6,7 @@ from civitas.domain import (
     ActionCompleted,
     ActionSelected,
     AgentSpawned,
+    LocationCreated,
     NeedDecayed,
     SimulationCompleted,
     SimulationConfig,
@@ -54,14 +55,17 @@ def test_run_emits_lifecycle_and_tick_events() -> None:
     types = [event.event_type for event in result.events]
 
     assert types[0] == SimulationStarted.__name__
-    assert types[1] == AgentSpawned.__name__
-    assert types[2] == AgentSpawned.__name__
+    assert types.count(LocationCreated.__name__) == 9
+    assert types.count(AgentSpawned.__name__) == 2
+    assert types[1] == LocationCreated.__name__
+    assert types[10] == AgentSpawned.__name__
     assert types.count(TickStarted.__name__) == 2
     assert types.count(TickCompleted.__name__) == 2
     assert types[-1] == SimulationCompleted.__name__
     assert isinstance(result.events[-1], SimulationCompleted)
     assert result.events[-1].ticks_executed == 2
     assert result.world.tick.value == 2
+    assert len(result.world.locations) == 9
 
 
 def test_each_tick_selects_and_executes_actions() -> None:
