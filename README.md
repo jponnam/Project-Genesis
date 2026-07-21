@@ -116,11 +116,11 @@ execution (`civitas run`) arrives in a later Phase 1 milestone.
 
 ## Current Milestone
 
-**Phase 1 — Milestone 9: Needs System**
+**Phase 1 — Milestone 10: Utility Policy**
 
-Deterministic `NeedsSystem` applying per-tick homeostatic decay and
-satisfaction, emitting `NeedDecayed` events in stable agent/need order.
-No coupling to other systems.
+Deterministic `UtilityPolicy` scoring Phase 1 actions from needs,
+personality, and goals. Selects max utility (name tie-break) and emits
+`ActionSelected` without mutating the world or calling other systems.
 
 ### Completed
 
@@ -133,6 +133,7 @@ No coupling to other systems.
 - Milestone 7: Seeded RNG
 - Milestone 8: World factory
 - Milestone 9: Needs system
+- Milestone 10: Utility policy
 - Testing / linting / formatting gates (established in Milestone 1)
 
 ## License

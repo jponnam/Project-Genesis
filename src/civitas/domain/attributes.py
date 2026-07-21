@@ -35,7 +35,7 @@ class AgentStatus(StrEnum):
 class Personality(BaseModel):
     """Big Five personality traits on the unit interval.
 
-    Traits feed the utility policy (later milestone). Defaults are
+    Traits modulate action utilities in the utility policy. Defaults are
     neutral (0.5) so an unspecified personality is well-defined.
     """
 
