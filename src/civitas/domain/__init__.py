@@ -7,6 +7,13 @@ may depend on domain; domain depends on nothing inside Civitas Lab.
 
 from __future__ import annotations
 
+from civitas.domain.actions import (
+    ACTION_CATALOG,
+    ACTION_NEED_TARGET,
+    ACTION_RESOURCE,
+    ActionChoice,
+    ActionKind,
+)
 from civitas.domain.agent import Agent, AgentIdentity
 from civitas.domain.attributes import (
     AgentStatus,
@@ -42,12 +49,18 @@ from civitas.domain.events import (
     event_from_record,
 )
 from civitas.domain.ids import AgentId, LocationId
+from civitas.domain.numeric import clamp_unit
 from civitas.domain.time import Tick
 from civitas.domain.world import World
 
 __all__ = [
+    "ACTION_CATALOG",
+    "ACTION_NEED_TARGET",
+    "ACTION_RESOURCE",
     "CANONICAL_SEED",
+    "ActionChoice",
     "ActionCompleted",
+    "ActionKind",
     "ActionSelected",
     "Agent",
     "AgentId",
@@ -81,5 +94,6 @@ __all__ = [
     "TickCompleted",
     "TickStarted",
     "World",
+    "clamp_unit",
     "event_from_record",
 ]

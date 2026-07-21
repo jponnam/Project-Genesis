@@ -12,9 +12,10 @@ from civitas.domain import (
     Needs,
     SimulationConfig,
     World,
+    clamp_unit,
 )
 from civitas.engine import EventBus, WorldFactory
-from civitas.systems import NEED_NAMES, NeedsConfig, NeedsSystem, clamp_unit
+from civitas.systems import NEED_NAMES, NeedsConfig, NeedsSystem
 
 
 def _world_with_needs(*needs_list: Needs) -> World:
