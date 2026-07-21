@@ -5,6 +5,8 @@ from __future__ import annotations
 import pytest
 
 from civitas.domain import (
+    ACTION_CATALOG,
+    ActionKind,
     ActionSelected,
     Agent,
     AgentStatus,
@@ -17,12 +19,7 @@ from civitas.domain import (
     World,
 )
 from civitas.engine import EventBus, WorldFactory
-from civitas.systems import (
-    ACTION_CATALOG,
-    ActionKind,
-    PolicyConfig,
-    UtilityPolicy,
-)
+from civitas.systems import PolicyConfig, UtilityPolicy
 
 
 def test_hungry_agent_selects_eat() -> None:

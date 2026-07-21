@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict
 
 from civitas.domain import NeedDecayed, Needs
+from civitas.domain.numeric import clamp_unit
 from civitas.domain.types import UnitInterval
 
 if TYPE_CHECKING:
@@ -59,11 +60,6 @@ class NeedsConfig(BaseModel):
             "social": self.social,
             "safety": self.safety,
         }
-
-
-def clamp_unit(value: float) -> float:
-    """Clamp ``value`` to ``[0.0, 1.0]`` with stable 6-decimal rounding."""
-    return max(0.0, min(1.0, round(value, 6)))
 
 
 class NeedsSystem:

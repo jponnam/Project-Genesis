@@ -7,49 +7,22 @@ never calls other systems — execution belongs to the action executor.
 
 from __future__ import annotations
 
-from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from civitas.domain import ActionSelected, AgentId
+from civitas.domain import (
+    ACTION_CATALOG,
+    ACTION_NEED_TARGET,
+    ActionChoice,
+    ActionKind,
+    ActionSelected,
+)
 from civitas.domain.types import UnitInterval
 
 if TYPE_CHECKING:
     from civitas.domain import Agent, World
     from civitas.engine.event_bus import EventBus
-
-
-class ActionKind(StrEnum):
-    """Phase 1 action catalog available to the utility policy."""
-
-    EAT = "eat"
-    DRINK = "drink"
-    REST = "rest"
-    SOCIALIZE = "socialize"
-    SEEK_SAFETY = "seek_safety"
-    IDLE = "idle"
-
-
-# Stable iteration order for deterministic tie-breaking.
-ACTION_CATALOG: tuple[ActionKind, ...] = (
-    ActionKind.EAT,
-    ActionKind.DRINK,
-    ActionKind.REST,
-    ActionKind.SOCIALIZE,
-    ActionKind.SEEK_SAFETY,
-    ActionKind.IDLE,
-)
-
-# Which need each restorative action targets.
-ACTION_NEED_TARGET: dict[ActionKind, str | None] = {
-    ActionKind.EAT: "food",
-    ActionKind.DRINK: "water",
-    ActionKind.REST: "energy",
-    ActionKind.SOCIALIZE: "social",
-    ActionKind.SEEK_SAFETY: "safety",
-    ActionKind.IDLE: None,
-}
 
 
 class PolicyConfig(BaseModel):
@@ -66,16 +39,6 @@ class PolicyConfig(BaseModel):
     goal_weight: UnitInterval = 0.5
     idle_weight: UnitInterval = 0.15
     personality_floor: UnitInterval = Field(default=0.5, ge=0.0, le=1.0)
-
-
-class ActionChoice(BaseModel):
-    """Result of selecting one action for one agent."""
-
-    model_config = ConfigDict(frozen=True, extra="forbid", validate_default=True)
-
-    agent_id: AgentId
-    action: ActionKind
-    utility: float
 
 
 class UtilityPolicy:
@@ -175,7 +138,6 @@ class UtilityPolicy:
         elif action in {ActionKind.EAT, ActionKind.DRINK, ActionKind.REST}:
             trait = personality.conscientiousness
         elif action is ActionKind.IDLE:
-            # Agreeable agents tolerate waiting; still keep a floor.
             trait = personality.agreeableness
         else:
             trait = 0.5
