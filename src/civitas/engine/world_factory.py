@@ -30,7 +30,7 @@ if TYPE_CHECKING:
     from civitas.domain import SimulationConfig
     from civitas.engine.event_bus import EventBus
 
-# All agents spawn at the camp until the movement milestone.
+# All agents spawn at the camp; MOVE may relocate them on later ticks.
 ORIGIN_LOCATION_ID: int = CAMP_LOCATION.location_id.value
 
 # Inclusive starting money range sampled per agent.

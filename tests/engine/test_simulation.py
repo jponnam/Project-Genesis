@@ -5,6 +5,7 @@ from __future__ import annotations
 from civitas.domain import (
     ActionCompleted,
     ActionSelected,
+    AgentMoved,
     AgentSpawned,
     LocationCreated,
     NeedDecayed,
@@ -83,7 +84,23 @@ def test_needs_decay_events_occur() -> None:
     """Need decay runs every tick and emits NeedDecayed events."""
     result = SimulationEngine().run(SimulationConfig(seed=42, ticks=1, agent_count=1))
     decayed = [event for event in result.events if isinstance(event, NeedDecayed)]
-    assert len(decayed) == 5  # five needs for one agent
+    # Five needs decay each tick; MOVE may add an extra energy NeedDecayed.
+    assert {event.need for event in decayed} == {
+        "food",
+        "water",
+        "energy",
+        "social",
+        "safety",
+    }
+    assert len(decayed) >= 5
+
+
+def test_agents_can_move_during_engine_run() -> None:
+    """Open agents may leave Camp via MOVE within a short seeded run."""
+    result = SimulationEngine().run(SimulationConfig(seed=42, ticks=5, agent_count=8))
+    moved = [event for event in result.events if isinstance(event, AgentMoved)]
+    assert moved
+    assert any(agent.location_id.value != 0 for agent in result.world.agents)
 
 
 def test_run_accepts_external_event_bus() -> None:

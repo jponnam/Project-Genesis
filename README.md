@@ -118,11 +118,12 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 2 — Milestone 1: Locations**
+**Phase 2 — Milestone 2: Movement**
 
-Immutable `Location` / `Coordinates` models, a fixed 3x3 research map,
-`World.locations` with occupancy queries, and `LocationCreated` events.
-Agents still spawn at Camp; movement is the next milestone.
+Domain geography helpers (adjacency, capacity, relocation), `ActionKind.MOVE`
+with destination selection in the utility policy, `MovementSystem` /
+executor application, and `AgentMoved` events. Agents spawn at Camp and
+may relocate to enterable orthogonal neighbors each tick.
 
 ### Completed
 
@@ -132,6 +133,7 @@ JSONL storage → `civitas run`
 
 **Phase 2:**
 - Milestone 1: Locations
+- Milestone 2: Movement
 
 ## License
 
