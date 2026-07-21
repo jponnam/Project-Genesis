@@ -166,6 +166,26 @@ class AgentDied(DomainEvent):
     name: NonEmptyStr
 
 
+class MoneyTransferred(DomainEvent):
+    """Emitted when money moves from one living agent to another."""
+
+    from_agent_id: AgentId
+    to_agent_id: AgentId
+    amount: NonNegativeInt
+
+
+class WealthObserved(DomainEvent):
+    """Emitted when a wealth census is taken."""
+
+    total: NonNegativeInt
+    alive_total: NonNegativeInt
+    dead_total: NonNegativeInt
+    alive_count: NonNegativeInt
+    mean_alive: float
+    min_alive: NonNegativeInt | None = None
+    max_alive: NonNegativeInt | None = None
+
+
 CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     SimulationStarted,
     SimulationCompleted,
@@ -182,6 +202,8 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     ResourceGathered,
     NeedDecayed,
     PopulationObserved,
+    MoneyTransferred,
+    WealthObserved,
 )
 
 EVENT_TYPE_REGISTRY: dict[str, type[DomainEvent]] = {

@@ -118,13 +118,12 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 2 — Milestone 9: Death**
+**Phase 3 — Milestone 1: Economy**
 
-System-driven death (`DeathSystem` / `apply_death`) marks living agents
-`DEAD` when food, water, or energy fall to configured thresholds, or when
-optional max age is reached. Each death emits `AgentDied` with a
-deterministic cause. Dead agents stay on the roster (census tracks them);
-short runs with mild need decay remain fully alive.
+Integer money helpers (`can_afford` / `credit_money` / `debit_money` /
+`transfer_money`) and `EconomySystem` provide deterministic balances and
+transfers. Each tick emits `WealthObserved`; successful transfers emit
+`MoneyTransferred`. Trading and markets are later Phase 3 milestones.
 
 ### Completed
 
@@ -142,6 +141,9 @@ JSONL storage → `civitas run`
 - Milestone 7: Population
 - Milestone 8: Birth
 - Milestone 9: Death
+
+**Phase 3:**
+- Milestone 1: Economy
 
 ## License
 

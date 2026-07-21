@@ -19,6 +19,7 @@ from civitas.domain import (
     SimulationStarted,
     TickCompleted,
     TickStarted,
+    WealthObserved,
 )
 from civitas.engine import EventBus, SimulationEngine
 from civitas.systems import BirthConfig, BirthSystem, DeathConfig, DeathSystem
@@ -235,3 +236,14 @@ def test_engine_deaths_reduce_alive_and_update_census() -> None:
     assert observed[0].alive == 3
     assert observed[-1].alive == 0
     assert observed[-1].dead == 3
+
+
+def test_wealth_observed_each_tick_including_start() -> None:
+    """Engine emits an initial wealth census plus one per executed tick."""
+    result = SimulationEngine().run(SimulationConfig(seed=42, ticks=3, agent_count=5))
+    observed = [event for event in result.events if isinstance(event, WealthObserved)]
+    assert len(observed) == 4  # tick 0 + ticks 1..3
+    assert observed[0].tick.value == 0
+    assert observed[-1].tick.value == 3
+    assert all(event.alive_count == 5 for event in observed)
+    assert observed[0].total == sum(agent.money for agent in result.world.agents)
