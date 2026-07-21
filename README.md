@@ -118,12 +118,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 2 — Milestone 2: Movement**
+**Phase 2 — Milestone 3: Resource gathering**
 
-Domain geography helpers (adjacency, capacity, relocation), `ActionKind.MOVE`
-with destination selection in the utility policy, `MovementSystem` /
-executor application, and `AgentMoved` events. Agents spawn at Camp and
-may relocate to enterable orthogonal neighbors each tick.
+Locations carry deterministic resource deposits by biome. Agents may
+`GATHER` stock into inventory (`ResourceGathered`), and the utility policy
+prefers resource-bearing neighbors when seeking food/water/materials.
 
 ### Completed
 
@@ -134,6 +133,7 @@ JSONL storage → `civitas run`
 **Phase 2:**
 - Milestone 1: Locations
 - Milestone 2: Movement
+- Milestone 3: Resource gathering
 
 ## License
 

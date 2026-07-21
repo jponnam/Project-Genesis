@@ -135,3 +135,22 @@ class World(BaseModel):
             msg = f"agent id {agent.agent_id.value} not found in world"
             raise ValueError(msg)
         return self.model_copy(update={"agents": tuple(updated)})
+
+    def with_location(self, location: Location) -> World:
+        """Return a copy replacing the location that shares ``location_id``.
+
+        Raises:
+            ValueError: If no location with that id exists.
+        """
+        updated: list[Location] = []
+        found = False
+        for existing in self.locations:
+            if existing.location_id == location.location_id:
+                updated.append(location)
+                found = True
+            else:
+                updated.append(existing)
+        if not found:
+            msg = f"location id {location.location_id.value} not found in world"
+            raise ValueError(msg)
+        return self.model_copy(update={"locations": tuple(updated)})

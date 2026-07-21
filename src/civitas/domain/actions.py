@@ -12,6 +12,7 @@ from typing import Self
 from pydantic import BaseModel, ConfigDict, model_validator
 
 from civitas.domain.ids import AgentId, LocationId
+from civitas.domain.types import NonEmptyStr
 
 
 class ActionKind(StrEnum):
@@ -22,6 +23,7 @@ class ActionKind(StrEnum):
     REST = "rest"
     SOCIALIZE = "socialize"
     SEEK_SAFETY = "seek_safety"
+    GATHER = "gather"
     MOVE = "move"
     IDLE = "idle"
 
@@ -33,6 +35,7 @@ ACTION_CATALOG: tuple[ActionKind, ...] = (
     ActionKind.REST,
     ActionKind.SOCIALIZE,
     ActionKind.SEEK_SAFETY,
+    ActionKind.GATHER,
     ActionKind.MOVE,
     ActionKind.IDLE,
 )
@@ -44,6 +47,7 @@ ACTION_NEED_TARGET: dict[ActionKind, str | None] = {
     ActionKind.REST: "energy",
     ActionKind.SOCIALIZE: "social",
     ActionKind.SEEK_SAFETY: "safety",
+    ActionKind.GATHER: None,
     ActionKind.MOVE: None,
     ActionKind.IDLE: None,
 }
@@ -55,6 +59,7 @@ ACTION_RESOURCE: dict[ActionKind, str | None] = {
     ActionKind.REST: None,
     ActionKind.SOCIALIZE: None,
     ActionKind.SEEK_SAFETY: None,
+    ActionKind.GATHER: None,
     ActionKind.MOVE: None,
     ActionKind.IDLE: None,
 }
@@ -69,15 +74,30 @@ class ActionChoice(BaseModel):
     action: ActionKind
     utility: float
     target_location_id: LocationId | None = None
+    target_resource: NonEmptyStr | None = None
 
     @model_validator(mode="after")
-    def move_target_consistency(self) -> Self:
-        """MOVE requires a destination; other actions forbid one."""
+    def target_field_consistency(self) -> Self:
+        """MOVE needs a destination; GATHER needs a resource; others forbid both."""
         if self.action is ActionKind.MOVE:
             if self.target_location_id is None:
                 msg = "MOVE requires target_location_id"
                 raise ValueError(msg)
-        elif self.target_location_id is not None:
-            msg = "target_location_id is only valid for MOVE"
-            raise ValueError(msg)
+            if self.target_resource is not None:
+                msg = "MOVE forbids target_resource"
+                raise ValueError(msg)
+        elif self.action is ActionKind.GATHER:
+            if self.target_resource is None:
+                msg = "GATHER requires target_resource"
+                raise ValueError(msg)
+            if self.target_location_id is not None:
+                msg = "GATHER forbids target_location_id"
+                raise ValueError(msg)
+        else:
+            if self.target_location_id is not None:
+                msg = "target_location_id is only valid for MOVE"
+                raise ValueError(msg)
+            if self.target_resource is not None:
+                msg = "target_resource is only valid for GATHER"
+                raise ValueError(msg)
         return self

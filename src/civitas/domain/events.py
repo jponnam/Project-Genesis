@@ -100,6 +100,7 @@ class ActionSelected(DomainEvent):
     action: NonEmptyStr
     utility: float
     target_location_id: LocationId | None = None
+    target_resource: NonEmptyStr | None = None
 
 
 class ActionCompleted(DomainEvent):
@@ -114,6 +115,15 @@ class ResourceConsumed(DomainEvent):
     """Emitted when an agent consumes a resource from inventory."""
 
     agent_id: AgentId
+    resource: NonEmptyStr
+    amount: NonNegativeInt
+
+
+class ResourceGathered(DomainEvent):
+    """Emitted when an agent gathers a resource from a location deposit."""
+
+    agent_id: AgentId
+    location_id: LocationId
     resource: NonEmptyStr
     amount: NonNegativeInt
 
@@ -138,6 +148,7 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     ActionSelected,
     ActionCompleted,
     ResourceConsumed,
+    ResourceGathered,
     NeedDecayed,
 )
 
