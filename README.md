@@ -103,10 +103,15 @@ All four must pass before a milestone is considered complete.
 
 ## Current Milestone
 
-**Phase 1 — Milestone 1: Project Structure**
+**Phase 1 — Milestone 2: Configuration**
 
-Scaffolding only: package layout, packaging metadata, lint/type/test tooling,
-and structural tests. No simulation logic yet.
+Immutable, validated `SimulationConfig` (Pydantic v2) with canonical seed `42`,
+bounds checking, and a stable fingerprint for run identification.
+
+### Completed
+
+- Milestone 1: Project structure, packaging, quality gates
+- Milestone 2: Simulation configuration models
 
 ## License
 
