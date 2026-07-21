@@ -97,10 +97,12 @@ civitas version
 civitas config show
 civitas config show --seed 42 --ticks 100 --agents 10 --name default
 civitas config fingerprint --seed 7 --ticks 50
+civitas run --seed 42 --ticks 100 --agents 10 --name default
+civitas run --seed 42 --ticks 20 --agents 5 -o runs/demo.jsonl
 ```
 
-The CLI validates options into an immutable `SimulationConfig`. Simulation
-execution (`civitas run`) arrives in a later Phase 1 milestone.
+`civitas run` executes a deterministic simulation and writes the event
+stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Roadmap
 
@@ -116,10 +118,10 @@ execution (`civitas run`) arrives in a later Phase 1 milestone.
 
 ## Current Milestone
 
-**Phase 1 — Milestone 13: JSONL Event Storage**
+**Phase 1 — Milestone 14: CLI Simulation Command**
 
-Append-only `JsonlEventStore` with deterministic JSON encoding, sequence
-validation, and lossless replay of simulation event streams.
+`civitas run` wires config → `SimulationEngine` → JSONL event output with
+a Rich run summary. **Phase 1 is complete.**
 
 ### Completed
 
@@ -136,6 +138,7 @@ validation, and lossless replay of simulation event streams.
 - Milestone 11: Action executor
 - Milestone 12: Simulation engine
 - Milestone 13: JSONL event storage
+- Milestone 14: CLI simulation command (`civitas run`)
 - Testing / linting / formatting gates (established in Milestone 1)
 
 ## License

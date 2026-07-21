@@ -1,12 +1,13 @@
 """Researcher-facing Typer CLI for Civitas Lab.
 
 The CLI is a thin adapter: it validates operator input into domain
-``SimulationConfig`` values and renders results. It contains no
-simulation policy or engine logic.
+``SimulationConfig`` values, runs the simulation engine, and persists
+event streams. It contains no simulation policy logic.
 """
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Annotated
 
 import typer
@@ -16,6 +17,8 @@ from rich.table import Table
 
 from civitas import __version__
 from civitas.domain import CANONICAL_SEED, SimulationConfig
+from civitas.engine import SimulationEngine, SimulationResult
+from civitas.storage import write_events
 
 console = Console(highlight=False)
 
@@ -80,6 +83,11 @@ def build_config(
         raise typer.Exit(code=1) from exc
 
 
+def default_events_path(config: SimulationConfig) -> Path:
+    """Return the default JSONL output path for ``config``."""
+    return Path("runs") / f"{config.run_name}_seed{config.seed}.jsonl"
+
+
 def render_config_table(config: SimulationConfig) -> None:
     """Print a Rich table describing ``config``."""
     table = Table(title="SimulationConfig", show_header=True, header_style="bold")
@@ -90,6 +98,23 @@ def render_config_table(config: SimulationConfig) -> None:
     table.add_row("agent_count", str(config.agent_count))
     table.add_row("run_name", config.run_name)
     table.add_row("fingerprint", config.fingerprint())
+    console.print(table)
+
+
+def render_run_summary(
+    result: SimulationResult,
+    output_path: Path,
+) -> None:
+    """Print a Rich summary of a completed simulation run."""
+    table = Table(title="Simulation Run", show_header=True, header_style="bold")
+    table.add_column("Field", style="cyan")
+    table.add_column("Value")
+    table.add_row("fingerprint", result.config.fingerprint())
+    table.add_row("ticks_executed", str(result.ticks_executed))
+    table.add_row("agents", str(len(result.world.agents)))
+    table.add_row("alive", str(len(result.world.alive_agents())))
+    table.add_row("events", str(len(result.events)))
+    table.add_row("output", str(output_path))
     console.print(table)
 
 
@@ -121,6 +146,32 @@ def root(
 def version_command() -> None:
     """Print the installed Civitas Lab package version."""
     console.print(__version__)
+
+
+@app.command("run")
+def run_command(
+    seed: SeedOpt = CANONICAL_SEED,
+    ticks: TicksOpt = 100,
+    agent_count: AgentsOpt = 10,
+    run_name: NameOpt = "default",
+    output: Annotated[
+        Path | None,
+        typer.Option(
+            "--output",
+            "-o",
+            help="JSONL path for the event stream "
+            "(default: runs/<name>_seed<seed>.jsonl).",
+            dir_okay=False,
+            writable=True,
+        ),
+    ] = None,
+) -> None:
+    """Run a deterministic simulation and write events to JSONL."""
+    config = build_config(seed, ticks, agent_count, run_name)
+    output_path = output if output is not None else default_events_path(config)
+    result = SimulationEngine().run(config)
+    write_events(output_path, result.events)
+    render_run_summary(result, output_path)
 
 
 @config_app.command("show")
