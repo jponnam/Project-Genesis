@@ -116,11 +116,11 @@ execution (`civitas run`) arrives in a later Phase 1 milestone.
 
 ## Current Milestone
 
-**Phase 1 — Milestone 6: Event System**
+**Phase 1 — Milestone 7: Seeded RNG**
 
-Immutable `DomainEvent` hierarchy with JSON record round-trip, plus a
-deterministic `EventBus` that assigns monotonic sequence numbers and
-dispatches to subscribers in registration order.
+Deterministic `SeededRNG` wrapping `random.Random` with explicit seeds,
+draw counting, config binding, and SHA-256-derived child streams via
+`spawn`. Never touches process-global RNG state.
 
 ### Completed
 
@@ -130,6 +130,7 @@ dispatches to subscribers in registration order.
 - Milestone 4: Simulation clock (`Tick` + `SimulationClock`)
 - Milestone 5: Domain models (`Agent` + attributes)
 - Milestone 6: Domain events + event bus
+- Milestone 7: Seeded RNG
 - Testing / linting / formatting gates (established in Milestone 1)
 
 ## License

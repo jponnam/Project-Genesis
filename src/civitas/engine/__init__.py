@@ -9,9 +9,12 @@ from __future__ import annotations
 
 from civitas.engine.clock import ClockError, SimulationClock
 from civitas.engine.event_bus import EventBus
+from civitas.engine.rng import SeededRNG, mix_seed
 
 __all__ = [
     "ClockError",
     "EventBus",
+    "SeededRNG",
     "SimulationClock",
+    "mix_seed",
 ]
