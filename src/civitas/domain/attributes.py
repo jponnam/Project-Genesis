@@ -52,7 +52,7 @@ class Needs(BaseModel):
     """Homeostatic needs on the unit interval.
 
     ``1.0`` means fully satisfied; ``0.0`` means critically deprived.
-    The needs system (later milestone) decays and restores these values.
+    The needs system decays and restores these values each tick.
     """
 
     model_config = _FROZEN

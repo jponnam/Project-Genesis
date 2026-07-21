@@ -116,11 +116,11 @@ execution (`civitas run`) arrives in a later Phase 1 milestone.
 
 ## Current Milestone
 
-**Phase 1 — Milestone 8: World Factory**
+**Phase 1 — Milestone 9: Needs System**
 
-Immutable `World` aggregate and deterministic `WorldFactory`. Seed `42`
-always produces identical initial worlds; per-agent RNG streams make each
-agent's traits depend only on `(seed, agent_id)`.
+Deterministic `NeedsSystem` applying per-tick homeostatic decay and
+satisfaction, emitting `NeedDecayed` events in stable agent/need order.
+No coupling to other systems.
 
 ### Completed
 
@@ -132,6 +132,7 @@ agent's traits depend only on `(seed, agent_id)`.
 - Milestone 6: Domain events + event bus
 - Milestone 7: Seeded RNG
 - Milestone 8: World factory
+- Milestone 9: Needs system
 - Testing / linting / formatting gates (established in Milestone 1)
 
 ## License
