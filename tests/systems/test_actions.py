@@ -21,9 +21,11 @@ from civitas.domain import (
     NeedDecayed,
     Needs,
     ResourceConsumed,
+    ResourceGathered,
     ResourceStack,
     SimulationConfig,
     World,
+    location_stock,
 )
 from civitas.engine import EventBus, WorldFactory
 from civitas.systems import ActionConfig, ActionExecutor, NeedsSystem, UtilityPolicy
@@ -233,5 +235,48 @@ def test_move_fails_when_destination_full() -> None:
     bus = EventBus()
     updated = ActionExecutor().execute(world, choice, bus=bus)
     assert updated.agents[1].location_id.value == 0
+    completed = [event for event in bus.history if isinstance(event, ActionCompleted)]
+    assert completed[0].success is False
+
+
+def test_gather_transfers_deposit_into_inventory() -> None:
+    """GATHER depletes location stock and emits ResourceGathered."""
+    forest = Location.create(1, "Forest", 1, 0, kind=LocationKind.FOREST)
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION, forest),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    choice = ActionChoice(
+        agent_id=AgentId(value=0),
+        action=ActionKind.GATHER,
+        utility=1.0,
+        target_resource="wood",
+    )
+    bus = EventBus()
+    updated = ActionExecutor().execute(world, choice, bus=bus)
+    assert updated.agents[0].inventory.quantity("wood") == 1
+    assert location_stock(updated.locations[1], "wood") == 15
+    assert any(isinstance(event, ResourceGathered) for event in bus.history)
+    completed = [event for event in bus.history if isinstance(event, ActionCompleted)]
+    assert completed[0].success is True
+
+
+def test_gather_fails_when_stock_missing() -> None:
+    """GATHER fails when the current location lacks the resource."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        agents=(Agent.create(agent_id=0, name="A", location_id=0),),
+    )
+    choice = ActionChoice(
+        agent_id=AgentId(value=0),
+        action=ActionKind.GATHER,
+        utility=1.0,
+        target_resource="food",
+    )
+    bus = EventBus()
+    updated = ActionExecutor().execute(world, choice, bus=bus)
+    assert updated.agents[0].inventory.quantity("food") == 0
     completed = [event for event in bus.history if isinstance(event, ActionCompleted)]
     assert completed[0].success is False

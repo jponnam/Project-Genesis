@@ -44,6 +44,7 @@ from civitas.domain.events import (
     LocationCreated,
     NeedDecayed,
     ResourceConsumed,
+    ResourceGathered,
     SimulationCompleted,
     SimulationStarted,
     TickCompleted,
@@ -68,6 +69,18 @@ from civitas.domain.location import (
     default_world_map,
 )
 from civitas.domain.numeric import clamp_unit
+from civitas.domain.resources import (
+    DEFAULT_GATHER_AMOUNT,
+    DEFAULT_INITIAL_STOCK,
+    LOCATION_RESOURCE_KINDS,
+    RESOURCE_NEED,
+    ResourceKind,
+    apply_gather,
+    deposits_for_kind,
+    gatherable_resources,
+    location_stock,
+    with_deposit_quantity,
+)
 from civitas.domain.time import Tick
 from civitas.domain.world import World
 
@@ -77,7 +90,11 @@ __all__ = [
     "ACTION_RESOURCE",
     "CAMP_LOCATION",
     "CANONICAL_SEED",
+    "DEFAULT_GATHER_AMOUNT",
+    "DEFAULT_INITIAL_STOCK",
     "DEFAULT_MOVE_ENERGY_COST",
+    "LOCATION_RESOURCE_KINDS",
+    "RESOURCE_NEED",
     "ActionChoice",
     "ActionCompleted",
     "ActionKind",
@@ -109,6 +126,8 @@ __all__ = [
     "Relationship",
     "RelationshipMap",
     "ResourceConsumed",
+    "ResourceGathered",
+    "ResourceKind",
     "ResourceStack",
     "SimulationCompleted",
     "SimulationConfig",
@@ -120,12 +139,17 @@ __all__ = [
     "TickStarted",
     "World",
     "adjacent_locations",
+    "apply_gather",
     "can_enter",
     "clamp_unit",
     "default_world_map",
+    "deposits_for_kind",
     "enterable_neighbors",
     "event_from_record",
+    "gatherable_resources",
     "is_adjacent",
+    "location_stock",
     "occupancy",
     "relocate",
+    "with_deposit_quantity",
 ]

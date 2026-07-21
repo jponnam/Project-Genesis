@@ -15,6 +15,7 @@ from civitas.domain import (
     LocationId,
     NeedDecayed,
     ResourceConsumed,
+    ResourceGathered,
     SimulationCompleted,
     SimulationStarted,
     Tick,
@@ -167,3 +168,33 @@ def test_action_selected_optional_target_location() -> None:
     restored = event_from_record(event.to_record())
     assert isinstance(restored, ActionSelected)
     assert restored.target_location_id == LocationId(value=3)
+
+
+def test_resource_gathered_round_trips() -> None:
+    """ResourceGathered serializes agent/location ids losslessly."""
+    event = ResourceGathered(
+        sequence=4,
+        tick=Tick(value=2),
+        agent_id=AgentId(value=1),
+        location_id=LocationId(value=2),
+        resource="wood",
+        amount=1,
+    )
+    restored = event_from_record(event.to_record())
+    assert isinstance(restored, ResourceGathered)
+    assert restored.resource == "wood"
+    assert restored.location_id == LocationId(value=2)
+
+
+def test_action_selected_optional_target_resource() -> None:
+    """ActionSelected accepts an optional GATHER resource."""
+    event = ActionSelected(
+        tick=Tick(value=1),
+        agent_id=AgentId(value=0),
+        action="gather",
+        utility=0.4,
+        target_resource="water",
+    )
+    restored = event_from_record(event.to_record())
+    assert isinstance(restored, ActionSelected)
+    assert restored.target_resource == "water"

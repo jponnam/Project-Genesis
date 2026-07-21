@@ -1,15 +1,18 @@
 """Spatial location value objects for the simulation world.
 
-Locations are immutable places with coordinates and a kind. Agents move
-between them via the MOVE action and domain geography helpers.
+Locations are immutable places with coordinates, a kind, and optional
+resource deposits. Agents move between them and may gather deposit stock
+into inventory.
 """
 
 from __future__ import annotations
 
 from enum import StrEnum
+from typing import Self
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from civitas.domain.attributes import ResourceStack
 from civitas.domain.ids import LocationId
 from civitas.domain.types import NonEmptyStr, PositiveInt
 
@@ -38,7 +41,7 @@ class Coordinates(BaseModel):
 
 
 class Location(BaseModel):
-    """An immutable place agents may occupy."""
+    """An immutable place agents may occupy and gather from."""
 
     model_config = ConfigDict(frozen=True, extra="forbid", validate_default=True)
 
@@ -50,6 +53,19 @@ class Location(BaseModel):
         default=32,
         description="Maximum agents that may occupy this location.",
     )
+    deposits: tuple[ResourceStack, ...] = ()
+
+    @model_validator(mode="after")
+    def deposits_must_be_unique_and_sorted(self) -> Self:
+        """Reject duplicate or unsorted deposit resource names."""
+        names = [stack.resource for stack in self.deposits]
+        if len(names) != len(set(names)):
+            msg = "location deposits must have unique resource names"
+            raise ValueError(msg)
+        if names != sorted(names):
+            msg = "location deposits must be ordered by resource name"
+            raise ValueError(msg)
+        return self
 
     @property
     def id(self) -> LocationId:
@@ -66,18 +82,31 @@ class Location(BaseModel):
         *,
         kind: LocationKind = LocationKind.PLAIN,
         capacity: int = 32,
+        deposits: tuple[ResourceStack, ...] | None = None,
     ) -> Location:
-        """Construct a validated location from primitive fields."""
+        """Construct a validated location from primitive fields.
+
+        When ``deposits`` is omitted, the canonical stock for ``kind`` is
+        used.
+        """
+        if deposits is None:
+            # Lazy import avoids a location <-> resources circular import.
+            from civitas.domain.resources import deposits_for_kind
+
+            stock = deposits_for_kind(kind)
+        else:
+            stock = deposits
         return cls(
             location_id=LocationId(value=location_id),
             name=name,
             coordinates=Coordinates(x=x, y=y),
             kind=kind,
             capacity=capacity,
+            deposits=stock,
         )
 
 
-# Origin camp: all agents spawn here; they may MOVE to neighbors later.
+# Origin camp: spawn point with no gatherable deposits.
 CAMP_LOCATION: Location = Location.create(
     0,
     "Camp",

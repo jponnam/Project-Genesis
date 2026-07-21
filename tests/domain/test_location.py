@@ -19,6 +19,7 @@ def test_camp_location_is_origin() -> None:
     assert CAMP_LOCATION.location_id.value == 0
     assert CAMP_LOCATION.coordinates == Coordinates(x=0, y=0)
     assert CAMP_LOCATION.kind is LocationKind.CAMP
+    assert CAMP_LOCATION.deposits == ()
 
 
 def test_default_world_map_is_three_by_three() -> None:

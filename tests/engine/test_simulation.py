@@ -9,6 +9,7 @@ from civitas.domain import (
     AgentSpawned,
     LocationCreated,
     NeedDecayed,
+    ResourceGathered,
     SimulationCompleted,
     SimulationConfig,
     SimulationStarted,
@@ -101,6 +102,14 @@ def test_agents_can_move_during_engine_run() -> None:
     moved = [event for event in result.events if isinstance(event, AgentMoved)]
     assert moved
     assert any(agent.location_id.value != 0 for agent in result.world.agents)
+
+
+def test_agents_can_gather_during_engine_run() -> None:
+    """Seeded runs eventually gather resources from biome deposits."""
+    result = SimulationEngine().run(SimulationConfig(seed=42, ticks=30, agent_count=10))
+    gathered = [event for event in result.events if isinstance(event, ResourceGathered)]
+    assert gathered
+    assert any(agent.inventory.stacks for agent in result.world.agents)
 
 
 def test_run_accepts_external_event_bus() -> None:

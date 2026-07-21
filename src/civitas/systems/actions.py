@@ -1,10 +1,10 @@
 """Action executor: apply selected actions to world state.
 
 The executor mutates the world only through immutable ``World`` updates.
-It does not call the needs system, movement system, or utility policy;
-shared catalogs and geography helpers live in the domain layer. Effects
-emit ``ActionCompleted``, and when applicable ``NeedDecayed``,
-``ResourceConsumed``, or ``AgentMoved``.
+It does not call the needs, movement, gathering, or policy systems;
+shared catalogs and domain helpers apply effects. Events include
+``ActionCompleted`` and, when applicable, ``NeedDecayed``,
+``ResourceConsumed``, ``ResourceGathered``, or ``AgentMoved``.
 """
 
 from __future__ import annotations
@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict, Field
 
 from civitas.domain import (
+    DEFAULT_GATHER_AMOUNT,
     DEFAULT_MOVE_ENERGY_COST,
     ActionChoice,
     ActionCompleted,
@@ -21,11 +22,13 @@ from civitas.domain import (
     AgentMoved,
     NeedDecayed,
     ResourceConsumed,
+    ResourceGathered,
+    apply_gather,
     relocate,
 )
 from civitas.domain.actions import ACTION_NEED_TARGET, ACTION_RESOURCE
 from civitas.domain.numeric import clamp_unit
-from civitas.domain.types import UnitInterval
+from civitas.domain.types import PositiveInt, UnitInterval
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -35,7 +38,7 @@ if TYPE_CHECKING:
 
 
 class ActionConfig(BaseModel):
-    """Per-action need restoration amounts and MOVE energy cost."""
+    """Per-action need restoration amounts and MOVE/GATHER parameters."""
 
     model_config = ConfigDict(frozen=True, extra="forbid", validate_default=True)
 
@@ -46,6 +49,7 @@ class ActionConfig(BaseModel):
     seek_safety: UnitInterval = 0.10
     idle: UnitInterval = Field(default=0.0, ge=0.0, le=1.0)
     move_energy_cost: UnitInterval = DEFAULT_MOVE_ENERGY_COST
+    gather_amount: PositiveInt = DEFAULT_GATHER_AMOUNT
 
     def restore_for(self, action: ActionKind) -> float:
         """Return the need restoration amount for ``action``.
@@ -103,9 +107,13 @@ class ActionExecutor:
                 )
             return world
 
-        updated_agent, success = self._apply(agent, choice, world, bus)
-        if success and updated_agent is not agent:
-            world = world.with_agent(updated_agent)
+        if choice.action is ActionKind.GATHER:
+            world, success = self._apply_gather(world, agent, choice, bus)
+        else:
+            updated_agent, success = self._apply(agent, choice, world, bus)
+            if success and updated_agent is not agent:
+                world = world.with_agent(updated_agent)
+
         if bus is not None:
             bus.publish(
                 ActionCompleted(
@@ -136,7 +144,7 @@ class ActionExecutor:
         world: World,
         bus: EventBus | None,
     ) -> tuple[Agent, bool]:
-        """Apply ``choice`` effects to ``agent``; return (agent, success)."""
+        """Apply non-GATHER ``choice`` effects; return (agent, success)."""
         action = choice.action
         if action is ActionKind.IDLE:
             return agent, True
@@ -222,6 +230,38 @@ class ActionExecutor:
                     agent_id=agent.agent_id,
                     from_location_id=from_location_id,
                     to_location_id=updated.location_id,
+                )
+            )
+        return updated, True
+
+    def _apply_gather(
+        self,
+        world: World,
+        agent: Agent,
+        choice: ActionChoice,
+        bus: EventBus | None,
+    ) -> tuple[World, bool]:
+        """Apply GATHER via domain helper; emit ResourceGathered on success."""
+        if choice.target_resource is None:
+            return world, False
+
+        updated = apply_gather(
+            world,
+            agent,
+            choice.target_resource,
+            amount=self._config.gather_amount,
+        )
+        if updated is None:
+            return world, False
+
+        if bus is not None:
+            bus.publish(
+                ResourceGathered(
+                    tick=world.tick,
+                    agent_id=agent.agent_id,
+                    location_id=agent.location_id,
+                    resource=choice.target_resource,
+                    amount=self._config.gather_amount,
                 )
             )
         return updated, True

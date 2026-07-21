@@ -14,6 +14,8 @@ from civitas.domain import (
     Goal,
     GoalSet,
     Health,
+    Location,
+    LocationKind,
     Needs,
     Personality,
     SimulationConfig,
@@ -167,6 +169,7 @@ def test_action_catalog_is_complete_and_stable() -> None:
         ActionKind.REST,
         ActionKind.SOCIALIZE,
         ActionKind.SEEK_SAFETY,
+        ActionKind.GATHER,
         ActionKind.MOVE,
         ActionKind.IDLE,
     )
@@ -217,3 +220,50 @@ def test_move_unavailable_without_world_or_energy() -> None:
         agents=(tired,),
     )
     assert UtilityPolicy().select(tired, world=world).action is not ActionKind.MOVE
+
+
+def test_hungry_agent_at_forest_selects_gather_food() -> None:
+    """Empty food inventory at a food deposit prefers GATHER over EAT."""
+    forest = Location.create(1, "Forest", 1, 0, kind=LocationKind.FOREST)
+    agent = Agent.create(
+        agent_id=0,
+        name="A",
+        location_id=1,
+        needs=Needs(food=0.2, water=0.9, energy=0.9, social=0.9, safety=0.9),
+        personality=Personality(conscientiousness=1.0),
+    )
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION, forest),
+        agents=(agent,),
+    )
+    choice = UtilityPolicy().select(agent, world=world)
+    assert choice.action is ActionKind.GATHER
+    assert choice.target_resource == "food"
+
+
+def test_thirsty_agent_prefers_river_neighbor() -> None:
+    """When thirsty, MOVE prefers the river neighbor over a plain."""
+    agent = Agent.create(
+        agent_id=0,
+        name="A",
+        location_id=0,
+        needs=Needs(food=0.9, water=0.1, energy=1.0, social=0.9, safety=0.9),
+        personality=Personality(openness=1.0, conscientiousness=0.0),
+    )
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map(),
+        agents=(agent,),
+    )
+    choice = UtilityPolicy().select(agent, world=world)
+    # EAT/DRINK still compete; if MOVE wins it should target the river (id 3).
+    if choice.action is ActionKind.MOVE:
+        assert choice.target_location_id is not None
+        assert choice.target_location_id.value == 3
+    else:
+        # Resource-seeking MOVE utility should at least prefer river among moves.
+        utility, destination = UtilityPolicy()._best_move(agent, world)
+        assert destination is not None
+        assert destination.value == 3
+        assert utility > 0.0
