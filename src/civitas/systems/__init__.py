@@ -14,6 +14,7 @@ from civitas.systems.gathering import GatheringConfig, GatheringSystem
 from civitas.systems.movement import MovementConfig, MovementSystem
 from civitas.systems.needs import NEED_NAMES, NeedsConfig, NeedsSystem
 from civitas.systems.policy import PolicyConfig, UtilityPolicy
+from civitas.systems.population import PopulationConfig, PopulationSystem
 from civitas.systems.water import WaterConfig, WaterSystem
 
 __all__ = [
@@ -31,6 +32,8 @@ __all__ = [
     "NeedsConfig",
     "NeedsSystem",
     "PolicyConfig",
+    "PopulationConfig",
+    "PopulationSystem",
     "UtilityPolicy",
     "WaterConfig",
     "WaterSystem",

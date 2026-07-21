@@ -14,6 +14,7 @@ from civitas.domain import (
     DomainEvent,
     LocationId,
     NeedDecayed,
+    PopulationObserved,
     ResourceConsumed,
     ResourceGathered,
     SimulationCompleted,
@@ -198,3 +199,20 @@ def test_action_selected_optional_target_resource() -> None:
     restored = event_from_record(event.to_record())
     assert isinstance(restored, ActionSelected)
     assert restored.target_resource == "water"
+
+
+def test_population_observed_round_trips() -> None:
+    """PopulationObserved serializes census fields losslessly."""
+    event = PopulationObserved(
+        sequence=7,
+        tick=Tick(value=3),
+        initial_count=10,
+        total=10,
+        alive=9,
+        dead=1,
+        location_counts=((0, 6), (1, 4)),
+    )
+    restored = event_from_record(event.to_record())
+    assert isinstance(restored, PopulationObserved)
+    assert restored.alive == 9
+    assert restored.location_counts == ((0, 6), (1, 4))

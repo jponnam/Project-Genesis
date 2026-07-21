@@ -9,6 +9,7 @@ from civitas.domain import (
     AgentSpawned,
     LocationCreated,
     NeedDecayed,
+    PopulationObserved,
     ResourceConsumed,
     ResourceGathered,
     SimulationCompleted,
@@ -168,7 +169,19 @@ def test_run_accepts_external_event_bus() -> None:
 
 
 def test_final_world_population_preserved() -> None:
-    """Phase 1 runs do not change population size."""
+    """Until birth/death, runs preserve roster size and aliveness."""
     result = SimulationEngine().run(SimulationConfig(seed=42, ticks=4, agent_count=6))
-    assert len(result.world.agents) == 6
+    assert result.world.population_size == 6
     assert len(result.world.alive_agents()) == 6
+
+
+def test_population_observed_each_tick_including_start() -> None:
+    """Engine emits an initial census plus one per executed tick."""
+    result = SimulationEngine().run(SimulationConfig(seed=42, ticks=3, agent_count=5))
+    observed = [
+        event for event in result.events if isinstance(event, PopulationObserved)
+    ]
+    assert len(observed) == 4  # tick 0 + ticks 1..3
+    assert observed[0].tick.value == 0
+    assert observed[-1].tick.value == 3
+    assert all(event.total == 5 and event.alive == 5 for event in observed)
