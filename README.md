@@ -118,28 +118,20 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 1 — Milestone 14: CLI Simulation Command**
+**Phase 2 — Milestone 1: Locations**
 
-`civitas run` wires config → `SimulationEngine` → JSONL event output with
-a Rich run summary. **Phase 1 is complete.**
+Immutable `Location` / `Coordinates` models, a fixed 3x3 research map,
+`World.locations` with occupancy queries, and `LocationCreated` events.
+Agents still spawn at Camp; movement is the next milestone.
 
 ### Completed
 
-- Milestone 1: Project structure, packaging, quality gates
-- Milestone 2: Simulation configuration models
-- Milestone 3: CLI skeleton (`civitas` entry point)
-- Milestone 4: Simulation clock (`Tick` + `SimulationClock`)
-- Milestone 5: Domain models (`Agent` + attributes)
-- Milestone 6: Domain events + event bus
-- Milestone 7: Seeded RNG
-- Milestone 8: World factory
-- Milestone 9: Needs system
-- Milestone 10: Utility policy
-- Milestone 11: Action executor
-- Milestone 12: Simulation engine
-- Milestone 13: JSONL event storage
-- Milestone 14: CLI simulation command (`civitas run`)
-- Testing / linting / formatting gates (established in Milestone 1)
+**Phase 1:** structure → config → CLI → clock → domain → events → RNG →
+world factory → needs → utility policy → action executor → engine →
+JSONL storage → `civitas run`
+
+**Phase 2:**
+- Milestone 1: Locations
 
 ## License
 

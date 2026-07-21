@@ -5,7 +5,15 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from civitas.domain import Agent, SimulationConfig, Tick, World
+from civitas.domain import (
+    CAMP_LOCATION,
+    Agent,
+    Location,
+    LocationKind,
+    SimulationConfig,
+    Tick,
+    World,
+)
 
 
 def _world(agent_count: int = 2) -> World:
@@ -14,14 +22,18 @@ def _world(agent_count: int = 2) -> World:
         Agent.create(agent_id=index, name=f"Agent-{index}")
         for index in range(agent_count)
     )
-    return World(config=config, agents=agents)
+    return World(config=config, locations=(CAMP_LOCATION,), agents=agents)
 
 
 def test_world_rejects_population_mismatch() -> None:
     """Agent count must match config.agent_count."""
     config = SimulationConfig(agent_count=2)
     with pytest.raises(ValidationError, match="agent_count"):
-        World(config=config, agents=(Agent.create(agent_id=0, name="A"),))
+        World(
+            config=config,
+            locations=(CAMP_LOCATION,),
+            agents=(Agent.create(agent_id=0, name="A"),),
+        )
 
 
 def test_world_rejects_unsorted_agents() -> None:
@@ -30,11 +42,51 @@ def test_world_rejects_unsorted_agents() -> None:
     with pytest.raises(ValidationError, match="ascending"):
         World(
             config=config,
+            locations=(CAMP_LOCATION,),
             agents=(
                 Agent.create(agent_id=1, name="B"),
                 Agent.create(agent_id=0, name="A"),
             ),
         )
+
+
+def test_world_requires_known_agent_locations() -> None:
+    """Agents may not reference missing locations."""
+    config = SimulationConfig(agent_count=1)
+    with pytest.raises(ValidationError, match="unknown location"):
+        World(
+            config=config,
+            locations=(CAMP_LOCATION,),
+            agents=(Agent.create(agent_id=0, name="A", location_id=9),),
+        )
+
+
+def test_world_requires_at_least_one_location() -> None:
+    """Empty location maps are invalid."""
+    with pytest.raises(ValidationError, match="at least one location"):
+        World(
+            config=SimulationConfig(agent_count=1),
+            locations=(),
+            agents=(Agent.create(agent_id=0, name="A"),),
+        )
+
+
+def test_location_by_id_and_agents_at() -> None:
+    """Location lookup and occupancy queries are stable."""
+    forest = Location.create(1, "Forest", 1, 0, kind=LocationKind.FOREST)
+    agents = (
+        Agent.create(agent_id=0, name="A", location_id=0),
+        Agent.create(agent_id=1, name="B", location_id=1),
+    )
+    world = World(
+        config=SimulationConfig(agent_count=2, seed=1),
+        locations=(CAMP_LOCATION, forest),
+        agents=agents,
+    )
+    assert world.location_by_id(1) == forest
+    assert world.location_by_id(9) is None
+    assert world.agents_at(0) == (agents[0],)
+    assert world.agents_at(1) == (agents[1],)
 
 
 def test_agent_by_id_and_alive_agents() -> None:

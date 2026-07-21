@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from civitas.domain import (
+    CAMP_LOCATION,
     ActionChoice,
     ActionCompleted,
     ActionKind,
@@ -39,7 +40,11 @@ def test_eat_restores_food_need() -> None:
         name="A",
         needs=Needs(food=0.4, water=1.0, energy=1.0, social=1.0, safety=1.0),
     )
-    world = World(config=SimulationConfig(agent_count=1, seed=1), agents=(agent,))
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        agents=(agent,),
+    )
     bus = EventBus()
     updated = ActionExecutor().execute(world, _choice(0, ActionKind.EAT), bus=bus)
     assert updated.agents[0].needs.food == pytest.approx(0.65)
@@ -60,7 +65,11 @@ def test_eat_consumes_inventory_food_when_present() -> None:
             "inventory": Inventory(stacks=(ResourceStack(resource="food", quantity=2),))
         }
     )
-    world = World(config=SimulationConfig(agent_count=1, seed=1), agents=(agent,))
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        agents=(agent,),
+    )
     bus = EventBus()
     updated = ActionExecutor().execute(world, _choice(0, ActionKind.EAT), bus=bus)
     assert updated.agents[0].inventory.quantity("food") == 1
@@ -70,7 +79,11 @@ def test_eat_consumes_inventory_food_when_present() -> None:
 def test_idle_succeeds_without_state_change() -> None:
     """Idle completes successfully and leaves needs unchanged."""
     agent = Agent.create(agent_id=0, name="A")
-    world = World(config=SimulationConfig(agent_count=1, seed=1), agents=(agent,))
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        agents=(agent,),
+    )
     bus = EventBus()
     updated = ActionExecutor().execute(world, _choice(0, ActionKind.IDLE), bus=bus)
     assert updated.agents[0].needs == agent.needs
@@ -84,7 +97,11 @@ def test_dead_agent_action_fails() -> None:
     dead = Agent.create(agent_id=0, name="D").model_copy(
         update={"status": AgentStatus.DEAD, "health": Health(vitality=0.0)}
     )
-    world = World(config=SimulationConfig(agent_count=1, seed=1), agents=(dead,))
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        agents=(dead,),
+    )
     bus = EventBus()
     updated = ActionExecutor().execute(world, _choice(0, ActionKind.EAT), bus=bus)
     assert updated.agents[0] == dead
@@ -106,7 +123,11 @@ def test_execute_all_applies_in_agent_id_order() -> None:
             needs=Needs(food=1.0, water=0.5, energy=1.0, social=1.0, safety=1.0),
         ),
     )
-    world = World(config=SimulationConfig(agent_count=2, seed=1), agents=agents)
+    world = World(
+        config=SimulationConfig(agent_count=2, seed=1),
+        locations=(CAMP_LOCATION,),
+        agents=agents,
+    )
     choices = (
         _choice(1, ActionKind.DRINK),
         _choice(0, ActionKind.EAT),
@@ -126,7 +147,11 @@ def test_restore_clamps_at_one() -> None:
         name="A",
         needs=Needs(food=0.9, water=1.0, energy=1.0, social=1.0, safety=1.0),
     )
-    world = World(config=SimulationConfig(agent_count=1, seed=1), agents=(agent,))
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        agents=(agent,),
+    )
     updated = ActionExecutor(ActionConfig(eat=0.5)).execute(
         world, _choice(0, ActionKind.EAT)
     )
@@ -137,6 +162,7 @@ def test_missing_agent_raises() -> None:
     """Executing a choice for an absent agent is an error."""
     world = World(
         config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
         agents=(Agent.create(agent_id=0, name="A"),),
     )
     with pytest.raises(ValueError, match="not found"):

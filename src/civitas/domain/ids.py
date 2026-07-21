@@ -33,11 +33,7 @@ class AgentId(BaseModel):
 
 
 class LocationId(BaseModel):
-    """Unique location identifier within a simulation run.
-
-    Full location geography arrives in Phase 2; Phase 1 only needs a
-    stable id so agents can occupy a place.
-    """
+    """Unique location identifier within a simulation run."""
 
     model_config = ConfigDict(frozen=True, extra="forbid", validate_default=True)
 

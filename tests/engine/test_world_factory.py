@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 from civitas.domain import (
+    CAMP_LOCATION,
     CANONICAL_SEED,
     AgentSpawned,
+    LocationCreated,
     SimulationConfig,
     SimulationStarted,
+    default_world_map,
 )
 from civitas.engine import EventBus, WorldFactory
 from civitas.engine.world_factory import ORIGIN_LOCATION_ID
@@ -50,6 +53,9 @@ def test_agents_have_stable_ids_names_and_origin_location() -> None:
     ]
     assert all(agent.location_id.value == ORIGIN_LOCATION_ID for agent in world.agents)
     assert world.tick.value == 0
+    assert world.locations == default_world_map()
+    assert world.locations[0] == CAMP_LOCATION
+    assert world.agents_at(0) == world.agents
 
 
 def test_agent_traits_depend_only_on_seed_and_id() -> None:
@@ -69,15 +75,27 @@ def test_starting_money_within_configured_bounds() -> None:
     assert len(set(monies)) > 1
 
 
-def test_create_publishes_started_and_spawned_events() -> None:
-    """Optional EventBus receives SimulationStarted then AgentSpawned events."""
+def test_create_publishes_started_locations_and_spawned_events() -> None:
+    """Bus receives Started, then LocationCreated, then AgentSpawned events."""
     bus = EventBus()
     config = SimulationConfig(seed=42, agent_count=2, ticks=5, run_name="w")
     world = WorldFactory().create(config, bus=bus)
     assert isinstance(bus.history[0], SimulationStarted)
     assert bus.history[0].seed == 42
     assert bus.history[0].agent_count == 2
+    created = [event for event in bus.history if isinstance(event, LocationCreated)]
+    assert len(created) == 9
+    assert created[0].name == "Camp"
     spawned = [event for event in bus.history if isinstance(event, AgentSpawned)]
     assert len(spawned) == 2
     assert spawned[0].name == world.agents[0].name
     assert spawned[1].agent_id.value == 1
+
+
+def test_map_is_independent_of_seed() -> None:
+    """Geography is fixed; only agent attributes vary with seed."""
+    factory = WorldFactory()
+    left = factory.create(SimulationConfig(seed=1, agent_count=3))
+    right = factory.create(SimulationConfig(seed=2, agent_count=3))
+    assert left.locations == right.locations
+    assert left.agents[0].personality != right.agents[0].personality
