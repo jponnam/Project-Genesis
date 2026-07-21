@@ -43,6 +43,7 @@ from civitas.domain.events import (
 )
 from civitas.domain.ids import AgentId, LocationId
 from civitas.domain.time import Tick
+from civitas.domain.world import World
 
 __all__ = [
     "CANONICAL_SEED",
@@ -79,5 +80,6 @@ __all__ = [
     "Tick",
     "TickCompleted",
     "TickStarted",
+    "World",
     "event_from_record",
 ]
