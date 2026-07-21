@@ -15,6 +15,7 @@ from civitas.domain import (
     AgentSpawned,
     DomainEvent,
     LocationId,
+    MoneyTransferred,
     NeedDecayed,
     PopulationObserved,
     ResourceConsumed,
@@ -24,6 +25,7 @@ from civitas.domain import (
     Tick,
     TickCompleted,
     TickStarted,
+    WealthObserved,
     event_from_record,
 )
 from civitas.domain.events import CONCRETE_EVENT_TYPES, EVENT_TYPE_REGISTRY
@@ -251,3 +253,38 @@ def test_agent_died_round_trips() -> None:
     assert isinstance(restored, AgentDied)
     assert restored.cause == "starvation"
     assert restored.agent_id == AgentId(value=2)
+
+
+def test_money_transferred_round_trips() -> None:
+    """MoneyTransferred serializes payer/payee/amount losslessly."""
+    event = MoneyTransferred(
+        sequence=6,
+        tick=Tick(value=2),
+        from_agent_id=AgentId(value=0),
+        to_agent_id=AgentId(value=1),
+        amount=4,
+    )
+    restored = event_from_record(event.to_record())
+    assert isinstance(restored, MoneyTransferred)
+    assert restored.amount == 4
+    assert restored.from_agent_id == AgentId(value=0)
+
+
+def test_wealth_observed_round_trips() -> None:
+    """WealthObserved serializes census fields losslessly."""
+    event = WealthObserved(
+        sequence=8,
+        tick=Tick(value=3),
+        total=20,
+        alive_total=15,
+        dead_total=5,
+        alive_count=3,
+        mean_alive=5.0,
+        min_alive=1,
+        max_alive=9,
+    )
+    restored = event_from_record(event.to_record())
+    assert isinstance(restored, WealthObserved)
+    assert restored.alive_total == 15
+    assert restored.min_alive == 1
+    assert restored.max_alive == 9
