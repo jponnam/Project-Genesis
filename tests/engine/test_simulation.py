@@ -143,6 +143,19 @@ def test_agents_can_drink_gathered_water_during_engine_run() -> None:
     )
 
 
+def test_agents_can_rest_during_engine_run() -> None:
+    """Seeded runs include successful REST actions as energy decays."""
+    result = SimulationEngine().run(SimulationConfig(seed=42, ticks=40, agent_count=10))
+    rested = [
+        event
+        for event in result.events
+        if isinstance(event, ActionCompleted)
+        and event.action == "rest"
+        and event.success
+    ]
+    assert rested
+
+
 def test_run_accepts_external_event_bus() -> None:
     """Caller-supplied buses receive the full event history."""
     bus = EventBus()

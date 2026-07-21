@@ -8,8 +8,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from civitas.domain.numeric import clamp_unit
-
 if TYPE_CHECKING:
     from civitas.domain.agent import Agent
     from civitas.domain.ids import LocationId
@@ -109,10 +107,6 @@ def relocate(
     if energy_cost < 0.0:
         msg = f"energy_cost must be >= 0, got {energy_cost}"
         raise ValueError(msg)
-    if not agent.is_alive():
-        return None
-    if agent.needs.energy < energy_cost:
-        return None
     destination = world.location_by_id(destination_id)
     if destination is None:
         return None
@@ -121,11 +115,10 @@ def relocate(
     if not can_enter(world, destination.location_id):
         return None
 
-    new_energy = clamp_unit(agent.needs.energy - energy_cost)
-    new_needs = agent.needs.model_copy(update={"energy": new_energy})
-    return agent.model_copy(
-        update={
-            "location_id": destination.location_id,
-            "needs": new_needs,
-        }
-    )
+    # Lazy import avoids a geography <-> energy circular import at module load.
+    from civitas.domain.energy import spend_energy
+
+    spent = spend_energy(agent, energy_cost)
+    if spent is None:
+        return None
+    return spent.model_copy(update={"location_id": destination.location_id})

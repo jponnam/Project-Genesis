@@ -23,6 +23,7 @@ from civitas.domain import (
     ActionChoice,
     ActionKind,
     ActionSelected,
+    can_rest,
     enterable_neighbors,
     gatherable_resources,
     occupancy,
@@ -79,7 +80,7 @@ class UtilityPolicy:
 
         MOVE / GATHER score their best legal target when ``world`` is set;
         otherwise they score 0.0. EAT/DRINK score 0.0 without inventory
-        food/water respectively.
+        food/water. REST scores 0.0 when energy is already full.
         """
         kind = ActionKind(action)
         if kind is ActionKind.MOVE:
@@ -91,6 +92,8 @@ class UtilityPolicy:
         if kind is ActionKind.EAT and not self._has_food(agent):
             return 0.0
         if kind is ActionKind.DRINK and not self._has_water(agent):
+            return 0.0
+        if kind is ActionKind.REST and not can_rest(agent):
             return 0.0
         need_component = self._need_utility(agent, kind)
         personality_component = self._personality_multiplier(agent, kind)
@@ -129,7 +132,7 @@ class UtilityPolicy:
                 if target_resource is None:
                     continue
                 target_location = None
-            elif self._consumable_unavailable(action, agent):
+            elif self._action_unavailable(action, agent):
                 continue
             else:
                 utility = self.score(agent, action, world=world)
@@ -294,12 +297,14 @@ class UtilityPolicy:
         """Return True when the agent holds enough water to drink."""
         return agent.inventory.quantity(WATER_RESOURCE) >= DEFAULT_DRINK_CONSUME_AMOUNT
 
-    def _consumable_unavailable(self, action: ActionKind, agent: Agent) -> bool:
-        """Return True when EAT/DRINK cannot run due to missing inventory."""
+    def _action_unavailable(self, action: ActionKind, agent: Agent) -> bool:
+        """Return True when EAT/DRINK/REST cannot run in the current state."""
         if action is ActionKind.EAT:
             return not self._has_food(agent)
         if action is ActionKind.DRINK:
             return not self._has_water(agent)
+        if action is ActionKind.REST:
+            return not can_rest(agent)
         return False
 
     def _need_utility(self, agent: Agent, action: ActionKind) -> float:

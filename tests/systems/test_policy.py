@@ -111,6 +111,24 @@ def test_thirsty_agent_without_water_skips_drink() -> None:
     assert UtilityPolicy().score(agent, ActionKind.DRINK) == 0.0
 
 
+def test_tired_agent_selects_rest() -> None:
+    """Low energy satisfaction yields rest as the top action."""
+    agent = Agent.create(
+        agent_id=0,
+        name="A",
+        needs=Needs(food=0.9, water=0.9, energy=0.1, social=0.9, safety=0.9),
+        personality=Personality(conscientiousness=1.0),
+    )
+    assert UtilityPolicy().select(agent).action is ActionKind.REST
+
+
+def test_full_energy_skips_rest() -> None:
+    """REST is unavailable when energy is already full."""
+    agent = Agent.create(agent_id=0, name="A", needs=Needs())
+    assert UtilityPolicy().score(agent, ActionKind.REST) == 0.0
+    assert UtilityPolicy().select(agent).action is not ActionKind.REST
+
+
 def test_satisfied_agent_prefers_idle() -> None:
     """When all needs are high, idle outranks restorative actions."""
     agent = Agent.create(agent_id=0, name="A", needs=Needs())

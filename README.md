@@ -118,11 +118,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 2 — Milestone 5: Water**
+**Phase 2 — Milestone 6: Energy**
 
-`DRINK` requires inventory water. Domain `apply_drink` / `WaterSystem`
-consume stock, restore the water need, and emit `ResourceConsumed` +
-`NeedDecayed`. The utility policy skips `DRINK` when the agent has no water.
+`REST` restores energy via domain `apply_rest` / `EnergySystem`.
+`spend_energy` powers MOVE costs. The utility policy skips `REST` when
+energy is already full.
 
 ### Completed
 
@@ -136,6 +136,7 @@ JSONL storage → `civitas run`
 - Milestone 3: Resource gathering
 - Milestone 4: Food
 - Milestone 5: Water
+- Milestone 6: Energy
 
 ## License
 
