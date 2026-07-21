@@ -38,6 +38,7 @@ from civitas.domain.config import CANONICAL_SEED, SimulationConfig
 from civitas.domain.events import (
     ActionCompleted,
     ActionSelected,
+    AgentMoved,
     AgentSpawned,
     DomainEvent,
     LocationCreated,
@@ -48,6 +49,15 @@ from civitas.domain.events import (
     TickCompleted,
     TickStarted,
     event_from_record,
+)
+from civitas.domain.geography import (
+    DEFAULT_MOVE_ENERGY_COST,
+    adjacent_locations,
+    can_enter,
+    enterable_neighbors,
+    is_adjacent,
+    occupancy,
+    relocate,
 )
 from civitas.domain.ids import AgentId, LocationId
 from civitas.domain.location import (
@@ -67,6 +77,7 @@ __all__ = [
     "ACTION_RESOURCE",
     "CAMP_LOCATION",
     "CANONICAL_SEED",
+    "DEFAULT_MOVE_ENERGY_COST",
     "ActionChoice",
     "ActionCompleted",
     "ActionKind",
@@ -74,6 +85,7 @@ __all__ = [
     "Agent",
     "AgentId",
     "AgentIdentity",
+    "AgentMoved",
     "AgentSpawned",
     "AgentStatus",
     "Belief",
@@ -107,7 +119,13 @@ __all__ = [
     "TickCompleted",
     "TickStarted",
     "World",
+    "adjacent_locations",
+    "can_enter",
     "clamp_unit",
     "default_world_map",
+    "enterable_neighbors",
     "event_from_record",
+    "is_adjacent",
+    "occupancy",
+    "relocate",
 ]

@@ -1,8 +1,7 @@
 """Spatial location value objects for the simulation world.
 
-Phase 2 introduces geography. Locations are immutable places with
-coordinates and a kind; movement between them arrives in a later
-milestone.
+Locations are immutable places with coordinates and a kind. Agents move
+between them via the MOVE action and domain geography helpers.
 """
 
 from __future__ import annotations
@@ -78,7 +77,7 @@ class Location(BaseModel):
         )
 
 
-# Origin camp: all Phase 2 agents spawn here until movement exists.
+# Origin camp: all agents spawn here; they may MOVE to neighbors later.
 CAMP_LOCATION: Location = Location.create(
     0,
     "Camp",

@@ -18,6 +18,7 @@ from civitas.domain import (
     Personality,
     SimulationConfig,
     World,
+    default_world_map,
 )
 from civitas.engine import EventBus, WorldFactory
 from civitas.systems import PolicyConfig, UtilityPolicy
@@ -166,7 +167,53 @@ def test_action_catalog_is_complete_and_stable() -> None:
         ActionKind.REST,
         ActionKind.SOCIALIZE,
         ActionKind.SEEK_SAFETY,
+        ActionKind.MOVE,
         ActionKind.IDLE,
     )
     assert len(ACTION_CATALOG) == len(set(ACTION_CATALOG))
     assert set(ACTION_CATALOG) == set(ActionKind)
+
+
+def test_open_satisfied_agent_selects_move_on_map() -> None:
+    """High openness with satisfied needs prefers MOVE when neighbors exist."""
+    agent = Agent.create(
+        agent_id=0,
+        name="Explorer",
+        needs=Needs(),
+        personality=Personality(openness=1.0, agreeableness=0.0),
+    )
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map(),
+        agents=(agent,),
+    )
+    choice = UtilityPolicy().select(agent, world=world)
+    assert choice.action is ActionKind.MOVE
+    assert choice.target_location_id is not None
+    assert choice.target_location_id.value in {1, 3}
+
+
+def test_move_unavailable_without_world_or_energy() -> None:
+    """MOVE is skipped when no world is provided or energy is insufficient."""
+    agent = Agent.create(
+        agent_id=0,
+        name="A",
+        needs=Needs(),
+        personality=Personality(openness=1.0),
+    )
+    choice = UtilityPolicy().select(agent)
+    assert choice.action is not ActionKind.MOVE
+    assert choice.target_location_id is None
+
+    tired = agent.model_copy(
+        update={
+            "needs": Needs(food=1.0, water=1.0, energy=0.01, social=1.0, safety=1.0),
+            "personality": Personality(openness=1.0, agreeableness=0.0),
+        }
+    )
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map(),
+        agents=(tired,),
+    )
+    assert UtilityPolicy().select(tired, world=world).action is not ActionKind.MOVE

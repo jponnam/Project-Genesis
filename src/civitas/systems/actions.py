@@ -1,9 +1,10 @@
 """Action executor: apply selected actions to world state.
 
 The executor mutates the world only through immutable ``World`` updates.
-It does not call the needs system or utility policy; shared catalogs live
-in the domain layer. Effects emit ``ActionCompleted``, and when applicable
-``NeedDecayed`` / ``ResourceConsumed``.
+It does not call the needs system, movement system, or utility policy;
+shared catalogs and geography helpers live in the domain layer. Effects
+emit ``ActionCompleted``, and when applicable ``NeedDecayed``,
+``ResourceConsumed``, or ``AgentMoved``.
 """
 
 from __future__ import annotations
@@ -13,11 +14,14 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict, Field
 
 from civitas.domain import (
+    DEFAULT_MOVE_ENERGY_COST,
     ActionChoice,
     ActionCompleted,
     ActionKind,
+    AgentMoved,
     NeedDecayed,
     ResourceConsumed,
+    relocate,
 )
 from civitas.domain.actions import ACTION_NEED_TARGET, ACTION_RESOURCE
 from civitas.domain.numeric import clamp_unit
@@ -31,7 +35,7 @@ if TYPE_CHECKING:
 
 
 class ActionConfig(BaseModel):
-    """Per-action need restoration amounts on the unit interval."""
+    """Per-action need restoration amounts and MOVE energy cost."""
 
     model_config = ConfigDict(frozen=True, extra="forbid", validate_default=True)
 
@@ -41,9 +45,14 @@ class ActionConfig(BaseModel):
     socialize: UnitInterval = 0.15
     seek_safety: UnitInterval = 0.10
     idle: UnitInterval = Field(default=0.0, ge=0.0, le=1.0)
+    move_energy_cost: UnitInterval = DEFAULT_MOVE_ENERGY_COST
 
     def restore_for(self, action: ActionKind) -> float:
-        """Return the need restoration amount for ``action``."""
+        """Return the need restoration amount for ``action``.
+
+        Raises:
+            ValueError: If ``action`` is not a restorative catalog action.
+        """
         mapping = {
             ActionKind.EAT: self.eat,
             ActionKind.DRINK: self.drink,
@@ -52,7 +61,11 @@ class ActionConfig(BaseModel):
             ActionKind.SEEK_SAFETY: self.seek_safety,
             ActionKind.IDLE: self.idle,
         }
-        return mapping[action]
+        try:
+            return mapping[action]
+        except KeyError as exc:
+            msg = f"action {action.value} has no restoration amount"
+            raise ValueError(msg) from exc
 
 
 class ActionExecutor:
@@ -90,7 +103,7 @@ class ActionExecutor:
                 )
             return world
 
-        updated_agent, success = self._apply(agent, choice.action, world, bus)
+        updated_agent, success = self._apply(agent, choice, world, bus)
         if success and updated_agent is not agent:
             world = world.with_agent(updated_agent)
         if bus is not None:
@@ -119,13 +132,16 @@ class ActionExecutor:
     def _apply(
         self,
         agent: Agent,
-        action: ActionKind,
+        choice: ActionChoice,
         world: World,
         bus: EventBus | None,
     ) -> tuple[Agent, bool]:
-        """Apply ``action`` effects to ``agent``; return (agent, success)."""
+        """Apply ``choice`` effects to ``agent``; return (agent, success)."""
+        action = choice.action
         if action is ActionKind.IDLE:
             return agent, True
+        if action is ActionKind.MOVE:
+            return self._apply_move(agent, choice, world, bus)
 
         need_name = ACTION_NEED_TARGET[action]
         if need_name is None:
@@ -165,4 +181,47 @@ class ActionExecutor:
                     )
                 )
 
+        return updated, True
+
+    def _apply_move(
+        self,
+        agent: Agent,
+        choice: ActionChoice,
+        world: World,
+        bus: EventBus | None,
+    ) -> tuple[Agent, bool]:
+        """Apply MOVE using domain relocation; emit AgentMoved on success."""
+        if choice.target_location_id is None:
+            return agent, False
+
+        from_location_id = agent.location_id
+        previous_energy = agent.needs.energy
+        updated = relocate(
+            world,
+            agent,
+            choice.target_location_id,
+            energy_cost=self._config.move_energy_cost,
+        )
+        if updated is None:
+            return agent, False
+
+        if bus is not None:
+            if updated.needs.energy != previous_energy:
+                bus.publish(
+                    NeedDecayed(
+                        tick=world.tick,
+                        agent_id=agent.agent_id,
+                        need="energy",
+                        previous=previous_energy,
+                        current=updated.needs.energy,
+                    )
+                )
+            bus.publish(
+                AgentMoved(
+                    tick=world.tick,
+                    agent_id=agent.agent_id,
+                    from_location_id=from_location_id,
+                    to_location_id=updated.location_id,
+                )
+            )
         return updated, True

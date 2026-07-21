@@ -9,6 +9,7 @@ from civitas.domain import (
     ActionCompleted,
     ActionSelected,
     AgentId,
+    AgentMoved,
     AgentSpawned,
     DomainEvent,
     LocationId,
@@ -137,3 +138,32 @@ def test_nested_ids_round_trip_through_record() -> None:
     assert isinstance(restored, AgentSpawned)
     assert restored.agent_id == AgentId(value=9)
     assert restored.location_id == LocationId(value=2)
+
+
+def test_agent_moved_round_trips() -> None:
+    """AgentMoved serializes nested location ids losslessly."""
+    event = AgentMoved(
+        sequence=2,
+        tick=Tick(value=3),
+        agent_id=AgentId(value=1),
+        from_location_id=LocationId(value=0),
+        to_location_id=LocationId(value=1),
+    )
+    restored = event_from_record(event.to_record())
+    assert isinstance(restored, AgentMoved)
+    assert restored.from_location_id == LocationId(value=0)
+    assert restored.to_location_id == LocationId(value=1)
+
+
+def test_action_selected_optional_target_location() -> None:
+    """ActionSelected accepts an optional MOVE destination."""
+    event = ActionSelected(
+        tick=Tick(value=1),
+        agent_id=AgentId(value=0),
+        action="move",
+        utility=0.5,
+        target_location_id=LocationId(value=3),
+    )
+    restored = event_from_record(event.to_record())
+    assert isinstance(restored, ActionSelected)
+    assert restored.target_location_id == LocationId(value=3)

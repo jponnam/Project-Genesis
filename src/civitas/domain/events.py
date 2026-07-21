@@ -85,12 +85,21 @@ class AgentSpawned(DomainEvent):
     location_id: LocationId
 
 
+class AgentMoved(DomainEvent):
+    """Emitted when an agent relocates from one location to another."""
+
+    agent_id: AgentId
+    from_location_id: LocationId
+    to_location_id: LocationId
+
+
 class ActionSelected(DomainEvent):
     """Emitted when a policy selects an action for an agent."""
 
     agent_id: AgentId
     action: NonEmptyStr
     utility: float
+    target_location_id: LocationId | None = None
 
 
 class ActionCompleted(DomainEvent):
@@ -125,6 +134,7 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     TickCompleted,
     LocationCreated,
     AgentSpawned,
+    AgentMoved,
     ActionSelected,
     ActionCompleted,
     ResourceConsumed,

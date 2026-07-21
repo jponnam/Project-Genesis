@@ -11,9 +11,13 @@ from civitas.domain import (
     ActionKind,
     Agent,
     AgentId,
+    AgentMoved,
     AgentStatus,
     Health,
     Inventory,
+    Location,
+    LocationId,
+    LocationKind,
     NeedDecayed,
     Needs,
     ResourceConsumed,
@@ -183,3 +187,51 @@ def test_policy_to_executor_pipeline_is_deterministic() -> None:
         return executor.execute_all(world, choices)
 
     assert run() == run()
+
+
+def test_move_relocates_agent_and_emits_agent_moved() -> None:
+    """MOVE updates location, spends energy, and emits AgentMoved."""
+    plain = Location.create(1, "Plain", 1, 0, kind=LocationKind.PLAIN)
+    agent = Agent.create(agent_id=0, name="A", location_id=0)
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION, plain),
+        agents=(agent,),
+    )
+    choice = ActionChoice(
+        agent_id=AgentId(value=0),
+        action=ActionKind.MOVE,
+        utility=1.0,
+        target_location_id=LocationId(value=1),
+    )
+    bus = EventBus()
+    updated = ActionExecutor().execute(world, choice, bus=bus)
+    assert updated.agents[0].location_id.value == 1
+    assert updated.agents[0].needs.energy == pytest.approx(0.95)
+    assert any(isinstance(event, AgentMoved) for event in bus.history)
+    completed = [event for event in bus.history if isinstance(event, ActionCompleted)]
+    assert completed[0].success is True
+
+
+def test_move_fails_when_destination_full() -> None:
+    """MOVE fails cleanly when the destination is at capacity."""
+    plain = Location.create(1, "Plain", 1, 0, capacity=1)
+    world = World(
+        config=SimulationConfig(agent_count=2, seed=1),
+        locations=(CAMP_LOCATION, plain),
+        agents=(
+            Agent.create(agent_id=0, name="A", location_id=1),
+            Agent.create(agent_id=1, name="B", location_id=0),
+        ),
+    )
+    choice = ActionChoice(
+        agent_id=AgentId(value=1),
+        action=ActionKind.MOVE,
+        utility=1.0,
+        target_location_id=LocationId(value=1),
+    )
+    bus = EventBus()
+    updated = ActionExecutor().execute(world, choice, bus=bus)
+    assert updated.agents[1].location_id.value == 0
+    completed = [event for event in bus.history if isinstance(event, ActionCompleted)]
+    assert completed[0].success is False
