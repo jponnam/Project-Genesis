@@ -10,6 +10,7 @@ from __future__ import annotations
 from civitas.engine.clock import ClockError, SimulationClock
 from civitas.engine.event_bus import EventBus
 from civitas.engine.rng import SeededRNG, mix_seed
+from civitas.engine.simulation import SimulationEngine, SimulationResult
 from civitas.engine.world_factory import WorldFactory
 
 __all__ = [
@@ -17,6 +18,8 @@ __all__ = [
     "EventBus",
     "SeededRNG",
     "SimulationClock",
+    "SimulationEngine",
+    "SimulationResult",
     "WorldFactory",
     "mix_seed",
 ]

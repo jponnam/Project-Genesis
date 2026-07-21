@@ -116,12 +116,11 @@ execution (`civitas run`) arrives in a later Phase 1 milestone.
 
 ## Current Milestone
 
-**Phase 1 — Milestone 11: Action Executor**
+**Phase 1 — Milestone 12: Simulation Engine**
 
-`ActionExecutor` applies selected actions to world state: restores needs,
-opportunistically consumes inventory, and emits `ActionCompleted` /
-`NeedDecayed` / `ResourceConsumed`. Action catalog lives in domain so
-policy and executor stay decoupled.
+`SimulationEngine.run(config)` executes the deterministic tick loop:
+decay → select → execute, with lifecycle/tick events. Seed `42` yields
+identical worlds and event histories.
 
 ### Completed
 
@@ -136,6 +135,7 @@ policy and executor stay decoupled.
 - Milestone 9: Needs system
 - Milestone 10: Utility policy
 - Milestone 11: Action executor
+- Milestone 12: Simulation engine
 - Testing / linting / formatting gates (established in Milestone 1)
 
 ## License
