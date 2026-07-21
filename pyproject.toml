@@ -74,7 +74,12 @@ select = [
     "TCH",  # flake8-type-checking
     "RUF",  # ruff-specific
 ]
-ignore = []
+ignore = [
+    # Pydantic models resolve field annotations at runtime; annotated
+    # aliases and nested domain types must remain imported outside
+    # TYPE_CHECKING blocks.
+    "TC001",
+]
 
 [tool.ruff.lint.isort]
 known-first-party = ["civitas"]
