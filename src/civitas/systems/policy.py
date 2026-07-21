@@ -14,10 +14,12 @@ from pydantic import BaseModel, ConfigDict, Field
 from civitas.domain import (
     ACTION_CATALOG,
     ACTION_NEED_TARGET,
+    DEFAULT_DRINK_CONSUME_AMOUNT,
     DEFAULT_EAT_CONSUME_AMOUNT,
     DEFAULT_MOVE_ENERGY_COST,
     FOOD_RESOURCE,
     RESOURCE_NEED,
+    WATER_RESOURCE,
     ActionChoice,
     ActionKind,
     ActionSelected,
@@ -76,7 +78,8 @@ class UtilityPolicy:
         """Compute utility of ``action`` for ``agent``.
 
         MOVE / GATHER score their best legal target when ``world`` is set;
-        otherwise they score 0.0. EAT scores 0.0 without inventory food.
+        otherwise they score 0.0. EAT/DRINK score 0.0 without inventory
+        food/water respectively.
         """
         kind = ActionKind(action)
         if kind is ActionKind.MOVE:
@@ -86,6 +89,8 @@ class UtilityPolicy:
             utility, _resource = self._best_gather(agent, world)
             return utility
         if kind is ActionKind.EAT and not self._has_food(agent):
+            return 0.0
+        if kind is ActionKind.DRINK and not self._has_water(agent):
             return 0.0
         need_component = self._need_utility(agent, kind)
         personality_component = self._personality_multiplier(agent, kind)
@@ -124,7 +129,7 @@ class UtilityPolicy:
                 if target_resource is None:
                     continue
                 target_location = None
-            elif action is ActionKind.EAT and not self._has_food(agent):
+            elif self._consumable_unavailable(action, agent):
                 continue
             else:
                 utility = self.score(agent, action, world=world)
@@ -284,6 +289,18 @@ class UtilityPolicy:
     def _has_food(self, agent: Agent) -> bool:
         """Return True when the agent holds enough food to eat."""
         return agent.inventory.quantity(FOOD_RESOURCE) >= DEFAULT_EAT_CONSUME_AMOUNT
+
+    def _has_water(self, agent: Agent) -> bool:
+        """Return True when the agent holds enough water to drink."""
+        return agent.inventory.quantity(WATER_RESOURCE) >= DEFAULT_DRINK_CONSUME_AMOUNT
+
+    def _consumable_unavailable(self, action: ActionKind, agent: Agent) -> bool:
+        """Return True when EAT/DRINK cannot run due to missing inventory."""
+        if action is ActionKind.EAT:
+            return not self._has_food(agent)
+        if action is ActionKind.DRINK:
+            return not self._has_water(agent)
+        return False
 
     def _need_utility(self, agent: Agent, action: ActionKind) -> float:
         """Urgency-based utility from the action's target need."""

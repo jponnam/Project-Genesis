@@ -89,6 +89,13 @@ from civitas.domain.resources import (
     with_deposit_quantity,
 )
 from civitas.domain.time import Tick
+from civitas.domain.water import (
+    DEFAULT_DRINK_CONSUME_AMOUNT,
+    DEFAULT_DRINK_RESTORE,
+    WATER_RESOURCE,
+    apply_drink,
+    can_drink,
+)
 from civitas.domain.world import World
 
 __all__ = [
@@ -97,6 +104,8 @@ __all__ = [
     "ACTION_RESOURCE",
     "CAMP_LOCATION",
     "CANONICAL_SEED",
+    "DEFAULT_DRINK_CONSUME_AMOUNT",
+    "DEFAULT_DRINK_RESTORE",
     "DEFAULT_EAT_CONSUME_AMOUNT",
     "DEFAULT_EAT_RESTORE",
     "DEFAULT_GATHER_AMOUNT",
@@ -105,6 +114,7 @@ __all__ = [
     "FOOD_RESOURCE",
     "LOCATION_RESOURCE_KINDS",
     "RESOURCE_NEED",
+    "WATER_RESOURCE",
     "ActionChoice",
     "ActionCompleted",
     "ActionKind",
@@ -149,8 +159,10 @@ __all__ = [
     "TickStarted",
     "World",
     "adjacent_locations",
+    "apply_drink",
     "apply_eat",
     "apply_gather",
+    "can_drink",
     "can_eat",
     "can_enter",
     "clamp_unit",

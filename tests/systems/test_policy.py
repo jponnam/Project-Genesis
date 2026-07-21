@@ -28,12 +28,19 @@ from civitas.engine import EventBus, WorldFactory
 from civitas.systems import PolicyConfig, UtilityPolicy
 
 
-def _agent_with_food(
+def _agent_with_supplies(
     *,
     food_need: float,
     water_need: float = 0.9,
-    quantity: int = 1,
+    food_qty: int = 1,
+    water_qty: int = 0,
 ) -> Agent:
+    stacks: list[ResourceStack] = []
+    if food_qty > 0:
+        stacks.append(ResourceStack(resource="food", quantity=food_qty))
+    if water_qty > 0:
+        stacks.append(ResourceStack(resource="water", quantity=water_qty))
+    stacks.sort(key=lambda stack: stack.resource)
     return Agent.create(
         agent_id=0,
         name="A",
@@ -44,12 +51,20 @@ def _agent_with_food(
             social=0.9,
             safety=0.9,
         ),
-    ).model_copy(
-        update={
-            "inventory": Inventory(
-                stacks=(ResourceStack(resource="food", quantity=quantity),)
-            )
-        }
+    ).model_copy(update={"inventory": Inventory(stacks=tuple(stacks))})
+
+
+def _agent_with_food(
+    *,
+    food_need: float,
+    water_need: float = 0.9,
+    quantity: int = 1,
+) -> Agent:
+    return _agent_with_supplies(
+        food_need=food_need,
+        water_need=water_need,
+        food_qty=quantity,
+        water_qty=0,
     )
 
 
@@ -74,13 +89,26 @@ def test_hungry_agent_without_food_skips_eat() -> None:
 
 
 def test_thirsty_agent_selects_drink() -> None:
-    """Low water satisfaction yields drink as the top action."""
+    """Low water satisfaction with inventory water yields drink."""
+    agent = _agent_with_supplies(
+        food_need=0.9,
+        water_need=0.05,
+        food_qty=0,
+        water_qty=1,
+    )
+    assert UtilityPolicy().select(agent).action is ActionKind.DRINK
+
+
+def test_thirsty_agent_without_water_skips_drink() -> None:
+    """DRINK is unavailable when the agent has no water inventory."""
     agent = Agent.create(
         agent_id=0,
         name="A",
         needs=Needs(food=0.9, water=0.05, energy=0.9, social=0.9, safety=0.9),
     )
-    assert UtilityPolicy().select(agent).action is ActionKind.DRINK
+    choice = UtilityPolicy().select(agent)
+    assert choice.action is not ActionKind.DRINK
+    assert UtilityPolicy().score(agent, ActionKind.DRINK) == 0.0
 
 
 def test_satisfied_agent_prefers_idle() -> None:
@@ -114,9 +142,12 @@ def test_extraversion_raises_socialize_utility() -> None:
 
 def test_goal_bonus_can_tip_selection() -> None:
     """A matching high-priority goal can override raw need urgency."""
-    agent = _agent_with_food(food_need=0.55, water_need=0.5).model_copy(
-        update={"personality": Personality()}
-    )
+    agent = _agent_with_supplies(
+        food_need=0.55,
+        water_need=0.5,
+        food_qty=1,
+        water_qty=1,
+    ).model_copy(update={"personality": Personality()})
     # Without goals, water is slightly more urgent than food.
     policy = UtilityPolicy(PolicyConfig(goal_weight=0.5))
     assert policy.select(agent).action is ActionKind.DRINK
@@ -134,7 +165,12 @@ def test_tie_breaks_by_action_name() -> None:
     policy = UtilityPolicy(
         PolicyConfig(goal_weight=0.0, idle_weight=0.0, personality_floor=1.0)
     )
-    agent = _agent_with_food(food_need=0.5, water_need=0.5).model_copy(
+    agent = _agent_with_supplies(
+        food_need=0.5,
+        water_need=0.5,
+        food_qty=1,
+        water_qty=1,
+    ).model_copy(
         update={
             "needs": Needs(food=0.5, water=0.5, energy=1.0, social=1.0, safety=1.0),
             "personality": Personality(
@@ -268,6 +304,26 @@ def test_hungry_agent_at_forest_selects_gather_food() -> None:
     choice = UtilityPolicy().select(agent, world=world)
     assert choice.action is ActionKind.GATHER
     assert choice.target_resource == "food"
+
+
+def test_thirsty_agent_at_river_selects_gather_water() -> None:
+    """Empty water inventory at a river deposit prefers GATHER water."""
+    river = Location.create(1, "River", 0, 1, kind=LocationKind.RIVER)
+    agent = Agent.create(
+        agent_id=0,
+        name="A",
+        location_id=1,
+        needs=Needs(food=0.9, water=0.2, energy=0.9, social=0.9, safety=0.9),
+        personality=Personality(conscientiousness=1.0),
+    )
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION, river),
+        agents=(agent,),
+    )
+    choice = UtilityPolicy().select(agent, world=world)
+    assert choice.action is ActionKind.GATHER
+    assert choice.target_resource == "water"
 
 
 def test_thirsty_agent_prefers_river_neighbor() -> None:
