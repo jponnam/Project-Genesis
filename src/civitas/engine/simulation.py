@@ -17,6 +17,7 @@ from civitas.engine.world_factory import WorldFactory
 from civitas.systems import (
     ActionExecutor,
     BirthSystem,
+    DeathSystem,
     NeedsSystem,
     PopulationSystem,
     UtilityPolicy,
@@ -53,13 +54,15 @@ class SimulationEngine:
     3. ``NeedsSystem.apply_decay``
     4. ``UtilityPolicy.select_all``
     5. ``ActionExecutor.execute_all``
-    6. ``BirthSystem.apply_births``
-    7. Publish ``TickCompleted``
-    8. ``PopulationSystem.observe``
+    6. ``DeathSystem.apply_deaths``
+    7. ``BirthSystem.apply_births``
+    8. Publish ``TickCompleted``
+    9. ``PopulationSystem.observe``
 
     An initial census is also observed at tick 0 immediately after world
-    creation. Birth runs before ``TickCompleted`` so the end-of-tick census
-    includes newborns.
+    creation. Death runs after actions (recovery chance) and before birth
+    so newly dead parents cannot reproduce. Birth and death both complete
+    before ``TickCompleted`` so the census reflects the final roster.
     """
 
     def __init__(
@@ -69,6 +72,7 @@ class SimulationEngine:
         needs_system: NeedsSystem | None = None,
         policy: UtilityPolicy | None = None,
         executor: ActionExecutor | None = None,
+        death_system: DeathSystem | None = None,
         birth_system: BirthSystem | None = None,
         population_system: PopulationSystem | None = None,
     ) -> None:
@@ -78,6 +82,7 @@ class SimulationEngine:
         self._needs_system = needs_system if needs_system is not None else NeedsSystem()
         self._policy = policy if policy is not None else UtilityPolicy()
         self._executor = executor if executor is not None else ActionExecutor()
+        self._death_system = death_system if death_system is not None else DeathSystem()
         self._birth_system = birth_system if birth_system is not None else BirthSystem()
         self._population_system = (
             population_system if population_system is not None else PopulationSystem()
@@ -103,6 +108,7 @@ class SimulationEngine:
             world = self._needs_system.apply_decay(world, bus=event_bus)
             choices = self._policy.select_all(world, bus=event_bus)
             world = self._executor.execute_all(world, choices, bus=event_bus)
+            world = self._death_system.apply_deaths(world, bus=event_bus)
             world = self._birth_system.apply_births(world, bus=event_bus)
             event_bus.publish(TickCompleted(tick=tick))
             world = self._population_system.observe(world, bus=event_bus)

@@ -9,6 +9,7 @@ from civitas.domain import (
     ActionCompleted,
     ActionSelected,
     AgentBorn,
+    AgentDied,
     AgentId,
     AgentMoved,
     AgentSpawned,
@@ -234,3 +235,19 @@ def test_agent_born_round_trips() -> None:
     assert restored.agent_id == AgentId(value=3)
     assert restored.parent_id == AgentId(value=1)
     assert restored.name == "Agent-3"
+
+
+def test_agent_died_round_trips() -> None:
+    """AgentDied serializes cause and identity losslessly."""
+    event = AgentDied(
+        sequence=5,
+        tick=Tick(value=9),
+        agent_id=AgentId(value=2),
+        location_id=LocationId(value=0),
+        cause="starvation",
+        name="Agent-2",
+    )
+    restored = event_from_record(event.to_record())
+    assert isinstance(restored, AgentDied)
+    assert restored.cause == "starvation"
+    assert restored.agent_id == AgentId(value=2)

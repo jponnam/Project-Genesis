@@ -157,6 +157,15 @@ class AgentBorn(DomainEvent):
     name: NonEmptyStr
 
 
+class AgentDied(DomainEvent):
+    """Emitted when a living agent transitions to dead."""
+
+    agent_id: AgentId
+    location_id: LocationId
+    cause: NonEmptyStr
+    name: NonEmptyStr
+
+
 CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     SimulationStarted,
     SimulationCompleted,
@@ -166,6 +175,7 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     AgentSpawned,
     AgentMoved,
     AgentBorn,
+    AgentDied,
     ActionSelected,
     ActionCompleted,
     ResourceConsumed,

@@ -6,6 +6,7 @@ from civitas.domain import (
     ActionCompleted,
     ActionSelected,
     AgentBorn,
+    AgentDied,
     AgentMoved,
     AgentSpawned,
     LocationCreated,
@@ -20,7 +21,7 @@ from civitas.domain import (
     TickStarted,
 )
 from civitas.engine import EventBus, SimulationEngine
-from civitas.systems import BirthConfig, BirthSystem
+from civitas.systems import BirthConfig, BirthSystem, DeathConfig, DeathSystem
 
 
 def test_seed_forty_two_runs_are_identical() -> None:
@@ -170,12 +171,13 @@ def test_run_accepts_external_event_bus() -> None:
     assert bus.next_sequence == len(bus.history)
 
 
-def test_final_world_population_preserved_before_min_parent_age() -> None:
-    """Default min parent age keeps short runs at the initial roster size."""
+def test_final_world_population_preserved_on_short_runs() -> None:
+    """Short runs stay fully alive with default birth age and death thresholds."""
     result = SimulationEngine().run(SimulationConfig(seed=42, ticks=4, agent_count=6))
     assert result.world.population_size == 6
     assert len(result.world.alive_agents()) == 6
     assert not any(isinstance(event, AgentBorn) for event in result.events)
+    assert not any(isinstance(event, AgentDied) for event in result.events)
 
 
 def test_population_observed_each_tick_including_start() -> None:
@@ -213,3 +215,23 @@ def test_engine_births_grow_population_and_census() -> None:
     ]
     assert observed[0].total == 2
     assert observed[-1].total == 5
+
+
+def test_engine_deaths_reduce_alive_and_update_census() -> None:
+    """Deaths after actions mark agents dead before the end-of-tick census."""
+    engine = SimulationEngine(
+        death_system=DeathSystem(DeathConfig(max_age_ticks=1)),
+        birth_system=BirthSystem(BirthConfig(enabled=False)),
+    )
+    result = engine.run(SimulationConfig(seed=42, ticks=2, agent_count=3))
+    died = [event for event in result.events if isinstance(event, AgentDied)]
+    assert len(died) == 3
+    assert all(event.cause == "old_age" for event in died)
+    assert result.world.population_size == 3
+    assert result.world.alive_agents() == ()
+    observed = [
+        event for event in result.events if isinstance(event, PopulationObserved)
+    ]
+    assert observed[0].alive == 3
+    assert observed[-1].alive == 0
+    assert observed[-1].dead == 3

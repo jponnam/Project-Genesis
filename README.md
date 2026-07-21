@@ -118,13 +118,13 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 2 — Milestone 8: Birth**
+**Phase 2 — Milestone 9: Death**
 
-System-driven birth (`BirthSystem` / `apply_birth`) adds agents when living
-parents meet age and need thresholds. Each birth emits `AgentBorn` and
-grows the roster beyond `config.agent_count`. Default minimum parent age
-keeps short runs flat; longer runs can grow until location capacity or an
-optional population ceiling stops further births.
+System-driven death (`DeathSystem` / `apply_death`) marks living agents
+`DEAD` when food, water, or energy fall to configured thresholds, or when
+optional max age is reached. Each death emits `AgentDied` with a
+deterministic cause. Dead agents stay on the roster (census tracks them);
+short runs with mild need decay remain fully alive.
 
 ### Completed
 
@@ -141,6 +141,7 @@ JSONL storage → `civitas run`
 - Milestone 6: Energy
 - Milestone 7: Population
 - Milestone 8: Birth
+- Milestone 9: Death
 
 ## License
 
