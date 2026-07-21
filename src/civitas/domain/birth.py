@@ -154,7 +154,11 @@ def apply_birth(
         ),
     )
     # next_agent_id is max+1, so appending preserves ascending id order.
-    agents = tuple(
-        spent if agent.agent_id == spent.agent_id else agent for agent in world.agents
-    ) + (child,)
+    agents = (
+        *(
+            spent if agent.agent_id == spent.agent_id else agent
+            for agent in world.agents
+        ),
+        child,
+    )
     return world.with_agents(agents), child

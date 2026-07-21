@@ -114,8 +114,9 @@ def test_apply_birth_spawns_child_and_costs_parent_energy() -> None:
     assert child.identity.birth_tick.value == 12
     assert child.location_id == parent.location_id
     assert child.personality.openness == pytest.approx(0.75)
-    assert updated.agent_by_id(0) is not None
-    assert updated.agent_by_id(0).needs.energy == pytest.approx(0.8)
+    updated_parent = updated.agent_by_id(0)
+    assert updated_parent is not None
+    assert updated_parent.needs.energy == pytest.approx(0.8)
 
 
 def test_apply_birth_returns_none_when_illegal() -> None:

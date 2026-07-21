@@ -37,9 +37,7 @@ def test_apply_births_emits_agent_born_and_grows_roster() -> None:
     """One eligible parent produces one child and one AgentBorn event."""
     world = _world(_eligible_parent())
     bus = EventBus()
-    system = BirthSystem(
-        BirthConfig(min_parent_age_ticks=0, max_births_per_tick=1)
-    )
+    system = BirthSystem(BirthConfig(min_parent_age_ticks=0, max_births_per_tick=1))
     updated = system.apply_births(world, bus=bus)
     assert updated.population_size == 2
     events = [event for event in bus.history if isinstance(event, AgentBorn)]
@@ -59,9 +57,7 @@ def test_apply_births_respects_max_births_and_parent_order() -> None:
     ).apply_births(world, bus=bus)
     assert updated.population_size == 5
     parents = [
-        event.parent_id.value
-        for event in bus.history
-        if isinstance(event, AgentBorn)
+        event.parent_id.value for event in bus.history if isinstance(event, AgentBorn)
     ]
     assert parents == [0, 1]
 
@@ -70,9 +66,9 @@ def test_apply_births_can_be_disabled() -> None:
     """BirthConfig.enabled=False skips all births."""
     world = _world(_eligible_parent())
     bus = EventBus()
-    updated = BirthSystem(BirthConfig(enabled=False, min_parent_age_ticks=0)).apply_births(
-        world, bus=bus
-    )
+    updated = BirthSystem(
+        BirthConfig(enabled=False, min_parent_age_ticks=0)
+    ).apply_births(world, bus=bus)
     assert updated == world
     assert bus.history == ()
 

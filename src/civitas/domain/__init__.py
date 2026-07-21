@@ -15,18 +15,6 @@ from civitas.domain.actions import (
     ActionKind,
 )
 from civitas.domain.agent import Agent, AgentIdentity
-from civitas.domain.birth import (
-    DEFAULT_MIN_ENERGY,
-    DEFAULT_MIN_FOOD,
-    DEFAULT_MIN_PARENT_AGE_TICKS,
-    DEFAULT_MIN_WATER,
-    DEFAULT_PARENT_ENERGY_COST,
-    DEFAULT_PERSONALITY_REGRESSION,
-    agent_age_ticks,
-    apply_birth,
-    can_birth,
-    inherit_personality,
-)
 from civitas.domain.attributes import (
     AgentStatus,
     Belief,
@@ -45,6 +33,18 @@ from civitas.domain.attributes import (
     ResourceStack,
     Skill,
     Skills,
+)
+from civitas.domain.birth import (
+    DEFAULT_MIN_ENERGY,
+    DEFAULT_MIN_FOOD,
+    DEFAULT_MIN_PARENT_AGE_TICKS,
+    DEFAULT_MIN_WATER,
+    DEFAULT_PARENT_ENERGY_COST,
+    DEFAULT_PERSONALITY_REGRESSION,
+    agent_age_ticks,
+    apply_birth,
+    can_birth,
+    inherit_personality,
 )
 from civitas.domain.config import CANONICAL_SEED, SimulationConfig
 from civitas.domain.energy import (
