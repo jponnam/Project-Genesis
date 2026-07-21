@@ -28,17 +28,34 @@ from civitas.domain.attributes import (
     Skills,
 )
 from civitas.domain.config import CANONICAL_SEED, SimulationConfig
+from civitas.domain.events import (
+    ActionCompleted,
+    ActionSelected,
+    AgentSpawned,
+    DomainEvent,
+    NeedDecayed,
+    ResourceConsumed,
+    SimulationCompleted,
+    SimulationStarted,
+    TickCompleted,
+    TickStarted,
+    event_from_record,
+)
 from civitas.domain.ids import AgentId, LocationId
 from civitas.domain.time import Tick
 
 __all__ = [
     "CANONICAL_SEED",
+    "ActionCompleted",
+    "ActionSelected",
     "Agent",
     "AgentId",
     "AgentIdentity",
+    "AgentSpawned",
     "AgentStatus",
     "Belief",
     "Beliefs",
+    "DomainEvent",
     "Goal",
     "GoalSet",
     "Health",
@@ -47,13 +64,20 @@ __all__ = [
     "LocationId",
     "Memory",
     "MemoryRecord",
+    "NeedDecayed",
     "Needs",
     "Personality",
     "Relationship",
     "RelationshipMap",
+    "ResourceConsumed",
     "ResourceStack",
+    "SimulationCompleted",
     "SimulationConfig",
+    "SimulationStarted",
     "Skill",
     "Skills",
     "Tick",
+    "TickCompleted",
+    "TickStarted",
+    "event_from_record",
 ]

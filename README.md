@@ -116,11 +116,11 @@ execution (`civitas run`) arrives in a later Phase 1 milestone.
 
 ## Current Milestone
 
-**Phase 1 — Milestone 5: Domain Models**
+**Phase 1 — Milestone 6: Event System**
 
-Immutable `Agent` aggregate with typed ids and attribute value objects:
-personality, needs, inventory, goals, beliefs, relationships, location,
-money, skills, knowledge, memory, health, and status.
+Immutable `DomainEvent` hierarchy with JSON record round-trip, plus a
+deterministic `EventBus` that assigns monotonic sequence numbers and
+dispatches to subscribers in registration order.
 
 ### Completed
 
@@ -129,6 +129,7 @@ money, skills, knowledge, memory, health, and status.
 - Milestone 3: CLI skeleton (`civitas` entry point)
 - Milestone 4: Simulation clock (`Tick` + `SimulationClock`)
 - Milestone 5: Domain models (`Agent` + attributes)
+- Milestone 6: Domain events + event bus
 - Testing / linting / formatting gates (established in Milestone 1)
 
 ## License

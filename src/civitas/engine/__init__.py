@@ -8,8 +8,10 @@ events but contains no domain-specific policy logic.
 from __future__ import annotations
 
 from civitas.engine.clock import ClockError, SimulationClock
+from civitas.engine.event_bus import EventBus
 
 __all__ = [
     "ClockError",
+    "EventBus",
     "SimulationClock",
 ]
