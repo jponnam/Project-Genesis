@@ -14,7 +14,12 @@ from civitas.domain import SimulationCompleted, TickCompleted, TickStarted
 from civitas.engine.clock import SimulationClock
 from civitas.engine.event_bus import EventBus
 from civitas.engine.world_factory import WorldFactory
-from civitas.systems import ActionExecutor, NeedsSystem, UtilityPolicy
+from civitas.systems import (
+    ActionExecutor,
+    NeedsSystem,
+    PopulationSystem,
+    UtilityPolicy,
+)
 
 if TYPE_CHECKING:
     from civitas.domain import DomainEvent, SimulationConfig, World
@@ -48,6 +53,10 @@ class SimulationEngine:
     4. ``UtilityPolicy.select_all``
     5. ``ActionExecutor.execute_all``
     6. Publish ``TickCompleted``
+    7. ``PopulationSystem.observe``
+
+    An initial census is also observed at tick 0 immediately after world
+    creation.
     """
 
     def __init__(
@@ -57,6 +66,7 @@ class SimulationEngine:
         needs_system: NeedsSystem | None = None,
         policy: UtilityPolicy | None = None,
         executor: ActionExecutor | None = None,
+        population_system: PopulationSystem | None = None,
     ) -> None:
         self._world_factory = (
             world_factory if world_factory is not None else WorldFactory()
@@ -64,6 +74,9 @@ class SimulationEngine:
         self._needs_system = needs_system if needs_system is not None else NeedsSystem()
         self._policy = policy if policy is not None else UtilityPolicy()
         self._executor = executor if executor is not None else ActionExecutor()
+        self._population_system = (
+            population_system if population_system is not None else PopulationSystem()
+        )
 
     def run(
         self,
@@ -77,6 +90,7 @@ class SimulationEngine:
         event_bus = bus if bus is not None else EventBus()
         clock = SimulationClock.from_config(config)
         world = self._world_factory.create(config, bus=event_bus)
+        world = self._population_system.observe(world, bus=event_bus)
 
         for tick in clock.run():
             world = world.with_tick(tick)
@@ -85,6 +99,7 @@ class SimulationEngine:
             choices = self._policy.select_all(world, bus=event_bus)
             world = self._executor.execute_all(world, choices, bus=event_bus)
             event_bus.publish(TickCompleted(tick=tick))
+            world = self._population_system.observe(world, bus=event_bus)
 
         event_bus.publish(
             SimulationCompleted(

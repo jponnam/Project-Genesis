@@ -25,15 +25,15 @@ def _world(agent_count: int = 2) -> World:
     return World(config=config, locations=(CAMP_LOCATION,), agents=agents)
 
 
-def test_world_rejects_population_mismatch() -> None:
-    """Agent count must match config.agent_count."""
-    config = SimulationConfig(agent_count=2)
-    with pytest.raises(ValidationError, match="agent_count"):
-        World(
-            config=config,
-            locations=(CAMP_LOCATION,),
-            agents=(Agent.create(agent_id=0, name="A"),),
-        )
+def test_world_allows_roster_size_to_diverge_from_initial_count() -> None:
+    """config.agent_count is initial size; runtime roster may differ."""
+    world = World(
+        config=SimulationConfig(agent_count=2),
+        locations=(CAMP_LOCATION,),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert world.population_size == 1
+    assert world.config.agent_count == 2
 
 
 def test_world_rejects_unsorted_agents() -> None:
@@ -117,3 +117,28 @@ def test_with_agent_unknown_id_raises() -> None:
     stranger = Agent.create(agent_id=9, name="X")
     with pytest.raises(ValueError, match="not found"):
         world.with_agent(stranger)
+
+
+def test_with_agents_replaces_roster() -> None:
+    """with_agents replaces the full roster when ids stay sorted."""
+    world = _world(1)
+    expanded = world.with_agents(
+        (
+            Agent.create(agent_id=0, name="A"),
+            Agent.create(agent_id=1, name="B"),
+        )
+    )
+    assert expanded.population_size == 2
+    assert world.population_size == 1
+
+
+def test_with_agents_rejects_unsorted_roster() -> None:
+    """with_agents still enforces ascending agent ids."""
+    world = _world(1)
+    with pytest.raises(ValidationError, match="ascending"):
+        world.with_agents(
+            (
+                Agent.create(agent_id=1, name="B"),
+                Agent.create(agent_id=0, name="A"),
+            )
+        )

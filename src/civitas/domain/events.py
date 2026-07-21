@@ -137,6 +137,17 @@ class NeedDecayed(DomainEvent):
     current: UnitInterval
 
 
+class PopulationObserved(DomainEvent):
+    """Emitted when a population census is taken."""
+
+    initial_count: NonNegativeInt
+    total: NonNegativeInt
+    alive: NonNegativeInt
+    dead: NonNegativeInt
+    # (location_id, agent_count) pairs in ascending location_id order.
+    location_counts: tuple[tuple[int, int], ...] = ()
+
+
 CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     SimulationStarted,
     SimulationCompleted,
@@ -150,6 +161,7 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     ResourceConsumed,
     ResourceGathered,
     NeedDecayed,
+    PopulationObserved,
 )
 
 EVENT_TYPE_REGISTRY: dict[str, type[DomainEvent]] = {

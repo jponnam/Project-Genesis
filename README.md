@@ -118,11 +118,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 2 — Milestone 6: Energy**
+**Phase 2 — Milestone 7: Population**
 
-`REST` restores energy via domain `apply_rest` / `EnergySystem`.
-`spend_energy` powers MOVE costs. The utility policy skips `REST` when
-energy is already full.
+Runtime population census (`PopulationCensus` / `PopulationSystem`) emits
+`PopulationObserved` each tick. `config.agent_count` is the initial size;
+roster length may diverge once birth/death arrive.
 
 ### Completed
 
@@ -137,6 +137,7 @@ JSONL storage → `civitas run`
 - Milestone 4: Food
 - Milestone 5: Water
 - Milestone 6: Energy
+- Milestone 7: Population
 
 ## License
 

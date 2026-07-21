@@ -2,6 +2,10 @@
 
 The world is immutable. Systems and the engine produce new ``World``
 instances via ``model_copy`` / helpers rather than mutating in place.
+
+``config.agent_count`` is the *initial* population created by the world
+factory. Runtime roster size is ``len(agents)`` and may diverge once
+birth and death are introduced.
 """
 
 from __future__ import annotations
@@ -37,13 +41,6 @@ class World(BaseModel):
     @model_validator(mode="after")
     def world_must_be_consistent(self) -> Self:
         """Enforce agent/location integrity constraints."""
-        if len(self.agents) != self.config.agent_count:
-            msg = (
-                f"world has {len(self.agents)} agents but "
-                f"config.agent_count is {self.config.agent_count}"
-            )
-            raise ValueError(msg)
-
         agent_ids = [agent.agent_id.value for agent in self.agents]
         if len(agent_ids) != len(set(agent_ids)):
             msg = "agent ids must be unique"
@@ -79,6 +76,11 @@ class World(BaseModel):
             raise ValueError(msg)
 
         return self
+
+    @property
+    def population_size(self) -> int:
+        """Return the current roster size."""
+        return len(self.agents)
 
     def agent_by_id(self, agent_id: AgentId | int) -> Agent | None:
         """Return the agent with ``agent_id``, or ``None`` if absent."""
@@ -135,6 +137,18 @@ class World(BaseModel):
             msg = f"agent id {agent.agent_id.value} not found in world"
             raise ValueError(msg)
         return self.model_copy(update={"agents": tuple(updated)})
+
+    def with_agents(self, agents: tuple[Agent, ...]) -> World:
+        """Return a copy with a replaced agent roster.
+
+        The roster must remain uniquely id-sorted; validation enforces this.
+        """
+        return World(
+            config=self.config,
+            tick=self.tick,
+            locations=self.locations,
+            agents=agents,
+        )
 
     def with_location(self, location: Location) -> World:
         """Return a copy replacing the location that shares ``location_id``.
