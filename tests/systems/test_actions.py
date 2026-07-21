@@ -23,6 +23,7 @@ from civitas.domain import (
     ResourceConsumed,
     ResourceGathered,
     ResourceStack,
+    ResourceTraded,
     SimulationConfig,
     World,
     location_stock,
@@ -385,5 +386,60 @@ def test_gather_fails_when_stock_missing() -> None:
     bus = EventBus()
     updated = ActionExecutor().execute(world, choice, bus=bus)
     assert updated.agents[0].inventory.quantity("food") == 0
+    completed = [event for event in bus.history if isinstance(event, ActionCompleted)]
+    assert completed[0].success is False
+
+
+def test_trade_moves_resource_and_money() -> None:
+    """TRADE transfers inventory and money and emits ResourceTraded."""
+    buyer = Agent.create(agent_id=0, name="A", money=5)
+    seller = Agent.create(agent_id=1, name="B", money=0).model_copy(
+        update={
+            "inventory": Inventory(stacks=(ResourceStack(resource="food", quantity=2),))
+        }
+    )
+    world = World(
+        config=SimulationConfig(agent_count=2, seed=1),
+        locations=(CAMP_LOCATION,),
+        agents=(buyer, seller),
+    )
+    choice = ActionChoice(
+        agent_id=AgentId(value=0),
+        action=ActionKind.TRADE,
+        utility=1.0,
+        target_resource="food",
+        target_agent_id=AgentId(value=1),
+    )
+    bus = EventBus()
+    updated = ActionExecutor().execute(world, choice, bus=bus)
+    assert updated.agents[0].inventory.quantity("food") == 1
+    assert updated.agents[0].money == 4
+    assert updated.agents[1].inventory.quantity("food") == 1
+    assert updated.agents[1].money == 1
+    assert any(isinstance(event, ResourceTraded) for event in bus.history)
+    completed = [event for event in bus.history if isinstance(event, ActionCompleted)]
+    assert completed[0].success is True
+
+
+def test_trade_fails_when_seller_lacks_stock() -> None:
+    """TRADE fails cleanly when the seller cannot supply the resource."""
+    world = World(
+        config=SimulationConfig(agent_count=2, seed=1),
+        locations=(CAMP_LOCATION,),
+        agents=(
+            Agent.create(agent_id=0, name="A", money=5),
+            Agent.create(agent_id=1, name="B", money=0),
+        ),
+    )
+    choice = ActionChoice(
+        agent_id=AgentId(value=0),
+        action=ActionKind.TRADE,
+        utility=1.0,
+        target_resource="food",
+        target_agent_id=AgentId(value=1),
+    )
+    bus = EventBus()
+    updated = ActionExecutor().execute(world, choice, bus=bus)
+    assert updated == world
     completed = [event for event in bus.history if isinstance(event, ActionCompleted)]
     assert completed[0].success is False

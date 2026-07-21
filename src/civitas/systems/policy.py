@@ -23,12 +23,17 @@ from civitas.domain import (
     ActionChoice,
     ActionKind,
     ActionSelected,
+    AgentId,
+    TradeTerms,
+    can_afford,
     can_rest,
+    can_trade,
     enterable_neighbors,
     gatherable_resources,
     occupancy,
 )
-from civitas.domain.types import UnitInterval
+from civitas.domain.trading import DEFAULT_TRADE_PRICE, DEFAULT_TRADE_QUANTITY
+from civitas.domain.types import NonNegativeInt, PositiveInt, UnitInterval
 
 if TYPE_CHECKING:
     from civitas.domain import Agent, Location, LocationId, World
@@ -43,8 +48,11 @@ class PolicyConfig(BaseModel):
         idle_weight: Scales idle utility by the least-satisfied need.
         move_weight: Scales exploratory MOVE utility.
         gather_weight: Scales GATHER utility from need/inventory pressure.
+        trade_weight: Scales TRADE utility from need/inventory pressure.
         resource_seek_weight: Bonus for MOVE toward resource-bearing cells.
         move_energy_cost: Minimum energy required to consider MOVE.
+        trade_quantity: Units purchased by a selected TRADE.
+        trade_price: Total money paid by the buyer for a selected TRADE.
         personality_floor: Minimum personality multiplier (avoids zeros).
     """
 
@@ -54,8 +62,11 @@ class PolicyConfig(BaseModel):
     idle_weight: UnitInterval = 0.15
     move_weight: UnitInterval = 0.35
     gather_weight: UnitInterval = 0.55
+    trade_weight: UnitInterval = 0.60
     resource_seek_weight: UnitInterval = 0.45
     move_energy_cost: UnitInterval = DEFAULT_MOVE_ENERGY_COST
+    trade_quantity: PositiveInt = DEFAULT_TRADE_QUANTITY
+    trade_price: NonNegativeInt = DEFAULT_TRADE_PRICE
     personality_floor: UnitInterval = Field(default=0.5, ge=0.0, le=1.0)
 
 
@@ -78,9 +89,9 @@ class UtilityPolicy:
     ) -> float:
         """Compute utility of ``action`` for ``agent``.
 
-        MOVE / GATHER score their best legal target when ``world`` is set;
-        otherwise they score 0.0. EAT/DRINK score 0.0 without inventory
-        food/water. REST scores 0.0 when energy is already full.
+        MOVE / GATHER / TRADE score their best legal target when ``world``
+        is set; otherwise they score 0.0. EAT/DRINK score 0.0 without
+        inventory food/water. REST scores 0.0 when energy is already full.
         """
         kind = ActionKind(action)
         if kind is ActionKind.MOVE:
@@ -88,6 +99,9 @@ class UtilityPolicy:
             return utility
         if kind is ActionKind.GATHER:
             utility, _resource = self._best_gather(agent, world)
+            return utility
+        if kind is ActionKind.TRADE:
+            utility, _seller, _resource = self._best_trade(agent, world)
             return utility
         if kind is ActionKind.EAT and not self._has_food(agent):
             return 0.0
@@ -121,15 +135,23 @@ class UtilityPolicy:
         best_utility = float("-inf")
         best_location: LocationId | None = None
         best_resource: str | None = None
+        best_agent: AgentId | None = None
         for action in ACTION_CATALOG:
             if action is ActionKind.MOVE:
                 utility, target_location = self._best_move(agent, world)
                 if target_location is None:
                     continue
                 target_resource = None
+                target_agent = None
             elif action is ActionKind.GATHER:
                 utility, target_resource = self._best_gather(agent, world)
                 if target_resource is None:
+                    continue
+                target_location = None
+                target_agent = None
+            elif action is ActionKind.TRADE:
+                utility, target_agent, target_resource = self._best_trade(agent, world)
+                if target_agent is None or target_resource is None:
                     continue
                 target_location = None
             elif self._action_unavailable(action, agent):
@@ -138,6 +160,7 @@ class UtilityPolicy:
                 utility = self.score(agent, action, world=world)
                 target_location = None
                 target_resource = None
+                target_agent = None
             if utility > best_utility or (
                 utility == best_utility and action.value < best_action.value
             ):
@@ -145,12 +168,14 @@ class UtilityPolicy:
                 best_utility = utility
                 best_location = target_location
                 best_resource = target_resource
+                best_agent = target_agent
         return ActionChoice(
             agent_id=agent.agent_id,
             action=best_action,
             utility=best_utility,
             target_location_id=best_location,
             target_resource=best_resource,
+            target_agent_id=best_agent,
         )
 
     def select_all(
@@ -176,6 +201,7 @@ class UtilityPolicy:
                         utility=choice.utility,
                         target_location_id=choice.target_location_id,
                         target_resource=choice.target_resource,
+                        target_agent_id=choice.target_agent_id,
                     )
                 )
         return tuple(choices)
@@ -250,6 +276,75 @@ class UtilityPolicy:
                 best_utility = utility
                 best_resource = resource
         return best_utility, best_resource
+
+    def _best_trade(
+        self,
+        agent: Agent,
+        world: World | None,
+    ) -> tuple[float, AgentId | None, str | None]:
+        """Return (utility, seller, resource) for the best legal TRADE."""
+        if world is None:
+            return 0.0, None, None
+        if not can_afford(agent, self._config.trade_price):
+            return 0.0, None, None
+
+        best_utility = float("-inf")
+        best_seller: AgentId | None = None
+        best_resource: str | None = None
+        for seller in world.agents_at(agent.location_id):
+            if seller.agent_id == agent.agent_id or not seller.is_alive():
+                continue
+            resources = sorted(
+                {
+                    stack.resource
+                    for stack in seller.inventory.stacks
+                    if stack.quantity >= self._config.trade_quantity
+                }
+            )
+            for resource in resources:
+                terms = TradeTerms(
+                    buyer_id=agent.agent_id,
+                    seller_id=seller.agent_id,
+                    resource=resource,
+                    quantity=self._config.trade_quantity,
+                    price=self._config.trade_price,
+                )
+                if not can_trade(world, terms):
+                    continue
+                utility = self._trade_utility(agent, resource)
+                candidate_key = (seller.agent_id.value, resource)
+                best_key = (
+                    (best_seller.value, best_resource)
+                    if best_seller is not None and best_resource is not None
+                    else None
+                )
+                if utility > best_utility or (
+                    utility == best_utility
+                    and (best_key is None or candidate_key < best_key)
+                ):
+                    best_utility = utility
+                    best_seller = seller.agent_id
+                    best_resource = resource
+        if best_seller is None or best_resource is None:
+            return 0.0, None, None
+        return best_utility, best_seller, best_resource
+
+    def _trade_utility(self, agent: Agent, resource: str) -> float:
+        """Score buying ``resource`` from need urgency and inventory gap."""
+        need_name = RESOURCE_NEED.get(resource)
+        inventory_qty = agent.inventory.quantity(resource)
+        scarcity = 1.0 / (1.0 + inventory_qty)
+        if need_name is None:
+            need_component = round(self._config.trade_weight * 0.25 * scarcity, 6)
+        else:
+            urgency = 1.0 - agent.needs.as_mapping()[need_name]
+            need_component = round(
+                self._config.trade_weight * urgency * scarcity,
+                6,
+            )
+        personality_component = self._personality_multiplier(agent, ActionKind.TRADE)
+        goal_component = self._trade_goal_bonus(agent, resource)
+        return round((need_component * personality_component) + goal_component, 6)
 
     def _gather_utility(self, agent: Agent, resource: str) -> float:
         """Score gathering ``resource`` from need urgency and inventory gap.
@@ -338,6 +433,8 @@ class UtilityPolicy:
             ActionKind.GATHER,
         }:
             trait = personality.conscientiousness
+        elif action is ActionKind.TRADE:
+            trait = personality.agreeableness
         elif action is ActionKind.MOVE:
             trait = personality.openness
         elif action is ActionKind.IDLE:
@@ -363,6 +460,19 @@ class UtilityPolicy:
         best = 0.0
         for goal in agent.goals.goals:
             matches = goal.kind in {ActionKind.GATHER.value, f"gather_{resource}"}
+            if matches:
+                best = max(best, goal.priority * self._config.goal_weight)
+        return round(best, 6)
+
+    def _trade_goal_bonus(self, agent: Agent, resource: str) -> float:
+        """Goal bonus for buying a specific resource."""
+        best = 0.0
+        for goal in agent.goals.goals:
+            matches = goal.kind in {
+                ActionKind.TRADE.value,
+                f"buy_{resource}",
+                f"trade_{resource}",
+            }
             if matches:
                 best = max(best, goal.priority * self._config.goal_weight)
         return round(best, 6)

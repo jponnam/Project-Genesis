@@ -20,6 +20,7 @@ from civitas.domain import (
     PopulationObserved,
     ResourceConsumed,
     ResourceGathered,
+    ResourceTraded,
     SimulationCompleted,
     SimulationStarted,
     Tick,
@@ -268,6 +269,24 @@ def test_money_transferred_round_trips() -> None:
     assert isinstance(restored, MoneyTransferred)
     assert restored.amount == 4
     assert restored.from_agent_id == AgentId(value=0)
+
+
+def test_resource_traded_round_trips() -> None:
+    """ResourceTraded serializes trade terms losslessly."""
+    event = ResourceTraded(
+        sequence=7,
+        tick=Tick(value=4),
+        buyer_id=AgentId(value=0),
+        seller_id=AgentId(value=2),
+        resource="food",
+        quantity=1,
+        price=3,
+    )
+    restored = event_from_record(event.to_record())
+    assert isinstance(restored, ResourceTraded)
+    assert restored.resource == "food"
+    assert restored.price == 3
+    assert restored.seller_id == AgentId(value=2)
 
 
 def test_wealth_observed_round_trips() -> None:

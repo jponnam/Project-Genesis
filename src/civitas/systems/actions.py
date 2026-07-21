@@ -30,15 +30,19 @@ from civitas.domain import (
     NeedDecayed,
     ResourceConsumed,
     ResourceGathered,
+    ResourceTraded,
+    TradeTerms,
     apply_drink,
     apply_eat,
     apply_gather,
     apply_rest,
+    apply_trade,
     relocate,
 )
 from civitas.domain.actions import ACTION_NEED_TARGET, ACTION_RESOURCE
 from civitas.domain.numeric import clamp_unit
-from civitas.domain.types import PositiveInt, UnitInterval
+from civitas.domain.trading import DEFAULT_TRADE_PRICE, DEFAULT_TRADE_QUANTITY
+from civitas.domain.types import NonNegativeInt, PositiveInt, UnitInterval
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -62,6 +66,8 @@ class ActionConfig(BaseModel):
     gather_amount: PositiveInt = DEFAULT_GATHER_AMOUNT
     eat_consume_amount: PositiveInt = DEFAULT_EAT_CONSUME_AMOUNT
     drink_consume_amount: PositiveInt = DEFAULT_DRINK_CONSUME_AMOUNT
+    trade_quantity: PositiveInt = DEFAULT_TRADE_QUANTITY
+    trade_price: NonNegativeInt = DEFAULT_TRADE_PRICE
 
     def restore_for(self, action: ActionKind) -> float:
         """Return the need restoration amount for ``action``.
@@ -121,6 +127,8 @@ class ActionExecutor:
 
         if choice.action is ActionKind.GATHER:
             world, success = self._apply_gather(world, agent, choice, bus)
+        elif choice.action is ActionKind.TRADE:
+            world, success = self._apply_trade(world, agent, choice, bus)
         else:
             updated_agent, success = self._apply(agent, choice, world, bus)
             if success and updated_agent is not agent:
@@ -378,6 +386,41 @@ class ActionExecutor:
                     location_id=agent.location_id,
                     resource=choice.target_resource,
                     amount=self._config.gather_amount,
+                )
+            )
+        return updated, True
+
+    def _apply_trade(
+        self,
+        world: World,
+        agent: Agent,
+        choice: ActionChoice,
+        bus: EventBus | None,
+    ) -> tuple[World, bool]:
+        """Apply TRADE via domain helper; emit ResourceTraded on success."""
+        if choice.target_resource is None or choice.target_agent_id is None:
+            return world, False
+
+        terms = TradeTerms(
+            buyer_id=agent.agent_id,
+            seller_id=choice.target_agent_id,
+            resource=choice.target_resource,
+            quantity=self._config.trade_quantity,
+            price=self._config.trade_price,
+        )
+        updated = apply_trade(world, terms)
+        if updated is None:
+            return world, False
+
+        if bus is not None:
+            bus.publish(
+                ResourceTraded(
+                    tick=updated.tick,
+                    buyer_id=terms.buyer_id,
+                    seller_id=terms.seller_id,
+                    resource=terms.resource,
+                    quantity=terms.quantity,
+                    price=terms.price,
                 )
             )
         return updated, True

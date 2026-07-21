@@ -252,6 +252,7 @@ def test_action_catalog_is_complete_and_stable() -> None:
         ActionKind.SOCIALIZE,
         ActionKind.SEEK_SAFETY,
         ActionKind.GATHER,
+        ActionKind.TRADE,
         ActionKind.MOVE,
         ActionKind.IDLE,
     )
