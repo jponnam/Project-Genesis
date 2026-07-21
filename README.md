@@ -116,11 +116,11 @@ execution (`civitas run`) arrives in a later Phase 1 milestone.
 
 ## Current Milestone
 
-**Phase 1 — Milestone 7: Seeded RNG**
+**Phase 1 — Milestone 8: World Factory**
 
-Deterministic `SeededRNG` wrapping `random.Random` with explicit seeds,
-draw counting, config binding, and SHA-256-derived child streams via
-`spawn`. Never touches process-global RNG state.
+Immutable `World` aggregate and deterministic `WorldFactory`. Seed `42`
+always produces identical initial worlds; per-agent RNG streams make each
+agent's traits depend only on `(seed, agent_id)`.
 
 ### Completed
 
@@ -131,6 +131,7 @@ draw counting, config binding, and SHA-256-derived child streams via
 - Milestone 5: Domain models (`Agent` + attributes)
 - Milestone 6: Domain events + event bus
 - Milestone 7: Seeded RNG
+- Milestone 8: World factory
 - Testing / linting / formatting gates (established in Milestone 1)
 
 ## License
