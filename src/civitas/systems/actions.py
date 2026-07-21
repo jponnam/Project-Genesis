@@ -14,8 +14,11 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict, Field
 
 from civitas.domain import (
+    DEFAULT_EAT_CONSUME_AMOUNT,
+    DEFAULT_EAT_RESTORE,
     DEFAULT_GATHER_AMOUNT,
     DEFAULT_MOVE_ENERGY_COST,
+    FOOD_RESOURCE,
     ActionChoice,
     ActionCompleted,
     ActionKind,
@@ -23,6 +26,7 @@ from civitas.domain import (
     NeedDecayed,
     ResourceConsumed,
     ResourceGathered,
+    apply_eat,
     apply_gather,
     relocate,
 )
@@ -42,7 +46,7 @@ class ActionConfig(BaseModel):
 
     model_config = ConfigDict(frozen=True, extra="forbid", validate_default=True)
 
-    eat: UnitInterval = 0.25
+    eat: UnitInterval = DEFAULT_EAT_RESTORE
     drink: UnitInterval = 0.30
     rest: UnitInterval = 0.20
     socialize: UnitInterval = 0.15
@@ -50,6 +54,7 @@ class ActionConfig(BaseModel):
     idle: UnitInterval = Field(default=0.0, ge=0.0, le=1.0)
     move_energy_cost: UnitInterval = DEFAULT_MOVE_ENERGY_COST
     gather_amount: PositiveInt = DEFAULT_GATHER_AMOUNT
+    eat_consume_amount: PositiveInt = DEFAULT_EAT_CONSUME_AMOUNT
 
     def restore_for(self, action: ActionKind) -> float:
         """Return the need restoration amount for ``action``.
@@ -150,6 +155,8 @@ class ActionExecutor:
             return agent, True
         if action is ActionKind.MOVE:
             return self._apply_move(agent, choice, world, bus)
+        if action is ActionKind.EAT:
+            return self._apply_eat(agent, world, bus)
 
         need_name = ACTION_NEED_TARGET[action]
         if need_name is None:
@@ -189,6 +196,43 @@ class ActionExecutor:
                     )
                 )
 
+        return updated, True
+
+    def _apply_eat(
+        self,
+        agent: Agent,
+        world: World,
+        bus: EventBus | None,
+    ) -> tuple[Agent, bool]:
+        """Apply inventory-backed EAT; emit consume/need events on success."""
+        previous_food = agent.needs.food
+        updated = apply_eat(
+            agent,
+            restore=self._config.eat,
+            amount=self._config.eat_consume_amount,
+        )
+        if updated is None:
+            return agent, False
+
+        if bus is not None:
+            bus.publish(
+                ResourceConsumed(
+                    tick=world.tick,
+                    agent_id=agent.agent_id,
+                    resource=FOOD_RESOURCE,
+                    amount=self._config.eat_consume_amount,
+                )
+            )
+            if updated.needs.food != previous_food:
+                bus.publish(
+                    NeedDecayed(
+                        tick=world.tick,
+                        agent_id=agent.agent_id,
+                        need="food",
+                        previous=previous_food,
+                        current=updated.needs.food,
+                    )
+                )
         return updated, True
 
     def _apply_move(

@@ -118,11 +118,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 2 — Milestone 3: Resource gathering**
+**Phase 2 — Milestone 4: Food**
 
-Locations carry deterministic resource deposits by biome. Agents may
-`GATHER` stock into inventory (`ResourceGathered`), and the utility policy
-prefers resource-bearing neighbors when seeking food/water/materials.
+`EAT` requires inventory food. Domain `apply_eat` / `FoodSystem` consume
+stock, restore the food need, and emit `ResourceConsumed` + `NeedDecayed`.
+The utility policy skips `EAT` when the agent has no food.
 
 ### Completed
 
@@ -134,6 +134,7 @@ JSONL storage → `civitas run`
 - Milestone 1: Locations
 - Milestone 2: Movement
 - Milestone 3: Resource gathering
+- Milestone 4: Food
 
 ## License
 

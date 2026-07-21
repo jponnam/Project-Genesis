@@ -39,8 +39,53 @@ def _choice(agent_id: int, action: ActionKind, utility: float = 1.0) -> ActionCh
     )
 
 
+def _with_food(
+    agent_id: int,
+    *,
+    food_need: float,
+    quantity: int = 1,
+    water_need: float = 1.0,
+) -> Agent:
+    return Agent.create(
+        agent_id=agent_id,
+        name=f"A{agent_id}",
+        needs=Needs(
+            food=food_need,
+            water=water_need,
+            energy=1.0,
+            social=1.0,
+            safety=1.0,
+        ),
+    ).model_copy(
+        update={
+            "inventory": Inventory(
+                stacks=(ResourceStack(resource="food", quantity=quantity),)
+            )
+        }
+    )
+
+
 def test_eat_restores_food_need() -> None:
     """Eating increases food satisfaction by the configured amount."""
+    agent = _with_food(0, food_need=0.4, quantity=1)
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        agents=(agent,),
+    )
+    bus = EventBus()
+    updated = ActionExecutor().execute(world, _choice(0, ActionKind.EAT), bus=bus)
+    assert updated.agents[0].needs.food == pytest.approx(0.65)
+    assert updated.agents[0].inventory.quantity("food") == 0
+    assert any(isinstance(event, NeedDecayed) for event in bus.history)
+    assert any(isinstance(event, ResourceConsumed) for event in bus.history)
+    assert any(
+        isinstance(event, ActionCompleted) and event.success for event in bus.history
+    )
+
+
+def test_eat_fails_without_inventory_food() -> None:
+    """Eating without food fails and does not restore the food need."""
     agent = Agent.create(
         agent_id=0,
         name="A",
@@ -53,33 +98,10 @@ def test_eat_restores_food_need() -> None:
     )
     bus = EventBus()
     updated = ActionExecutor().execute(world, _choice(0, ActionKind.EAT), bus=bus)
-    assert updated.agents[0].needs.food == pytest.approx(0.65)
-    assert any(isinstance(event, NeedDecayed) for event in bus.history)
-    assert any(
-        isinstance(event, ActionCompleted) and event.success for event in bus.history
-    )
-
-
-def test_eat_consumes_inventory_food_when_present() -> None:
-    """Eating with food in inventory emits ResourceConsumed and decrements stock."""
-    agent = Agent.create(
-        agent_id=0,
-        name="A",
-        needs=Needs(food=0.5, water=1.0, energy=1.0, social=1.0, safety=1.0),
-    ).model_copy(
-        update={
-            "inventory": Inventory(stacks=(ResourceStack(resource="food", quantity=2),))
-        }
-    )
-    world = World(
-        config=SimulationConfig(agent_count=1, seed=1),
-        locations=(CAMP_LOCATION,),
-        agents=(agent,),
-    )
-    bus = EventBus()
-    updated = ActionExecutor().execute(world, _choice(0, ActionKind.EAT), bus=bus)
-    assert updated.agents[0].inventory.quantity("food") == 1
-    assert any(isinstance(event, ResourceConsumed) for event in bus.history)
+    assert updated.agents[0].needs.food == pytest.approx(0.4)
+    completed = [event for event in bus.history if isinstance(event, ActionCompleted)]
+    assert completed[0].success is False
+    assert not any(isinstance(event, ResourceConsumed) for event in bus.history)
 
 
 def test_idle_succeeds_without_state_change() -> None:
@@ -118,11 +140,7 @@ def test_dead_agent_action_fails() -> None:
 def test_execute_all_applies_in_agent_id_order() -> None:
     """execute_all sorts choices by agent id before applying."""
     agents = (
-        Agent.create(
-            agent_id=0,
-            name="A",
-            needs=Needs(food=0.5, water=1.0, energy=1.0, social=1.0, safety=1.0),
-        ),
+        _with_food(0, food_need=0.5, quantity=1),
         Agent.create(
             agent_id=1,
             name="B",
@@ -148,11 +166,7 @@ def test_execute_all_applies_in_agent_id_order() -> None:
 
 def test_restore_clamps_at_one() -> None:
     """Need restoration cannot exceed 1.0."""
-    agent = Agent.create(
-        agent_id=0,
-        name="A",
-        needs=Needs(food=0.9, water=1.0, energy=1.0, social=1.0, safety=1.0),
-    )
+    agent = _with_food(0, food_need=0.9, quantity=1)
     world = World(
         config=SimulationConfig(agent_count=1, seed=1),
         locations=(CAMP_LOCATION,),
