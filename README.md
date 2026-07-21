@@ -89,6 +89,19 @@ mypy
 
 All four must pass before a milestone is considered complete.
 
+### CLI
+
+```bash
+civitas --help
+civitas version
+civitas config show
+civitas config show --seed 42 --ticks 100 --agents 10 --name default
+civitas config fingerprint --seed 7 --ticks 50
+```
+
+The CLI validates options into an immutable `SimulationConfig`. Simulation
+execution (`civitas run`) arrives in a later Phase 1 milestone.
+
 ## Roadmap
 
 | Phase | Focus |
@@ -103,15 +116,17 @@ All four must pass before a milestone is considered complete.
 
 ## Current Milestone
 
-**Phase 1 — Milestone 2: Configuration**
+**Phase 1 — Milestone 3: CLI**
 
-Immutable, validated `SimulationConfig` (Pydantic v2) with canonical seed `42`,
-bounds checking, and a stable fingerprint for run identification.
+Typer + Rich researcher CLI with `version`, `config show`, and
+`config fingerprint`. Thin adapter over `SimulationConfig` only — no
+simulation execution yet.
 
 ### Completed
 
 - Milestone 1: Project structure, packaging, quality gates
 - Milestone 2: Simulation configuration models
+- Milestone 3: CLI skeleton (`civitas` entry point)
 
 ## License
 

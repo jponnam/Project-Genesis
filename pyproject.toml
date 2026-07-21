@@ -43,6 +43,9 @@ dev = [
     "ruff>=0.12",
 ]
 
+[project.scripts]
+civitas = "civitas.cli.app:main"
+
 [project.urls]
 Homepage = "https://github.com/civitas-lab/civitas-lab"
 Documentation = "https://github.com/civitas-lab/civitas-lab#readme"
