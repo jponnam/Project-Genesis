@@ -7,11 +7,11 @@ completed advances of the simulation clock.
 
 from __future__ import annotations
 
-from typing import Annotated, Any, Self
+from typing import Any, Self
 
 from pydantic import BaseModel, ConfigDict, Field
 
-NonNegativeInt = Annotated[int, Field(ge=0)]
+from civitas.domain.types import NonNegativeInt
 
 
 class Tick(BaseModel):

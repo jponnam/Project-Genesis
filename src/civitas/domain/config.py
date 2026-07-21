@@ -16,14 +16,13 @@ from typing import Annotated, Any, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from civitas.domain.types import NonEmptyStr, NonNegativeInt
+
 # Canonical seed used across research reproducibility tests.
 CANONICAL_SEED: int = 42
 
-NonNegativeInt = Annotated[int, Field(ge=0)]
-PositiveInt = Annotated[int, Field(ge=1)]
 BoundedTicks = Annotated[int, Field(ge=1, le=10_000_000)]
 BoundedAgentCount = Annotated[int, Field(ge=1, le=1_000_000)]
-RunName = Annotated[str, Field(min_length=1, max_length=128)]
 
 
 class SimulationConfig(BaseModel):
@@ -55,7 +54,7 @@ class SimulationConfig(BaseModel):
         default=10,
         description="Initial number of agents in the world.",
     )
-    run_name: RunName = Field(
+    run_name: NonEmptyStr = Field(
         default="default",
         description="Label for the run; does not affect determinism.",
     )
