@@ -127,11 +127,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 15 Milestone 4: Ditch infrastructure**
+**Phase 15 Milestone 5: Farmstead cities**
 
-``InfrastructureKind.DITCH`` (build cost 7) grants a seat-scoped water
-gather bonus, stacking with pottery craft, irrigation canal, and sail.
-Not seeded in ``default_infrastructure()``.
+``CityKind.FARMSTEAD`` is a non-capital specialized seat. Active farmsteads
+grant a seat-scoped food gather bonus, stacking with plow, storehouse,
+waystation, entrepot, and granary. Not seeded in ``default_cities()``.
 
 ### Completed
 
@@ -281,6 +281,7 @@ JSONL storage → `civitas run`
 - Milestone 2: Land tenure laws
 - Milestone 3: Granary institutions
 - Milestone 4: Ditch infrastructure
+- Milestone 5: Farmstead cities
 
 ## License
 
