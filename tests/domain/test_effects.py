@@ -73,6 +73,7 @@ from civitas.domain import (
     FORUM_TEACHINGS_PER_KNOWER_BONUS,
     FOUNDRY_PRODUCE_ENERGY_DISCOUNT,
     GUILD_PRODUCE_ENERGY_DISCOUNT,
+    HARBOR_MARKET_FEE_DISCOUNT,
     HOSPITAL_REST_RESTORE_BONUS,
     HYGIENE_DRINK_RESTORE_BONUS,
     INFIRMARY_REST_RESTORE_BONUS,
@@ -155,6 +156,7 @@ from civitas.domain import (
     location_has_active_forum,
     location_has_active_foundry,
     location_has_active_guild,
+    location_has_active_harbor,
     location_has_active_hospital,
     location_has_active_infirmary,
     location_has_active_lazaretto,
@@ -3844,3 +3846,59 @@ def test_bureaucracy_discounts_market_fee_at_seat() -> None:
     )
     assert location_has_active_bureaucracy(bare, 0) is False
     assert effective_market_fee(bare, 0) == 2
+
+
+def test_harbor_discounts_market_fee_at_seat() -> None:
+    """Active harbor cities reduce market fee by 1 at their seat (floor 0)."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp Harbor", CityKind.HARBOR),),
+        laws=(Law.create(0, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=2),),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_harbor(world, 0) is True
+    assert market_fee_for(world, 0) == 2
+    assert effective_market_fee(world, 0) == 2 - HARBOR_MARKET_FEE_DISCOUNT
+    floored = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp Harbor", CityKind.HARBOR),),
+        laws=(Law.create(0, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=1),),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert effective_market_fee(floored, 0) == 0
+    bare = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(Law.create(0, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=2),),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_harbor(bare, 0) is False
+    assert effective_market_fee(bare, 0) == 2
+
+
+def test_harbor_stacks_with_bureaucracy_market_fee_discount() -> None:
+    """Harbor and bureaucracy market-fee discounts stack at the same seat."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp Harbor", CityKind.HARBOR),),
+        laws=(Law.create(0, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=3),),
+        institutions=(
+            Institution.create(
+                0, 0, 0, "Camp Bureaucracy", InstitutionKind.BUREAUCRACY
+            ),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_harbor(world, 0) is True
+    assert location_has_active_bureaucracy(world, 0) is True
+    assert market_fee_for(world, 0) == 3
+    assert effective_market_fee(world, 0) == (
+        3 - BUREAUCRACY_MARKET_FEE_DISCOUNT - HARBOR_MARKET_FEE_DISCOUNT
+    )

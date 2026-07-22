@@ -38,6 +38,7 @@ def test_observe_emits_cities_observed_without_mutating_world() -> None:
     assert events[0].active_lazaretto_count == 0
     assert events[0].active_foundry_count == 0
     assert events[0].active_quarry_count == 0
+    assert events[0].active_harbor_count == 0
 
 
 def test_observe_can_suppress_events() -> None:
@@ -151,6 +152,26 @@ def test_observe_reports_active_quarry_count() -> None:
     events = [event for event in bus.history if isinstance(event, CitiesObserved)]
     assert len(events) == 1
     assert events[0].active_quarry_count == 1
+    assert events[0].total_residents == 1
+
+
+def test_observe_reports_active_harbor_count() -> None:
+    """observe publishes the active harbor city count."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Harbor", CityKind.HARBOR),
+        ),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    bus = EventBus()
+    CitySystem().observe(world, bus=bus)
+    events = [event for event in bus.history if isinstance(event, CitiesObserved)]
+    assert len(events) == 1
+    assert events[0].active_harbor_count == 1
     assert events[0].total_residents == 1
 
 
