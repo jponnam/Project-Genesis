@@ -9,6 +9,7 @@ from civitas.domain import (
     ARCHIVE_RETRIEVAL_LIMIT_BONUS,
     ASTRONOMY_RETRIEVAL_LIMIT_BONUS,
     BUREAUCRACY_MARKET_FEE_DISCOUNT,
+    CALENDAR_RETRIEVAL_LIMIT_BONUS,
     CAMP_ABACUS,
     CAMP_ASTRONOMY,
     CAMP_FIRE,
@@ -905,6 +906,83 @@ def test_star_chart_stacks_with_archive_library_and_observatory() -> None:
         + LIBRARY_RETRIEVAL_LIMIT_BONUS
         + OBSERVATORY_RETRIEVAL_LIMIT_BONUS
         + ASTRONOMY_RETRIEVAL_LIMIT_BONUS
+    )
+
+
+def test_calendar_raises_retrieval_limit_for_subjects() -> None:
+    """Active CALENDAR raises retrieval limit for living subjects only."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(Law.create(0, 0, "Camp Calendar", LawKind.CALENDAR, flat_amount=5),),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert effective_retrieval_limit(world, agent) == (
+        DEFAULT_RETRIEVAL_LIMIT + CALENDAR_RETRIEVAL_LIMIT_BONUS
+    )
+    bare = _world()
+    assert effective_retrieval_limit(bare, bare.agents[0]) == DEFAULT_RETRIEVAL_LIMIT
+
+
+def test_calendar_stacks_with_archive_library_observatory_and_star_chart() -> None:
+    """Calendar retrieval bonus stacks with archive/library/observatory/star chart."""
+    discovered_pottery = CAMP_POTTERY.model_copy(update={"discovered": True})
+    discovered_irrigation = CAMP_IRRIGATION.model_copy(update={"discovered": True})
+    discovered_metallurgy = CAMP_METALLURGY.model_copy(update={"discovered": True})
+    discovered_writing = CAMP_WRITING.model_copy(update={"discovered": True})
+    discovered_math = CAMP_MATHEMATICS.model_copy(update={"discovered": True})
+    discovered_astronomy = CAMP_ASTRONOMY.model_copy(update={"discovered": True})
+    active_star_chart = CAMP_STAR_CHART.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Library", CityKind.LIBRARY),
+        ),
+        institutions=(
+            Institution.create(0, 0, 1, "Library Archive", InstitutionKind.ARCHIVE),
+        ),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 1, 1, "Library Observatory", InfrastructureKind.OBSERVATORY
+            ),
+        ),
+        laws=(Law.create(0, 0, "Camp Calendar", LawKind.CALENDAR),),
+        technologies=(
+            CAMP_FIRE,
+            discovered_pottery,
+            discovered_irrigation,
+            discovered_metallurgy,
+            discovered_writing,
+            discovered_math,
+            discovered_astronomy,
+        ),
+        innovations=(
+            CAMP_FIRE_HEARTH,
+            CAMP_POTTERY_CRAFT,
+            CAMP_IRRIGATION_CANAL,
+            CAMP_FORGE,
+            CAMP_SCRIBE,
+            CAMP_ABACUS,
+            active_star_chart,
+        ),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_archive(world, agent.location_id) is True
+    assert location_has_active_library(world, agent.location_id) is True
+    assert location_has_active_observatory(world, agent.location_id) is True
+    assert effective_retrieval_limit(world, agent) == (
+        DEFAULT_RETRIEVAL_LIMIT
+        + ARCHIVE_RETRIEVAL_LIMIT_BONUS
+        + LIBRARY_RETRIEVAL_LIMIT_BONUS
+        + OBSERVATORY_RETRIEVAL_LIMIT_BONUS
+        + ASTRONOMY_RETRIEVAL_LIMIT_BONUS
+        + CALENDAR_RETRIEVAL_LIMIT_BONUS
     )
 
 

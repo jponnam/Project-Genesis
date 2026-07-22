@@ -520,6 +520,7 @@ class LawsObserved(DomainEvent):
     active_tax_schedule_count: NonNegativeInt
     active_market_fee_count: NonNegativeInt
     active_curriculum_count: NonNegativeInt
+    active_calendar_count: NonNegativeInt
 
 
 class ElectionResolved(DomainEvent):
