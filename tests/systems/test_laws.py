@@ -29,6 +29,7 @@ def test_observe_emits_laws_observed_without_mutating_world() -> None:
     assert events[0].active_tax_schedule_count == 1
     assert events[0].active_market_fee_count == 0
     assert events[0].active_curriculum_count == 0
+    assert events[0].active_calendar_count == 0
 
 
 def test_observe_can_suppress_events() -> None:

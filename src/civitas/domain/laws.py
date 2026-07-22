@@ -1,13 +1,15 @@
 """Laws: statutes attached to governments with optional fiscal effects.
 
 Laws are first-class world aggregates. Domain helpers own enactment,
-repeal, tax-schedule lookup, market-fee lookup, and curriculum teaching
-bonuses. Active ``TAX_SCHEDULE`` statutes override fallback levy
-parameters when collecting taxes. Active ``MARKET_FEE`` statutes charge a
-flat buyer fee on market listing fills (Phase 9 M10). Active
-``CURRICULUM`` statutes grant living subjects +1 teachings-per-knower
-(Phase 10 M4). Elections (voting) are a separate Phase 5 aggregate, as
-are institutions.
+repeal, tax-schedule lookup, market-fee lookup, curriculum teaching
+bonuses, and calendar retrieval bonuses. Active ``TAX_SCHEDULE``
+statutes override fallback levy parameters when collecting taxes.
+Active ``MARKET_FEE`` statutes charge a flat buyer fee on market
+listing fills (Phase 9 M10). Active ``CURRICULUM`` statutes grant
+living subjects +1 teachings-per-knower (Phase 10 M4). Active
+``CALENDAR`` statutes grant living subjects +1 retrieval limit
+(Phase 10 M11). Elections (voting) are a separate Phase 5 aggregate,
+as are institutions.
 """
 
 from __future__ import annotations
@@ -33,6 +35,7 @@ class LawKind(StrEnum):
     TAX_SCHEDULE = "tax_schedule"
     MARKET_FEE = "market_fee"
     CURRICULUM = "curriculum"
+    CALENDAR = "calendar"
 
 
 # Statute kinds that allow at most one active law per government.
@@ -41,11 +44,15 @@ _UNIQUE_ACTIVE_KINDS: frozenset[LawKind] = frozenset(
         LawKind.TAX_SCHEDULE,
         LawKind.MARKET_FEE,
         LawKind.CURRICULUM,
+        LawKind.CALENDAR,
     }
 )
 
 # Kind-only teachings bonus for living subjects under an active CURRICULUM.
 CURRICULUM_TEACHINGS_PER_KNOWER_BONUS: int = 1
+
+# Kind-only retrieval-limit bonus for living subjects under an active CALENDAR.
+CALENDAR_RETRIEVAL_LIMIT_BONUS: int = 1
 
 
 class Law(BaseModel):
@@ -62,7 +69,7 @@ class Law(BaseModel):
         default=0,
         description=(
             "TAX_SCHEDULE flat poll amount, or MARKET_FEE flat fill fee; "
-            "ignored by CURRICULUM and other kinds."
+            "ignored by CURRICULUM, CALENDAR, and other kinds."
         ),
     )
     rate_bps: NonNegativeInt = Field(
@@ -124,6 +131,7 @@ class LawCensus(BaseModel):
     active_tax_schedule_count: NonNegativeInt
     active_market_fee_count: NonNegativeInt
     active_curriculum_count: NonNegativeInt
+    active_calendar_count: NonNegativeInt
 
 
 def law_by_id(world: World, law_id: LawId | int) -> Law | None:
@@ -241,6 +249,36 @@ def curriculum_teachings_bonus_for(world: World, agent: Agent) -> int:
     return CURRICULUM_TEACHINGS_PER_KNOWER_BONUS
 
 
+def active_calendar_law(
+    world: World,
+    government_id: GovernmentId | int,
+) -> Law | None:
+    """Return the active calendar statute for ``government_id``, if any.
+
+    When multiple active ``CALENDAR`` laws exist (should not under
+    uniqueness rules), the lowest ``law_id`` wins.
+    """
+    for law in active_laws(world, government_id):
+        if law.kind == LawKind.CALENDAR:
+            return law
+    return None
+
+
+def calendar_retrieval_bonus_for(world: World, agent: Agent) -> int:
+    """Return +1 when ``agent`` is a living subject under active CALENDAR.
+
+    The statute kind alone enables the bonus; ``flat_amount`` is ignored.
+    """
+    if not agent.is_alive():
+        return 0
+    government = government_at(world, agent.location_id)
+    if government is None:
+        return 0
+    if active_calendar_law(world, government.government_id) is None:
+        return 0
+    return CALENDAR_RETRIEVAL_LIMIT_BONUS
+
+
 def _has_active_kind(
     world: World,
     government_id: GovernmentId,
@@ -311,6 +349,7 @@ def census_laws(world: World) -> LawCensus:
     active_tax = sum(1 for law in active if law.kind == LawKind.TAX_SCHEDULE)
     active_fee = sum(1 for law in active if law.kind == LawKind.MARKET_FEE)
     active_curriculum = sum(1 for law in active if law.kind == LawKind.CURRICULUM)
+    active_calendar = sum(1 for law in active if law.kind == LawKind.CALENDAR)
     return LawCensus(
         tick=world.tick,
         law_count=len(laws),
@@ -320,19 +359,23 @@ def census_laws(world: World) -> LawCensus:
         active_tax_schedule_count=active_tax,
         active_market_fee_count=active_fee,
         active_curriculum_count=active_curriculum,
+        active_calendar_count=active_calendar,
     )
 
 
 __all__ = [
+    "CALENDAR_RETRIEVAL_LIMIT_BONUS",
     "CAMP_POLL_TAX_LAW",
     "CURRICULUM_TEACHINGS_PER_KNOWER_BONUS",
     "Law",
     "LawCensus",
     "LawKind",
+    "active_calendar_law",
     "active_curriculum_law",
     "active_laws",
     "active_market_fee_law",
     "active_tax_schedule",
+    "calendar_retrieval_bonus_for",
     "census_laws",
     "curriculum_teachings_bonus_for",
     "default_laws",

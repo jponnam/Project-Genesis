@@ -122,16 +122,14 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 10 — Milestone 10: Astronomy technology**
+**Phase 10 — Milestone 11: Calendar laws**
 
-``TechnologyKind.ASTRONOMY`` continues the tech tree after mathematics
-(``CAMP_ASTRONOMY`` id=6, prerequisite mathematics). Research stays
-locked until mathematics is discovered. ``InnovationKind.STAR_CHART``
-seeds inactive; when active it grants ``+1`` retrieval limit
-society-wide (``ASTRONOMY_RETRIEVAL_LIMIT_BONUS``), stacking with
-archive, library, and observatory via ``effective_retrieval_limit``.
-Knowledge fact ``ASTRONOMY_FACT`` diffuses after discovery. Census
-tracks astronomy discovery, star-chart activation, and knower counts.
+``LawKind.CALENDAR`` is a kind-only statute (``flat_amount`` ignored; not
+seeded). At most one active calendar per government. Living subjects of a
+government with an active calendar receive ``+1`` retrieval limit via
+``calendar_retrieval_bonus_for``, stacking with archive, library,
+observatory, and star chart through ``effective_retrieval_limit``. Census
+and ``LawsObserved`` report ``active_calendar_count``.
 
 ### Completed
 
@@ -217,6 +215,7 @@ JSONL storage → `civitas run`
 - Milestone 8: Academy institutions
 - Milestone 9: Observatory infrastructure
 - Milestone 10: Astronomy technology
+- Milestone 11: Calendar laws
 
 ## License
 
