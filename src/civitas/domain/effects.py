@@ -85,9 +85,12 @@ architect/curriculum). Phase 14 Milestone 9 adds BEACON retrieval-limit
 bonuses at the infrastructure seat (stacking with archive, library,
 observatory, lyceum, star chart, plumb line, map, and calendar). Phase 14
 Milestone 10 adds a global SAIL water-gather bonus (stacking with pottery
-craft and irrigation canal). The action executor, retrieval path, market
-fills, knowledge diffusion, and research progression read these helpers;
-``EffectsSystem`` only observes coverage. Systems never call each other.
+craft and irrigation canal). Phase 14 Milestone 11 adds CUSTOMS law
+PRODUCE energy discounts for living subjects (stacking with guild,
+workshop, foundry, abacus, and pulley). The action executor, retrieval
+path, market fills, knowledge diffusion, and research progression read
+these helpers; ``EffectsSystem`` only observes coverage. Systems never
+call each other.
 """
 
 from __future__ import annotations
@@ -109,6 +112,7 @@ from civitas.domain.laws import (
     building_codes_move_discount_for,
     calendar_retrieval_bonus_for,
     curriculum_teachings_bonus_for,
+    customs_produce_discount_for,
     market_fee_for,
     passage_move_discount_for,
     quarantine_rest_bonus_for,
@@ -962,13 +966,14 @@ def move_energy_discount(world: World, agent: Agent) -> float:
 
 
 def produce_energy_discount(world: World, agent: Agent) -> float:
-    """Return PRODUCE energy discount from craft seats, abacus, and pulley.
+    """Return PRODUCE energy discount from craft seats, statutes, and tech.
 
     An active GUILD at the agent's location contributes
     ``GUILD_PRODUCE_ENERGY_DISCOUNT``. An active WORKSHOP at the agent's
     location contributes ``WORKSHOP_PRODUCE_ENERGY_DISCOUNT``. An active
     FOUNDRY city at the agent's location contributes
-    ``FOUNDRY_PRODUCE_ENERGY_DISCOUNT``. An active ABACUS innovation
+    ``FOUNDRY_PRODUCE_ENERGY_DISCOUNT``. An active ``CUSTOMS`` statute
+    contributes its subject discount. An active ABACUS innovation
     contributes ``MATHEMATICS_PRODUCE_ENERGY_DISCOUNT`` society-wide. An
     active PULLEY innovation contributes
     ``ENGINEERING_PRODUCE_ENERGY_DISCOUNT`` society-wide. All stack when
@@ -981,6 +986,7 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
         discount += WORKSHOP_PRODUCE_ENERGY_DISCOUNT
     if location_has_active_foundry(world, agent.location_id):
         discount += FOUNDRY_PRODUCE_ENERGY_DISCOUNT
+    discount += customs_produce_discount_for(world, agent)
     if innovation_kind_is_active(world, InnovationKind.ABACUS):
         discount += MATHEMATICS_PRODUCE_ENERGY_DISCOUNT
     if innovation_kind_is_active(world, InnovationKind.PULLEY):
@@ -1205,7 +1211,7 @@ def effective_produce_energy_cost(
     *,
     base: float,
 ) -> float:
-    """Return PRODUCE energy cost including guild, abacus, and pulley discounts."""
+    """Return PRODUCE energy cost including craft, statute, and tech discounts."""
     if base < 0:
         return 0.0
     discounted = base - produce_energy_discount(world, agent)
@@ -1314,6 +1320,7 @@ def census_effects(world: World) -> EffectsCensus:
         )
     )
     # Produce cost potential at craft seats, plus society-wide discounts.
+    # Statute discounts (customs) are omitted.
     produce_discount = GUILD_PRODUCE_ENERGY_DISCOUNT if guilds else 0.0
     if workshops:
         produce_discount += WORKSHOP_PRODUCE_ENERGY_DISCOUNT
