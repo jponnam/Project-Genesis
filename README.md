@@ -120,11 +120,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 8 — Milestone 2: Infrastructure effects**
+**Phase 8 — Milestone 3: Birth knowledge inheritance**
 
-Active `WELL` infrastructure boosts DRINK restore for agents at the well
-seat. Innovation bonuses from Milestone 1 remain in place; `EffectsSystem`
-now also reports well coverage and drink-restore potential.
+Newborns inherit their parent's knowledge facts at birth. `BirthSystem`
+emits `KnowledgeLearned` with `source=birth` (teacher = parent) for each
+inherited fact, so cultural knowledge persists across generations.
 
 ### Completed
 
@@ -182,6 +182,7 @@ JSONL storage → `civitas run`
 **Phase 8:**
 - Milestone 1: Effect wiring
 - Milestone 2: Infrastructure effects
+- Milestone 3: Birth knowledge inheritance
 
 ## License
 

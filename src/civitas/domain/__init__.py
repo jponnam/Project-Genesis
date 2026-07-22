@@ -45,6 +45,7 @@ from civitas.domain.birth import (
     agent_age_ticks,
     apply_birth,
     can_birth,
+    inherit_knowledge,
     inherit_personality,
 )
 from civitas.domain.cities import (
@@ -913,6 +914,7 @@ __all__ = [
     "infrastructure_by_id",
     "infrastructure_for",
     "infrastructure_for_city",
+    "inherit_knowledge",
     "inherit_personality",
     "innovation_by_id",
     "innovation_by_kind",
