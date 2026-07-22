@@ -30,6 +30,7 @@ from civitas.domain import (
     CAMP_ASTRONOMY,
     CAMP_BELLOWS,
     CAMP_BLUEPRINT,
+    CAMP_CARPENTRY,
     CAMP_CARTOGRAPHY,
     CAMP_COMPASS,
     CAMP_COPPICE,
@@ -68,6 +69,7 @@ from civitas.domain import (
     CAMP_REMEDY,
     CAMP_RHETORIC,
     CAMP_SAIL,
+    CAMP_SAWMILL,
     CAMP_SCRIBE,
     CAMP_SEAFARING,
     CAMP_SMITHING,
@@ -80,6 +82,7 @@ from civitas.domain import (
     CAMP_TOOLMAKING,
     CAMP_WRITING,
     CARAVAN_MOVE_ENERGY_DISCOUNT,
+    CARPENTRY_WOOD_GATHER_BONUS,
     CARTOGRAPHER_TEACHINGS_PER_KNOWER_BONUS,
     CARTOGRAPHY_RETRIEVAL_LIMIT_BONUS,
     CLINIC_DRINK_RESTORE_BONUS,
@@ -1170,6 +1173,112 @@ def test_coppice_stacks_with_scaffold_wood_gather() -> None:
     assert location_has_active_scaffold(world, agent.location_id) is True
     wood_bonus = FORESTRY_WOOD_GATHER_BONUS + SCAFFOLD_WOOD_GATHER_BONUS
     assert gather_amount_bonus(world, "wood") == FORESTRY_WOOD_GATHER_BONUS
+    assert (
+        gather_amount_bonus(world, "wood", location_id=agent.location_id) == wood_bonus
+    )
+    assert effective_gather_amount(world, "wood", agent=agent) == (
+        DEFAULT_GATHER_AMOUNT + wood_bonus
+    )
+
+
+def test_sawmill_raises_wood_gather_society_wide() -> None:
+    """Active sawmill raises wood gather amount for every agent."""
+    discovered_carpentry = CAMP_CARPENTRY.model_copy(update={"discovered": True})
+    active_sawmill = CAMP_SAWMILL.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        technologies=tuple(
+            discovered_carpentry
+            if item.technology_id == CAMP_CARPENTRY.technology_id
+            else item
+            for item in default_technologies()
+        ),
+        innovations=tuple(
+            active_sawmill
+            if item.innovation_id == CAMP_SAWMILL.innovation_id
+            else item
+            for item in default_innovations()
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert gather_amount_bonus(world, "wood") == CARPENTRY_WOOD_GATHER_BONUS
+    assert gather_amount_bonus(world, "food") == 0
+    assert gather_amount_bonus(world, "water") == 0
+    assert gather_amount_bonus(world, "stone") == 0
+    assert effective_gather_amount(world, "wood") == (
+        DEFAULT_GATHER_AMOUNT + CARPENTRY_WOOD_GATHER_BONUS
+    )
+    bare = _world()
+    assert gather_amount_bonus(bare, "wood") == 0
+    assert effective_gather_amount(bare, "wood") == DEFAULT_GATHER_AMOUNT
+
+
+def test_sawmill_stacks_with_coppice_society_wide_wood_gather() -> None:
+    """Sawmill wood gather bonus stacks with the coppice society-wide bonus."""
+    discovered_forestry = CAMP_FORESTRY.model_copy(update={"discovered": True})
+    discovered_carpentry = CAMP_CARPENTRY.model_copy(update={"discovered": True})
+    active_coppice = CAMP_COPPICE.model_copy(update={"active": True})
+    active_sawmill = CAMP_SAWMILL.model_copy(update={"active": True})
+    discovered = {
+        CAMP_FORESTRY.technology_id: discovered_forestry,
+        CAMP_CARPENTRY.technology_id: discovered_carpentry,
+    }
+    active = {
+        CAMP_COPPICE.innovation_id: active_coppice,
+        CAMP_SAWMILL.innovation_id: active_sawmill,
+    }
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        technologies=tuple(
+            discovered.get(item.technology_id, item)
+            for item in default_technologies()
+        ),
+        innovations=tuple(
+            active.get(item.innovation_id, item) for item in default_innovations()
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    wood_bonus = FORESTRY_WOOD_GATHER_BONUS + CARPENTRY_WOOD_GATHER_BONUS
+    assert gather_amount_bonus(world, "wood") == wood_bonus
+    assert effective_gather_amount(world, "wood") == (
+        DEFAULT_GATHER_AMOUNT + wood_bonus
+    )
+
+
+def test_sawmill_stacks_with_scaffold_wood_gather() -> None:
+    """Sawmill wood gather bonus stacks with the scaffold seat bonus."""
+    discovered_carpentry = CAMP_CARPENTRY.model_copy(update={"discovered": True})
+    active_sawmill = CAMP_SAWMILL.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 0, 0, "Camp Scaffold", InfrastructureKind.SCAFFOLD
+            ),
+        ),
+        technologies=tuple(
+            discovered_carpentry
+            if item.technology_id == CAMP_CARPENTRY.technology_id
+            else item
+            for item in default_technologies()
+        ),
+        innovations=tuple(
+            active_sawmill
+            if item.innovation_id == CAMP_SAWMILL.innovation_id
+            else item
+            for item in default_innovations()
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_scaffold(world, agent.location_id) is True
+    wood_bonus = CARPENTRY_WOOD_GATHER_BONUS + SCAFFOLD_WOOD_GATHER_BONUS
+    assert gather_amount_bonus(world, "wood") == CARPENTRY_WOOD_GATHER_BONUS
     assert (
         gather_amount_bonus(world, "wood", location_id=agent.location_id) == wood_bonus
     )

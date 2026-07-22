@@ -175,7 +175,9 @@ bellows, abacus, pulley, customs, labor, and loom). Phase 17 Milestone 12
 adds IRONWORKS city PRODUCE energy discounts at the city seat (stacking
 with guild, workshop, weaver, smelter, foundry, fulling mill, forge works,
 mill town, tannery, bellows, lathe, abacus, pulley, customs, labor, safety
-codes, and loom).
+codes, and loom). Phase 18 Milestone 1 adds a global SAWMILL wood-gather
+bonus society-wide (stacking with coppice society-wide, the scaffold seat,
+the conservation subject bonus, and the pastoral city seat).
 The action
 executor,
 retrieval
@@ -242,6 +244,7 @@ IRRIGATION_WATER_GATHER_BONUS: int = 1
 SEAFARING_WATER_GATHER_BONUS: int = 1
 DITCH_WATER_GATHER_BONUS: int = 1
 FORESTRY_WOOD_GATHER_BONUS: int = 1
+CARPENTRY_WOOD_GATHER_BONUS: int = 1
 METALLURGY_STONE_GATHER_BONUS: int = 1
 MINING_STONE_GATHER_BONUS: int = 1
 WRITING_TEACHINGS_PER_KNOWER_BONUS: int = 1
@@ -1313,8 +1316,9 @@ def gather_amount_bonus(
     active STOREHOUSE, WAYSTATION, ENTREPOT city, FARMSTEAD city,
     GRANARY, HUSBANDMAN, and/or TERRACE at ``location_id`` when provided
     (they stack). Wood bonuses come from an active COPPICE innovation
-    society-wide, plus an active SCAFFOLD and/or PASTORAL city at
-    ``location_id`` when provided (they stack).
+    society-wide and an active SAWMILL innovation society-wide, plus an
+    active SCAFFOLD and/or PASTORAL city at ``location_id`` when provided
+    (they stack).
     """
     bonus = 0
     if resource == WATER_RESOURCE:
@@ -1366,6 +1370,8 @@ def gather_amount_bonus(
     elif resource == ResourceKind.WOOD.value:
         if innovation_kind_is_active(world, InnovationKind.COPPICE):
             bonus += FORESTRY_WOOD_GATHER_BONUS
+        if innovation_kind_is_active(world, InnovationKind.SAWMILL):
+            bonus += CARPENTRY_WOOD_GATHER_BONUS
         if location_id is not None:
             if location_has_active_scaffold(world, location_id):
                 bonus += SCAFFOLD_WOOD_GATHER_BONUS

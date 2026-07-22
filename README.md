@@ -126,17 +126,18 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 | **15** | Agriculture and husbandry |
 | **16** | Textiles and craft goods |
 | **17** | Mining and minerals |
+| **18** | Timber and carpentry |
 
 ## Current Milestone
 
-**Phase 17 Milestone 12: Ironworks cities**
+**Phase 18 Milestone 1: Carpentry technology**
 
-``CityKind.IRONWORKS`` is a non-capital specialized city seat for metal
-production whose living residents gain a PRODUCE energy discount. It
-stacks with the full produce chain: guild, workshop, weaver, smelter,
-foundry, fulling mill, forge works, mill town, tannery, bellows, lathe,
-abacus, pulley, customs, labor, safety codes, and loom. Ironworks cannot
-be capitals and are not seeded.
+``TechnologyKind.CARPENTRY`` is a society-level technology requiring
+toolmaking, adopted through the ``SAWMILL`` innovation. An active sawmill
+grants a society-wide WOOD gather bonus that stacks with the coppice
+society-wide bonus, the scaffold seat, the conservation subject bonus,
+and the pastoral city seat. Discovery flows through the standard
+research, innovation, and knowledge-diffusion pipeline.
 
 ### Completed
 
@@ -322,6 +323,9 @@ JSONL storage → `civitas run`
 - Milestone 10: Toolmaking technology
 - Milestone 11: Safety codes laws
 - Milestone 12: Ironworks cities
+
+**Phase 18:**
+- Milestone 1: Carpentry technology
 
 ## License
 

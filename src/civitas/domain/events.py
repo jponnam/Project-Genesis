@@ -700,6 +700,7 @@ class TechnologiesObserved(DomainEvent):
     discovered_mining_count: NonNegativeInt = 0
     discovered_smithing_count: NonNegativeInt = 0
     discovered_toolmaking_count: NonNegativeInt = 0
+    discovered_carpentry_count: NonNegativeInt = 0
     locked_count: NonNegativeInt = 0
     researchable_count: NonNegativeInt = 0
 
@@ -784,6 +785,7 @@ class InnovationsObserved(DomainEvent):
     active_pickaxe_count: NonNegativeInt = 0
     active_bellows_count: NonNegativeInt = 0
     active_lathe_count: NonNegativeInt = 0
+    active_sawmill_count: NonNegativeInt = 0
 
 
 class KnowledgeLearned(DomainEvent):
@@ -828,6 +830,7 @@ class KnowledgeObserved(DomainEvent):
     mining_knower_count: NonNegativeInt = 0
     smithing_knower_count: NonNegativeInt = 0
     toolmaking_knower_count: NonNegativeInt = 0
+    carpentry_knower_count: NonNegativeInt = 0
     total_fact_instances: NonNegativeInt
     coverage_bps: NonNegativeInt
 
