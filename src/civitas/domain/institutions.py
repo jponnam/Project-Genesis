@@ -6,14 +6,15 @@ and Milestone 8 academies, plus Phase 11 Milestone 3 temples,
 Milestone 6 schools, and Milestone 8 lyceums, plus Phase 12 Milestone 3
 hospitals, Milestone 6 apothecaries, and Milestone 8 collegia, plus
 Phase 13 Milestone 3 workshops, Milestone 6 masons, and Milestone 8
-architects, plus Phase 14 Milestone 3 caravans. Institutions are
-gov-attached civic organizations with a seat location inside the
-government's jurisdiction, an optional officer, and an integer budget
-funded from the parent government treasury. Councils, guilds, archives,
-bureaucracies, academies, temples, schools, lyceums, hospitals,
-apothecaries, collegia, workshops, masons, architects, and caravans
-coexist; this package seeds a single ``COUNCIL``. Writing-gated archive
-creation is a later milestone.
+architects, plus Phase 14 Milestone 3 caravans and Milestone 6
+merchants. Institutions are gov-attached civic organizations with a
+seat location inside the government's jurisdiction, an optional
+officer, and an integer budget funded from the parent government
+treasury. Councils, guilds, archives, bureaucracies, academies,
+temples, schools, lyceums, hospitals, apothecaries, collegia,
+workshops, masons, architects, caravans, and merchants coexist; this
+package seeds a single ``COUNCIL``. Writing-gated archive creation is
+a later milestone.
 """
 
 from __future__ import annotations
@@ -51,6 +52,7 @@ class InstitutionKind(StrEnum):
     MASON = "mason"
     ARCHITECT = "architect"
     CARAVAN = "caravan"
+    MERCHANT = "merchant"
 
 
 class Institution(BaseModel):
@@ -135,6 +137,7 @@ class InstitutionCensus(BaseModel):
     active_mason_count: NonNegativeInt = 0
     active_architect_count: NonNegativeInt = 0
     active_caravan_count: NonNegativeInt = 0
+    active_merchant_count: NonNegativeInt = 0
     total_budget: NonNegativeInt = 0
     funded_count: NonNegativeInt = 0
 
@@ -454,6 +457,9 @@ def census_institutions(world: World) -> InstitutionCensus:
     active_caravans = sum(
         1 for institution in active if institution.kind is InstitutionKind.CARAVAN
     )
+    active_merchants = sum(
+        1 for institution in active if institution.kind is InstitutionKind.MERCHANT
+    )
     total_budget = institution_budget_total(world)
     funded_count = sum(1 for institution in institutions if institution.budget > 0)
     return InstitutionCensus(
@@ -479,6 +485,7 @@ def census_institutions(world: World) -> InstitutionCensus:
         active_mason_count=active_masons,
         active_architect_count=active_architects,
         active_caravan_count=active_caravans,
+        active_merchant_count=active_merchants,
         total_budget=total_budget,
         funded_count=funded_count,
     )

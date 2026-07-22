@@ -85,6 +85,7 @@ from civitas.domain import (
     MASON_STONE_GATHER_BONUS,
     MATHEMATICS_PRODUCE_ENERGY_DISCOUNT,
     MEDICINE_REST_RESTORE_BONUS,
+    MERCHANT_MARKET_FEE_DISCOUNT,
     METALLURGY_STONE_GATHER_BONUS,
     NAVIGATION_MOVE_ENERGY_DISCOUNT,
     OBSERVATORY_RETRIEVAL_LIMIT_BONUS,
@@ -163,6 +164,7 @@ from civitas.domain import (
     location_has_active_library,
     location_has_active_lyceum,
     location_has_active_mason,
+    location_has_active_merchant,
     location_has_active_observatory,
     location_has_active_quarry,
     location_has_active_road,
@@ -3901,4 +3903,69 @@ def test_harbor_stacks_with_bureaucracy_market_fee_discount() -> None:
     assert market_fee_for(world, 0) == 3
     assert effective_market_fee(world, 0) == (
         3 - BUREAUCRACY_MARKET_FEE_DISCOUNT - HARBOR_MARKET_FEE_DISCOUNT
+    )
+
+
+def test_merchant_discounts_market_fee_at_seat() -> None:
+    """Active merchant reduces market fee by 1 at its seat (floor 0)."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(Law.create(0, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=2),),
+        institutions=(
+            Institution.create(0, 0, 0, "Camp Merchant", InstitutionKind.MERCHANT),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_merchant(world, 0) is True
+    assert market_fee_for(world, 0) == 2
+    assert effective_market_fee(world, 0) == 2 - MERCHANT_MARKET_FEE_DISCOUNT
+    floored = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(Law.create(0, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=1),),
+        institutions=(
+            Institution.create(0, 0, 0, "Camp Merchant", InstitutionKind.MERCHANT),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert effective_market_fee(floored, 0) == 0
+    bare = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(Law.create(0, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=2),),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_merchant(bare, 0) is False
+    assert effective_market_fee(bare, 0) == 2
+
+
+def test_merchant_stacks_with_bureaucracy_and_harbor_market_fee_discount() -> None:
+    """Merchant, bureaucracy, and harbor market-fee discounts stack."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp Harbor", CityKind.HARBOR),),
+        laws=(Law.create(0, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=4),),
+        institutions=(
+            Institution.create(
+                0, 0, 0, "Camp Bureaucracy", InstitutionKind.BUREAUCRACY
+            ),
+            Institution.create(1, 0, 0, "Camp Merchant", InstitutionKind.MERCHANT),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_harbor(world, 0) is True
+    assert location_has_active_bureaucracy(world, 0) is True
+    assert location_has_active_merchant(world, 0) is True
+    assert market_fee_for(world, 0) == 4
+    assert effective_market_fee(world, 0) == (
+        4
+        - BUREAUCRACY_MARKET_FEE_DISCOUNT
+        - HARBOR_MARKET_FEE_DISCOUNT
+        - MERCHANT_MARKET_FEE_DISCOUNT
     )
