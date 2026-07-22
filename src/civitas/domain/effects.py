@@ -55,10 +55,11 @@ Milestone 4 adds BRIDGE MOVE energy discounts at the infrastructure seat
 (stacking with ROAD and BUILDING_CODES). Phase 13 Milestone 5 adds FOUNDRY
 city PRODUCE energy discounts at the city seat (stacking with guild,
 workshop, abacus, and pulley). Phase 13 Milestone 6 adds MASON stone-gather
-bonuses at the institution seat (stacking with forge). The action executor,
-retrieval path, market fills, knowledge diffusion, and research progression
-read these helpers; ``EffectsSystem`` only observes coverage. Systems never
-call each other.
+bonuses at the institution seat (stacking with forge). Phase 13 Milestone 7
+adds a global BLUEPRINT research-points bonus (stacking with syllogism and
+dissection). The action executor, retrieval path, market fills, knowledge
+diffusion, and research progression read these helpers; ``EffectsSystem``
+only observes coverage. Systems never call each other.
 """
 
 from __future__ import annotations
@@ -118,6 +119,7 @@ COLLEGIUM_TEACHINGS_PER_KNOWER_BONUS: int = 1
 PHILOSOPHY_TEACHINGS_PER_KNOWER_BONUS: int = 1
 LOGIC_RESEARCH_POINTS_BONUS: int = 1
 ANATOMY_RESEARCH_POINTS_BONUS: int = 1
+ARCHITECTURE_RESEARCH_POINTS_BONUS: int = 1
 RHETORIC_SOCIALIZE_RESTORE_BONUS: float = 0.05
 AGORA_SOCIALIZE_RESTORE_BONUS: float = 0.05
 WELL_DRINK_RESTORE_BONUS: float = 0.05
@@ -653,6 +655,8 @@ def research_points_bonus(world: World) -> int:
         bonus += LOGIC_RESEARCH_POINTS_BONUS
     if innovation_kind_is_active(world, InnovationKind.DISSECTION):
         bonus += ANATOMY_RESEARCH_POINTS_BONUS
+    if innovation_kind_is_active(world, InnovationKind.BLUEPRINT):
+        bonus += ARCHITECTURE_RESEARCH_POINTS_BONUS
     return bonus
 
 

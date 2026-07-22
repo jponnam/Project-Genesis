@@ -125,10 +125,10 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 13 Milestone 6: Mason institutions**
+**Phase 13 Milestone 7: Architecture technology**
 
-``InstitutionKind.MASON`` grants a seat-scoped stone gather bonus that stacks
-with forge metallurgy.
+``TechnologyKind.ARCHITECTURE`` requires engineering. Its inactive ``BLUEPRINT``
+innovation grants +1 research points per tick when activated.
 
 ### Completed
 
@@ -252,6 +252,7 @@ JSONL storage → `civitas run`
 - Milestone 4: Bridge infrastructure
 - Milestone 5: Foundry cities
 - Milestone 6: Mason institutions
+- Milestone 7: Architecture technology
 
 ## License
 

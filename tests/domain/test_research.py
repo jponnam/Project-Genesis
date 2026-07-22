@@ -8,6 +8,8 @@ from pydantic import ValidationError
 from civitas.domain import (
     CAMP_ANATOMY,
     CAMP_ANATOMY_RESEARCH,
+    CAMP_ARCHITECTURE,
+    CAMP_ARCHITECTURE_RESEARCH,
     CAMP_ASTRONOMY,
     CAMP_ASTRONOMY_RESEARCH,
     CAMP_ENGINEERING,
@@ -68,7 +70,7 @@ def _world(
     )
 
 
-def test_default_research_progress_seeds_pottery_through_engineering() -> None:
+def test_default_research_progress_seeds_pottery_through_architecture() -> None:
     """Canonical research tracks undiscovered technologies at zero points."""
     assert default_research_progress() == (
         CAMP_POTTERY_RESEARCH,
@@ -84,6 +86,7 @@ def test_default_research_progress_seeds_pottery_through_engineering() -> None:
         CAMP_ANATOMY_RESEARCH,
         CAMP_HYGIENE_RESEARCH,
         CAMP_ENGINEERING_RESEARCH,
+        CAMP_ARCHITECTURE_RESEARCH,
     )
     assert CAMP_POTTERY_RESEARCH.technology_id == CAMP_POTTERY.technology_id
     assert CAMP_POTTERY_RESEARCH.points == 0
@@ -155,6 +158,7 @@ def test_advance_research_increments_and_discovers() -> None:
         CAMP_ANATOMY_RESEARCH,
         CAMP_HYGIENE_RESEARCH,
         CAMP_ENGINEERING_RESEARCH,
+        CAMP_ARCHITECTURE_RESEARCH,
     )
     assert world.technologies[1].discovered is True
     assert world.technologies[1].kind is TechnologyKind.POTTERY
@@ -182,6 +186,7 @@ def test_advance_research_large_step_discovers_immediately() -> None:
         CAMP_ANATOMY_RESEARCH,
         CAMP_HYGIENE_RESEARCH,
         CAMP_ENGINEERING_RESEARCH,
+        CAMP_ARCHITECTURE_RESEARCH,
     )
     assert world.technologies[1].discovered is True
 
@@ -637,6 +642,7 @@ def test_active_syllogism_adds_research_point_per_tick() -> None:
             CAMP_ANATOMY,
             CAMP_HYGIENE,
             CAMP_ENGINEERING,
+            CAMP_ARCHITECTURE,
         ),
         research_progress=(CAMP_POTTERY_RESEARCH,),
         innovations=tuple(

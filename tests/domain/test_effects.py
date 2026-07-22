@@ -9,6 +9,7 @@ from civitas.domain import (
     AGORA_SOCIALIZE_RESTORE_BONUS,
     ANATOMY_RESEARCH_POINTS_BONUS,
     APOTHECARY_DRINK_RESTORE_BONUS,
+    ARCHITECTURE_RESEARCH_POINTS_BONUS,
     ARCHIVE_RETRIEVAL_LIMIT_BONUS,
     ASSEMBLY_SOCIALIZE_RESTORE_BONUS,
     ASTRONOMY_RETRIEVAL_LIMIT_BONUS,
@@ -19,8 +20,10 @@ from civitas.domain import (
     CALENDAR_RETRIEVAL_LIMIT_BONUS,
     CAMP_ABACUS,
     CAMP_ANATOMY,
+    CAMP_ARCHITECTURE,
     CAMP_ASEPSIS,
     CAMP_ASTRONOMY,
+    CAMP_BLUEPRINT,
     CAMP_DIALECTIC,
     CAMP_DISSECTION,
     CAMP_ENGINEERING,
@@ -2868,11 +2871,13 @@ def test_dialectic_stacks_with_scribe() -> None:
 
 
 def test_syllogism_boosts_research_points_per_tick() -> None:
-    """Active syllogism and dissection stack society-wide research bonuses."""
+    """Active syllogism, dissection, and blueprint stack research bonuses."""
     discovered_logic = CAMP_LOGIC.model_copy(update={"discovered": True})
     discovered_anatomy = CAMP_ANATOMY.model_copy(update={"discovered": True})
+    discovered_architecture = CAMP_ARCHITECTURE.model_copy(update={"discovered": True})
     active_syllogism = CAMP_SYLLOGISM.model_copy(update={"active": True})
     active_dissection = CAMP_DISSECTION.model_copy(update={"active": True})
+    active_blueprint = CAMP_BLUEPRINT.model_copy(update={"active": True})
     world = World(
         config=SimulationConfig(agent_count=1, seed=1),
         locations=(CAMP_LOCATION,),
@@ -2889,6 +2894,9 @@ def test_syllogism_boosts_research_points_per_tick() -> None:
             CAMP_RHETORIC,
             CAMP_MEDICINE,
             discovered_anatomy,
+            CAMP_HYGIENE,
+            CAMP_ENGINEERING,
+            discovered_architecture,
         ),
         innovations=(
             CAMP_FIRE_HEARTH,
@@ -2903,17 +2911,23 @@ def test_syllogism_boosts_research_points_per_tick() -> None:
             CAMP_ORATION,
             CAMP_REMEDY,
             active_dissection,
+            CAMP_ASEPSIS,
+            CAMP_PULLEY,
+            active_blueprint,
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
     )
     assert research_points_bonus(world) == (
-        LOGIC_RESEARCH_POINTS_BONUS + ANATOMY_RESEARCH_POINTS_BONUS
+        LOGIC_RESEARCH_POINTS_BONUS
+        + ANATOMY_RESEARCH_POINTS_BONUS
+        + ARCHITECTURE_RESEARCH_POINTS_BONUS
     )
     assert (
         effective_research_points_per_tick(world, base=DEFAULT_POINTS_PER_TICK)
         == DEFAULT_POINTS_PER_TICK
         + LOGIC_RESEARCH_POINTS_BONUS
         + ANATOMY_RESEARCH_POINTS_BONUS
+        + ARCHITECTURE_RESEARCH_POINTS_BONUS
     )
     bare = _world()
     assert research_points_bonus(bare) == 0

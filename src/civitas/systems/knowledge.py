@@ -108,6 +108,7 @@ class KnowledgeSystem:
                     anatomy_knower_count=snap.anatomy_knower_count,
                     hygiene_knower_count=snap.hygiene_knower_count,
                     engineering_knower_count=snap.engineering_knower_count,
+                    architecture_knower_count=snap.architecture_knower_count,
                     total_fact_instances=snap.total_fact_instances,
                     coverage_bps=snap.coverage_bps,
                 )

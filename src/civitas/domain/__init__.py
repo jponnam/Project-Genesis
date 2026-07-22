@@ -99,6 +99,7 @@ from civitas.domain.effects import (
     AGORA_SOCIALIZE_RESTORE_BONUS,
     ANATOMY_RESEARCH_POINTS_BONUS,
     APOTHECARY_DRINK_RESTORE_BONUS,
+    ARCHITECTURE_RESEARCH_POINTS_BONUS,
     ARCHIVE_RETRIEVAL_LIMIT_BONUS,
     ASTRONOMY_RETRIEVAL_LIMIT_BONUS,
     BATHHOUSE_REST_RESTORE_BONUS,
@@ -356,6 +357,7 @@ from civitas.domain.infrastructure import (
 from civitas.domain.innovation import (
     CAMP_ABACUS,
     CAMP_ASEPSIS,
+    CAMP_BLUEPRINT,
     CAMP_DIALECTIC,
     CAMP_DISSECTION,
     CAMP_FIRE_HEARTH,
@@ -407,6 +409,7 @@ from civitas.domain.institutions import (
 )
 from civitas.domain.knowledge import (
     ANATOMY_FACT,
+    ARCHITECTURE_FACT,
     ASTRONOMY_FACT,
     DEFAULT_MIN_TEACH_TRUST,
     DEFAULT_TEACHINGS_PER_KNOWER,
@@ -605,6 +608,7 @@ from civitas.domain.reputation import (
 )
 from civitas.domain.research import (
     CAMP_ANATOMY_RESEARCH,
+    CAMP_ARCHITECTURE_RESEARCH,
     CAMP_ASTRONOMY_RESEARCH,
     CAMP_ENGINEERING_RESEARCH,
     CAMP_HYGIENE_RESEARCH,
@@ -662,6 +666,7 @@ from civitas.domain.taxes import (
 )
 from civitas.domain.technology import (
     CAMP_ANATOMY,
+    CAMP_ARCHITECTURE,
     CAMP_ASTRONOMY,
     CAMP_ENGINEERING,
     CAMP_FIRE,
@@ -740,6 +745,8 @@ __all__ = [
     "ANATOMY_FACT",
     "ANATOMY_RESEARCH_POINTS_BONUS",
     "APOTHECARY_DRINK_RESTORE_BONUS",
+    "ARCHITECTURE_FACT",
+    "ARCHITECTURE_RESEARCH_POINTS_BONUS",
     "ARCHIVE_RETRIEVAL_LIMIT_BONUS",
     "ASSEMBLY_SOCIALIZE_RESTORE_BONUS",
     "ASTRONOMY_FACT",
@@ -753,9 +760,12 @@ __all__ = [
     "CAMP_ABACUS",
     "CAMP_ANATOMY",
     "CAMP_ANATOMY_RESEARCH",
+    "CAMP_ARCHITECTURE",
+    "CAMP_ARCHITECTURE_RESEARCH",
     "CAMP_ASEPSIS",
     "CAMP_ASTRONOMY",
     "CAMP_ASTRONOMY_RESEARCH",
+    "CAMP_BLUEPRINT",
     "CAMP_CITY",
     "CAMP_COUNCIL",
     "CAMP_DIALECTIC",
