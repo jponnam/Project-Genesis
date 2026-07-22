@@ -111,6 +111,7 @@ class KnowledgeSystem:
                     architecture_knower_count=snap.architecture_knower_count,
                     surveying_knower_count=snap.surveying_knower_count,
                     navigation_knower_count=snap.navigation_knower_count,
+                    cartography_knower_count=snap.cartography_knower_count,
                     total_fact_instances=snap.total_fact_instances,
                     coverage_bps=snap.coverage_bps,
                 )

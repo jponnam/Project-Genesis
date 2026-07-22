@@ -25,6 +25,7 @@ from civitas.domain import (
     CAMP_ASEPSIS,
     CAMP_ASTRONOMY,
     CAMP_BLUEPRINT,
+    CAMP_CARTOGRAPHY,
     CAMP_COMPASS,
     CAMP_DIALECTIC,
     CAMP_DISSECTION,
@@ -37,6 +38,7 @@ from civitas.domain import (
     CAMP_IRRIGATION_CANAL,
     CAMP_LOCATION,
     CAMP_LOGIC,
+    CAMP_MAP,
     CAMP_MATHEMATICS,
     CAMP_MEDICINE,
     CAMP_METALLURGY,
@@ -55,6 +57,7 @@ from civitas.domain import (
     CAMP_SYLLOGISM,
     CAMP_WRITING,
     CARAVAN_MOVE_ENERGY_DISCOUNT,
+    CARTOGRAPHY_RETRIEVAL_LIMIT_BONUS,
     CLINIC_DRINK_RESTORE_BONUS,
     COLLEGIUM_TEACHINGS_PER_KNOWER_BONUS,
     CURRICULUM_TEACHINGS_PER_KNOWER_BONUS,
@@ -3282,6 +3285,7 @@ def test_plumb_line_stacks_with_star_chart_and_retrieval_seats() -> None:
             CAMP_ARCHITECTURE,
             discovered_surveying,
             CAMP_NAVIGATION,
+            CAMP_CARTOGRAPHY,
         ),
         innovations=(
             CAMP_FIRE_HEARTH,
@@ -3301,6 +3305,7 @@ def test_plumb_line_stacks_with_star_chart_and_retrieval_seats() -> None:
             CAMP_BLUEPRINT,
             active_plumb_line,
             CAMP_COMPASS,
+            CAMP_MAP,
         ),
         agents=(Agent.create(agent_id=0, name="A", location_id=1),),
     )
@@ -3312,6 +3317,120 @@ def test_plumb_line_stacks_with_star_chart_and_retrieval_seats() -> None:
         + OBSERVATORY_RETRIEVAL_LIMIT_BONUS
         + ASTRONOMY_RETRIEVAL_LIMIT_BONUS
         + SURVEYING_RETRIEVAL_LIMIT_BONUS
+    )
+
+
+def test_map_raises_retrieval_limit_society_wide() -> None:
+    """Active map raises retrieval limit for every agent."""
+    discovered_cartography = CAMP_CARTOGRAPHY.model_copy(update={"discovered": True})
+    active_map = CAMP_MAP.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        technologies=tuple(
+            discovered_cartography
+            if item.technology_id == CAMP_CARTOGRAPHY.technology_id
+            else item
+            for item in default_technologies()
+        ),
+        innovations=tuple(
+            active_map if item.innovation_id == CAMP_MAP.innovation_id else item
+            for item in default_innovations()
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert effective_retrieval_limit(world, agent) == (
+        DEFAULT_RETRIEVAL_LIMIT + CARTOGRAPHY_RETRIEVAL_LIMIT_BONUS
+    )
+    bare = _world()
+    assert effective_retrieval_limit(bare, bare.agents[0]) == DEFAULT_RETRIEVAL_LIMIT
+
+
+def test_map_stacks_with_star_chart_plumb_line_seats_and_calendar() -> None:
+    """Map retrieval bonus stacks with star chart, plumb line, seats, calendar."""
+    discovered_pottery = CAMP_POTTERY.model_copy(update={"discovered": True})
+    discovered_irrigation = CAMP_IRRIGATION.model_copy(update={"discovered": True})
+    discovered_metallurgy = CAMP_METALLURGY.model_copy(update={"discovered": True})
+    discovered_writing = CAMP_WRITING.model_copy(update={"discovered": True})
+    discovered_math = CAMP_MATHEMATICS.model_copy(update={"discovered": True})
+    discovered_astronomy = CAMP_ASTRONOMY.model_copy(update={"discovered": True})
+    discovered_surveying = CAMP_SURVEYING.model_copy(update={"discovered": True})
+    discovered_cartography = CAMP_CARTOGRAPHY.model_copy(update={"discovered": True})
+    active_star_chart = CAMP_STAR_CHART.model_copy(update={"active": True})
+    active_plumb_line = CAMP_PLUMB_LINE.model_copy(update={"active": True})
+    active_map = CAMP_MAP.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Library", CityKind.LIBRARY),
+        ),
+        institutions=(
+            Institution.create(0, 0, 1, "Library Archive", InstitutionKind.ARCHIVE),
+            Institution.create(1, 0, 1, "Library Lyceum", InstitutionKind.LYCEUM),
+        ),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 1, 1, "Library Observatory", InfrastructureKind.OBSERVATORY
+            ),
+        ),
+        laws=(Law.create(0, 0, "Camp Calendar", LawKind.CALENDAR),),
+        technologies=(
+            CAMP_FIRE,
+            discovered_pottery,
+            discovered_irrigation,
+            discovered_metallurgy,
+            discovered_writing,
+            discovered_math,
+            discovered_astronomy,
+            CAMP_PHILOSOPHY,
+            CAMP_LOGIC,
+            CAMP_RHETORIC,
+            CAMP_MEDICINE,
+            CAMP_ANATOMY,
+            CAMP_HYGIENE,
+            CAMP_ENGINEERING,
+            CAMP_ARCHITECTURE,
+            discovered_surveying,
+            CAMP_NAVIGATION,
+            discovered_cartography,
+        ),
+        innovations=(
+            CAMP_FIRE_HEARTH,
+            CAMP_POTTERY_CRAFT,
+            CAMP_IRRIGATION_CANAL,
+            CAMP_FORGE,
+            CAMP_SCRIBE,
+            CAMP_ABACUS,
+            active_star_chart,
+            CAMP_DIALECTIC,
+            CAMP_SYLLOGISM,
+            CAMP_ORATION,
+            CAMP_REMEDY,
+            CAMP_DISSECTION,
+            CAMP_ASEPSIS,
+            CAMP_PULLEY,
+            CAMP_BLUEPRINT,
+            active_plumb_line,
+            CAMP_COMPASS,
+            active_map,
+        ),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    agent = world.agents[0]
+    assert effective_retrieval_limit(world, agent) == (
+        DEFAULT_RETRIEVAL_LIMIT
+        + ARCHIVE_RETRIEVAL_LIMIT_BONUS
+        + LIBRARY_RETRIEVAL_LIMIT_BONUS
+        + OBSERVATORY_RETRIEVAL_LIMIT_BONUS
+        + LYCEUM_RETRIEVAL_LIMIT_BONUS
+        + ASTRONOMY_RETRIEVAL_LIMIT_BONUS
+        + SURVEYING_RETRIEVAL_LIMIT_BONUS
+        + CARTOGRAPHY_RETRIEVAL_LIMIT_BONUS
+        + CALENDAR_RETRIEVAL_LIMIT_BONUS
     )
 
 

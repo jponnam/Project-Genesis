@@ -541,10 +541,13 @@ def test_enact_building_codes_and_uniqueness() -> None:
     with_quarantine = enact_law(with_sanitation, quarantine)
     assert with_quarantine is not None
     assert active_building_codes_law(with_quarantine, 0) == building_codes
-    assert building_codes_move_discount_for(
-        with_quarantine,
-        with_quarantine.agents[0],
-    ) == BUILDING_CODES_MOVE_ENERGY_DISCOUNT
+    assert (
+        building_codes_move_discount_for(
+            with_quarantine,
+            with_quarantine.agents[0],
+        )
+        == BUILDING_CODES_MOVE_ENERGY_DISCOUNT
+    )
 
 
 def test_enact_zoning_and_uniqueness() -> None:
@@ -640,10 +643,13 @@ def test_enact_passage_and_uniqueness() -> None:
     with_zoning = enact_law(with_codes, zoning)
     assert with_zoning is not None
     assert active_passage_law(with_zoning, 0) == passage
-    assert passage_move_discount_for(
-        with_zoning,
-        with_zoning.agents[0],
-    ) == PASSAGE_MOVE_ENERGY_DISCOUNT
+    assert (
+        passage_move_discount_for(
+            with_zoning,
+            with_zoning.agents[0],
+        )
+        == PASSAGE_MOVE_ENERGY_DISCOUNT
+    )
 
 
 def test_sanitation_bonus_requires_living_subject() -> None:

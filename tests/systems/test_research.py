@@ -27,9 +27,9 @@ def test_observe_emits_without_mutating_world() -> None:
     assert updated == world
     events = [event for event in bus.history if isinstance(event, ResearchObserved)]
     assert len(events) == 1
-    assert events[0].progress_count == 16
+    assert events[0].progress_count == 17
     assert events[0].total_points == 0
-    assert events[0].total_threshold == 160
+    assert events[0].total_threshold == 170
     assert events[0].completion_bps == 0
 
 
@@ -95,7 +95,7 @@ def test_engine_discovers_pottery_by_tick_ten() -> None:
     """Default research discovers pottery on the tenth apply tick."""
     result = SimulationEngine().run(SimulationConfig(seed=42, ticks=10, agent_count=3))
     assert result.world.technologies[1].discovered is True
-    assert len(result.world.research_progress) == 15
+    assert len(result.world.research_progress) == 16
     assert result.world.research_progress[0].technology_id.value == 2
     assert result.world.research_progress[0].points == 0
     assert result.world.research_progress[1].technology_id.value == 3
@@ -126,6 +126,8 @@ def test_engine_discovers_pottery_by_tick_ten() -> None:
     assert result.world.research_progress[13].points == 0
     assert result.world.research_progress[14].technology_id.value == 16
     assert result.world.research_progress[14].points == 0
+    assert result.world.research_progress[15].technology_id.value == 17
+    assert result.world.research_progress[15].points == 0
     discovered = [
         event for event in result.events if isinstance(event, TechnologyDiscovered)
     ]

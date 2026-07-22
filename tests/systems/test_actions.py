@@ -323,8 +323,6 @@ def test_rest_uses_active_bathhouse_restore_bonus() -> None:
     )
 
 
-
-
 def test_eat_uses_active_zoning_restore_bonus() -> None:
     """EAT through ActionExecutor includes subject-scoped zoning bonus."""
     agent = Agent.create(
@@ -333,9 +331,7 @@ def test_eat_uses_active_zoning_restore_bonus() -> None:
         needs=Needs(food=0.4, water=1.0, energy=1.0, social=1.0, safety=1.0),
     ).model_copy(
         update={
-            "inventory": Inventory(
-                stacks=(ResourceStack(resource="food", quantity=2),)
-            )
+            "inventory": Inventory(stacks=(ResourceStack(resource="food", quantity=2),))
         }
     )
     world = World(
@@ -456,9 +452,7 @@ def test_drink_action_uses_apothecary_bonus() -> None:
         locations=(CAMP_LOCATION,),
         governments=(Government.create(0, "Camp", 0, (0,)),),
         institutions=(
-            Institution.create(
-                0, 0, 0, "Camp Apothecary", InstitutionKind.APOTHECARY
-            ),
+            Institution.create(0, 0, 0, "Camp Apothecary", InstitutionKind.APOTHECARY),
         ),
         agents=(agent,),
     )

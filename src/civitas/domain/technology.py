@@ -44,6 +44,7 @@ class TechnologyKind(StrEnum):
     ARCHITECTURE = "architecture"
     SURVEYING = "surveying"
     NAVIGATION = "navigation"
+    CARTOGRAPHY = "cartography"
 
 
 class Technology(BaseModel):
@@ -211,6 +212,13 @@ CAMP_NAVIGATION: Technology = Technology.create(
     discovered=False,
     prerequisite_ids=(15,),
 )
+CAMP_CARTOGRAPHY: Technology = Technology.create(
+    17,
+    "Camp Cartography",
+    TechnologyKind.CARTOGRAPHY,
+    discovered=False,
+    prerequisite_ids=(16,),
+)
 
 
 def default_technologies() -> tuple[Technology, ...]:
@@ -233,6 +241,7 @@ def default_technologies() -> tuple[Technology, ...]:
         CAMP_ARCHITECTURE,
         CAMP_SURVEYING,
         CAMP_NAVIGATION,
+        CAMP_CARTOGRAPHY,
     )
 
 
@@ -262,6 +271,7 @@ class TechnologyCensus(BaseModel):
     discovered_architecture_count: NonNegativeInt = 0
     discovered_surveying_count: NonNegativeInt = 0
     discovered_navigation_count: NonNegativeInt = 0
+    discovered_cartography_count: NonNegativeInt = 0
     locked_count: NonNegativeInt
     researchable_count: NonNegativeInt
 
@@ -384,11 +394,10 @@ def census_technologies(world: World) -> TechnologyCensus:
     architecture = sum(
         1 for tech in discovered if tech.kind is TechnologyKind.ARCHITECTURE
     )
-    surveying = sum(
-        1 for tech in discovered if tech.kind is TechnologyKind.SURVEYING
-    )
-    navigation = sum(
-        1 for tech in discovered if tech.kind is TechnologyKind.NAVIGATION
+    surveying = sum(1 for tech in discovered if tech.kind is TechnologyKind.SURVEYING)
+    navigation = sum(1 for tech in discovered if tech.kind is TechnologyKind.NAVIGATION)
+    cartography = sum(
+        1 for tech in discovered if tech.kind is TechnologyKind.CARTOGRAPHY
     )
     return TechnologyCensus(
         tick=world.tick,
@@ -412,6 +421,7 @@ def census_technologies(world: World) -> TechnologyCensus:
         discovered_architecture_count=architecture,
         discovered_surveying_count=surveying,
         discovered_navigation_count=navigation,
+        discovered_cartography_count=cartography,
         locked_count=len(locked),
         researchable_count=len(researchable),
     )

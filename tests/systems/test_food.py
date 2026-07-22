@@ -81,8 +81,6 @@ def test_food_config_controls_restore_and_amount() -> None:
     assert updated.agents[0].needs.food == pytest.approx(0.9)
 
 
-
-
 def test_eat_uses_active_zoning_restore_bonus() -> None:
     """FoodSystem.eat includes subject-scoped zoning eat restore bonus."""
     agent = Agent.create(
@@ -91,9 +89,7 @@ def test_eat_uses_active_zoning_restore_bonus() -> None:
         needs=Needs(food=0.4, water=1.0, energy=1.0, social=1.0, safety=1.0),
     ).model_copy(
         update={
-            "inventory": Inventory(
-                stacks=(ResourceStack(resource="food", quantity=2),)
-            )
+            "inventory": Inventory(stacks=(ResourceStack(resource="food", quantity=2),))
         }
     )
     world = World(

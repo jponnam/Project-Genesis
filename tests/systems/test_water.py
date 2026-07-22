@@ -98,8 +98,10 @@ def test_drink_uses_apothecary_bonus() -> None:
 
 def test_drink_uses_lazaretto_bonus() -> None:
     """WaterSystem drink restore includes active lazaretto city seat bonuses."""
-    agent = _world_with_water(quantity=1).agents[0].model_copy(
-        update={"location_id": default_world_map()[1].location_id}
+    agent = (
+        _world_with_water(quantity=1)
+        .agents[0]
+        .model_copy(update={"location_id": default_world_map()[1].location_id})
     )
     world = World(
         config=SimulationConfig(agent_count=1, seed=1),

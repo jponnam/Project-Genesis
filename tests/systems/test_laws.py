@@ -103,8 +103,6 @@ def test_observe_emits_active_building_codes_count() -> None:
     assert events[0].active_building_codes_count == 1
 
 
-
-
 def test_observe_emits_active_zoning_count() -> None:
     """observe reports active ZONING laws in LawsObserved."""
     world = World(

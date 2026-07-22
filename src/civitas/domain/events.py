@@ -658,6 +658,7 @@ class TechnologiesObserved(DomainEvent):
     discovered_architecture_count: NonNegativeInt = 0
     discovered_surveying_count: NonNegativeInt = 0
     discovered_navigation_count: NonNegativeInt = 0
+    discovered_cartography_count: NonNegativeInt = 0
     locked_count: NonNegativeInt = 0
     researchable_count: NonNegativeInt = 0
 
@@ -731,6 +732,7 @@ class InnovationsObserved(DomainEvent):
     active_blueprint_count: NonNegativeInt = 0
     active_plumb_line_count: NonNegativeInt = 0
     active_compass_count: NonNegativeInt = 0
+    active_map_count: NonNegativeInt = 0
 
 
 class KnowledgeLearned(DomainEvent):
@@ -764,6 +766,7 @@ class KnowledgeObserved(DomainEvent):
     architecture_knower_count: NonNegativeInt = 0
     surveying_knower_count: NonNegativeInt = 0
     navigation_knower_count: NonNegativeInt = 0
+    cartography_knower_count: NonNegativeInt = 0
     total_fact_instances: NonNegativeInt
     coverage_bps: NonNegativeInt
 
