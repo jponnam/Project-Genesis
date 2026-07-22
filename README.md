@@ -129,15 +129,16 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 17 Milestone 8: Smith institutions**
+**Phase 17 Milestone 9: Forge works infrastructure**
 
-``InstitutionKind.SMITH`` is a government-attached teaching institution
-seated inside its jurisdiction. An active smith grants a
-teachings-per-knower bonus at its seat that stacks with the
-scribe/dialectic innovations and the scriptorium, stoa, academy, forum,
-school, collegium, architect, cartographer, agronomist, tailor, and
-curriculum bonuses. Smiths are not seeded and are surfaced through the
-institution census and ``InstitutionsObserved`` events.
+``InfrastructureKind.FORGE_WORKS`` is a government-attached infrastructure
+piece seated at a city inside its jurisdiction. An active forge works
+grants a produce-energy discount at its seat that stacks with the guild,
+workshop, weaver, smelter, foundry, fulling mill, mill town, tannery,
+bellows, abacus, pulley, customs, labor, and loom discounts. Forge works
+are built via government treasury or institution budget, are not seeded,
+and are surfaced through the infrastructure census and
+``InfrastructuresObserved`` events.
 
 ### Completed
 
@@ -319,6 +320,7 @@ JSONL storage → `civitas run`
 - Milestone 6: Smelter institutions
 - Milestone 7: Smithing technology
 - Milestone 8: Smith institutions
+- Milestone 9: Forge works infrastructure
 
 ## License
 
