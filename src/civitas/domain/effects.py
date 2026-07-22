@@ -145,7 +145,10 @@ Phase 17 Milestone 1 adds a global PICKAXE stone-gather bonus society-wide
 (stacking with the forge metallurgy bonus, the mason seat bonus, and the
 quarry city bonus). Phase 17 Milestone 2 adds MINERAL_RIGHTS law STONE
 gather bonuses for living subjects (stacking with pickaxe and forge
-society-wide, the mason seat, and the quarry city). The action executor,
+society-wide, the mason seat, and the quarry city). Phase 17 Milestone 3
+adds MINER institution STONE gather bonuses at the institution seat
+(stacking with pickaxe and forge society-wide, the mason seat, the
+quarry city, and the mineral rights subject bonus). The action executor,
 retrieval
 path, market fills, knowledge
 diffusion, and research progression read these helpers; ``EffectsSystem``
@@ -246,6 +249,7 @@ CROP_ROTATION_EAT_RESTORE_BONUS: float = 0.05
 SCAFFOLD_WOOD_GATHER_BONUS: int = 1
 PASTORAL_WOOD_GATHER_BONUS: int = 1
 MASON_STONE_GATHER_BONUS: int = 1
+MINER_STONE_GATHER_BONUS: int = 1
 QUARRY_STONE_GATHER_BONUS: int = 1
 ROAD_MOVE_ENERGY_DISCOUNT: float = 0.02
 BRIDGE_MOVE_ENERGY_DISCOUNT: float = 0.02
@@ -658,6 +662,22 @@ def location_has_active_mason(
     )
     return any(
         item.kind is InstitutionKind.MASON and item.location_id == target
+        for item in active_institutions(world)
+    )
+
+
+def location_has_active_miner(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active MINER is seated at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InstitutionKind.MINER and item.location_id == target
         for item in active_institutions(world)
     )
 
@@ -1164,7 +1184,8 @@ def gather_amount_bonus(
     canal, and sail), plus an active DITCH at ``location_id`` when provided
     (they stack). Stone bonuses come from an active FORGE innovation
     society-wide, an active PICKAXE innovation society-wide, an active MASON
-    seat at ``location_id`` when provided, and an active QUARRY city at
+    seat at ``location_id`` when provided, an active MINER seat at
+    ``location_id`` when provided, and an active QUARRY city at
     ``location_id`` when provided. Food
     bonuses come from an active PLOW innovation society-wide, plus an
     active STOREHOUSE, WAYSTATION, ENTREPOT city, FARMSTEAD city,
@@ -1190,6 +1211,8 @@ def gather_amount_bonus(
             bonus += MINING_STONE_GATHER_BONUS
         if location_id is not None and location_has_active_mason(world, location_id):
             bonus += MASON_STONE_GATHER_BONUS
+        if location_id is not None and location_has_active_miner(world, location_id):
+            bonus += MINER_STONE_GATHER_BONUS
         if location_id is not None and location_has_active_quarry(world, location_id):
             bonus += QUARRY_STONE_GATHER_BONUS
     elif resource == FOOD_RESOURCE:
