@@ -2,8 +2,8 @@
 
 Agents hold directed bonds (affinity + trust) toward other agents.
 Domain helpers create, adjust, clear, and socialize without systems
-calling each other. Reputation and network analytics are later
-milestones.
+calling each other. Reputation analytics observe these bonds without
+mutating them; family and network analytics are later milestones.
 """
 
 from __future__ import annotations

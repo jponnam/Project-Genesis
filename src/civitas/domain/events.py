@@ -319,6 +319,19 @@ class RelationshipsObserved(DomainEvent):
     max_trust: UnitInterval | None = None
 
 
+class ReputationObserved(DomainEvent):
+    """Emitted when a public-standing (reputation) census is taken."""
+
+    living_agent_count: NonNegativeInt
+    mean_standing: UnitInterval
+    median_standing_bps: NonNegativeInt
+    gini_standing_bps: NonNegativeInt
+    top_standing_share_bps: NonNegativeInt
+    agents_with_inbound_bonds: NonNegativeInt
+    top_agent_id: AgentId | None = None
+    top_standing: UnitInterval | None = None
+
+
 CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     SimulationStarted,
     SimulationCompleted,
@@ -348,6 +361,7 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     WealthObserved,
     RelationshipUpdated,
     RelationshipsObserved,
+    ReputationObserved,
 )
 
 EVENT_TYPE_REGISTRY: dict[str, type[DomainEvent]] = {

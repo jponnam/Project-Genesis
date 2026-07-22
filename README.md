@@ -118,12 +118,13 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 4 — Milestone 2: Trust**
+**Phase 4 — Milestone 3: Reputation**
 
-Co-located `SOCIALIZE` requires a partner and deterministically raises
-mutual directed trust and affinity via `apply_socialize`. The actor's
-social need is restored; bond changes emit `RelationshipUpdated`.
-Reputation, families, and network analytics are later Phase 4 milestones.
+Public standing is an observe-only analytic over inbound living-peer bonds
+(`census_reputation` / `ReputationSystem.observe`). Reciprocity weights a
+small bonus; inequality metrics and `ReputationObserved` mirror the wealth
+census pattern. Families and social-network analytics remain later Phase 4
+milestones.
 
 ### Completed
 
@@ -154,6 +155,7 @@ JSONL storage → `civitas run`
 **Phase 4:**
 - Milestone 1: Relationships
 - Milestone 2: Trust
+- Milestone 3: Reputation
 
 ## License
 
