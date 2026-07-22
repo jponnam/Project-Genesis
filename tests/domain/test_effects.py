@@ -116,6 +116,7 @@ from civitas.domain import (
     MEDICINE_REST_RESTORE_BONUS,
     MERCHANT_MARKET_FEE_DISCOUNT,
     METALLURGY_STONE_GATHER_BONUS,
+    MILL_TOWN_PRODUCE_ENERGY_DISCOUNT,
     NAVIGATION_MOVE_ENERGY_DISCOUNT,
     OBSERVATORY_RETRIEVAL_LIMIT_BONUS,
     PASSAGE_MOVE_ENERGY_DISCOUNT,
@@ -212,6 +213,7 @@ from civitas.domain import (
     location_has_active_lyceum,
     location_has_active_mason,
     location_has_active_merchant,
+    location_has_active_mill_town,
     location_has_active_observatory,
     location_has_active_pastoral,
     location_has_active_quarry,
@@ -4439,6 +4441,77 @@ def test_foundry_stacks_with_guild_workshop_abacus_and_pulley() -> None:
     ) == pytest.approx(0.0)
     assert census_effects(world).produce_energy_cost_bps == 0
     assert expected_discount == pytest.approx(DEFAULT_PRODUCE_ENERGY_COST)
+
+
+def test_mill_town_reduces_produce_energy_for_residents() -> None:
+    """Active mill town cities discount PRODUCE energy for residents at the seat."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Mill Town", CityKind.MILL_TOWN),
+        ),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_mill_town(world, agent.location_id) is True
+    assert effective_produce_energy_cost(
+        world,
+        agent,
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(DEFAULT_PRODUCE_ENERGY_COST - MILL_TOWN_PRODUCE_ENERGY_DISCOUNT)
+    assert census_effects(world).produce_energy_cost_bps == round(
+        (DEFAULT_PRODUCE_ENERGY_COST - MILL_TOWN_PRODUCE_ENERGY_DISCOUNT) * 10_000
+    )
+    bare = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_mill_town(bare, bare.agents[0].location_id) is False
+
+
+def test_mill_town_stacks_with_guild_workshop_weaver_and_fulling_mill() -> None:
+    """Mill town seat discount stacks with guild, workshop, weaver, fulling mill."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Mill Town", CityKind.MILL_TOWN),
+        ),
+        institutions=(
+            Institution.create(0, 0, 1, "Camp Guild", InstitutionKind.GUILD),
+            Institution.create(1, 0, 1, "Camp Workshop", InstitutionKind.WORKSHOP),
+            Institution.create(2, 0, 1, "Camp Weaver", InstitutionKind.WEAVER),
+        ),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 1, 1, "Camp Fulling Mill", InfrastructureKind.FULLING_MILL
+            ),
+        ),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    agent = world.agents[0]
+    expected_discount = (
+        GUILD_PRODUCE_ENERGY_DISCOUNT
+        + WORKSHOP_PRODUCE_ENERGY_DISCOUNT
+        + WEAVER_PRODUCE_ENERGY_DISCOUNT
+        + FULLING_MILL_PRODUCE_ENERGY_DISCOUNT
+        + MILL_TOWN_PRODUCE_ENERGY_DISCOUNT
+    )
+    assert location_has_active_mill_town(world, agent.location_id) is True
+    assert produce_energy_discount(world, agent) == pytest.approx(expected_discount)
+    expected = DEFAULT_PRODUCE_ENERGY_COST - expected_discount
+    assert effective_produce_energy_cost(
+        world,
+        agent,
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(expected)
+    assert census_effects(world).produce_energy_cost_bps == round(expected * 10_000)
 
 
 def test_customs_stacks_with_guild_workshop_foundry_abacus_and_pulley() -> None:

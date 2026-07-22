@@ -128,11 +128,12 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 16 Milestone 4: Fulling mill infrastructure**
+**Phase 16 Milestone 5: Mill town cities**
 
-``InfrastructureKind.FULLING_MILL`` grants a seat-scoped PRODUCE energy
-discount that stacks with guild, workshop, foundry, weaver, abacus,
-pulley, customs, labor, and loom. Not seeded.
+``CityKind.MILL_TOWN`` is a non-capital specialized city seat whose
+active seat grants a PRODUCE energy discount that stacks with guild,
+workshop, foundry, weaver, fulling mill, abacus, pulley, customs, labor,
+and loom. Not seeded.
 
 ### Completed
 
@@ -296,6 +297,7 @@ JSONL storage → `civitas run`
 - Milestone 2: Labor laws
 - Milestone 3: Weaver institutions
 - Milestone 4: Fulling mill infrastructure
+- Milestone 5: Mill town cities
 
 ## License
 
