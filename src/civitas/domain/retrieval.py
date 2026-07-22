@@ -114,11 +114,19 @@ def apply_retrieval(
     *,
     limit: int = DEFAULT_RETRIEVAL_LIMIT,
 ) -> tuple[World, tuple[RetrievalHit, ...]]:
-    """Refresh each living agent's working memory from long-term memory."""
+    """Refresh each living agent's working memory from long-term memory.
+
+    When an active ARCHIVE sits at an agent's location, the effective
+    retrieval limit includes the archive bonus from society effects.
+    """
+    # Local import avoids a module-level cycle with effects → retrieval.
+    from civitas.domain.effects import effective_retrieval_limit
+
     hits: list[RetrievalHit] = []
     for agent in world.alive_agents():
         query = retrieval_query_for_agent(agent)
-        records = retrieve_memories(agent, limit=limit)
+        agent_limit = effective_retrieval_limit(world, agent, base=limit)
+        records = retrieve_memories(agent, limit=agent_limit)
         summary = summarize_retrieved(records)
         updated = agent.model_copy(
             update={"working_memory": WorkingMemory(query=query, records=records)}

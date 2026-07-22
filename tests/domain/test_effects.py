@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from civitas.domain import (
+    ARCHIVE_RETRIEVAL_LIMIT_BONUS,
     CAMP_FIRE,
     CAMP_FIRE_HEARTH,
     CAMP_FORGE,
@@ -21,6 +22,7 @@ from civitas.domain import (
     DEFAULT_MOVE_ENERGY_COST,
     DEFAULT_PRODUCE_ENERGY_COST,
     DEFAULT_REST_RESTORE,
+    DEFAULT_RETRIEVAL_LIMIT,
     DEFAULT_TEACHINGS_PER_KNOWER,
     FIRE_HEARTH_REST_BONUS,
     GUILD_PRODUCE_ENERGY_DISCOUNT,
@@ -48,8 +50,10 @@ from civitas.domain import (
     effective_move_energy_cost,
     effective_produce_energy_cost,
     effective_rest_restore,
+    effective_retrieval_limit,
     effective_teachings_per_knower,
     gather_amount_bonus,
+    location_has_active_archive,
     location_has_active_guild,
     location_has_active_road,
     location_has_active_storehouse,
@@ -305,3 +309,29 @@ def test_guild_reduces_produce_energy_for_colocated_agents() -> None:
     assert snap.produce_energy_cost_bps == round(
         (DEFAULT_PRODUCE_ENERGY_COST - GUILD_PRODUCE_ENERGY_DISCOUNT) * 10_000
     )
+
+
+def test_archive_raises_retrieval_limit_for_colocated_agents() -> None:
+    """Active archives raise the memory retrieval limit at their seat."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        institutions=(
+            Institution.create(0, 0, 0, "Camp Archive", InstitutionKind.ARCHIVE),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_archive(world, agent.location_id) is True
+    assert effective_retrieval_limit(world, agent) == (
+        DEFAULT_RETRIEVAL_LIMIT + ARCHIVE_RETRIEVAL_LIMIT_BONUS
+    )
+    bare = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_archive(bare, bare.agents[0].location_id) is False
+    assert effective_retrieval_limit(bare, bare.agents[0]) == DEFAULT_RETRIEVAL_LIMIT

@@ -3,10 +3,15 @@
 from __future__ import annotations
 
 from civitas.domain import (
+    ARCHIVE_RETRIEVAL_LIMIT_BONUS,
     CAMP_LOCATION,
+    DEFAULT_RETRIEVAL_LIMIT,
     Agent,
     Goal,
     GoalSet,
+    Government,
+    Institution,
+    InstitutionKind,
     Memory,
     MemoryKind,
     MemoryRecord,
@@ -25,10 +30,15 @@ from civitas.domain import (
 )
 
 
-def _world(*agents: Agent) -> World:
+def _world(
+    *agents: Agent,
+    institutions: tuple[Institution, ...] = (),
+) -> World:
     return World(
         config=SimulationConfig(agent_count=max(len(agents), 1), seed=1),
         locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        institutions=institutions,
         technologies=default_technologies(),
         research_progress=default_research_progress(),
         innovations=default_innovations(),
@@ -115,3 +125,40 @@ def test_apply_retrieval_writes_working_memory() -> None:
     assert snap.agents_with_context == 1
     assert snap.total_retrieved == 1
     assert snap.mean_retrieved_bps == 10_000
+
+
+def test_apply_retrieval_uses_archive_limit_bonus() -> None:
+    """Colocated archives raise how many memories the apply path retrieves."""
+    records = tuple(
+        MemoryRecord(
+            tick=Tick(value=tick),
+            kind=MemoryKind.EPISODE.value,
+            content=f"food=0.{tick}",
+        )
+        for tick in range(
+            1, DEFAULT_RETRIEVAL_LIMIT + ARCHIVE_RETRIEVAL_LIMIT_BONUS + 2
+        )
+    )
+    agent = Agent.create(agent_id=0, name="A").model_copy(
+        update={
+            "goals": GoalSet(
+                goals=(Goal(kind="satisfy_food", priority=0.8, target="food"),)
+            ),
+            "memory": Memory(records=records),
+        }
+    )
+    bare, bare_hits = apply_retrieval(_world(agent))
+    assert bare_hits[0].retrieved_count == DEFAULT_RETRIEVAL_LIMIT
+    assert len(bare.agents[0].working_memory.records) == DEFAULT_RETRIEVAL_LIMIT
+
+    boosted, boosted_hits = apply_retrieval(
+        _world(
+            agent,
+            institutions=(
+                Institution.create(0, 0, 0, "Camp Archive", InstitutionKind.ARCHIVE),
+            ),
+        )
+    )
+    expected = DEFAULT_RETRIEVAL_LIMIT + ARCHIVE_RETRIEVAL_LIMIT_BONUS
+    assert boosted_hits[0].retrieved_count == expected
+    assert len(boosted.agents[0].working_memory.records) == expected
