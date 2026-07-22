@@ -1,10 +1,12 @@
 """Infrastructure: built capacity at settlement locations.
 
-Phase 5 Milestone 6. Infrastructure pieces attach to a city seat inside a
-government jurisdiction. This milestone seeds a single ``WELL`` kind as
-declarative water capacity. Tech trees, build costs, roads, storehouses,
-and build costs remain later milestones. Effect wiring (Phase 8) applies
-WELL drink-restore bonuses for colocated agents.
+Phase 5 Milestone 6 plus Phase 9 Milestone 5 build costs. Infrastructure
+pieces attach to a city seat inside a government jurisdiction. This package
+seeds a single ``WELL`` kind as declarative water capacity. Governments may
+opt into paid construction via ``build_infrastructure``, which debits the
+parent treasury then inserts the piece. Extra kinds (roads, storehouses)
+remain later milestones. Effect wiring (Phase 8) applies WELL drink-restore
+bonuses for colocated agents.
 """
 
 from __future__ import annotations
@@ -15,7 +17,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict
 
 from civitas.domain.cities import CAMP_CITY, city_by_id
-from civitas.domain.governments import government_by_id
+from civitas.domain.governments import debit_government_treasury, government_by_id
 from civitas.domain.ids import CityId, GovernmentId, InfrastructureId, LocationId
 from civitas.domain.location import CAMP_LOCATION
 from civitas.domain.time import Tick
@@ -29,6 +31,13 @@ class InfrastructureKind(StrEnum):
     """Supported infrastructure kinds."""
 
     WELL = "well"
+
+
+# Canonical treasury cost to construct each infrastructure kind.
+DEFAULT_WELL_BUILD_COST: int = 5
+INFRASTRUCTURE_BUILD_COSTS: dict[InfrastructureKind, int] = {
+    InfrastructureKind.WELL: DEFAULT_WELL_BUILD_COST,
+}
 
 
 class Infrastructure(BaseModel):
@@ -218,6 +227,37 @@ def create_infrastructure(
         )
     )
     return world.model_copy(update={"infrastructure": infrastructure})
+
+
+def build_cost_for(kind: InfrastructureKind | str) -> int:
+    """Return the canonical treasury cost to construct ``kind``."""
+    return INFRASTRUCTURE_BUILD_COSTS[InfrastructureKind(kind)]
+
+
+def build_infrastructure(
+    world: World,
+    item: Infrastructure,
+    *,
+    cost: int | None = None,
+) -> World | None:
+    """Debit the parent government treasury, then create ``item``.
+
+    ``cost`` defaults to the catalog price for ``item.kind``. Returns
+    ``None`` when cost is non-positive, construction would be illegal,
+    or the government cannot afford the cost. Free seeding continues to
+    use ``create_infrastructure``.
+    """
+    amount = build_cost_for(item.kind) if cost is None else cost
+    if amount <= 0:
+        return None
+    if government_by_id(world, item.government_id) is None:
+        return None
+    if create_infrastructure(world, item) is None:
+        return None
+    debited = debit_government_treasury(world, item.government_id, amount)
+    if debited is None:
+        return None
+    return create_infrastructure(debited, item)
 
 
 def set_infrastructure_active(

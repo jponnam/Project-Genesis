@@ -121,11 +121,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 9 — Milestone 4: Institution budgets**
+**Phase 9 — Milestone 5: Treasury-funded infrastructure construction**
 
-Institutions hold integer budgets that governments can fund from their
-treasuries. Funding is opt-in (not automatic each tick). Society money
-totals include institution budgets so wealth conservation still holds.
+Governments can pay catalog build costs from their treasuries to construct
+infrastructure via opt-in helpers. Free seeding of the camp well is
+unchanged; paid builds emit ``InfrastructureBuilt``.
 
 ### Completed
 
@@ -191,6 +191,7 @@ JSONL storage → `civitas run`
 - Milestone 2: Irrigation technology
 - Milestone 3: Tax redirection to government treasuries
 - Milestone 4: Institution budgets
+- Milestone 5: Treasury-funded infrastructure construction
 
 ## License
 

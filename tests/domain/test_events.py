@@ -27,6 +27,7 @@ from civitas.domain import (
     GovernmentCreated,
     GovernmentId,
     GovernmentsObserved,
+    InfrastructureBuilt,
     InfrastructureCreated,
     InfrastructureId,
     InfrastructuresObserved,
@@ -846,6 +847,23 @@ def test_infrastructure_created_and_observed_round_trips() -> None:
     restored = event_from_record(observed.to_record())
     assert isinstance(restored, InfrastructuresObserved)
     assert restored.active_well_count == 1
+
+    funded = InfrastructureBuilt(
+        sequence=27,
+        tick=Tick(value=3),
+        infrastructure_id=InfrastructureId(value=1),
+        government_id=GovernmentId(value=0),
+        city_id=CityId(value=0),
+        location_id=LocationId(value=0),
+        name="Paid Well",
+        kind="well",
+        cost=5,
+        treasury_after=3,
+    )
+    restored_built = event_from_record(funded.to_record())
+    assert isinstance(restored_built, InfrastructureBuilt)
+    assert restored_built.cost == 5
+    assert restored_built.treasury_after == 3
 
 
 def test_technology_created_and_observed_round_trips() -> None:

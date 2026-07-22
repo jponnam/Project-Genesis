@@ -10,6 +10,7 @@ from civitas.domain import (
     CAMP_GOVERNMENT,
     CAMP_LOCATION,
     CAMP_WELL,
+    DEFAULT_WELL_BUILD_COST,
     Agent,
     City,
     CityKind,
@@ -18,6 +19,8 @@ from civitas.domain import (
     InfrastructureKind,
     SimulationConfig,
     World,
+    build_cost_for,
+    build_infrastructure,
     census_infrastructure,
     create_infrastructure,
     default_cities,
@@ -26,6 +29,7 @@ from civitas.domain import (
     dissolve_infrastructure,
     infrastructure_by_id,
     next_infrastructure_id,
+    society_money_total,
 )
 
 
@@ -102,6 +106,53 @@ def test_dissolve_frees_active_kind_slot() -> None:
         Infrastructure.create(1, 0, 0, 0, "B", InfrastructureKind.WELL),
     )
     assert recreated is not None
+
+
+def test_build_infrastructure_debits_treasury() -> None:
+    """Paid builds debit the government treasury then insert the piece."""
+    assert build_cost_for(InfrastructureKind.WELL) == DEFAULT_WELL_BUILD_COST
+    world = _world(
+        Agent.create(agent_id=0, name="A", money=10),
+        governments=(Government.create(0, "Camp", 0, (0,), treasury=8),),
+    )
+    initial = society_money_total(world)
+    built = build_infrastructure(
+        world,
+        Infrastructure.create(0, 0, 0, 0, "New Well", InfrastructureKind.WELL),
+    )
+    assert built is not None
+    assert built.infrastructure[0].name == "New Well"
+    assert built.governments[0].treasury == 8 - DEFAULT_WELL_BUILD_COST
+    assert society_money_total(built) == initial - DEFAULT_WELL_BUILD_COST
+
+    assert (
+        build_infrastructure(
+            world,
+            Infrastructure.create(0, 0, 0, 0, "Well", InfrastructureKind.WELL),
+            cost=0,
+        )
+        is None
+    )
+    assert (
+        build_infrastructure(
+            world,
+            Infrastructure.create(0, 0, 0, 0, "Well", InfrastructureKind.WELL),
+            cost=9,
+        )
+        is None
+    )
+    occupied = create_infrastructure(
+        world,
+        Infrastructure.create(0, 0, 0, 0, "Seed", InfrastructureKind.WELL),
+    )
+    assert occupied is not None
+    assert (
+        build_infrastructure(
+            occupied,
+            Infrastructure.create(1, 0, 0, 0, "Dup", InfrastructureKind.WELL),
+        )
+        is None
+    )
 
 
 def test_census_infrastructure_counts() -> None:
