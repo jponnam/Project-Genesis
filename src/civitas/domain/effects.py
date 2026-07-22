@@ -22,11 +22,12 @@ TEMPLE REST restore bonuses (stacking with the global fire-hearth
 innovation), SHRINE DRINK restore bonuses (stacking with WELL),
 SANCTUARY city REST restore bonuses (stacking with fire hearth and
 temple), SCHOOL teachings-per-knower bonuses (stacking with
-scribe/scriptorium/curriculum/academy/forum/dialectic), and a global
-SYLLOGISM research-points bonus. The action executor, retrieval path,
-market fills, knowledge diffusion, and research progression read these
-helpers; ``EffectsSystem`` only observes coverage. Systems never call
-each other.
+scribe/scriptorium/curriculum/academy/forum/dialectic), a global
+SYLLOGISM research-points bonus, and LYCEUM retrieval-limit bonuses
+(stacking with archive/library/observatory/star-chart/calendar). The
+action executor, retrieval path, market fills, knowledge diffusion, and
+research progression read these helpers; ``EffectsSystem`` only observes
+coverage. Systems never call each other.
 """
 
 from __future__ import annotations
@@ -84,6 +85,7 @@ ARCHIVE_RETRIEVAL_LIMIT_BONUS: int = 1
 LIBRARY_RETRIEVAL_LIMIT_BONUS: int = 1
 OBSERVATORY_RETRIEVAL_LIMIT_BONUS: int = 1
 ASTRONOMY_RETRIEVAL_LIMIT_BONUS: int = 1
+LYCEUM_RETRIEVAL_LIMIT_BONUS: int = 1
 BUREAUCRACY_MARKET_FEE_DISCOUNT: int = 1
 
 
@@ -308,6 +310,22 @@ def location_has_active_school(
     )
 
 
+def location_has_active_lyceum(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active LYCEUM is seated at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InstitutionKind.LYCEUM and item.location_id == target
+        for item in active_institutions(world)
+    )
+
+
 def location_has_active_library(
     world: World,
     location_id: LocationId | int,
@@ -453,9 +471,9 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
 def retrieval_limit_bonus(world: World, agent: Agent) -> int:
     """Return retrieval-limit bonuses for the agent.
 
-    Active ARCHIVE institutions, LIBRARY city seats, and OBSERVATORY
-    infrastructure each contribute ``+1`` when present at the agent's
-    location. An active STAR_CHART innovation contributes
+    Active ARCHIVE and LYCEUM institutions, LIBRARY city seats, and
+    OBSERVATORY infrastructure each contribute ``+1`` when present at
+    the agent's location. An active STAR_CHART innovation contributes
     ``ASTRONOMY_RETRIEVAL_LIMIT_BONUS`` society-wide. An active
     ``CALENDAR`` statute contributes ``+1`` for living subjects of that
     government. All stack.
@@ -467,6 +485,8 @@ def retrieval_limit_bonus(world: World, agent: Agent) -> int:
         bonus += LIBRARY_RETRIEVAL_LIMIT_BONUS
     if location_has_active_observatory(world, agent.location_id):
         bonus += OBSERVATORY_RETRIEVAL_LIMIT_BONUS
+    if location_has_active_lyceum(world, agent.location_id):
+        bonus += LYCEUM_RETRIEVAL_LIMIT_BONUS
     if innovation_kind_is_active(world, InnovationKind.STAR_CHART):
         bonus += ASTRONOMY_RETRIEVAL_LIMIT_BONUS
     bonus += calendar_retrieval_bonus_for(world, agent)

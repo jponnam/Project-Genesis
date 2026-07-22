@@ -123,15 +123,14 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 11 — Milestone 7: Logic technology**
+**Phase 11 — Milestone 8: Lyceum institutions**
 
-``TechnologyKind.LOGIC`` extends the prerequisite chain after philosophy.
-``CAMP_LOGIC`` is initially undiscovered, with ``CAMP_LOGIC_RESEARCH``
-tracking progress at the default threshold. Its ``CAMP_SYLLOGISM``
-innovation starts inactive; once active, syllogism adds ``+1`` research
-point per tick through ``effective_research_points_per_tick``. Census and
-knowledge observers track logic discovery, syllogism activation, and logic
-knowers.
+``InstitutionKind.LYCEUM`` adds a government-attached institution kind.
+Lyceums are not seeded by default, but an active lyceum at an agent's seat
+adds ``+1`` to the memory retrieval limit through
+``effective_retrieval_limit``. The bonus stacks with archive, library,
+observatory, star chart, and calendar retrieval bonuses. Institution census
+and observed events track active lyceum counts.
 
 ### Completed
 
@@ -228,6 +227,7 @@ JSONL storage → `civitas run`
 - Milestone 5: Sanctuary cities
 - Milestone 6: School institutions
 - Milestone 7: Logic technology
+- Milestone 8: Lyceum institutions
 
 ## License
 

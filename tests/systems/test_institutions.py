@@ -36,9 +36,31 @@ def test_observe_emits_institutions_observed_without_mutating_world() -> None:
     assert events[0].active_academy_count == 0
     assert events[0].active_temple_count == 0
     assert events[0].active_school_count == 0
+    assert events[0].active_lyceum_count == 0
     assert events[0].vacant_officer_count == 1
     assert events[0].total_budget == 0
     assert events[0].funded_count == 0
+
+
+def test_observe_emits_active_lyceum_count() -> None:
+    """observe maps active lyceum census counts into the observed event."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        institutions=(
+            Institution.create(0, 0, 0, "Council", InstitutionKind.COUNCIL),
+            Institution.create(1, 0, 0, "Camp Lyceum", InstitutionKind.LYCEUM),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    bus = EventBus()
+    updated = InstitutionSystem().observe(world, bus=bus)
+    assert updated == world
+    events = [event for event in bus.history if isinstance(event, InstitutionsObserved)]
+    assert len(events) == 1
+    assert events[0].active_council_count == 1
+    assert events[0].active_lyceum_count == 1
 
 
 def test_observe_can_suppress_events() -> None:
