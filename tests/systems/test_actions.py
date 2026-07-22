@@ -16,6 +16,7 @@ from civitas.domain import (
     CAMP_ORATION,
     CAMP_RHETORIC,
     DEFAULT_DRINK_RESTORE,
+    DEFAULT_EAT_RESTORE,
     DEFAULT_MOVE_ENERGY_COST,
     DEFAULT_REST_RESTORE,
     DEFAULT_SOCIALIZE_RESTORE,
@@ -25,6 +26,7 @@ from civitas.domain import (
     LAZARETTO_DRINK_RESTORE_BONUS,
     QUARANTINE_REST_RESTORE_BONUS,
     RHETORIC_SOCIALIZE_RESTORE_BONUS,
+    ZONING_EAT_RESTORE_BONUS,
     ActionChoice,
     ActionCompleted,
     ActionKind,
@@ -317,6 +319,34 @@ def test_rest_uses_active_bathhouse_restore_bonus() -> None:
     updated = ActionExecutor().execute(world, _choice(0, ActionKind.REST))
     assert updated.agents[0].needs.energy == pytest.approx(
         0.4 + DEFAULT_REST_RESTORE + BATHHOUSE_REST_RESTORE_BONUS
+    )
+
+
+
+
+def test_eat_uses_active_zoning_restore_bonus() -> None:
+    """EAT through ActionExecutor includes subject-scoped zoning bonus."""
+    agent = Agent.create(
+        agent_id=0,
+        name="A",
+        needs=Needs(food=0.4, water=1.0, energy=1.0, social=1.0, safety=1.0),
+    ).model_copy(
+        update={
+            "inventory": Inventory(
+                stacks=(ResourceStack(resource="food", quantity=2),)
+            )
+        }
+    )
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(Law.create(0, 0, "Camp Zoning", LawKind.ZONING),),
+        agents=(agent,),
+    )
+    updated = ActionExecutor().execute(world, _choice(0, ActionKind.EAT))
+    assert updated.agents[0].needs.food == pytest.approx(
+        0.4 + DEFAULT_EAT_RESTORE + ZONING_EAT_RESTORE_BONUS
     )
 
 

@@ -56,6 +56,7 @@ from civitas.domain import (
     COLLEGIUM_TEACHINGS_PER_KNOWER_BONUS,
     CURRICULUM_TEACHINGS_PER_KNOWER_BONUS,
     DEFAULT_DRINK_RESTORE,
+    DEFAULT_EAT_RESTORE,
     DEFAULT_GATHER_AMOUNT,
     DEFAULT_MOVE_ENERGY_COST,
     DEFAULT_POINTS_PER_TICK,
@@ -100,6 +101,7 @@ from civitas.domain import (
     WELL_DRINK_RESTORE_BONUS,
     WORKSHOP_PRODUCE_ENERGY_DISCOUNT,
     WRITING_TEACHINGS_PER_KNOWER_BONUS,
+    ZONING_EAT_RESTORE_BONUS,
     Agent,
     City,
     CityKind,
@@ -119,7 +121,9 @@ from civitas.domain import (
     default_technologies,
     default_world_map,
     drink_restore_bonus,
+    eat_restore_bonus,
     effective_drink_restore,
+    effective_eat_restore,
     effective_gather_amount,
     effective_market_fee,
     effective_move_energy_cost,
@@ -169,6 +173,7 @@ from civitas.domain import (
     sanitation_drink_bonus_for,
     socialize_restore_bonus,
     teachings_per_knower_bonus,
+    zoning_eat_bonus_for,
 )
 from civitas.engine import WorldFactory
 
@@ -733,6 +738,31 @@ def test_quarantine_stacks_with_rest_restore_sources() -> None:
     )
     assert effective_rest_restore(world, agent=world.agents[1]) == pytest.approx(
         DEFAULT_REST_RESTORE + infirmary_bonus
+    )
+
+
+
+
+def test_zoning_boosts_eat_restore_for_living_subjects() -> None:
+    """Active ZONING raises EAT restore for living subjects only."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(Law.create(0, 0, "Camp Zoning", LawKind.ZONING),),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert zoning_eat_bonus_for(world, agent) == ZONING_EAT_RESTORE_BONUS
+    assert eat_restore_bonus(world, agent) == ZONING_EAT_RESTORE_BONUS
+    assert effective_eat_restore(world, agent) == pytest.approx(
+        DEFAULT_EAT_RESTORE + ZONING_EAT_RESTORE_BONUS
+    )
+    bare = _world()
+    assert zoning_eat_bonus_for(bare, bare.agents[0]) == 0.0
+    assert eat_restore_bonus(bare, bare.agents[0]) == 0.0
+    assert effective_eat_restore(bare, bare.agents[0]) == pytest.approx(
+        DEFAULT_EAT_RESTORE
     )
 
 

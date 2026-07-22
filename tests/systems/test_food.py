@@ -6,8 +6,13 @@ import pytest
 
 from civitas.domain import (
     CAMP_LOCATION,
+    DEFAULT_EAT_RESTORE,
+    ZONING_EAT_RESTORE_BONUS,
     Agent,
+    Government,
     Inventory,
+    Law,
+    LawKind,
     NeedDecayed,
     Needs,
     ResourceConsumed,
@@ -74,6 +79,34 @@ def test_food_config_controls_restore_and_amount() -> None:
     updated = FoodSystem(FoodConfig(restore=0.4, consume_amount=2)).eat(world, 0)
     assert updated.agents[0].inventory.quantity("food") == 1
     assert updated.agents[0].needs.food == pytest.approx(0.9)
+
+
+
+
+def test_eat_uses_active_zoning_restore_bonus() -> None:
+    """FoodSystem.eat includes subject-scoped zoning eat restore bonus."""
+    agent = Agent.create(
+        agent_id=0,
+        name="A",
+        needs=Needs(food=0.4, water=1.0, energy=1.0, social=1.0, safety=1.0),
+    ).model_copy(
+        update={
+            "inventory": Inventory(
+                stacks=(ResourceStack(resource="food", quantity=2),)
+            )
+        }
+    )
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(Law.create(0, 0, "Camp Zoning", LawKind.ZONING),),
+        agents=(agent,),
+    )
+    updated = FoodSystem().eat(world, 0)
+    assert updated.agents[0].needs.food == pytest.approx(
+        0.4 + DEFAULT_EAT_RESTORE + ZONING_EAT_RESTORE_BONUS
+    )
 
 
 def test_missing_agent_raises() -> None:

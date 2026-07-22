@@ -47,6 +47,7 @@ from civitas.domain import (
     apply_socialize,
     apply_trade,
     effective_drink_restore,
+    effective_eat_restore,
     effective_gather_amount,
     effective_move_energy_cost,
     effective_produce_energy_cost,
@@ -248,9 +249,10 @@ class ActionExecutor:
     ) -> tuple[Agent, bool]:
         """Apply inventory-backed EAT; emit consume/need events on success."""
         previous_food = agent.needs.food
+        restore = effective_eat_restore(world, agent, base=float(self._config.eat))
         updated = apply_eat(
             agent,
-            restore=self._config.eat,
+            restore=restore,
             amount=self._config.eat_consume_amount,
         )
         if updated is None:
