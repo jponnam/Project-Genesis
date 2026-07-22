@@ -127,11 +127,12 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 15 Milestone 10: Forestry technology**
+**Phase 15 Milestone 11: Conservation laws**
 
-``TechnologyKind.FORESTRY`` (id 21) requires crop rotation. Research
-threshold 10. ``InnovationKind.COPPICE`` raises WOOD gather by 1
-society-wide when active, stacking with the scaffold seat.
+``LawKind.CONSERVATION`` grants living subjects +1 WOOD gather while an
+active conservation statute governs their location, stacking with the
+coppice innovation society-wide and the scaffold seat. At most one active
+conservation law per government; not seeded.
 
 ### Completed
 
@@ -287,6 +288,7 @@ JSONL storage → `civitas run`
 - Milestone 8: Agronomist institutions
 - Milestone 9: Terrace infrastructure
 - Milestone 10: Forestry technology
+- Milestone 11: Conservation laws
 
 ## License
 

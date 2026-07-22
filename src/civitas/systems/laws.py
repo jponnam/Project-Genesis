@@ -78,6 +78,7 @@ class LawSystem:
                     active_passage_count=snap.active_passage_count,
                     active_customs_count=snap.active_customs_count,
                     active_land_tenure_count=snap.active_land_tenure_count,
+                    active_conservation_count=snap.active_conservation_count,
                 )
             )
         return world
