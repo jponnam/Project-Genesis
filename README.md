@@ -130,16 +130,15 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 18 Milestone 9: Sawpit infrastructure**
+**Phase 18 Milestone 10: Cabinetry technology**
 
-``InfrastructureKind.SAWPIT`` is a city-seated infrastructure piece built
-inside its government's jurisdiction. An active sawpit grants a
-produce-energy discount at its seat location that stacks with the guild,
+``TechnologyKind.CABINETRY`` is a society-level technology requiring
+joinery, adopted through the ``DOVETAIL`` innovation. An active dovetail
+grants a society-wide PRODUCE energy discount that stacks with guild,
 workshop, weaver, smelter, joiner, foundry, fulling mill, forge works,
 mill town, ironworks, tannery, bellows, lathe, plane, abacus, pulley,
-customs, labor, safety codes, and loom produce discounts. Sawpits are not
-seeded; the infrastructure census and ``InfrastructuresObserved`` event
-report the active sawpit count.
+customs, labor, safety codes, and loom. Discovery flows through the
+standard research, innovation, and knowledge-diffusion pipeline.
 
 ### Completed
 
@@ -336,6 +335,7 @@ JSONL storage → `civitas run`
 - Milestone 7: Joinery technology
 - Milestone 8: Carver institutions
 - Milestone 9: Sawpit infrastructure
+- Milestone 10: Cabinetry technology
 
 ## License
 

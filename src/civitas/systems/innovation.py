@@ -124,6 +124,7 @@ class InnovationSystem:
                     active_lathe_count=snap.active_lathe_count,
                     active_sawmill_count=snap.active_sawmill_count,
                     active_plane_count=snap.active_plane_count,
+                    active_dovetail_count=snap.active_dovetail_count,
                 )
             )
         return world
