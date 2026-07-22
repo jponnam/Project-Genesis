@@ -16,7 +16,7 @@ from civitas.domain.types import NonEmptyStr
 
 
 class ActionKind(StrEnum):
-    """Phase 2 action catalog."""
+    """Phase 2/3 action catalog."""
 
     EAT = "eat"
     DRINK = "drink"
@@ -24,6 +24,7 @@ class ActionKind(StrEnum):
     SOCIALIZE = "socialize"
     SEEK_SAFETY = "seek_safety"
     GATHER = "gather"
+    TRADE = "trade"
     MOVE = "move"
     IDLE = "idle"
 
@@ -36,6 +37,7 @@ ACTION_CATALOG: tuple[ActionKind, ...] = (
     ActionKind.SOCIALIZE,
     ActionKind.SEEK_SAFETY,
     ActionKind.GATHER,
+    ActionKind.TRADE,
     ActionKind.MOVE,
     ActionKind.IDLE,
 )
@@ -48,6 +50,7 @@ ACTION_NEED_TARGET: dict[ActionKind, str | None] = {
     ActionKind.SOCIALIZE: "social",
     ActionKind.SEEK_SAFETY: "safety",
     ActionKind.GATHER: None,
+    ActionKind.TRADE: None,
     ActionKind.MOVE: None,
     ActionKind.IDLE: None,
 }
@@ -60,6 +63,7 @@ ACTION_RESOURCE: dict[ActionKind, str | None] = {
     ActionKind.SOCIALIZE: None,
     ActionKind.SEEK_SAFETY: None,
     ActionKind.GATHER: None,
+    ActionKind.TRADE: None,
     ActionKind.MOVE: None,
     ActionKind.IDLE: None,
 }
@@ -75,16 +79,20 @@ class ActionChoice(BaseModel):
     utility: float
     target_location_id: LocationId | None = None
     target_resource: NonEmptyStr | None = None
+    target_agent_id: AgentId | None = None
 
     @model_validator(mode="after")
     def target_field_consistency(self) -> Self:
-        """MOVE needs a destination; GATHER needs a resource; others forbid both."""
+        """Validate per-action target field requirements."""
         if self.action is ActionKind.MOVE:
             if self.target_location_id is None:
                 msg = "MOVE requires target_location_id"
                 raise ValueError(msg)
             if self.target_resource is not None:
                 msg = "MOVE forbids target_resource"
+                raise ValueError(msg)
+            if self.target_agent_id is not None:
+                msg = "MOVE forbids target_agent_id"
                 raise ValueError(msg)
         elif self.action is ActionKind.GATHER:
             if self.target_resource is None:
@@ -93,11 +101,27 @@ class ActionChoice(BaseModel):
             if self.target_location_id is not None:
                 msg = "GATHER forbids target_location_id"
                 raise ValueError(msg)
+            if self.target_agent_id is not None:
+                msg = "GATHER forbids target_agent_id"
+                raise ValueError(msg)
+        elif self.action is ActionKind.TRADE:
+            if self.target_resource is None:
+                msg = "TRADE requires target_resource"
+                raise ValueError(msg)
+            if self.target_agent_id is None:
+                msg = "TRADE requires target_agent_id"
+                raise ValueError(msg)
+            if self.target_location_id is not None:
+                msg = "TRADE forbids target_location_id"
+                raise ValueError(msg)
         else:
             if self.target_location_id is not None:
                 msg = "target_location_id is only valid for MOVE"
                 raise ValueError(msg)
             if self.target_resource is not None:
-                msg = "target_resource is only valid for GATHER"
+                msg = "target_resource is only valid for GATHER or TRADE"
+                raise ValueError(msg)
+            if self.target_agent_id is not None:
+                msg = "target_agent_id is only valid for TRADE"
                 raise ValueError(msg)
         return self

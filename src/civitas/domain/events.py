@@ -101,6 +101,7 @@ class ActionSelected(DomainEvent):
     utility: float
     target_location_id: LocationId | None = None
     target_resource: NonEmptyStr | None = None
+    target_agent_id: AgentId | None = None
 
 
 class ActionCompleted(DomainEvent):
@@ -174,6 +175,16 @@ class MoneyTransferred(DomainEvent):
     amount: NonNegativeInt
 
 
+class ResourceTraded(DomainEvent):
+    """Emitted when a buyer purchases inventory from a seller."""
+
+    buyer_id: AgentId
+    seller_id: AgentId
+    resource: NonEmptyStr
+    quantity: NonNegativeInt
+    price: NonNegativeInt
+
+
 class WealthObserved(DomainEvent):
     """Emitted when a wealth census is taken."""
 
@@ -200,6 +211,7 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     ActionCompleted,
     ResourceConsumed,
     ResourceGathered,
+    ResourceTraded,
     NeedDecayed,
     PopulationObserved,
     MoneyTransferred,
