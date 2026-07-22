@@ -101,6 +101,7 @@ class KnowledgeSystem:
                     writing_knower_count=snap.writing_knower_count,
                     mathematics_knower_count=snap.mathematics_knower_count,
                     astronomy_knower_count=snap.astronomy_knower_count,
+                    philosophy_knower_count=snap.philosophy_knower_count,
                     total_fact_instances=snap.total_fact_instances,
                     coverage_bps=snap.coverage_bps,
                 )

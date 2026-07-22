@@ -12,6 +12,7 @@ from civitas.domain import (
     CALENDAR_RETRIEVAL_LIMIT_BONUS,
     CAMP_ABACUS,
     CAMP_ASTRONOMY,
+    CAMP_DIALECTIC,
     CAMP_FIRE,
     CAMP_FIRE_HEARTH,
     CAMP_FORGE,
@@ -20,6 +21,7 @@ from civitas.domain import (
     CAMP_LOCATION,
     CAMP_MATHEMATICS,
     CAMP_METALLURGY,
+    CAMP_PHILOSOPHY,
     CAMP_POTTERY,
     CAMP_POTTERY_CRAFT,
     CAMP_SCRIBE,
@@ -41,6 +43,7 @@ from civitas.domain import (
     MATHEMATICS_PRODUCE_ENERGY_DISCOUNT,
     METALLURGY_STONE_GATHER_BONUS,
     OBSERVATORY_RETRIEVAL_LIMIT_BONUS,
+    PHILOSOPHY_TEACHINGS_PER_KNOWER_BONUS,
     POTTERY_WATER_GATHER_BONUS,
     ROAD_MOVE_ENERGY_DISCOUNT,
     SCRIPTORIUM_TEACHINGS_PER_KNOWER_BONUS,
@@ -101,6 +104,7 @@ def _world(*, innovations: tuple = ()) -> World:
             CAMP_WRITING,
             CAMP_MATHEMATICS,
             CAMP_ASTRONOMY,
+            CAMP_PHILOSOPHY,
         ),
         innovations=innovations,
         agents=(Agent.create(agent_id=0, name="A"),),
@@ -135,6 +139,7 @@ def test_pottery_and_irrigation_stack_water_gather_bonus() -> None:
             CAMP_WRITING,
             CAMP_MATHEMATICS,
             CAMP_ASTRONOMY,
+            CAMP_PHILOSOPHY,
         ),
         innovations=(
             CAMP_FIRE_HEARTH,
@@ -144,6 +149,7 @@ def test_pottery_and_irrigation_stack_water_gather_bonus() -> None:
             CAMP_SCRIBE,
             CAMP_ABACUS,
             CAMP_STAR_CHART,
+            CAMP_DIALECTIC,
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
     )
@@ -174,6 +180,7 @@ def test_forge_boosts_stone_gather_bonus() -> None:
             CAMP_WRITING,
             CAMP_MATHEMATICS,
             CAMP_ASTRONOMY,
+            CAMP_PHILOSOPHY,
         ),
         innovations=(
             CAMP_FIRE_HEARTH,
@@ -183,6 +190,7 @@ def test_forge_boosts_stone_gather_bonus() -> None:
             CAMP_SCRIBE,
             CAMP_ABACUS,
             CAMP_STAR_CHART,
+            CAMP_DIALECTIC,
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
     )
@@ -212,6 +220,7 @@ def test_scribe_boosts_teachings_per_knower() -> None:
             discovered_writing,
             CAMP_MATHEMATICS,
             CAMP_ASTRONOMY,
+            CAMP_PHILOSOPHY,
         ),
         innovations=(
             CAMP_FIRE_HEARTH,
@@ -221,6 +230,7 @@ def test_scribe_boosts_teachings_per_knower() -> None:
             active_scribe,
             CAMP_ABACUS,
             CAMP_STAR_CHART,
+            CAMP_DIALECTIC,
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
     )
@@ -257,6 +267,7 @@ def test_scriptorium_boosts_teachings_and_stacks_with_scribe() -> None:
             discovered_writing,
             CAMP_MATHEMATICS,
             CAMP_ASTRONOMY,
+            CAMP_PHILOSOPHY,
         ),
         innovations=(
             CAMP_FIRE_HEARTH,
@@ -266,6 +277,7 @@ def test_scriptorium_boosts_teachings_and_stacks_with_scribe() -> None:
             active_scribe,
             CAMP_ABACUS,
             CAMP_STAR_CHART,
+            CAMP_DIALECTIC,
         ),
         infrastructure=(
             Infrastructure.create(
@@ -330,6 +342,7 @@ def test_curriculum_boosts_teachings_and_stacks_with_scribe_scriptorium() -> Non
             discovered_writing,
             CAMP_MATHEMATICS,
             CAMP_ASTRONOMY,
+            CAMP_PHILOSOPHY,
         ),
         innovations=(
             CAMP_FIRE_HEARTH,
@@ -339,6 +352,7 @@ def test_curriculum_boosts_teachings_and_stacks_with_scribe_scriptorium() -> Non
             active_scribe,
             CAMP_ABACUS,
             CAMP_STAR_CHART,
+            CAMP_DIALECTIC,
         ),
         infrastructure=(
             Infrastructure.create(
@@ -401,6 +415,7 @@ def test_academy_boosts_teachings_and_stacks_with_prior_bonuses() -> None:
             discovered_writing,
             CAMP_MATHEMATICS,
             CAMP_ASTRONOMY,
+            CAMP_PHILOSOPHY,
         ),
         innovations=(
             CAMP_FIRE_HEARTH,
@@ -410,6 +425,7 @@ def test_academy_boosts_teachings_and_stacks_with_prior_bonuses() -> None:
             active_scribe,
             CAMP_ABACUS,
             CAMP_STAR_CHART,
+            CAMP_DIALECTIC,
         ),
         infrastructure=(
             Infrastructure.create(
@@ -485,6 +501,7 @@ def test_forum_boosts_teachings_and_stacks_with_academy_scriptorium() -> None:
             discovered_writing,
             CAMP_MATHEMATICS,
             CAMP_ASTRONOMY,
+            CAMP_PHILOSOPHY,
         ),
         innovations=(
             CAMP_FIRE_HEARTH,
@@ -494,6 +511,7 @@ def test_forum_boosts_teachings_and_stacks_with_academy_scriptorium() -> None:
             active_scribe,
             CAMP_ABACUS,
             CAMP_STAR_CHART,
+            CAMP_DIALECTIC,
         ),
         infrastructure=(
             Infrastructure.create(
@@ -697,6 +715,7 @@ def test_abacus_reduces_produce_energy_and_stacks_with_guild() -> None:
             discovered_writing,
             discovered_math,
             CAMP_ASTRONOMY,
+            CAMP_PHILOSOPHY,
         ),
         innovations=(
             CAMP_FIRE_HEARTH,
@@ -706,6 +725,7 @@ def test_abacus_reduces_produce_energy_and_stacks_with_guild() -> None:
             CAMP_SCRIBE,
             active_abacus,
             CAMP_STAR_CHART,
+            CAMP_DIALECTIC,
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
     )
@@ -737,6 +757,7 @@ def test_abacus_reduces_produce_energy_and_stacks_with_guild() -> None:
             discovered_writing,
             discovered_math,
             CAMP_ASTRONOMY,
+            CAMP_PHILOSOPHY,
         ),
         innovations=(
             CAMP_FIRE_HEARTH,
@@ -746,6 +767,7 @@ def test_abacus_reduces_produce_energy_and_stacks_with_guild() -> None:
             CAMP_SCRIBE,
             active_abacus,
             CAMP_STAR_CHART,
+            CAMP_DIALECTIC,
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
     )
@@ -938,6 +960,7 @@ def test_star_chart_raises_retrieval_limit_society_wide() -> None:
             discovered_writing,
             discovered_math,
             discovered_astronomy,
+            CAMP_PHILOSOPHY,
         ),
         innovations=(
             CAMP_FIRE_HEARTH,
@@ -947,6 +970,7 @@ def test_star_chart_raises_retrieval_limit_society_wide() -> None:
             CAMP_SCRIBE,
             CAMP_ABACUS,
             active_star_chart,
+            CAMP_DIALECTIC,
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
     )
@@ -991,6 +1015,7 @@ def test_star_chart_stacks_with_archive_library_and_observatory() -> None:
             discovered_writing,
             discovered_math,
             discovered_astronomy,
+            CAMP_PHILOSOPHY,
         ),
         innovations=(
             CAMP_FIRE_HEARTH,
@@ -1000,6 +1025,7 @@ def test_star_chart_stacks_with_archive_library_and_observatory() -> None:
             CAMP_SCRIBE,
             CAMP_ABACUS,
             active_star_chart,
+            CAMP_DIALECTIC,
         ),
         agents=(Agent.create(agent_id=0, name="A", location_id=1),),
     )
@@ -1067,6 +1093,7 @@ def test_calendar_stacks_with_archive_library_observatory_and_star_chart() -> No
             discovered_writing,
             discovered_math,
             discovered_astronomy,
+            CAMP_PHILOSOPHY,
         ),
         innovations=(
             CAMP_FIRE_HEARTH,
@@ -1076,6 +1103,7 @@ def test_calendar_stacks_with_archive_library_observatory_and_star_chart() -> No
             CAMP_SCRIBE,
             CAMP_ABACUS,
             active_star_chart,
+            CAMP_DIALECTIC,
         ),
         agents=(Agent.create(agent_id=0, name="A", location_id=1),),
     )
@@ -1090,6 +1118,101 @@ def test_calendar_stacks_with_archive_library_observatory_and_star_chart() -> No
         + OBSERVATORY_RETRIEVAL_LIMIT_BONUS
         + ASTRONOMY_RETRIEVAL_LIMIT_BONUS
         + CALENDAR_RETRIEVAL_LIMIT_BONUS
+    )
+
+
+def test_dialectic_boosts_teachings_per_knower() -> None:
+    """Active dialectic adds a society-wide teachings-per-knower bonus."""
+    discovered_pottery = CAMP_POTTERY.model_copy(update={"discovered": True})
+    discovered_irrigation = CAMP_IRRIGATION.model_copy(update={"discovered": True})
+    discovered_metallurgy = CAMP_METALLURGY.model_copy(update={"discovered": True})
+    discovered_writing = CAMP_WRITING.model_copy(update={"discovered": True})
+    discovered_math = CAMP_MATHEMATICS.model_copy(update={"discovered": True})
+    discovered_astronomy = CAMP_ASTRONOMY.model_copy(update={"discovered": True})
+    discovered_philosophy = CAMP_PHILOSOPHY.model_copy(update={"discovered": True})
+    active_dialectic = CAMP_DIALECTIC.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        technologies=(
+            CAMP_FIRE,
+            discovered_pottery,
+            discovered_irrigation,
+            discovered_metallurgy,
+            discovered_writing,
+            discovered_math,
+            discovered_astronomy,
+            discovered_philosophy,
+        ),
+        innovations=(
+            CAMP_FIRE_HEARTH,
+            CAMP_POTTERY_CRAFT,
+            CAMP_IRRIGATION_CANAL,
+            CAMP_FORGE,
+            CAMP_SCRIBE,
+            CAMP_ABACUS,
+            CAMP_STAR_CHART,
+            active_dialectic,
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert teachings_per_knower_bonus(world) == PHILOSOPHY_TEACHINGS_PER_KNOWER_BONUS
+    assert (
+        effective_teachings_per_knower(world, base=DEFAULT_TEACHINGS_PER_KNOWER)
+        == DEFAULT_TEACHINGS_PER_KNOWER + PHILOSOPHY_TEACHINGS_PER_KNOWER_BONUS
+    )
+    bare = _world()
+    assert teachings_per_knower_bonus(bare) == 0
+    assert (
+        effective_teachings_per_knower(bare, base=DEFAULT_TEACHINGS_PER_KNOWER)
+        == DEFAULT_TEACHINGS_PER_KNOWER
+    )
+
+
+def test_dialectic_stacks_with_scribe() -> None:
+    """Dialectic teachings bonus stacks with scribe society-wide."""
+    discovered_pottery = CAMP_POTTERY.model_copy(update={"discovered": True})
+    discovered_irrigation = CAMP_IRRIGATION.model_copy(update={"discovered": True})
+    discovered_metallurgy = CAMP_METALLURGY.model_copy(update={"discovered": True})
+    discovered_writing = CAMP_WRITING.model_copy(update={"discovered": True})
+    discovered_math = CAMP_MATHEMATICS.model_copy(update={"discovered": True})
+    discovered_astronomy = CAMP_ASTRONOMY.model_copy(update={"discovered": True})
+    discovered_philosophy = CAMP_PHILOSOPHY.model_copy(update={"discovered": True})
+    active_scribe = CAMP_SCRIBE.model_copy(update={"active": True})
+    active_dialectic = CAMP_DIALECTIC.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        technologies=(
+            CAMP_FIRE,
+            discovered_pottery,
+            discovered_irrigation,
+            discovered_metallurgy,
+            discovered_writing,
+            discovered_math,
+            discovered_astronomy,
+            discovered_philosophy,
+        ),
+        innovations=(
+            CAMP_FIRE_HEARTH,
+            CAMP_POTTERY_CRAFT,
+            CAMP_IRRIGATION_CANAL,
+            CAMP_FORGE,
+            active_scribe,
+            CAMP_ABACUS,
+            CAMP_STAR_CHART,
+            active_dialectic,
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert teachings_per_knower_bonus(world) == (
+        WRITING_TEACHINGS_PER_KNOWER_BONUS + PHILOSOPHY_TEACHINGS_PER_KNOWER_BONUS
+    )
+    assert (
+        effective_teachings_per_knower(world, base=DEFAULT_TEACHINGS_PER_KNOWER)
+        == DEFAULT_TEACHINGS_PER_KNOWER
+        + WRITING_TEACHINGS_PER_KNOWER_BONUS
+        + PHILOSOPHY_TEACHINGS_PER_KNOWER_BONUS
     )
 
 

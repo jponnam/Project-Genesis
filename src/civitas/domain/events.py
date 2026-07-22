@@ -615,6 +615,7 @@ class TechnologiesObserved(DomainEvent):
     discovered_writing_count: NonNegativeInt = 0
     discovered_mathematics_count: NonNegativeInt = 0
     discovered_astronomy_count: NonNegativeInt = 0
+    discovered_philosophy_count: NonNegativeInt = 0
     locked_count: NonNegativeInt = 0
     researchable_count: NonNegativeInt = 0
 
@@ -678,6 +679,7 @@ class InnovationsObserved(DomainEvent):
     active_scribe_count: NonNegativeInt = 0
     active_abacus_count: NonNegativeInt = 0
     active_star_chart_count: NonNegativeInt = 0
+    active_dialectic_count: NonNegativeInt = 0
 
 
 class KnowledgeLearned(DomainEvent):
@@ -701,6 +703,7 @@ class KnowledgeObserved(DomainEvent):
     writing_knower_count: NonNegativeInt = 0
     mathematics_knower_count: NonNegativeInt = 0
     astronomy_knower_count: NonNegativeInt = 0
+    philosophy_knower_count: NonNegativeInt = 0
     total_fact_instances: NonNegativeInt
     coverage_bps: NonNegativeInt
 
