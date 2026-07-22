@@ -126,3 +126,18 @@ def test_producible_recipes_returns_catalog_order() -> None:
     assert tuple(recipe.recipe_id for recipe in producible_recipes(rations_only)) == (
         "rations",
     )
+
+
+def test_energy_cost_override_enables_and_spends_discounted_cost() -> None:
+    """Optional energy_cost overrides recipe cost for legality and spending."""
+    tired = _crafter(food=2, water=1, energy=0.03)
+    assert can_produce(tired, "rations") is False
+    assert can_produce(tired, "rations", energy_cost=0.02) is True
+    updated = apply_produce(tired, "rations", energy_cost=0.02)
+    assert updated is not None
+    assert updated.needs.energy == pytest.approx(0.01)
+    assert updated.inventory.quantity("rations") == 1
+
+    agent = _crafter(food=2, water=1, stone=1, wood=2, energy=0.04)
+    recipes = producible_recipes(agent, energy_cost_fn=lambda recipe: 0.02)
+    assert tuple(recipe.recipe_id for recipe in recipes) == ("rations", "tools")

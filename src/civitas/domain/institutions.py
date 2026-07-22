@@ -1,10 +1,11 @@
 """Institutions: durable organizations under governments.
 
-Phase 5 Milestone 4 plus Phase 9 Milestone 4 budgets. Institutions are
-gov-attached civic organizations with a seat location inside the
-government's jurisdiction, an optional officer, and an integer budget
-funded from the parent government treasury. This package seeds a single
-``COUNCIL`` kind. Extra kinds remain later milestones.
+Phase 5 Milestone 4 plus Phase 9 Milestone 4 budgets and Milestone 9
+guilds. Institutions are gov-attached civic organizations with a seat
+location inside the government's jurisdiction, an optional officer, and
+an integer budget funded from the parent government treasury. Councils
+and guilds coexist; this package seeds a single ``COUNCIL``. Extra kinds
+remain later milestones.
 """
 
 from __future__ import annotations
@@ -28,6 +29,7 @@ class InstitutionKind(StrEnum):
     """Supported institution kinds."""
 
     COUNCIL = "council"
+    GUILD = "guild"
 
 
 class Institution(BaseModel):
@@ -98,6 +100,7 @@ class InstitutionCensus(BaseModel):
     staffed_count: NonNegativeInt
     vacant_officer_count: NonNegativeInt
     active_council_count: NonNegativeInt
+    active_guild_count: NonNegativeInt = 0
     total_budget: NonNegativeInt = 0
     funded_count: NonNegativeInt = 0
 
@@ -375,6 +378,9 @@ def census_institutions(world: World) -> InstitutionCensus:
     active_councils = sum(
         1 for institution in active if institution.kind is InstitutionKind.COUNCIL
     )
+    active_guilds = sum(
+        1 for institution in active if institution.kind is InstitutionKind.GUILD
+    )
     total_budget = institution_budget_total(world)
     funded_count = sum(1 for institution in institutions if institution.budget > 0)
     return InstitutionCensus(
@@ -386,6 +392,7 @@ def census_institutions(world: World) -> InstitutionCensus:
         staffed_count=staffed,
         vacant_officer_count=vacant,
         active_council_count=active_councils,
+        active_guild_count=active_guilds,
         total_budget=total_budget,
         funded_count=funded_count,
     )

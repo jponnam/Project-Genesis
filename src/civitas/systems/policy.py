@@ -29,6 +29,7 @@ from civitas.domain import (
     can_afford,
     can_rest,
     can_trade,
+    effective_produce_energy_cost,
     enterable_neighbors,
     gatherable_resources,
     get_bond,
@@ -113,7 +114,7 @@ class UtilityPolicy:
             utility, _seller, _resource = self._best_trade(agent, world)
             return utility
         if kind is ActionKind.PRODUCE:
-            utility, _recipe = self._best_produce(agent)
+            utility, _recipe = self._best_produce(agent, world)
             return utility
         if kind is ActionKind.SOCIALIZE:
             utility, _partner = self._best_socialize(agent, world)
@@ -176,7 +177,7 @@ class UtilityPolicy:
                 target_location = None
                 target_resource = None
             elif action is ActionKind.PRODUCE:
-                utility, target_resource = self._best_produce(agent)
+                utility, target_resource = self._best_produce(agent, world)
                 if target_resource is None:
                     continue
                 target_location = None
@@ -373,9 +374,23 @@ class UtilityPolicy:
         goal_component = self._trade_goal_bonus(agent, resource)
         return round((need_component * personality_component) + goal_component, 6)
 
-    def _best_produce(self, agent: Agent) -> tuple[float, str | None]:
+    def _best_produce(
+        self,
+        agent: Agent,
+        world: World | None = None,
+    ) -> tuple[float, str | None]:
         """Return (utility, recipe_id) for the best legal PRODUCE, if any."""
-        recipes = producible_recipes(agent)
+        if world is None:
+            recipes = producible_recipes(agent)
+        else:
+            recipes = producible_recipes(
+                agent,
+                energy_cost_fn=lambda recipe: effective_produce_energy_cost(
+                    world,
+                    agent,
+                    base=float(recipe.energy_cost),
+                ),
+            )
         if not recipes:
             return 0.0, None
 

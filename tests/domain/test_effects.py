@@ -15,8 +15,10 @@ from civitas.domain import (
     DEFAULT_DRINK_RESTORE,
     DEFAULT_GATHER_AMOUNT,
     DEFAULT_MOVE_ENERGY_COST,
+    DEFAULT_PRODUCE_ENERGY_COST,
     DEFAULT_REST_RESTORE,
     FIRE_HEARTH_REST_BONUS,
+    GUILD_PRODUCE_ENERGY_DISCOUNT,
     IRRIGATION_WATER_GATHER_BONUS,
     POTTERY_WATER_GATHER_BONUS,
     ROAD_MOVE_ENERGY_DISCOUNT,
@@ -28,6 +30,8 @@ from civitas.domain import (
     Government,
     Infrastructure,
     InfrastructureKind,
+    Institution,
+    InstitutionKind,
     SimulationConfig,
     World,
     census_effects,
@@ -35,8 +39,10 @@ from civitas.domain import (
     effective_drink_restore,
     effective_gather_amount,
     effective_move_energy_cost,
+    effective_produce_energy_cost,
     effective_rest_restore,
     gather_amount_bonus,
+    location_has_active_guild,
     location_has_active_road,
     location_has_active_storehouse,
     location_has_active_well,
@@ -171,4 +177,31 @@ def test_road_reduces_move_energy_for_colocated_agents() -> None:
     assert snap.active_road_count == 1
     assert snap.move_energy_cost_bps == round(
         (DEFAULT_MOVE_ENERGY_COST - ROAD_MOVE_ENERGY_DISCOUNT) * 10_000
+    )
+    assert snap.active_guild_count == 0
+    assert snap.produce_energy_cost_bps == round(DEFAULT_PRODUCE_ENERGY_COST * 10_000)
+
+
+def test_guild_reduces_produce_energy_for_colocated_agents() -> None:
+    """Active guilds discount PRODUCE energy at their seat location."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        institutions=(
+            Institution.create(0, 0, 0, "Camp Guild", InstitutionKind.GUILD),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_guild(world, agent.location_id) is True
+    assert effective_produce_energy_cost(
+        world,
+        agent,
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(DEFAULT_PRODUCE_ENERGY_COST - GUILD_PRODUCE_ENERGY_DISCOUNT)
+    snap = census_effects(world)
+    assert snap.active_guild_count == 1
+    assert snap.produce_energy_cost_bps == round(
+        (DEFAULT_PRODUCE_ENERGY_COST - GUILD_PRODUCE_ENERGY_DISCOUNT) * 10_000
     )

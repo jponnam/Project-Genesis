@@ -538,6 +538,7 @@ class InstitutionsObserved(DomainEvent):
     staffed_count: NonNegativeInt
     vacant_officer_count: NonNegativeInt
     active_council_count: NonNegativeInt
+    active_guild_count: NonNegativeInt = 0
     total_budget: NonNegativeInt = 0
     funded_count: NonNegativeInt = 0
 
@@ -750,6 +751,8 @@ class EffectsObserved(DomainEvent):
     food_gather_amount: NonNegativeInt = 1
     active_road_count: NonNegativeInt = 0
     move_energy_cost_bps: NonNegativeInt = 500
+    active_guild_count: NonNegativeInt = 0
+    produce_energy_cost_bps: NonNegativeInt = 1000
 
 
 CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (

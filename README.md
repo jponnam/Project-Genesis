@@ -121,11 +121,12 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 9 — Milestone 8: Institution-funded infrastructure construction**
+**Phase 9 — Milestone 9: Guild institutions**
 
-Active institutions can spend their budgets to commission infrastructure
-via opt-in helpers. This closes the fiscal loop: taxes fund government
-treasuries, treasuries fund institution budgets, and budgets fund builds.
+``InstitutionKind.GUILD`` is a second institution kind that coexists with
+councils. An active guild at an agent's location discounts PRODUCE energy
+cost. Camp council remains the only seeded institution; guilds are created
+opt-in, with at most one active guild per government.
 
 ### Completed
 
@@ -195,6 +196,7 @@ JSONL storage → `civitas run`
 - Milestone 6: Storehouse infrastructure
 - Milestone 7: Road infrastructure
 - Milestone 8: Institution-funded infrastructure construction
+- Milestone 9: Guild institutions
 
 ## License
 

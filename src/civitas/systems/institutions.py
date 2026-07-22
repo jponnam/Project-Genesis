@@ -79,6 +79,7 @@ class InstitutionSystem:
                     staffed_count=snap.staffed_count,
                     vacant_officer_count=snap.vacant_officer_count,
                     active_council_count=snap.active_council_count,
+                    active_guild_count=snap.active_guild_count,
                     total_budget=snap.total_budget,
                     funded_count=snap.funded_count,
                 )

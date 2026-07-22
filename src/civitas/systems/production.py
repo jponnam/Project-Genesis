@@ -12,7 +12,13 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
-from civitas.domain import NeedDecayed, ResourceProduced, apply_produce, can_produce
+from civitas.domain import (
+    NeedDecayed,
+    ResourceProduced,
+    apply_produce,
+    can_produce,
+    effective_produce_energy_cost,
+)
 from civitas.domain.production import recipe_by_id
 
 if TYPE_CHECKING:
@@ -49,7 +55,15 @@ class ProductionSystem:
         agent = world.agent_by_id(agent_id)
         if agent is None:
             return False
-        return can_produce(agent, recipe_id)
+        recipe = recipe_by_id(recipe_id)
+        if recipe is None:
+            return False
+        cost = effective_produce_energy_cost(
+            world,
+            agent,
+            base=float(recipe.energy_cost),
+        )
+        return can_produce(agent, recipe_id, energy_cost=cost)
 
     def produce(
         self,
@@ -69,9 +83,16 @@ class ProductionSystem:
             raise ValueError(msg)
 
         recipe = recipe_by_id(recipe_id)
+        if recipe is None:
+            return world
         previous_energy = agent.needs.energy
-        updated = apply_produce(agent, recipe_id)
-        if updated is None or recipe is None:
+        cost = effective_produce_energy_cost(
+            world,
+            agent,
+            base=float(recipe.energy_cost),
+        )
+        updated = apply_produce(agent, recipe_id, energy_cost=cost)
+        if updated is None:
             return world
 
         world = world.with_agent(updated)
