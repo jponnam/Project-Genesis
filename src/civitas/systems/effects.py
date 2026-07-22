@@ -1,7 +1,8 @@
 """Effects system: observe society modifiers from tech and infrastructure.
 
 Owns observe-time ``EffectsObserved``. Does not apply world mutations;
-the action executor reads domain effect helpers when REST/GATHER/DRINK run.
+the action executor reads domain effect helpers when REST/GATHER/DRINK/
+MOVE/PRODUCE run.
 """
 
 from __future__ import annotations
@@ -65,6 +66,8 @@ class EffectsSystem:
                     food_gather_amount=snap.food_gather_amount,
                     active_road_count=snap.active_road_count,
                     move_energy_cost_bps=snap.move_energy_cost_bps,
+                    active_guild_count=snap.active_guild_count,
+                    produce_energy_cost_bps=snap.produce_energy_cost_bps,
                 )
             )
         return world

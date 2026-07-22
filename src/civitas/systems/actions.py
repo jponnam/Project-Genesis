@@ -49,6 +49,7 @@ from civitas.domain import (
     effective_drink_restore,
     effective_gather_amount,
     effective_move_energy_cost,
+    effective_produce_energy_cost,
     effective_rest_restore,
     get_bond,
     recipe_by_id,
@@ -350,9 +351,16 @@ class ActionExecutor:
             return agent, False
 
         recipe = recipe_by_id(choice.target_resource)
+        if recipe is None:
+            return agent, False
         previous_energy = agent.needs.energy
-        updated = apply_produce(agent, choice.target_resource)
-        if updated is None or recipe is None:
+        cost = effective_produce_energy_cost(
+            world,
+            agent,
+            base=float(recipe.energy_cost),
+        )
+        updated = apply_produce(agent, choice.target_resource, energy_cost=cost)
+        if updated is None:
             return agent, False
 
         if bus is not None:

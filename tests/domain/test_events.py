@@ -753,6 +753,7 @@ def test_institution_created_and_observed_round_trips() -> None:
         staffed_count=0,
         vacant_officer_count=1,
         active_council_count=1,
+        active_guild_count=1,
         total_budget=3,
         funded_count=1,
     )
@@ -760,6 +761,7 @@ def test_institution_created_and_observed_round_trips() -> None:
     assert isinstance(restored, InstitutionsObserved)
     assert restored.institution_count == 1
     assert restored.active_council_count == 1
+    assert restored.active_guild_count == 1
     assert restored.total_budget == 3
     assert restored.funded_count == 1
 
@@ -1163,6 +1165,8 @@ def test_effects_events_round_trip() -> None:
         food_gather_amount=2,
         active_road_count=1,
         move_energy_cost_bps=300,
+        active_guild_count=1,
+        produce_energy_cost_bps=800,
     )
     restored = event_from_record(observed.to_record())
     assert isinstance(restored, EffectsObserved)
@@ -1174,3 +1178,5 @@ def test_effects_events_round_trip() -> None:
     assert restored.food_gather_amount == 2
     assert restored.active_road_count == 1
     assert restored.move_energy_cost_bps == 300
+    assert restored.active_guild_count == 1
+    assert restored.produce_energy_cost_bps == 800

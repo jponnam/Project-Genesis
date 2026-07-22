@@ -17,6 +17,8 @@ from civitas.domain.energy import spend_energy
 from civitas.domain.types import NonEmptyStr, UnitInterval
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from civitas.domain.agent import Agent
 
 DEFAULT_PRODUCE_ENERGY_COST: float = 0.10
@@ -88,14 +90,20 @@ def recipe_by_id(recipe_id: str) -> Recipe | None:
     return PRODUCTION_RECIPES.get(recipe_id)
 
 
-def can_produce(agent: Agent, recipe_id: str) -> bool:
+def can_produce(
+    agent: Agent,
+    recipe_id: str,
+    *,
+    energy_cost: float | None = None,
+) -> bool:
     """Return True when a living agent can craft ``recipe_id`` right now."""
     recipe = recipe_by_id(recipe_id)
     if recipe is None:
         return False
     if not agent.is_alive():
         return False
-    if agent.needs.energy < recipe.energy_cost:
+    cost = recipe.energy_cost if energy_cost is None else energy_cost
+    if agent.needs.energy < cost:
         return False
     return all(
         agent.inventory.quantity(stack.resource) >= stack.quantity
@@ -103,14 +111,22 @@ def can_produce(agent: Agent, recipe_id: str) -> bool:
     )
 
 
-def apply_produce(agent: Agent, recipe_id: str) -> Agent | None:
+def apply_produce(
+    agent: Agent,
+    recipe_id: str,
+    *,
+    energy_cost: float | None = None,
+) -> Agent | None:
     """Craft ``recipe_id`` for ``agent`` when legal.
 
-    Consumes inputs, adds outputs, and spends the recipe energy cost.
+    Consumes inputs, adds outputs, and spends the effective energy cost.
     Returns the updated agent, or ``None`` when crafting is illegal.
     """
     recipe = recipe_by_id(recipe_id)
-    if recipe is None or not can_produce(agent, recipe_id):
+    if recipe is None:
+        return None
+    cost = recipe.energy_cost if energy_cost is None else energy_cost
+    if not can_produce(agent, recipe_id, energy_cost=cost):
         return None
 
     inventory = agent.inventory
@@ -123,11 +139,18 @@ def apply_produce(agent: Agent, recipe_id: str) -> Agent | None:
         inventory = inventory.add(stack.resource, stack.quantity)
 
     crafted = agent.model_copy(update={"inventory": inventory})
-    return spend_energy(crafted, recipe.energy_cost)
+    return spend_energy(crafted, cost)
 
 
-def producible_recipes(agent: Agent) -> tuple[Recipe, ...]:
+def producible_recipes(
+    agent: Agent,
+    *,
+    energy_cost_fn: Callable[[Recipe], float] | None = None,
+) -> tuple[Recipe, ...]:
     """Return recipes ``agent`` can craft, in catalog order."""
-    return tuple(
-        recipe for recipe in RECIPE_CATALOG if can_produce(agent, recipe.recipe_id)
-    )
+    result: list[Recipe] = []
+    for recipe in RECIPE_CATALOG:
+        cost = None if energy_cost_fn is None else energy_cost_fn(recipe)
+        if can_produce(agent, recipe.recipe_id, energy_cost=cost):
+            result.append(recipe)
+    return tuple(result)

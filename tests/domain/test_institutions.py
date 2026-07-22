@@ -90,6 +90,31 @@ def test_create_rejects_second_active_council() -> None:
     )
 
 
+def test_create_guild_alongside_council() -> None:
+    """Guilds coexist with councils; census counts each kind."""
+    world = _world(
+        Agent.create(agent_id=0, name="A"),
+        institutions=(Institution.create(0, 0, 0, "Council", InstitutionKind.COUNCIL),),
+    )
+    with_guild = create_institution(
+        world,
+        Institution.create(1, 0, 0, "Camp Guild", InstitutionKind.GUILD),
+    )
+    assert with_guild is not None
+    assert with_guild.institutions[1].kind is InstitutionKind.GUILD
+    snap = census_institutions(with_guild)
+    assert snap.active_council_count == 1
+    assert snap.active_guild_count == 1
+    assert snap.active_count == 2
+    assert (
+        create_institution(
+            with_guild,
+            Institution.create(2, 0, 0, "Second Guild", InstitutionKind.GUILD),
+        )
+        is None
+    )
+
+
 def test_dissolve_and_reactivate() -> None:
     """Soft dissolve frees the active-kind slot for reactivation."""
     world = _world(
@@ -149,6 +174,7 @@ def test_census_institutions_counts() -> None:
     assert snap.staffed_count == 1
     assert snap.vacant_officer_count == 1
     assert snap.active_council_count == 1
+    assert snap.active_guild_count == 0
     assert snap.total_budget == 0
     assert snap.funded_count == 0
     assert census_institutions(world) == snap
