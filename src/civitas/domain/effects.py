@@ -1,10 +1,9 @@
 """Society effect wiring from innovations and infrastructure.
 
-Phase 8 Milestone 1 wired active innovations into REST/GATHER outcomes.
-Milestone 2 adds location-scoped infrastructure effects: an active WELL
-boosts DRINK restore for agents at that seat. The action executor reads
-these helpers; ``EffectsSystem`` only observes coverage. Systems never
-call each other.
+Phase 8 wired active innovations into REST/GATHER outcomes and WELL
+drink-restore bonuses. Phase 9 Milestone 6 adds location-scoped STOREHOUSE
+food-gather bonuses. The action executor reads these helpers;
+``EffectsSystem`` only observes coverage. Systems never call each other.
 """
 
 from __future__ import annotations
@@ -14,6 +13,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict
 
 from civitas.domain.energy import DEFAULT_REST_RESTORE
+from civitas.domain.food import FOOD_RESOURCE
 from civitas.domain.ids import LocationId
 from civitas.domain.infrastructure import InfrastructureKind, active_infrastructure
 from civitas.domain.innovation import InnovationKind, active_innovations
@@ -31,6 +31,7 @@ FIRE_HEARTH_REST_BONUS: float = 0.05
 POTTERY_WATER_GATHER_BONUS: int = 1
 IRRIGATION_WATER_GATHER_BONUS: int = 1
 WELL_DRINK_RESTORE_BONUS: float = 0.05
+STOREHOUSE_FOOD_GATHER_BONUS: int = 1
 
 
 class EffectsCensus(BaseModel):
@@ -46,6 +47,8 @@ class EffectsCensus(BaseModel):
     water_gather_amount: NonNegativeInt
     active_well_count: NonNegativeInt
     drink_restore_bps: NonNegativeInt
+    active_storehouse_count: NonNegativeInt = 0
+    food_gather_amount: NonNegativeInt = DEFAULT_GATHER_AMOUNT
 
 
 def innovation_kind_is_active(world: World, kind: InnovationKind | str) -> bool:
@@ -70,6 +73,22 @@ def location_has_active_well(
     )
 
 
+def location_has_active_storehouse(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active STOREHOUSE stands at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InfrastructureKind.STOREHOUSE and item.location_id == target
+        for item in active_infrastructure(world)
+    )
+
+
 def rest_restore_bonus(world: World) -> float:
     """Return the REST restore bonus from active fire-hearth innovations."""
     if innovation_kind_is_active(world, InnovationKind.FIRE_HEARTH):
@@ -77,15 +96,26 @@ def rest_restore_bonus(world: World) -> float:
     return 0.0
 
 
-def gather_amount_bonus(world: World, resource: str) -> int:
-    """Return the gather-amount bonus for ``resource`` from innovations."""
-    if resource != WATER_RESOURCE:
-        return 0
+def gather_amount_bonus(
+    world: World,
+    resource: str,
+    *,
+    location_id: LocationId | int | None = None,
+) -> int:
+    """Return gather-amount bonuses for ``resource``.
+
+    Water bonuses come from society innovations. Food bonuses come from an
+    active STOREHOUSE at ``location_id`` when provided.
+    """
     bonus = 0
-    if innovation_kind_is_active(world, InnovationKind.POTTERY_CRAFT):
-        bonus += POTTERY_WATER_GATHER_BONUS
-    if innovation_kind_is_active(world, InnovationKind.IRRIGATION_CANAL):
-        bonus += IRRIGATION_WATER_GATHER_BONUS
+    if resource == WATER_RESOURCE:
+        if innovation_kind_is_active(world, InnovationKind.POTTERY_CRAFT):
+            bonus += POTTERY_WATER_GATHER_BONUS
+        if innovation_kind_is_active(world, InnovationKind.IRRIGATION_CANAL):
+            bonus += IRRIGATION_WATER_GATHER_BONUS
+    elif resource == FOOD_RESOURCE and location_id is not None:
+        if location_has_active_storehouse(world, location_id):
+            bonus += STOREHOUSE_FOOD_GATHER_BONUS
     return bonus
 
 
@@ -110,11 +140,18 @@ def effective_gather_amount(
     resource: str,
     *,
     base: int = DEFAULT_GATHER_AMOUNT,
+    location_id: LocationId | int | None = None,
+    agent: Agent | None = None,
 ) -> int:
-    """Return gather amount for ``resource`` including innovation bonuses."""
+    """Return gather amount for ``resource`` including effect bonuses."""
     if base < 0:
         return 0
-    return base + gather_amount_bonus(world, resource)
+    seat = (
+        location_id
+        if location_id is not None
+        else (None if agent is None else agent.location_id)
+    )
+    return base + gather_amount_bonus(world, resource, location_id=seat)
 
 
 def effective_drink_restore(
@@ -136,9 +173,20 @@ def census_effects(world: World) -> EffectsCensus:
         for item in active_infrastructure(world)
         if item.kind is InfrastructureKind.WELL
     )
+    storehouses = tuple(
+        item
+        for item in active_infrastructure(world)
+        if item.kind is InfrastructureKind.STOREHOUSE
+    )
     # Society drink potential at a well seat (bonus available when colocated).
     drink_at_well = clamp_unit(
         DEFAULT_DRINK_RESTORE + (WELL_DRINK_RESTORE_BONUS if wells else 0.0)
+    )
+    # Food gather potential at a storehouse seat.
+    food_at_storehouse = effective_gather_amount(
+        world,
+        FOOD_RESOURCE,
+        location_id=storehouses[0].location_id if storehouses else None,
     )
     return EffectsCensus(
         tick=world.tick,
@@ -153,4 +201,6 @@ def census_effects(world: World) -> EffectsCensus:
         water_gather_amount=water_amount,
         active_well_count=len(wells),
         drink_restore_bps=round(drink_at_well * 10_000),
+        active_storehouse_count=len(storehouses),
+        food_gather_amount=food_at_storehouse,
     )

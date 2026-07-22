@@ -18,8 +18,14 @@ from civitas.domain import (
     FIRE_HEARTH_REST_BONUS,
     IRRIGATION_WATER_GATHER_BONUS,
     POTTERY_WATER_GATHER_BONUS,
+    STOREHOUSE_FOOD_GATHER_BONUS,
     WELL_DRINK_RESTORE_BONUS,
     Agent,
+    City,
+    CityKind,
+    Government,
+    Infrastructure,
+    InfrastructureKind,
     SimulationConfig,
     World,
     census_effects,
@@ -28,6 +34,7 @@ from civitas.domain import (
     effective_gather_amount,
     effective_rest_restore,
     gather_amount_bonus,
+    location_has_active_storehouse,
     location_has_active_well,
     rest_restore_bonus,
 )
@@ -101,3 +108,37 @@ def test_well_boosts_drink_restore_for_colocated_agents() -> None:
     snap = census_effects(world)
     assert snap.active_well_count == 1
     assert snap.drink_restore_bps == 3500
+    assert snap.active_storehouse_count == 0
+    assert snap.food_gather_amount == DEFAULT_GATHER_AMOUNT
+
+
+def test_storehouse_boosts_food_gather_for_colocated_agents() -> None:
+    """Active storehouses add a food gather bonus at their seat location."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 0, 0, "Camp Storehouse", InfrastructureKind.STOREHOUSE
+            ),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_storehouse(world, agent.location_id) is True
+    assert (
+        gather_amount_bonus(world, "food", location_id=agent.location_id)
+        == STOREHOUSE_FOOD_GATHER_BONUS
+    )
+    assert gather_amount_bonus(world, "food") == 0
+    assert (
+        effective_gather_amount(world, "food", agent=agent)
+        == DEFAULT_GATHER_AMOUNT + STOREHOUSE_FOOD_GATHER_BONUS
+    )
+    snap = census_effects(world)
+    assert snap.active_storehouse_count == 1
+    assert snap.food_gather_amount == (
+        DEFAULT_GATHER_AMOUNT + STOREHOUSE_FOOD_GATHER_BONUS
+    )

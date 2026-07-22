@@ -32,6 +32,7 @@ def test_observe_emits_without_mutating_world() -> None:
     assert len(events) == 1
     assert events[0].infrastructure_count == 1
     assert events[0].active_well_count == 1
+    assert events[0].active_storehouse_count == 0
 
 
 def test_observe_can_suppress_events() -> None:

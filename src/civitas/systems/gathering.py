@@ -69,7 +69,12 @@ class GatheringSystem:
         location = world.location_by_id(agent.location_id)
         if location is None:
             return False
-        amount = effective_gather_amount(world, resource, base=int(self._config.amount))
+        amount = effective_gather_amount(
+            world,
+            resource,
+            base=int(self._config.amount),
+            agent=agent,
+        )
         return location_stock(location, resource) >= amount
 
     def gather(
@@ -92,7 +97,12 @@ class GatheringSystem:
             msg = f"agent id {agent_id} not found in world"
             raise ValueError(msg)
 
-        amount = effective_gather_amount(world, resource, base=int(self._config.amount))
+        amount = effective_gather_amount(
+            world,
+            resource,
+            base=int(self._config.amount),
+            agent=agent,
+        )
         updated = apply_gather(
             world,
             agent,
