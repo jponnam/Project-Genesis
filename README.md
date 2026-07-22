@@ -129,14 +129,14 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 17 Milestone 11: Safety codes laws**
+**Phase 17 Milestone 12: Ironworks cities**
 
-``LawKind.SAFETY_CODES`` is a government statute that grants living
-subjects a PRODUCE energy discount. It stacks with the full produce
-chain: guild, workshop, weaver, smelter, foundry, fulling mill, forge
-works, mill town, tannery, bellows, lathe, abacus, pulley, customs,
-labor, and loom. At most one safety codes law may be active per
-government. The statute is not seeded and must be enacted.
+``CityKind.IRONWORKS`` is a non-capital specialized city seat for metal
+production whose living residents gain a PRODUCE energy discount. It
+stacks with the full produce chain: guild, workshop, weaver, smelter,
+foundry, fulling mill, forge works, mill town, tannery, bellows, lathe,
+abacus, pulley, customs, labor, safety codes, and loom. Ironworks cannot
+be capitals and are not seeded.
 
 ### Completed
 
@@ -321,6 +321,7 @@ JSONL storage → `civitas run`
 - Milestone 9: Forge works infrastructure
 - Milestone 10: Toolmaking technology
 - Milestone 11: Safety codes laws
+- Milestone 12: Ironworks cities
 
 ## License
 
