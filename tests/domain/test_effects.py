@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from civitas.domain import (
+    ACADEMY_TEACHINGS_PER_KNOWER_BONUS,
     ARCHIVE_RETRIEVAL_LIMIT_BONUS,
     BUREAUCRACY_MARKET_FEE_DISCOUNT,
     CAMP_ABACUS,
@@ -64,6 +65,7 @@ from civitas.domain import (
     effective_retrieval_limit,
     effective_teachings_per_knower,
     gather_amount_bonus,
+    location_has_active_academy,
     location_has_active_archive,
     location_has_active_bureaucracy,
     location_has_active_guild,
@@ -356,6 +358,85 @@ def test_curriculum_boosts_teachings_and_stacks_with_scribe_scriptorium() -> Non
         )
         == DEFAULT_TEACHINGS_PER_KNOWER + CURRICULUM_TEACHINGS_PER_KNOWER_BONUS
     )
+
+
+def test_academy_boosts_teachings_and_stacks_with_prior_bonuses() -> None:
+    """Active academy seat bonus stacks with scribe, scriptorium, and curriculum."""
+    discovered_pottery = CAMP_POTTERY.model_copy(update={"discovered": True})
+    discovered_irrigation = CAMP_IRRIGATION.model_copy(update={"discovered": True})
+    discovered_metallurgy = CAMP_METALLURGY.model_copy(update={"discovered": True})
+    discovered_writing = CAMP_WRITING.model_copy(update={"discovered": True})
+    active_scribe = CAMP_SCRIBE.model_copy(update={"active": True})
+    curriculum = Law.create(0, 0, "Camp Schools", LawKind.CURRICULUM)
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(curriculum,),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        technologies=(
+            CAMP_FIRE,
+            discovered_pottery,
+            discovered_irrigation,
+            discovered_metallurgy,
+            discovered_writing,
+            CAMP_MATHEMATICS,
+        ),
+        innovations=(
+            CAMP_FIRE_HEARTH,
+            CAMP_POTTERY_CRAFT,
+            CAMP_IRRIGATION_CANAL,
+            CAMP_FORGE,
+            active_scribe,
+            CAMP_ABACUS,
+        ),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 0, 0, "Camp Scriptorium", InfrastructureKind.SCRIPTORIUM
+            ),
+        ),
+        institutions=(
+            Institution.create(0, 0, 0, "Camp Academy", InstitutionKind.ACADEMY),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_academy(world, agent.location_id) is True
+    assert (
+        effective_teachings_per_knower(
+            world, base=DEFAULT_TEACHINGS_PER_KNOWER, agent=agent
+        )
+        == DEFAULT_TEACHINGS_PER_KNOWER
+        + WRITING_TEACHINGS_PER_KNOWER_BONUS
+        + SCRIPTORIUM_TEACHINGS_PER_KNOWER_BONUS
+        + CURRICULUM_TEACHINGS_PER_KNOWER_BONUS
+        + ACADEMY_TEACHINGS_PER_KNOWER_BONUS
+    )
+    # Without agent/location, academy (seat-scoped) and curriculum do not apply.
+    assert (
+        effective_teachings_per_knower(world, base=DEFAULT_TEACHINGS_PER_KNOWER)
+        == DEFAULT_TEACHINGS_PER_KNOWER + WRITING_TEACHINGS_PER_KNOWER_BONUS
+    )
+    academy_only = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        institutions=(
+            Institution.create(0, 0, 0, "Camp Academy", InstitutionKind.ACADEMY),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_academy(academy_only, 0) is True
+    assert (
+        effective_teachings_per_knower(
+            academy_only,
+            base=DEFAULT_TEACHINGS_PER_KNOWER,
+            agent=academy_only.agents[0],
+        )
+        == DEFAULT_TEACHINGS_PER_KNOWER + ACADEMY_TEACHINGS_PER_KNOWER_BONUS
+    )
+    bare = _world()
+    assert location_has_active_academy(bare, bare.agents[0].location_id) is False
 
 
 def test_census_effects_reports_active_bonuses() -> None:

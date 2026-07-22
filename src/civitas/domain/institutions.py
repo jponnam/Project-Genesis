@@ -1,12 +1,13 @@
 """Institutions: durable organizations under governments.
 
 Phase 5 Milestone 4 plus Phase 9 Milestone 4 budgets and Milestone 9
-guilds, plus Phase 10 Milestone 2 archives and Milestone 6 bureaucracies.
-Institutions are gov-attached civic organizations with a seat location
-inside the government's jurisdiction, an optional officer, and an integer
-budget funded from the parent government treasury. Councils, guilds,
-archives, and bureaucracies coexist; this package seeds a single
-``COUNCIL``. Writing-gated archive creation is a later milestone.
+guilds, plus Phase 10 Milestone 2 archives, Milestone 6 bureaucracies,
+and Milestone 8 academies. Institutions are gov-attached civic
+organizations with a seat location inside the government's jurisdiction,
+an optional officer, and an integer budget funded from the parent
+government treasury. Councils, guilds, archives, bureaucracies, and
+academies coexist; this package seeds a single ``COUNCIL``. Writing-gated
+archive creation is a later milestone.
 """
 
 from __future__ import annotations
@@ -33,6 +34,7 @@ class InstitutionKind(StrEnum):
     GUILD = "guild"
     ARCHIVE = "archive"
     BUREAUCRACY = "bureaucracy"
+    ACADEMY = "academy"
 
 
 class Institution(BaseModel):
@@ -106,6 +108,7 @@ class InstitutionCensus(BaseModel):
     active_guild_count: NonNegativeInt = 0
     active_archive_count: NonNegativeInt = 0
     active_bureaucracy_count: NonNegativeInt = 0
+    active_academy_count: NonNegativeInt = 0
     total_budget: NonNegativeInt = 0
     funded_count: NonNegativeInt = 0
 
@@ -392,6 +395,9 @@ def census_institutions(world: World) -> InstitutionCensus:
     active_bureaucracies = sum(
         1 for institution in active if institution.kind is InstitutionKind.BUREAUCRACY
     )
+    active_academies = sum(
+        1 for institution in active if institution.kind is InstitutionKind.ACADEMY
+    )
     total_budget = institution_budget_total(world)
     funded_count = sum(1 for institution in institutions if institution.budget > 0)
     return InstitutionCensus(
@@ -406,6 +412,7 @@ def census_institutions(world: World) -> InstitutionCensus:
         active_guild_count=active_guilds,
         active_archive_count=active_archives,
         active_bureaucracy_count=active_bureaucracies,
+        active_academy_count=active_academies,
         total_budget=total_budget,
         funded_count=funded_count,
     )
