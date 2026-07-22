@@ -1,9 +1,10 @@
 """Society effect wiring from innovations and infrastructure.
 
 Phase 8 wired active innovations into REST/GATHER outcomes and WELL
-drink-restore bonuses. Phase 9 Milestone 6 adds location-scoped STOREHOUSE
-food-gather bonuses. The action executor reads these helpers;
-``EffectsSystem`` only observes coverage. Systems never call each other.
+drink-restore bonuses. Phase 9 adds location-scoped STOREHOUSE food-gather
+bonuses and ROAD move-energy discounts. The action executor reads these
+helpers; ``EffectsSystem`` only observes coverage. Systems never call each
+other.
 """
 
 from __future__ import annotations
@@ -14,6 +15,7 @@ from pydantic import BaseModel, ConfigDict
 
 from civitas.domain.energy import DEFAULT_REST_RESTORE
 from civitas.domain.food import FOOD_RESOURCE
+from civitas.domain.geography import DEFAULT_MOVE_ENERGY_COST
 from civitas.domain.ids import LocationId
 from civitas.domain.infrastructure import InfrastructureKind, active_infrastructure
 from civitas.domain.innovation import InnovationKind, active_innovations
@@ -32,6 +34,7 @@ POTTERY_WATER_GATHER_BONUS: int = 1
 IRRIGATION_WATER_GATHER_BONUS: int = 1
 WELL_DRINK_RESTORE_BONUS: float = 0.05
 STOREHOUSE_FOOD_GATHER_BONUS: int = 1
+ROAD_MOVE_ENERGY_DISCOUNT: float = 0.02
 
 
 class EffectsCensus(BaseModel):
@@ -49,6 +52,8 @@ class EffectsCensus(BaseModel):
     drink_restore_bps: NonNegativeInt
     active_storehouse_count: NonNegativeInt = 0
     food_gather_amount: NonNegativeInt = DEFAULT_GATHER_AMOUNT
+    active_road_count: NonNegativeInt = 0
+    move_energy_cost_bps: NonNegativeInt = round(DEFAULT_MOVE_ENERGY_COST * 10_000)
 
 
 def innovation_kind_is_active(world: World, kind: InnovationKind | str) -> bool:
@@ -85,6 +90,22 @@ def location_has_active_storehouse(
     )
     return any(
         item.kind is InfrastructureKind.STOREHOUSE and item.location_id == target
+        for item in active_infrastructure(world)
+    )
+
+
+def location_has_active_road(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active ROAD stands at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InfrastructureKind.ROAD and item.location_id == target
         for item in active_infrastructure(world)
     )
 
@@ -126,6 +147,13 @@ def drink_restore_bonus(world: World, agent: Agent) -> float:
     return 0.0
 
 
+def move_energy_discount(world: World, agent: Agent) -> float:
+    """Return MOVE energy discount from a ROAD at the agent's location."""
+    if location_has_active_road(world, agent.location_id):
+        return ROAD_MOVE_ENERGY_DISCOUNT
+    return 0.0
+
+
 def effective_rest_restore(
     world: World,
     *,
@@ -164,6 +192,19 @@ def effective_drink_restore(
     return clamp_unit(base + drink_restore_bonus(world, agent))
 
 
+def effective_move_energy_cost(
+    world: World,
+    agent: Agent,
+    *,
+    base: float = DEFAULT_MOVE_ENERGY_COST,
+) -> float:
+    """Return MOVE energy cost including road discounts at the origin seat."""
+    if base < 0:
+        return 0.0
+    discounted = base - move_energy_discount(world, agent)
+    return clamp_unit(max(0.0, discounted))
+
+
 def census_effects(world: World) -> EffectsCensus:
     """Build a deterministic society-effects census for ``world``."""
     restore = effective_rest_restore(world)
@@ -178,6 +219,11 @@ def census_effects(world: World) -> EffectsCensus:
         for item in active_infrastructure(world)
         if item.kind is InfrastructureKind.STOREHOUSE
     )
+    roads = tuple(
+        item
+        for item in active_infrastructure(world)
+        if item.kind is InfrastructureKind.ROAD
+    )
     # Society drink potential at a well seat (bonus available when colocated).
     drink_at_well = clamp_unit(
         DEFAULT_DRINK_RESTORE + (WELL_DRINK_RESTORE_BONUS if wells else 0.0)
@@ -187,6 +233,13 @@ def census_effects(world: World) -> EffectsCensus:
         world,
         FOOD_RESOURCE,
         location_id=storehouses[0].location_id if storehouses else None,
+    )
+    # Move cost potential at a road seat.
+    move_at_road = clamp_unit(
+        max(
+            0.0,
+            DEFAULT_MOVE_ENERGY_COST - (ROAD_MOVE_ENERGY_DISCOUNT if roads else 0.0),
+        )
     )
     return EffectsCensus(
         tick=world.tick,
@@ -203,4 +256,6 @@ def census_effects(world: World) -> EffectsCensus:
         drink_restore_bps=round(drink_at_well * 10_000),
         active_storehouse_count=len(storehouses),
         food_gather_amount=food_at_storehouse,
+        active_road_count=len(roads),
+        move_energy_cost_bps=round(move_at_road * 10_000),
     )

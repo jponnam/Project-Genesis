@@ -48,6 +48,7 @@ from civitas.domain import (
     apply_trade,
     effective_drink_restore,
     effective_gather_amount,
+    effective_move_energy_cost,
     effective_rest_restore,
     get_bond,
     recipe_by_id,
@@ -394,7 +395,11 @@ class ActionExecutor:
             world,
             agent,
             choice.target_location_id,
-            energy_cost=self._config.move_energy_cost,
+            energy_cost=effective_move_energy_cost(
+                world,
+                agent,
+                base=float(self._config.move_energy_cost),
+            ),
         )
         if updated is None:
             return agent, False

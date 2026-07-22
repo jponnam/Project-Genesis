@@ -18,6 +18,8 @@ from civitas.domain import (
     FIRE_HEARTH_REST_BONUS,
     IRRIGATION_WATER_GATHER_BONUS,
     POTTERY_WATER_GATHER_BONUS,
+    DEFAULT_MOVE_ENERGY_COST,
+    ROAD_MOVE_ENERGY_DISCOUNT,
     STOREHOUSE_FOOD_GATHER_BONUS,
     WELL_DRINK_RESTORE_BONUS,
     Agent,
@@ -32,8 +34,10 @@ from civitas.domain import (
     drink_restore_bonus,
     effective_drink_restore,
     effective_gather_amount,
+    effective_move_energy_cost,
     effective_rest_restore,
     gather_amount_bonus,
+    location_has_active_road,
     location_has_active_storehouse,
     location_has_active_well,
     rest_restore_bonus,
@@ -141,4 +145,30 @@ def test_storehouse_boosts_food_gather_for_colocated_agents() -> None:
     assert snap.active_storehouse_count == 1
     assert snap.food_gather_amount == (
         DEFAULT_GATHER_AMOUNT + STOREHOUSE_FOOD_GATHER_BONUS
+    )
+    assert snap.active_road_count == 0
+    assert snap.move_energy_cost_bps == round(DEFAULT_MOVE_ENERGY_COST * 10_000)
+
+
+def test_road_reduces_move_energy_for_colocated_agents() -> None:
+    """Active roads discount MOVE energy at their seat location."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        infrastructure=(
+            Infrastructure.create(0, 0, 0, 0, "Camp Road", InfrastructureKind.ROAD),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_road(world, agent.location_id) is True
+    assert effective_move_energy_cost(world, agent) == pytest.approx(
+        DEFAULT_MOVE_ENERGY_COST - ROAD_MOVE_ENERGY_DISCOUNT
+    )
+    snap = census_effects(world)
+    assert snap.active_road_count == 1
+    assert snap.move_energy_cost_bps == round(
+        (DEFAULT_MOVE_ENERGY_COST - ROAD_MOVE_ENERGY_DISCOUNT) * 10_000
     )

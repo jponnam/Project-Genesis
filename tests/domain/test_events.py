@@ -844,11 +844,13 @@ def test_infrastructure_created_and_observed_round_trips() -> None:
         cities_with_infrastructure=1,
         active_well_count=1,
         active_storehouse_count=1,
+        active_road_count=1,
     )
     restored = event_from_record(observed.to_record())
     assert isinstance(restored, InfrastructuresObserved)
     assert restored.active_well_count == 1
     assert restored.active_storehouse_count == 1
+    assert restored.active_road_count == 1
 
     funded = InfrastructureBuilt(
         sequence=27,
@@ -1139,6 +1141,8 @@ def test_effects_events_round_trip() -> None:
         drink_restore_bps=3500,
         active_storehouse_count=1,
         food_gather_amount=2,
+        active_road_count=1,
+        move_energy_cost_bps=300,
     )
     restored = event_from_record(observed.to_record())
     assert isinstance(restored, EffectsObserved)
@@ -1148,3 +1152,5 @@ def test_effects_events_round_trip() -> None:
     assert restored.drink_restore_bps == 3500
     assert restored.active_storehouse_count == 1
     assert restored.food_gather_amount == 2
+    assert restored.active_road_count == 1
+    assert restored.move_energy_cost_bps == 300

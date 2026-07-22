@@ -121,12 +121,12 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 9 — Milestone 6: Storehouse infrastructure**
+**Phase 9 — Milestone 7: Road infrastructure**
 
-``STOREHOUSE`` is a second infrastructure kind with a catalog build cost.
-An active storehouse boosts food gathering for agents at its seat. The camp
-well remains the only seeded piece; storehouses are created or paid-built
-on demand.
+``ROAD`` is a third infrastructure kind with a catalog build cost. An active
+road reduces MOVE energy cost for agents departing from its seat. The camp
+well remains the only seeded piece; roads are created or paid-built on
+demand.
 
 ### Completed
 
@@ -194,6 +194,7 @@ JSONL storage → `civitas run`
 - Milestone 4: Institution budgets
 - Milestone 5: Treasury-funded infrastructure construction
 - Milestone 6: Storehouse infrastructure
+- Milestone 7: Road infrastructure
 
 ## License
 

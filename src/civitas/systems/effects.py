@@ -63,6 +63,8 @@ class EffectsSystem:
                     drink_restore_bps=snap.drink_restore_bps,
                     active_storehouse_count=snap.active_storehouse_count,
                     food_gather_amount=snap.food_gather_amount,
+                    active_road_count=snap.active_road_count,
+                    move_energy_cost_bps=snap.move_energy_cost_bps,
                 )
             )
         return world

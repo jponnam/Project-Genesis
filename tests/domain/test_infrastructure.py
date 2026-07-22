@@ -10,6 +10,7 @@ from civitas.domain import (
     CAMP_GOVERNMENT,
     CAMP_LOCATION,
     CAMP_WELL,
+    DEFAULT_ROAD_BUILD_COST,
     DEFAULT_STOREHOUSE_BUILD_COST,
     DEFAULT_WELL_BUILD_COST,
     Agent,
@@ -175,6 +176,7 @@ def test_census_infrastructure_counts() -> None:
     assert snap.cities_with_infrastructure == 1
     assert snap.active_well_count == 1
     assert snap.active_storehouse_count == 0
+    assert snap.active_road_count == 0
     assert census_infrastructure(world) == snap
 
 
@@ -211,6 +213,36 @@ def test_create_and_build_storehouse() -> None:
     )
     assert built is not None
     assert built.governments[0].treasury == 20 - DEFAULT_STOREHOUSE_BUILD_COST
+
+
+def test_create_and_build_road() -> None:
+    """ROAD is a distinct kind with its own catalog build cost."""
+    assert build_cost_for(InfrastructureKind.ROAD) == DEFAULT_ROAD_BUILD_COST
+    world = _world(
+        Agent.create(agent_id=0, name="A"),
+        governments=(Government.create(0, "Camp", 0, (0,), treasury=20),),
+        infrastructure=(
+            Infrastructure.create(0, 0, 0, 0, "Well", InfrastructureKind.WELL),
+        ),
+    )
+    created = create_infrastructure(
+        world,
+        Infrastructure.create(1, 0, 0, 0, "Road", InfrastructureKind.ROAD),
+    )
+    assert created is not None
+    assert created.infrastructure[1].kind is InfrastructureKind.ROAD
+    assert census_infrastructure(created).active_road_count == 1
+
+    empty = _world(
+        Agent.create(agent_id=0, name="A"),
+        governments=(Government.create(0, "Camp", 0, (0,), treasury=20),),
+    )
+    built = build_infrastructure(
+        empty,
+        Infrastructure.create(0, 0, 0, 0, "Paid Road", InfrastructureKind.ROAD),
+    )
+    assert built is not None
+    assert built.governments[0].treasury == 20 - DEFAULT_ROAD_BUILD_COST
 
 
 def test_world_rejects_city_location_mismatch() -> None:
