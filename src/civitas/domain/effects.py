@@ -57,9 +57,12 @@ city PRODUCE energy discounts at the city seat (stacking with guild,
 workshop, abacus, and pulley). Phase 13 Milestone 6 adds MASON stone-gather
 bonuses at the institution seat (stacking with forge). Phase 13 Milestone 7
 adds a global BLUEPRINT research-points bonus (stacking with syllogism and
-dissection). The action executor, retrieval path, market fills, knowledge
-diffusion, and research progression read these helpers; ``EffectsSystem``
-only observes coverage. Systems never call each other.
+dissection). Phase 13 Milestone 8 adds ARCHITECT teachings-per-knower
+bonuses at the institution seat (stacking with
+scribe/dialectic/scriptorium/academy/forum/school/stoa/collegium/curriculum).
+The action executor, retrieval path, market fills, knowledge diffusion, and
+research progression read these helpers; ``EffectsSystem`` only observes
+coverage. Systems never call each other.
 """
 
 from __future__ import annotations
@@ -116,6 +119,7 @@ ACADEMY_TEACHINGS_PER_KNOWER_BONUS: int = 1
 FORUM_TEACHINGS_PER_KNOWER_BONUS: int = 1
 SCHOOL_TEACHINGS_PER_KNOWER_BONUS: int = 1
 COLLEGIUM_TEACHINGS_PER_KNOWER_BONUS: int = 1
+ARCHITECT_TEACHINGS_PER_KNOWER_BONUS: int = 1
 PHILOSOPHY_TEACHINGS_PER_KNOWER_BONUS: int = 1
 LOGIC_RESEARCH_POINTS_BONUS: int = 1
 ANATOMY_RESEARCH_POINTS_BONUS: int = 1
@@ -378,6 +382,22 @@ def location_has_active_mason(
     )
     return any(
         item.kind is InstitutionKind.MASON and item.location_id == target
+        for item in active_institutions(world)
+    )
+
+
+def location_has_active_architect(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active ARCHITECT is seated at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InstitutionKind.ARCHITECT and item.location_id == target
         for item in active_institutions(world)
     )
 
@@ -858,11 +878,12 @@ def effective_teachings_per_knower(
     """Return teachings-per-knower including scribe, dialectic, seats, laws.
 
     The scribe and dialectic innovation bonuses are society-wide. The
-    scriptorium, stoa, academy, forum, school, and collegium bonuses apply
-    only when ``location_id`` or ``agent`` places the knower at an active
-    SCRIPTORIUM, STOA, ACADEMY, FORUM, SCHOOL, or COLLEGIUM seat. The
-    curriculum law bonus applies when ``agent`` is a living subject of a
-    government with an active ``CURRICULUM`` statute. All bonuses stack.
+    scriptorium, stoa, academy, forum, school, collegium, and architect
+    bonuses apply only when ``location_id`` or ``agent`` places the knower
+    at an active SCRIPTORIUM, STOA, ACADEMY, FORUM, SCHOOL, COLLEGIUM, or
+    ARCHITECT seat. The curriculum law bonus applies when ``agent`` is a
+    living subject of a government with an active ``CURRICULUM`` statute.
+    All bonuses stack.
     """
     if base < 0:
         return 0
@@ -884,6 +905,8 @@ def effective_teachings_per_knower(
         bonus += SCHOOL_TEACHINGS_PER_KNOWER_BONUS
     if seat is not None and location_has_active_collegium(world, seat):
         bonus += COLLEGIUM_TEACHINGS_PER_KNOWER_BONUS
+    if seat is not None and location_has_active_architect(world, seat):
+        bonus += ARCHITECT_TEACHINGS_PER_KNOWER_BONUS
     if agent is not None:
         bonus += curriculum_teachings_bonus_for(world, agent)
     return base + bonus

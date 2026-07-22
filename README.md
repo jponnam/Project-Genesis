@@ -125,10 +125,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 13 Milestone 7: Architecture technology**
+**Phase 13 Milestone 8: Architect institutions**
 
-``TechnologyKind.ARCHITECTURE`` requires engineering. Its inactive ``BLUEPRINT``
-innovation grants +1 research points per tick when activated.
+``InstitutionKind.ARCHITECT`` sits beside workshops and masons. Active
+architects add ``+1`` teachings-per-knower at their seat, stacking with prior
+teaching bonuses.
 
 ### Completed
 
@@ -253,6 +254,7 @@ JSONL storage → `civitas run`
 - Milestone 5: Foundry cities
 - Milestone 6: Mason institutions
 - Milestone 7: Architecture technology
+- Milestone 8: Architect institutions
 
 ## License
 

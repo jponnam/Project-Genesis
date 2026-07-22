@@ -91,6 +91,7 @@ class InstitutionSystem:
                     active_collegium_count=snap.active_collegium_count,
                     active_workshop_count=snap.active_workshop_count,
                     active_mason_count=snap.active_mason_count,
+                    active_architect_count=snap.active_architect_count,
                     total_budget=snap.total_budget,
                     funded_count=snap.funded_count,
                 )
