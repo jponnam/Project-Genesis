@@ -119,17 +119,20 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 | **8** | Effect wiring from innovations into action outcomes |
 | **9** | Technology prerequisite trees and deeper tech progression |
 | **10** | Writing, record-keeping, and institutional memory |
+| **11** | Philosophy, ethics, and reflective culture |
 
 ## Current Milestone
 
-**Phase 10 — Milestone 12: Forum cities**
+**Phase 11 — Milestone 1: Philosophy technology**
 
-``CityKind.FORUM`` is a non-capital specialized seat (not seeded). Living
-agents at an active forum receive ``+1`` teachings per knower via
-``location_has_active_forum`` and ``FORUM_TEACHINGS_PER_KNOWER_BONUS``,
-stacking with academy, scriptorium, curriculum, and scribe through
-``effective_teachings_per_knower``. Census and ``CitiesObserved`` report
-``active_forum_count``.
+``TechnologyKind.PHILOSOPHY`` continues the tech tree after astronomy
+(``CAMP_PHILOSOPHY`` id=7, prerequisite astronomy). Research stays
+locked until astronomy is discovered. ``InnovationKind.DIALECTIC``
+seeds inactive; when active it grants ``+1`` teachings per knower
+society-wide (``PHILOSOPHY_TEACHINGS_PER_KNOWER_BONUS``), stacking with
+scribe via ``effective_teachings_per_knower``. Knowledge fact
+``PHILOSOPHY_FACT`` diffuses after discovery. Census tracks philosophy
+discovery, dialectic activation, and knower counts.
 
 ### Completed
 
@@ -217,6 +220,9 @@ JSONL storage → `civitas run`
 - Milestone 10: Astronomy technology
 - Milestone 11: Calendar laws
 - Milestone 12: Forum cities
+
+**Phase 11:**
+- Milestone 1: Philosophy technology
 
 ## License
 
