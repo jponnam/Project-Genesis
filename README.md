@@ -122,13 +122,12 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 10 — Milestone 1: Writing technology**
+**Phase 10 — Milestone 2: Archive institutions**
 
-``TechnologyKind.WRITING`` extends the prereq tree past metallurgy.
-Camp Writing seeds undiscovered (requires metallurgy), with research
-progress locked until metallurgy is known, an inactive scribe innovation,
-a writing knowledge fact, and a +1 teachings-per-knower bonus when the
-scribe is active.
+``InstitutionKind.ARCHIVE`` adds a location-scoped institutional memory
+bonus. An active archive at an agent's seat raises the effective memory
+retrieval limit by +1. Archives are not seeded by default and may be
+created alongside councils and guilds (writing-gated creation is later).
 
 ### Completed
 
@@ -205,6 +204,7 @@ JSONL storage → `civitas run`
 
 **Phase 10:**
 - Milestone 1: Writing technology
+- Milestone 2: Archive institutions
 
 ## License
 

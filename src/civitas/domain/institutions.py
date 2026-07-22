@@ -1,11 +1,12 @@
 """Institutions: durable organizations under governments.
 
 Phase 5 Milestone 4 plus Phase 9 Milestone 4 budgets and Milestone 9
-guilds. Institutions are gov-attached civic organizations with a seat
-location inside the government's jurisdiction, an optional officer, and
-an integer budget funded from the parent government treasury. Councils
-and guilds coexist; this package seeds a single ``COUNCIL``. Extra kinds
-remain later milestones.
+guilds, plus Phase 10 Milestone 2 archives. Institutions are gov-attached
+civic organizations with a seat location inside the government's
+jurisdiction, an optional officer, and an integer budget funded from the
+parent government treasury. Councils, guilds, and archives coexist; this
+package seeds a single ``COUNCIL``. Writing-gated archive creation is a
+later milestone.
 """
 
 from __future__ import annotations
@@ -30,6 +31,7 @@ class InstitutionKind(StrEnum):
 
     COUNCIL = "council"
     GUILD = "guild"
+    ARCHIVE = "archive"
 
 
 class Institution(BaseModel):
@@ -101,6 +103,7 @@ class InstitutionCensus(BaseModel):
     vacant_officer_count: NonNegativeInt
     active_council_count: NonNegativeInt
     active_guild_count: NonNegativeInt = 0
+    active_archive_count: NonNegativeInt = 0
     total_budget: NonNegativeInt = 0
     funded_count: NonNegativeInt = 0
 
@@ -381,6 +384,9 @@ def census_institutions(world: World) -> InstitutionCensus:
     active_guilds = sum(
         1 for institution in active if institution.kind is InstitutionKind.GUILD
     )
+    active_archives = sum(
+        1 for institution in active if institution.kind is InstitutionKind.ARCHIVE
+    )
     total_budget = institution_budget_total(world)
     funded_count = sum(1 for institution in institutions if institution.budget > 0)
     return InstitutionCensus(
@@ -393,6 +399,7 @@ def census_institutions(world: World) -> InstitutionCensus:
         vacant_officer_count=vacant,
         active_council_count=active_councils,
         active_guild_count=active_guilds,
+        active_archive_count=active_archives,
         total_budget=total_budget,
         funded_count=funded_count,
     )

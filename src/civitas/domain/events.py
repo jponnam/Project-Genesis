@@ -551,6 +551,7 @@ class InstitutionsObserved(DomainEvent):
     vacant_officer_count: NonNegativeInt
     active_council_count: NonNegativeInt
     active_guild_count: NonNegativeInt = 0
+    active_archive_count: NonNegativeInt = 0
     total_budget: NonNegativeInt = 0
     funded_count: NonNegativeInt = 0
 

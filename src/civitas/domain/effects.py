@@ -3,7 +3,8 @@
 Phase 8 wired active innovations into REST/GATHER outcomes and WELL
 drink-restore bonuses. Phase 9 adds location-scoped STOREHOUSE food-gather
 bonuses, ROAD move-energy discounts, and GUILD produce-energy discounts.
-The action executor reads these helpers; ``EffectsSystem`` only observes
+Phase 10 adds ARCHIVE retrieval-limit bonuses. The action executor and
+retrieval path read these helpers; ``EffectsSystem`` only observes
 coverage. Systems never call each other.
 """
 
@@ -23,6 +24,7 @@ from civitas.domain.institutions import InstitutionKind, active_institutions
 from civitas.domain.numeric import clamp_unit
 from civitas.domain.production import DEFAULT_PRODUCE_ENERGY_COST
 from civitas.domain.resources import DEFAULT_GATHER_AMOUNT, ResourceKind
+from civitas.domain.retrieval import DEFAULT_RETRIEVAL_LIMIT
 from civitas.domain.time import Tick
 from civitas.domain.types import NonNegativeInt
 from civitas.domain.water import DEFAULT_DRINK_RESTORE, WATER_RESOURCE
@@ -40,6 +42,7 @@ WELL_DRINK_RESTORE_BONUS: float = 0.05
 STOREHOUSE_FOOD_GATHER_BONUS: int = 1
 ROAD_MOVE_ENERGY_DISCOUNT: float = 0.02
 GUILD_PRODUCE_ENERGY_DISCOUNT: float = 0.02
+ARCHIVE_RETRIEVAL_LIMIT_BONUS: int = 1
 
 
 class EffectsCensus(BaseModel):
@@ -135,6 +138,22 @@ def location_has_active_guild(
     )
 
 
+def location_has_active_archive(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active ARCHIVE is seated at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InstitutionKind.ARCHIVE and item.location_id == target
+        for item in active_institutions(world)
+    )
+
+
 def rest_restore_bonus(world: World) -> float:
     """Return the REST restore bonus from active fire-hearth innovations."""
     if innovation_kind_is_active(world, InnovationKind.FIRE_HEARTH):
@@ -194,6 +213,13 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
     if location_has_active_guild(world, agent.location_id):
         return GUILD_PRODUCE_ENERGY_DISCOUNT
     return 0.0
+
+
+def retrieval_limit_bonus(world: World, agent: Agent) -> int:
+    """Return retrieval-limit bonus from an ARCHIVE at the agent's location."""
+    if location_has_active_archive(world, agent.location_id):
+        return ARCHIVE_RETRIEVAL_LIMIT_BONUS
+    return 0
 
 
 def effective_rest_restore(
@@ -269,6 +295,18 @@ def effective_produce_energy_cost(
         return 0.0
     discounted = base - produce_energy_discount(world, agent)
     return clamp_unit(max(0.0, discounted))
+
+
+def effective_retrieval_limit(
+    world: World,
+    agent: Agent,
+    *,
+    base: int = DEFAULT_RETRIEVAL_LIMIT,
+) -> int:
+    """Return memory retrieval limit including archive bonuses at the seat."""
+    if base < 0:
+        return 0
+    return base + retrieval_limit_bonus(world, agent)
 
 
 def census_effects(world: World) -> EffectsCensus:

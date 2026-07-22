@@ -51,7 +51,7 @@ def _world(
 
 
 def test_default_institutions_seed_camp_council() -> None:
-    """Canonical institution is an active council at the camp."""
+    """Canonical institution is an active council at the camp; no archive."""
     assert default_institutions() == (CAMP_COUNCIL,)
     assert CAMP_COUNCIL.kind is InstitutionKind.COUNCIL
     assert CAMP_COUNCIL.active is True
@@ -59,6 +59,9 @@ def test_default_institutions_seed_camp_council() -> None:
     assert CAMP_COUNCIL.budget == 0
     assert CAMP_COUNCIL.government_id.value == CAMP_GOVERNMENT.government_id.value
     assert CAMP_COUNCIL.location_id.value == CAMP_LOCATION.location_id.value
+    assert all(
+        item.kind is not InstitutionKind.ARCHIVE for item in default_institutions()
+    )
 
 
 def test_create_and_lookup_institution() -> None:
@@ -105,11 +108,41 @@ def test_create_guild_alongside_council() -> None:
     snap = census_institutions(with_guild)
     assert snap.active_council_count == 1
     assert snap.active_guild_count == 1
+    assert snap.active_archive_count == 0
     assert snap.active_count == 2
     assert (
         create_institution(
             with_guild,
             Institution.create(2, 0, 0, "Second Guild", InstitutionKind.GUILD),
+        )
+        is None
+    )
+
+
+def test_create_archive_alongside_council_and_guild() -> None:
+    """Archives coexist with councils and guilds; census counts each kind."""
+    world = _world(
+        Agent.create(agent_id=0, name="A"),
+        institutions=(
+            Institution.create(0, 0, 0, "Council", InstitutionKind.COUNCIL),
+            Institution.create(1, 0, 0, "Camp Guild", InstitutionKind.GUILD),
+        ),
+    )
+    with_archive = create_institution(
+        world,
+        Institution.create(2, 0, 0, "Camp Archive", InstitutionKind.ARCHIVE),
+    )
+    assert with_archive is not None
+    assert with_archive.institutions[2].kind is InstitutionKind.ARCHIVE
+    snap = census_institutions(with_archive)
+    assert snap.active_council_count == 1
+    assert snap.active_guild_count == 1
+    assert snap.active_archive_count == 1
+    assert snap.active_count == 3
+    assert (
+        create_institution(
+            with_archive,
+            Institution.create(3, 0, 0, "Second Archive", InstitutionKind.ARCHIVE),
         )
         is None
     )
@@ -175,6 +208,7 @@ def test_census_institutions_counts() -> None:
     assert snap.vacant_officer_count == 1
     assert snap.active_council_count == 1
     assert snap.active_guild_count == 0
+    assert snap.active_archive_count == 0
     assert snap.total_budget == 0
     assert snap.funded_count == 0
     assert census_institutions(world) == snap
