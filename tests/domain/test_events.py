@@ -52,6 +52,8 @@ from civitas.domain import (
     MoneyTransferred,
     NeedDecayed,
     NetworksObserved,
+    PlansObserved,
+    PlanUpdated,
     PopulationObserved,
     PriceObserved,
     RelationshipsObserved,
@@ -1007,3 +1009,31 @@ def test_cognition_events_round_trip() -> None:
     restored_reflected = event_from_record(reflected.to_record())
     assert isinstance(restored_reflected, AgentReflected)
     assert restored_reflected.proposition == "priority:food"
+
+
+def test_planning_events_round_trip() -> None:
+    """Plan update/observe events serialize losslessly."""
+    updated = PlanUpdated(
+        sequence=41,
+        tick=Tick(value=3),
+        agent_id=AgentId(value=1),
+        goal_kind="satisfy_food",
+        priority=0.8,
+        target="food",
+    )
+    restored_updated = event_from_record(updated.to_record())
+    assert isinstance(restored_updated, PlanUpdated)
+    assert restored_updated.target == "food"
+
+    observed = PlansObserved(
+        sequence=42,
+        tick=Tick(value=3),
+        living_count=3,
+        agents_with_plans=3,
+        satisfy_food_count=2,
+        satisfy_water_count=1,
+        satisfy_energy_count=0,
+    )
+    restored_observed = event_from_record(observed.to_record())
+    assert isinstance(restored_observed, PlansObserved)
+    assert restored_observed.satisfy_food_count == 2

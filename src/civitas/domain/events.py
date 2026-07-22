@@ -650,6 +650,25 @@ class AgentReflected(DomainEvent):
     model_name: NonEmptyStr
 
 
+class PlanUpdated(DomainEvent):
+    """Emitted when an agent's planned goal is set."""
+
+    agent_id: AgentId
+    goal_kind: NonEmptyStr
+    priority: UnitInterval
+    target: str | None = None
+
+
+class PlansObserved(DomainEvent):
+    """Emitted when a planning census is taken."""
+
+    living_count: NonNegativeInt
+    agents_with_plans: NonNegativeInt
+    satisfy_food_count: NonNegativeInt
+    satisfy_water_count: NonNegativeInt
+    satisfy_energy_count: NonNegativeInt
+
+
 CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     SimulationStarted,
     SimulationCompleted,
@@ -707,6 +726,8 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     MemoryRecorded,
     CognitionObserved,
     AgentReflected,
+    PlanUpdated,
+    PlansObserved,
 )
 
 EVENT_TYPE_REGISTRY: dict[str, type[DomainEvent]] = {

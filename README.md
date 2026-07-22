@@ -119,12 +119,12 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 7 — Milestone 2: Reflection**
+**Phase 7 — Milestone 3: Planning**
 
-After each episode encoding, agents reflect through the seeded mock LLM
-port, store a `reflection` memory, and upsert a `priority:*` belief from
-their dominant need. `AgentReflected` and `CognitionObserved` cover the
-cycle. Planning and memory retrieval remain later Phase 7 milestones.
+After reflection, `PlanningSystem.apply_planning` sets one
+`satisfy_<need>` goal per living agent from their priority belief (or
+dominant need). Goals feed the existing utility policy. Memory retrieval
+remains a later Phase 7 milestone.
 
 ### Completed
 
@@ -176,6 +176,7 @@ JSONL storage → `civitas run`
 **Phase 7:**
 - Milestone 1: Episodic memory encoding
 - Milestone 2: Reflection
+- Milestone 3: Planning
 
 ## License
 
