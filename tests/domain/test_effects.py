@@ -90,6 +90,7 @@ from civitas.domain import (
     HYGIENE_DRINK_RESTORE_BONUS,
     INFIRMARY_REST_RESTORE_BONUS,
     IRRIGATION_WATER_GATHER_BONUS,
+    LAND_TENURE_EAT_RESTORE_BONUS,
     LAZARETTO_DRINK_RESTORE_BONUS,
     LIBRARY_RETRIEVAL_LIMIT_BONUS,
     LOGIC_RESEARCH_POINTS_BONUS,
@@ -157,6 +158,7 @@ from civitas.domain import (
     effective_socialize_restore,
     effective_teachings_per_knower,
     gather_amount_bonus,
+    land_tenure_eat_bonus_for,
     location_has_active_academy,
     location_has_active_agora,
     location_has_active_apothecary,
@@ -794,6 +796,51 @@ def test_zoning_boosts_eat_restore_for_living_subjects() -> None:
     assert eat_restore_bonus(bare, bare.agents[0]) == 0.0
     assert effective_eat_restore(bare, bare.agents[0]) == pytest.approx(
         DEFAULT_EAT_RESTORE
+    )
+
+
+def test_land_tenure_boosts_eat_restore_for_living_subjects() -> None:
+    """Active LAND_TENURE raises EAT restore for living subjects only."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(Law.create(0, 0, "Camp Land Tenure", LawKind.LAND_TENURE),),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert land_tenure_eat_bonus_for(world, agent) == LAND_TENURE_EAT_RESTORE_BONUS
+    assert eat_restore_bonus(world, agent) == LAND_TENURE_EAT_RESTORE_BONUS
+    assert effective_eat_restore(world, agent) == pytest.approx(
+        DEFAULT_EAT_RESTORE + LAND_TENURE_EAT_RESTORE_BONUS
+    )
+    bare = _world()
+    assert land_tenure_eat_bonus_for(bare, bare.agents[0]) == 0.0
+    assert eat_restore_bonus(bare, bare.agents[0]) == 0.0
+    assert effective_eat_restore(bare, bare.agents[0]) == pytest.approx(
+        DEFAULT_EAT_RESTORE
+    )
+
+
+def test_zoning_and_land_tenure_stack_eat_restore() -> None:
+    """Active ZONING and LAND_TENURE stack for EAT restore."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(
+            Law.create(0, 0, "Camp Zoning", LawKind.ZONING),
+            Law.create(1, 0, "Camp Land Tenure", LawKind.LAND_TENURE),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    expected = ZONING_EAT_RESTORE_BONUS + LAND_TENURE_EAT_RESTORE_BONUS
+    assert zoning_eat_bonus_for(world, agent) == ZONING_EAT_RESTORE_BONUS
+    assert land_tenure_eat_bonus_for(world, agent) == LAND_TENURE_EAT_RESTORE_BONUS
+    assert eat_restore_bonus(world, agent) == pytest.approx(expected)
+    assert effective_eat_restore(world, agent) == pytest.approx(
+        DEFAULT_EAT_RESTORE + expected
     )
 
 

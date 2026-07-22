@@ -21,8 +21,9 @@ energy cost (Phase 13 M2). Active ``ZONING`` statutes grant living
 subjects +0.05 EAT restore (Phase 13 M11). Active ``PASSAGE`` statutes
 grant living subjects -0.02 MOVE energy cost (Phase 14 M2). Active
 ``CUSTOMS`` statutes grant living subjects -0.02 PRODUCE energy cost
-(Phase 14 M11). Elections (voting) are a separate Phase 5 aggregate,
-as are institutions.
+(Phase 14 M11). Active ``LAND_TENURE`` statutes grant living subjects
++0.05 EAT restore (Phase 15 M2), stacking with zoning. Elections
+(voting) are a separate Phase 5 aggregate, as are institutions.
 """
 
 from __future__ import annotations
@@ -57,6 +58,7 @@ class LawKind(StrEnum):
     ZONING = "zoning"
     PASSAGE = "passage"
     CUSTOMS = "customs"
+    LAND_TENURE = "land_tenure"
 
 
 # Statute kinds that allow at most one active law per government.
@@ -74,6 +76,7 @@ _UNIQUE_ACTIVE_KINDS: frozenset[LawKind] = frozenset(
         LawKind.ZONING,
         LawKind.PASSAGE,
         LawKind.CUSTOMS,
+        LawKind.LAND_TENURE,
     }
 )
 
@@ -107,6 +110,9 @@ PASSAGE_MOVE_ENERGY_DISCOUNT: float = 0.02
 # Kind-only PRODUCE energy discount for living subjects under active CUSTOMS.
 CUSTOMS_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 
+# Kind-only EAT restore bonus for living subjects under active LAND_TENURE.
+LAND_TENURE_EAT_RESTORE_BONUS: float = 0.05
+
 
 class Law(BaseModel):
     """One statute enacted by a government."""
@@ -123,8 +129,8 @@ class Law(BaseModel):
         description=(
             "TAX_SCHEDULE flat poll amount, or MARKET_FEE flat fill fee; "
             "ignored by CURRICULUM, CALENDAR, ETHICS, ASSEMBLY, SANITATION, "
-            "QUARANTINE, BUILDING_CODES, ZONING, PASSAGE, CUSTOMS, and other "
-            "kinds."
+            "QUARANTINE, BUILDING_CODES, ZONING, PASSAGE, CUSTOMS, "
+            "LAND_TENURE, and other kinds."
         ),
     )
     rate_bps: NonNegativeInt = Field(
@@ -195,6 +201,7 @@ class LawCensus(BaseModel):
     active_zoning_count: NonNegativeInt = 0
     active_passage_count: NonNegativeInt = 0
     active_customs_count: NonNegativeInt = 0
+    active_land_tenure_count: NonNegativeInt = 0
 
 
 def law_by_id(world: World, law_id: LawId | int) -> Law | None:
@@ -583,6 +590,36 @@ def customs_produce_discount_for(world: World, agent: Agent) -> float:
     return CUSTOMS_PRODUCE_ENERGY_DISCOUNT
 
 
+def active_land_tenure_law(
+    world: World,
+    government_id: GovernmentId | int,
+) -> Law | None:
+    """Return the active land-tenure statute for ``government_id``, if any.
+
+    When multiple active ``LAND_TENURE`` laws exist (should not under
+    uniqueness rules), the lowest ``law_id`` wins.
+    """
+    for law in active_laws(world, government_id):
+        if law.kind == LawKind.LAND_TENURE:
+            return law
+    return None
+
+
+def land_tenure_eat_bonus_for(world: World, agent: Agent) -> float:
+    """Return +0.05 when ``agent`` is a living subject under LAND_TENURE.
+
+    The statute kind alone enables the bonus; ``flat_amount`` is ignored.
+    """
+    if not agent.is_alive():
+        return 0.0
+    government = government_at(world, agent.location_id)
+    if government is None:
+        return 0.0
+    if active_land_tenure_law(world, government.government_id) is None:
+        return 0.0
+    return LAND_TENURE_EAT_RESTORE_BONUS
+
+
 def _has_active_kind(
     world: World,
     government_id: GovernmentId,
@@ -664,6 +701,7 @@ def census_laws(world: World) -> LawCensus:
     active_zoning = sum(1 for law in active if law.kind == LawKind.ZONING)
     active_passage = sum(1 for law in active if law.kind == LawKind.PASSAGE)
     active_customs = sum(1 for law in active if law.kind == LawKind.CUSTOMS)
+    active_land_tenure = sum(1 for law in active if law.kind == LawKind.LAND_TENURE)
     return LawCensus(
         tick=world.tick,
         law_count=len(laws),
@@ -682,6 +720,7 @@ def census_laws(world: World) -> LawCensus:
         active_zoning_count=active_zoning,
         active_passage_count=active_passage,
         active_customs_count=active_customs,
+        active_land_tenure_count=active_land_tenure,
     )
 
 
@@ -693,6 +732,7 @@ __all__ = [
     "CURRICULUM_TEACHINGS_PER_KNOWER_BONUS",
     "CUSTOMS_PRODUCE_ENERGY_DISCOUNT",
     "ETHICS_MIN_TEACH_TRUST_DELTA",
+    "LAND_TENURE_EAT_RESTORE_BONUS",
     "PASSAGE_MOVE_ENERGY_DISCOUNT",
     "QUARANTINE_REST_RESTORE_BONUS",
     "SANITATION_DRINK_RESTORE_BONUS",
@@ -706,6 +746,7 @@ __all__ = [
     "active_curriculum_law",
     "active_customs_law",
     "active_ethics_law",
+    "active_land_tenure_law",
     "active_laws",
     "active_market_fee_law",
     "active_passage_law",
@@ -722,6 +763,7 @@ __all__ = [
     "default_laws",
     "enact_law",
     "ethics_min_teach_trust_delta_for",
+    "land_tenure_eat_bonus_for",
     "law_by_id",
     "laws_for",
     "market_fee_for",

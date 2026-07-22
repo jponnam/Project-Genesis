@@ -530,6 +530,7 @@ class LawsObserved(DomainEvent):
     active_zoning_count: NonNegativeInt = 0
     active_passage_count: NonNegativeInt = 0
     active_customs_count: NonNegativeInt = 0
+    active_land_tenure_count: NonNegativeInt = 0
 
 
 class ElectionResolved(DomainEvent):

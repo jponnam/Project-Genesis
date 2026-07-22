@@ -91,9 +91,11 @@ workshop, foundry, abacus, and pulley). Phase 14 Milestone 12 adds
 ENTREPOT city food-gather bonuses at the city seat (stacking with
 STOREHOUSE and WAYSTATION). Phase 15 Milestone 1 adds a global PLOW food-
 gather bonus (stacking with storehouse, waystation, and entrepot seat
-bonuses). The action executor, retrieval path, market fills, knowledge
-diffusion, and research progression read these helpers; ``EffectsSystem``
-only observes coverage. Systems never call each other.
+bonuses). Phase 15 Milestone 2 adds LAND_TENURE law EAT restore bonuses
+for living subjects (stacking with zoning). The action executor,
+retrieval path, market fills, knowledge diffusion, and research
+progression read these helpers; ``EffectsSystem`` only observes coverage.
+Systems never call each other.
 """
 
 from __future__ import annotations
@@ -116,6 +118,7 @@ from civitas.domain.laws import (
     calendar_retrieval_bonus_for,
     curriculum_teachings_bonus_for,
     customs_produce_discount_for,
+    land_tenure_eat_bonus_for,
     market_fee_for,
     passage_move_discount_for,
     quarantine_rest_bonus_for,
@@ -951,11 +954,12 @@ def drink_restore_bonus(world: World, agent: Agent) -> float:
 
 
 def eat_restore_bonus(world: World, agent: Agent) -> float:
-    """Return the EAT restore bonus from zoning laws.
+    """Return the EAT restore bonus from zoning and land-tenure laws.
 
-    An active ``ZONING`` statute contributes for living subjects.
+    An active ``ZONING`` statute and an active ``LAND_TENURE`` statute
+    each contribute for living subjects and stack when both are present.
     """
-    return zoning_eat_bonus_for(world, agent)
+    return zoning_eat_bonus_for(world, agent) + land_tenure_eat_bonus_for(world, agent)
 
 
 def move_energy_discount(world: World, agent: Agent) -> float:
