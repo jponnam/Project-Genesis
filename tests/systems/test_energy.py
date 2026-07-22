@@ -10,6 +10,7 @@ from civitas.domain import (
     CAMP_LOCATION,
     DEFAULT_REST_RESTORE,
     FIRE_HEARTH_REST_BONUS,
+    HOSPITAL_REST_RESTORE_BONUS,
     TEMPLE_REST_RESTORE_BONUS,
     Agent,
     Government,
@@ -94,4 +95,26 @@ def test_rest_applies_temple_and_fire_hearth_bonuses() -> None:
     updated = EnergySystem().rest(world, 0)
     assert updated.agents[0].needs.energy == pytest.approx(
         0.5 + DEFAULT_REST_RESTORE + FIRE_HEARTH_REST_BONUS + TEMPLE_REST_RESTORE_BONUS
+    )
+
+
+def test_rest_applies_hospital_bonus() -> None:
+    """EnergySystem.rest includes the hospital seat bonus."""
+    agent = Agent.create(
+        agent_id=0,
+        name="A",
+        needs=Needs(food=1.0, water=1.0, energy=0.5, social=1.0, safety=1.0),
+    )
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        institutions=(
+            Institution.create(0, 0, 0, "Camp Hospital", InstitutionKind.HOSPITAL),
+        ),
+        agents=(agent,),
+    )
+    updated = EnergySystem().rest(world, 0)
+    assert updated.agents[0].needs.energy == pytest.approx(
+        0.5 + DEFAULT_REST_RESTORE + HOSPITAL_REST_RESTORE_BONUS
     )
