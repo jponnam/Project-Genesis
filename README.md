@@ -118,13 +118,12 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 4 — Milestone 4: Families**
+**Phase 4 — Milestone 5: Social networks**
 
-Birth persists `identity.parent_id`. Kinship helpers
-(`parent_of` / `children_of` / `siblings_of` / `root_of`) and
-`census_families` / `FamilySystem.observe` emit `FamiliesObserved` lineage
-metrics without mutating agents. Social-network analytics remain a later
-Phase 4 milestone.
+Observe-only graph analytics over living directed bonds
+(`census_networks` / `NetworkSystem.observe`): degree, reciprocity,
+density, weakly connected components, and strongest-tie strength, emitted
+as `NetworksObserved`. Phase 4 completes with this milestone.
 
 ### Completed
 
@@ -157,6 +156,7 @@ JSONL storage → `civitas run`
 - Milestone 2: Trust
 - Milestone 3: Reputation
 - Milestone 4: Families
+- Milestone 5: Social networks
 
 ## License
 

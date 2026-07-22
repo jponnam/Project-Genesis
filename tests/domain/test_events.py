@@ -24,6 +24,7 @@ from civitas.domain import (
     MarketObserved,
     MoneyTransferred,
     NeedDecayed,
+    NetworksObserved,
     PopulationObserved,
     PriceObserved,
     RelationshipsObserved,
@@ -538,3 +539,38 @@ def test_families_observed_round_trips() -> None:
     assert restored.mean_lineage_size == 2.5
     assert restored.max_generation_depth == 2
     assert restored.max_living_children == 2
+
+
+def test_networks_observed_round_trips() -> None:
+    """NetworksObserved serializes graph census fields losslessly."""
+    event = NetworksObserved(
+        sequence=14,
+        tick=Tick(value=8),
+        living_agent_count=4,
+        directed_edge_count=3,
+        undirected_edge_count=2,
+        reciprocal_pair_count=1,
+        reciprocity_rate=0.5,
+        reciprocity_bps=5000,
+        mean_degree=1.0,
+        max_degree=2,
+        max_degree_agent_id=AgentId(value=1),
+        isolated_count=1,
+        component_count=2,
+        largest_component_size=3,
+        mean_component_size=2.0,
+        density=0.333333,
+        density_bps=3333,
+        strongest_from_id=AgentId(value=0),
+        strongest_to_id=AgentId(value=1),
+        strongest_strength=0.75,
+    )
+    restored = event_from_record(event.to_record())
+    assert isinstance(restored, NetworksObserved)
+    assert restored.directed_edge_count == 3
+    assert restored.reciprocity_bps == 5000
+    assert restored.max_degree_agent_id == AgentId(value=1)
+    assert restored.component_count == 2
+    assert restored.density_bps == 3333
+    assert restored.strongest_from_id == AgentId(value=0)
+    assert restored.strongest_strength == 0.75
