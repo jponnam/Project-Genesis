@@ -1,11 +1,12 @@
 """Infrastructure: built capacity at settlement locations.
 
-Phase 5 Milestone 6 plus Phase 9 Milestones 5-7. Infrastructure pieces
+Phase 5 Milestone 6 plus Phase 9 Milestones 5-8. Infrastructure pieces
 attach to a city seat inside a government jurisdiction. This package seeds
 a single ``WELL`` kind; ``STOREHOUSE`` and ``ROAD`` are available via free
-create or paid ``build_infrastructure``. Effect wiring applies WELL drink
-restore, STOREHOUSE food gather, and ROAD move-energy discounts for
-colocated agents.
+create or paid construction. Governments pay via ``build_infrastructure``;
+institutions pay via ``build_infrastructure_from_institution``. Effect
+wiring applies WELL drink restore, STOREHOUSE food gather, and ROAD
+move-energy discounts for colocated agents.
 """
 
 from __future__ import annotations
@@ -17,7 +18,14 @@ from pydantic import BaseModel, ConfigDict
 
 from civitas.domain.cities import CAMP_CITY, city_by_id
 from civitas.domain.governments import debit_government_treasury, government_by_id
-from civitas.domain.ids import CityId, GovernmentId, InfrastructureId, LocationId
+from civitas.domain.ids import (
+    CityId,
+    GovernmentId,
+    InfrastructureId,
+    InstitutionId,
+    LocationId,
+)
+from civitas.domain.institutions import debit_institution_budget, institution_by_id
 from civitas.domain.location import CAMP_LOCATION
 from civitas.domain.time import Tick
 from civitas.domain.types import NonEmptyStr, NonNegativeInt
@@ -262,6 +270,37 @@ def build_infrastructure(
     if create_infrastructure(world, item) is None:
         return None
     debited = debit_government_treasury(world, item.government_id, amount)
+    if debited is None:
+        return None
+    return create_infrastructure(debited, item)
+
+
+def build_infrastructure_from_institution(
+    world: World,
+    item: Infrastructure,
+    institution_id: InstitutionId | int,
+    *,
+    cost: int | None = None,
+) -> World | None:
+    """Debit an institution budget, then create ``item``.
+
+    The institution must be active and share ``item.government_id``.
+    ``cost`` defaults to the catalog price for ``item.kind``. Returns
+    ``None`` when cost is non-positive, construction would be illegal,
+    the institution is missing/inactive/mismatched, or the budget cannot
+    afford the cost.
+    """
+    amount = build_cost_for(item.kind) if cost is None else cost
+    if amount <= 0:
+        return None
+    institution = institution_by_id(world, institution_id)
+    if institution is None or not institution.active:
+        return None
+    if institution.government_id != item.government_id:
+        return None
+    if create_infrastructure(world, item) is None:
+        return None
+    debited = debit_institution_budget(world, institution.institution_id, amount)
     if debited is None:
         return None
     return create_infrastructure(debited, item)

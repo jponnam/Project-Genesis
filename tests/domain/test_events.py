@@ -28,6 +28,7 @@ from civitas.domain import (
     GovernmentId,
     GovernmentsObserved,
     InfrastructureBuilt,
+    InfrastructureCommissioned,
     InfrastructureCreated,
     InfrastructureId,
     InfrastructuresObserved,
@@ -868,6 +869,25 @@ def test_infrastructure_created_and_observed_round_trips() -> None:
     assert isinstance(restored_built, InfrastructureBuilt)
     assert restored_built.cost == 5
     assert restored_built.treasury_after == 3
+
+    commissioned = InfrastructureCommissioned(
+        sequence=28,
+        tick=Tick(value=4),
+        infrastructure_id=InfrastructureId(value=2),
+        government_id=GovernmentId(value=0),
+        institution_id=InstitutionId(value=0),
+        city_id=CityId(value=0),
+        location_id=LocationId(value=0),
+        name="Council Well",
+        kind="well",
+        cost=5,
+        budget_after=2,
+    )
+    restored_commissioned = event_from_record(commissioned.to_record())
+    assert isinstance(restored_commissioned, InfrastructureCommissioned)
+    assert restored_commissioned.cost == 5
+    assert restored_commissioned.budget_after == 2
+    assert restored_commissioned.institution_id.value == 0
 
 
 def test_technology_created_and_observed_round_trips() -> None:

@@ -13,13 +13,16 @@ from pydantic import BaseModel, ConfigDict
 
 from civitas.domain import (
     InfrastructureBuilt,
+    InfrastructureCommissioned,
     InfrastructuresObserved,
     build_cost_for,
     build_infrastructure,
+    build_infrastructure_from_institution,
     census_infrastructure,
     create_infrastructure,
     dissolve_infrastructure,
     infrastructure_by_id,
+    institution_by_id,
     set_infrastructure_active,
 )
 
@@ -28,6 +31,7 @@ if TYPE_CHECKING:
         Infrastructure,
         InfrastructureCensus,
         InfrastructureId,
+        InstitutionId,
         World,
     )
     from civitas.engine.event_bus import EventBus
@@ -142,6 +146,46 @@ class InfrastructureSystem:
                         kind=built.kind.value,
                         cost=amount,
                         treasury_after=government.treasury,
+                    )
+                )
+        return updated
+
+    def commission(
+        self,
+        world: World,
+        item: Infrastructure,
+        institution_id: InstitutionId | int,
+        bus: EventBus | None = None,
+        *,
+        cost: int | None = None,
+    ) -> World:
+        """Pay to construct ``item`` from an institution budget when legal.
+
+        Emits ``InfrastructureCommissioned`` on success. Illegal builds leave
+        the world unchanged. ``cost`` defaults to the catalog price.
+        """
+        amount = build_cost_for(item.kind) if cost is None else cost
+        updated = build_infrastructure_from_institution(
+            world, item, institution_id, cost=cost
+        )
+        if updated is None:
+            return world
+        if bus is not None and self._config.emit_events:
+            built = infrastructure_by_id(updated, item.infrastructure_id)
+            institution = institution_by_id(updated, institution_id)
+            if built is not None and institution is not None:
+                bus.publish(
+                    InfrastructureCommissioned(
+                        tick=updated.tick,
+                        infrastructure_id=built.infrastructure_id,
+                        government_id=built.government_id,
+                        institution_id=institution.institution_id,
+                        city_id=built.city_id,
+                        location_id=built.location_id,
+                        name=built.name,
+                        kind=built.kind.value,
+                        cost=amount,
+                        budget_after=institution.budget,
                     )
                 )
         return updated

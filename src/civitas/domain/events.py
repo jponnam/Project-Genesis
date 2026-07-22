@@ -311,6 +311,20 @@ class InfrastructureBuilt(DomainEvent):
     treasury_after: NonNegativeInt
 
 
+class InfrastructureCommissioned(DomainEvent):
+    """Emitted when an institution budget pays to construct infrastructure."""
+
+    infrastructure_id: InfrastructureId
+    government_id: GovernmentId
+    institution_id: InstitutionId
+    city_id: CityId
+    location_id: LocationId
+    name: NonEmptyStr
+    kind: NonEmptyStr
+    cost: NonNegativeInt
+    budget_after: NonNegativeInt
+
+
 class ListingPosted(DomainEvent):
     """Emitted when a seller escrows goods onto a market listing."""
 
@@ -783,6 +797,7 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     CitiesObserved,
     InfrastructureCreated,
     InfrastructureBuilt,
+    InfrastructureCommissioned,
     InfrastructuresObserved,
     TechnologyCreated,
     TechnologiesObserved,
