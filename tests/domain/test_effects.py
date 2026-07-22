@@ -142,6 +142,7 @@ from civitas.domain import (
     SHRINE_DRINK_RESTORE_BONUS,
     STOA_TEACHINGS_PER_KNOWER_BONUS,
     STOREHOUSE_FOOD_GATHER_BONUS,
+    SUMPTUARY_MARKET_FEE_DISCOUNT,
     SURVEYING_RETRIEVAL_LIMIT_BONUS,
     TAILOR_TEACHINGS_PER_KNOWER_BONUS,
     TANNING_PRODUCE_ENERGY_DISCOUNT,
@@ -6240,4 +6241,56 @@ def test_warehouse_stacks_with_all_market_fee_discounts() -> None:
         - DYER_MARKET_FEE_DISCOUNT
         - DYEING_MARKET_FEE_DISCOUNT
         - WAREHOUSE_MARKET_FEE_DISCOUNT
+    )
+
+
+def test_sumptuary_stacks_with_all_market_fee_discounts() -> None:
+    """SUMPTUARY stacks with seats, dyer, mordant, and warehouse discounts."""
+    discovered_dyeing = CAMP_DYEING.model_copy(update={"discovered": True})
+    active_mordant = CAMP_MORDANT.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp Harbor", CityKind.HARBOR),),
+        laws=(
+            Law.create(0, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=9),
+            Law.create(1, 0, "Camp Sumptuary", LawKind.SUMPTUARY),
+        ),
+        institutions=(
+            Institution.create(
+                0, 0, 0, "Camp Bureaucracy", InstitutionKind.BUREAUCRACY
+            ),
+            Institution.create(1, 0, 0, "Camp Merchant", InstitutionKind.MERCHANT),
+            Institution.create(2, 0, 0, "Camp Dyer", InstitutionKind.DYER),
+        ),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 0, 0, "Camp Warehouse", InfrastructureKind.WAREHOUSE
+            ),
+        ),
+        technologies=tuple(
+            discovered_dyeing
+            if item.technology_id == CAMP_DYEING.technology_id
+            else item
+            for item in default_technologies()
+        ),
+        innovations=tuple(
+            active_mordant
+            if item.innovation_id == CAMP_MORDANT.innovation_id
+            else item
+            for item in default_innovations()
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert market_fee_for(world, 0) == 9
+    assert effective_market_fee(world, 0) == (
+        9
+        - BUREAUCRACY_MARKET_FEE_DISCOUNT
+        - HARBOR_MARKET_FEE_DISCOUNT
+        - MERCHANT_MARKET_FEE_DISCOUNT
+        - DYER_MARKET_FEE_DISCOUNT
+        - DYEING_MARKET_FEE_DISCOUNT
+        - WAREHOUSE_MARKET_FEE_DISCOUNT
+        - SUMPTUARY_MARKET_FEE_DISCOUNT
     )

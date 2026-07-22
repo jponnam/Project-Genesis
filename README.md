@@ -128,14 +128,14 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 16 Milestone 10: Tanning technology**
+**Phase 16 Milestone 11: Sumptuary laws**
 
-``TechnologyKind.TANNING`` is a society-level technology requiring
-dyeing, adopted through the ``TANNERY`` innovation. An active tannery
-grants a society-wide PRODUCE energy discount that stacks with guild,
-workshop, foundry, weaver, fulling mill, mill town, abacus, pulley,
-customs, labor, and loom. Discovery flows through the standard research,
-innovation, and knowledge-diffusion pipeline.
+``LawKind.SUMPTUARY`` is a government statute that lowers the flat market
+fill fee at the enacting government's markets by 1. The discount is
+resolved at the market location (``government_at(location)``) and stacks
+with the bureaucracy, harbor, merchant, dyer, warehouse, and mordant
+market-fee discounts, flooring the effective fee at zero. At most one
+active sumptuary law is allowed per government; it is not seeded.
 
 ### Completed
 
@@ -305,6 +305,7 @@ JSONL storage → `civitas run`
 - Milestone 8: Tailor institutions
 - Milestone 9: Warehouse infrastructure
 - Milestone 10: Tanning technology
+- Milestone 11: Sumptuary laws
 
 ## License
 

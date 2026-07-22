@@ -172,6 +172,7 @@ from civitas.domain.laws import (
     passage_move_discount_for,
     quarantine_rest_bonus_for,
     sanitation_drink_bonus_for,
+    sumptuary_market_discount_for,
     zoning_eat_bonus_for,
 )
 from civitas.domain.numeric import clamp_unit
@@ -1352,7 +1353,7 @@ def retrieval_limit_bonus(world: World, agent: Agent) -> int:
 
 
 def market_fee_discount(world: World, location_id: LocationId | int) -> int:
-    """Return market-fee discount from seats, dyer, mordant, and warehouse.
+    """Return market-fee discount from seats, laws, dyer, mordant, warehouse.
 
     An active BUREAUCRACY contributes ``BUREAUCRACY_MARKET_FEE_DISCOUNT``.
     An active HARBOR city seat contributes ``HARBOR_MARKET_FEE_DISCOUNT``.
@@ -1360,7 +1361,9 @@ def market_fee_discount(world: World, location_id: LocationId | int) -> int:
     active DYER contributes ``DYER_MARKET_FEE_DISCOUNT``. An active MORDANT
     innovation contributes ``DYEING_MARKET_FEE_DISCOUNT`` society-wide. An
     active WAREHOUSE at the seat contributes
-    ``WAREHOUSE_MARKET_FEE_DISCOUNT``. All stack.
+    ``WAREHOUSE_MARKET_FEE_DISCOUNT``. An active ``SUMPTUARY`` statute for
+    the market's government contributes ``SUMPTUARY_MARKET_FEE_DISCOUNT``.
+    All stack.
     """
     discount = 0
     if location_has_active_bureaucracy(world, location_id):
@@ -1375,11 +1378,12 @@ def market_fee_discount(world: World, location_id: LocationId | int) -> int:
         discount += DYEING_MARKET_FEE_DISCOUNT
     if location_has_active_warehouse(world, location_id):
         discount += WAREHOUSE_MARKET_FEE_DISCOUNT
+    discount += sumptuary_market_discount_for(world, location_id)
     return discount
 
 
 def effective_market_fee(world: World, location_id: LocationId | int) -> int:
-    """Return market fill fee after seats, dyer, mordant, and warehouse.
+    """Return market fill fee after seats, laws, dyer, mordant, warehouse.
 
     ``effective_market_fee = max(0, market_fee_for(...) - discount)`` where
     an active bureaucracy at the market location contributes
@@ -1388,8 +1392,10 @@ def effective_market_fee(world: World, location_id: LocationId | int) -> int:
     contributes ``MERCHANT_MARKET_FEE_DISCOUNT`` (1), an active dyer
     contributes ``DYER_MARKET_FEE_DISCOUNT`` (1), an active MORDANT
     innovation contributes ``DYEING_MARKET_FEE_DISCOUNT`` (1) society-wide,
-    and an active warehouse at the seat contributes
-    ``WAREHOUSE_MARKET_FEE_DISCOUNT`` (1). Discounts stack.
+    an active warehouse at the seat contributes
+    ``WAREHOUSE_MARKET_FEE_DISCOUNT`` (1), and an active ``SUMPTUARY``
+    statute for the market's government contributes
+    ``SUMPTUARY_MARKET_FEE_DISCOUNT`` (1). Discounts stack.
     """
     base = market_fee_for(world, location_id)
     return max(0, base - market_fee_discount(world, location_id))

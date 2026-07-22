@@ -239,6 +239,34 @@ def test_bureaucracy_reduces_market_fee_on_fill() -> None:
     assert society_money_total(filled) == initial
 
 
+def test_sumptuary_reduces_market_fee_on_fill() -> None:
+    """Active SUMPTUARY law at the market government discounts the fill fee."""
+    government = Government.create(0, "Camp", 0, (0,))
+    fee = Law.create(0, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=2)
+    sumptuary = Law.create(1, 0, "Camp Sumptuary", LawKind.SUMPTUARY)
+    world = _world(
+        _with_food(0, 1, money=0),
+        _with_food(1, 0, money=4),
+        governments=(government,),
+        laws=(fee, sumptuary),
+    )
+    assert market_fee_for(world, 0) == 2
+    assert effective_market_fee(world, 0) == 1
+    posted = post_listing(world, 0, 0, "food", quantity=1, unit_price=2)
+    assert posted is not None
+    world, listing = posted
+    initial = society_money_total(world)
+    filled = fill_listing(world, 0, listing.listing_id, 1, quantity=1)
+    assert filled is not None
+    buyer = filled.agent_by_id(1)
+    seller = filled.agent_by_id(0)
+    assert buyer is not None and seller is not None
+    assert buyer.money == 1  # 4 - 2 price - 1 discounted fee
+    assert seller.money == 2
+    assert filled.government_by_id(0).treasury == 1  # type: ignore[union-attr]
+    assert society_money_total(filled) == initial
+
+
 def test_bureaucracy_market_fee_discount_floors_at_zero() -> None:
     """Bureaucracy discount cannot drive the effective market fee below zero."""
     government = Government.create(0, "Camp", 0, (0,))

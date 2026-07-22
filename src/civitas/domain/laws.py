@@ -27,8 +27,11 @@ grant living subjects -0.02 MOVE energy cost (Phase 14 M2). Active
 M11), stacking with coppice society-wide and the scaffold seat. Active
 ``LABOR`` statutes grant living subjects -0.02 PRODUCE energy cost
 (Phase 16 M2), stacking with guild, workshop, foundry, abacus, pulley,
-customs, and loom. Elections (voting) are a separate Phase 5 aggregate,
-as are institutions.
+customs, and loom. Active ``SUMPTUARY`` statutes lower the market fill
+fee at the enacting government's markets by 1 (Phase 16 M11), stacking
+with bureaucracy, harbor, merchant, dyer, warehouse, and mordant.
+Elections (voting) are a separate Phase 5 aggregate, as are
+institutions.
 """
 
 from __future__ import annotations
@@ -66,6 +69,7 @@ class LawKind(StrEnum):
     LAND_TENURE = "land_tenure"
     CONSERVATION = "conservation"
     LABOR = "labor"
+    SUMPTUARY = "sumptuary"
 
 
 # Statute kinds that allow at most one active law per government.
@@ -86,6 +90,7 @@ _UNIQUE_ACTIVE_KINDS: frozenset[LawKind] = frozenset(
         LawKind.LAND_TENURE,
         LawKind.CONSERVATION,
         LawKind.LABOR,
+        LawKind.SUMPTUARY,
     }
 )
 
@@ -128,6 +133,9 @@ CONSERVATION_WOOD_GATHER_BONUS: int = 1
 # Kind-only PRODUCE energy discount for living subjects under active LABOR.
 LABOR_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 
+# Kind-only market fill-fee discount at markets under an active SUMPTUARY law.
+SUMPTUARY_MARKET_FEE_DISCOUNT: int = 1
+
 
 class Law(BaseModel):
     """One statute enacted by a government."""
@@ -145,7 +153,7 @@ class Law(BaseModel):
             "TAX_SCHEDULE flat poll amount, or MARKET_FEE flat fill fee; "
             "ignored by CURRICULUM, CALENDAR, ETHICS, ASSEMBLY, SANITATION, "
             "QUARANTINE, BUILDING_CODES, ZONING, PASSAGE, CUSTOMS, "
-            "LAND_TENURE, CONSERVATION, LABOR, and other kinds."
+            "LAND_TENURE, CONSERVATION, LABOR, SUMPTUARY, and other kinds."
         ),
     )
     rate_bps: NonNegativeInt = Field(
@@ -219,6 +227,7 @@ class LawCensus(BaseModel):
     active_land_tenure_count: NonNegativeInt = 0
     active_conservation_count: NonNegativeInt = 0
     active_labor_count: NonNegativeInt = 0
+    active_sumptuary_count: NonNegativeInt = 0
 
 
 def law_by_id(world: World, law_id: LawId | int) -> Law | None:
@@ -697,6 +706,39 @@ def labor_produce_discount_for(world: World, agent: Agent) -> float:
     return LABOR_PRODUCE_ENERGY_DISCOUNT
 
 
+def active_sumptuary_law(
+    world: World,
+    government_id: GovernmentId | int,
+) -> Law | None:
+    """Return the active sumptuary statute for ``government_id``, if any.
+
+    When multiple active ``SUMPTUARY`` laws exist (should not under
+    uniqueness rules), the lowest ``law_id`` wins.
+    """
+    for law in active_laws(world, government_id):
+        if law.kind == LawKind.SUMPTUARY:
+            return law
+    return None
+
+
+def sumptuary_market_discount_for(
+    world: World,
+    location_id: LocationId | int,
+) -> int:
+    """Return the SUMPTUARY market fill-fee discount at ``location_id``, or 0.
+
+    Market fees are location-scoped, so the government is resolved via
+    ``government_at(location)``, mirroring ``market_fee_for``. The statute
+    kind alone enables the discount; ``flat_amount`` is ignored.
+    """
+    government = government_at(world, location_id)
+    if government is None:
+        return 0
+    if active_sumptuary_law(world, government.government_id) is None:
+        return 0
+    return SUMPTUARY_MARKET_FEE_DISCOUNT
+
+
 def _has_active_kind(
     world: World,
     government_id: GovernmentId,
@@ -783,6 +825,7 @@ def census_laws(world: World) -> LawCensus:
         1 for law in active if law.kind == LawKind.CONSERVATION
     )
     active_labor = sum(1 for law in active if law.kind == LawKind.LABOR)
+    active_sumptuary = sum(1 for law in active if law.kind == LawKind.SUMPTUARY)
     return LawCensus(
         tick=world.tick,
         law_count=len(laws),
@@ -804,6 +847,7 @@ def census_laws(world: World) -> LawCensus:
         active_land_tenure_count=active_land_tenure,
         active_conservation_count=active_conservation,
         active_labor_count=active_labor,
+        active_sumptuary_count=active_sumptuary,
     )
 
 
@@ -821,6 +865,7 @@ __all__ = [
     "PASSAGE_MOVE_ENERGY_DISCOUNT",
     "QUARANTINE_REST_RESTORE_BONUS",
     "SANITATION_DRINK_RESTORE_BONUS",
+    "SUMPTUARY_MARKET_FEE_DISCOUNT",
     "ZONING_EAT_RESTORE_BONUS",
     "Law",
     "LawCensus",
@@ -839,6 +884,7 @@ __all__ = [
     "active_passage_law",
     "active_quarantine_law",
     "active_sanitation_law",
+    "active_sumptuary_law",
     "active_tax_schedule",
     "active_zoning_law",
     "assembly_socialize_bonus_for",
@@ -861,6 +907,7 @@ __all__ = [
     "repeal_law",
     "sanitation_drink_bonus_for",
     "set_law_active",
+    "sumptuary_market_discount_for",
     "tax_schedule_for_agent",
     "zoning_eat_bonus_for",
 ]

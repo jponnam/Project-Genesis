@@ -80,6 +80,7 @@ class LawSystem:
                     active_land_tenure_count=snap.active_land_tenure_count,
                     active_conservation_count=snap.active_conservation_count,
                     active_labor_count=snap.active_labor_count,
+                    active_sumptuary_count=snap.active_sumptuary_count,
                 )
             )
         return world
