@@ -124,11 +124,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 12 Milestone 9: Bathhouse infrastructure**
+**Phase 12 Milestone 10: Hygiene technology**
 
-``InfrastructureKind.BATHHOUSE`` adds paid bathhouses at city seats. Active
-bathhouses add ``+0.05`` REST restore for colocated agents, stacking with prior
-REST bonuses.
+``TechnologyKind.HYGIENE`` adds Camp Hygiene after Anatomy with Camp Asepsis.
+Active asepsis adds ``+0.05`` DRINK restore society-wide, stacking with wells,
+shrines, clinics, apothecaries, and sanitation laws.
 
 ### Completed
 
@@ -241,6 +241,7 @@ JSONL storage → `civitas run`
 - Milestone 7: Anatomy technology
 - Milestone 8: Collegium institutions
 - Milestone 9: Bathhouse infrastructure
+- Milestone 10: Hygiene technology
 
 ## License
 

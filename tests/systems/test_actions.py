@@ -9,6 +9,8 @@ from civitas.domain import (
     APOTHECARY_DRINK_RESTORE_BONUS,
     ASSEMBLY_SOCIALIZE_RESTORE_BONUS,
     BATHHOUSE_REST_RESTORE_BONUS,
+    CAMP_ASEPSIS,
+    CAMP_HYGIENE,
     CAMP_LOCATION,
     CAMP_ORATION,
     CAMP_RHETORIC,
@@ -16,6 +18,7 @@ from civitas.domain import (
     DEFAULT_REST_RESTORE,
     DEFAULT_SOCIALIZE_RESTORE,
     HOSPITAL_REST_RESTORE_BONUS,
+    HYGIENE_DRINK_RESTORE_BONUS,
     INFIRMARY_REST_RESTORE_BONUS,
     RHETORIC_SOCIALIZE_RESTORE_BONUS,
     ActionChoice,
@@ -407,6 +410,39 @@ def test_drink_action_uses_apothecary_bonus() -> None:
     updated = ActionExecutor().execute(world, _choice(0, ActionKind.DRINK))
     assert updated.agents[0].needs.water == pytest.approx(
         0.4 + DEFAULT_DRINK_RESTORE + APOTHECARY_DRINK_RESTORE_BONUS
+    )
+
+
+def test_drink_action_uses_asepsis_bonus() -> None:
+    """DRINK restore includes society-wide asepsis bonuses."""
+    agent = Agent.create(
+        agent_id=0,
+        name="A",
+        needs=Needs(food=1.0, water=0.4, energy=1.0, social=1.0, safety=1.0),
+    ).model_copy(
+        update={
+            "inventory": Inventory(
+                stacks=(ResourceStack(resource="water", quantity=1),)
+            )
+        }
+    )
+    discovered_hygiene = CAMP_HYGIENE.model_copy(update={"discovered": True})
+    active_asepsis = CAMP_ASEPSIS.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        technologies=tuple(
+            discovered_hygiene
+            if tech.technology_id == CAMP_HYGIENE.technology_id
+            else tech
+            for tech in default_technologies()
+        ),
+        innovations=(active_asepsis,),
+        agents=(agent,),
+    )
+    updated = ActionExecutor().execute(world, _choice(0, ActionKind.DRINK))
+    assert updated.agents[0].needs.water == pytest.approx(
+        0.4 + DEFAULT_DRINK_RESTORE + HYGIENE_DRINK_RESTORE_BONUS
     )
 
 

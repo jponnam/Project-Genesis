@@ -106,6 +106,7 @@ class InnovationSystem:
                     active_oration_count=snap.active_oration_count,
                     active_remedy_count=snap.active_remedy_count,
                     active_dissection_count=snap.active_dissection_count,
+                    active_asepsis_count=snap.active_asepsis_count,
                 )
             )
         return world

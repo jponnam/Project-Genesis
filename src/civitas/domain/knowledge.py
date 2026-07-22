@@ -46,6 +46,7 @@ LOGIC_FACT: str = TechnologyKind.LOGIC.value
 RHETORIC_FACT: str = TechnologyKind.RHETORIC.value
 MEDICINE_FACT: str = TechnologyKind.MEDICINE.value
 ANATOMY_FACT: str = TechnologyKind.ANATOMY.value
+HYGIENE_FACT: str = TechnologyKind.HYGIENE.value
 
 
 class KnowledgeSource(StrEnum):
@@ -76,6 +77,7 @@ class KnowledgeCensus(BaseModel):
     rhetoric_knower_count: NonNegativeInt = 0
     medicine_knower_count: NonNegativeInt = 0
     anatomy_knower_count: NonNegativeInt = 0
+    hygiene_knower_count: NonNegativeInt = 0
     total_fact_instances: NonNegativeInt
     coverage_bps: NonNegativeInt
 
@@ -317,6 +319,7 @@ def census_knowledge(world: World) -> KnowledgeCensus:
         1 for agent in living if agent.knowledge.knows(MEDICINE_FACT)
     )
     anatomy_knowers = sum(1 for agent in living if agent.knowledge.knows(ANATOMY_FACT))
+    hygiene_knowers = sum(1 for agent in living if agent.knowledge.knows(HYGIENE_FACT))
     total_fact_instances = 0
     for agent in living:
         total_fact_instances += sum(
@@ -346,6 +349,7 @@ def census_knowledge(world: World) -> KnowledgeCensus:
         rhetoric_knower_count=rhetoric_knowers,
         medicine_knower_count=medicine_knowers,
         anatomy_knower_count=anatomy_knowers,
+        hygiene_knower_count=hygiene_knowers,
         total_fact_instances=total_fact_instances,
         coverage_bps=coverage_bps,
     )

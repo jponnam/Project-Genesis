@@ -106,6 +106,7 @@ class KnowledgeSystem:
                     rhetoric_knower_count=snap.rhetoric_knower_count,
                     medicine_knower_count=snap.medicine_knower_count,
                     anatomy_knower_count=snap.anatomy_knower_count,
+                    hygiene_knower_count=snap.hygiene_knower_count,
                     total_fact_instances=snap.total_fact_instances,
                     coverage_bps=snap.coverage_bps,
                 )

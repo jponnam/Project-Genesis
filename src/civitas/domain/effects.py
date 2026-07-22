@@ -41,6 +41,8 @@ well, shrine, clinic, and sanitation). Phase 12 Milestone 7 adds a global
 DISSECTION research-points bonus (stacking with syllogism). Phase 12
 Milestone 8 adds COLLEGIUM teachings-per-knower bonuses (stacking with
 scribe/dialectic/scriptorium/academy/forum/school/stoa/curriculum).
+Phase 12 Milestone 10 adds a global ASEPSIS DRINK restore bonus (stacking
+with well, shrine, clinic, apothecary, and sanitation).
 The action executor, retrieval path, market fills,
 knowledge diffusion, and research progression read these helpers;
 ``EffectsSystem`` only observes coverage. Systems never call each other.
@@ -107,6 +109,7 @@ WELL_DRINK_RESTORE_BONUS: float = 0.05
 SHRINE_DRINK_RESTORE_BONUS: float = 0.05
 CLINIC_DRINK_RESTORE_BONUS: float = 0.05
 APOTHECARY_DRINK_RESTORE_BONUS: float = 0.05
+HYGIENE_DRINK_RESTORE_BONUS: float = 0.05
 STOREHOUSE_FOOD_GATHER_BONUS: int = 1
 ROAD_MOVE_ENERGY_DISCOUNT: float = 0.02
 GUILD_PRODUCE_ENERGY_DISCOUNT: float = 0.02
@@ -611,15 +614,18 @@ def gather_amount_bonus(
 
 
 def drink_restore_bonus(world: World, agent: Agent) -> float:
-    """Return the DRINK restore bonus from WELL/SHRINE/CLINIC/APOTHECARY/SANITATION.
+    """Return the DRINK restore bonus from seats, sanitation, and asepsis.
 
     An active WELL contributes ``WELL_DRINK_RESTORE_BONUS``. An active
     SHRINE contributes ``SHRINE_DRINK_RESTORE_BONUS``. An active
     CLINIC contributes ``CLINIC_DRINK_RESTORE_BONUS``. An active
     APOTHECARY contributes ``APOTHECARY_DRINK_RESTORE_BONUS``. An active
-    ``SANITATION`` statute contributes for living subjects. All stack.
+    ``SANITATION`` statute contributes for living subjects. An active
+    ASEPSIS innovation contributes society-wide. All stack.
     """
     bonus = 0.0
+    if innovation_kind_is_active(world, InnovationKind.ASEPSIS):
+        bonus += HYGIENE_DRINK_RESTORE_BONUS
     if location_has_active_well(world, agent.location_id):
         bonus += WELL_DRINK_RESTORE_BONUS
     if location_has_active_shrine(world, agent.location_id):
@@ -875,9 +881,10 @@ def census_effects(world: World) -> EffectsCensus:
         if item.kind is InstitutionKind.GUILD
     )
     # Society drink potential at a well seat (bonus available when colocated).
-    drink_at_well = clamp_unit(
-        DEFAULT_DRINK_RESTORE + (WELL_DRINK_RESTORE_BONUS if wells else 0.0)
-    )
+    drink_bonus = WELL_DRINK_RESTORE_BONUS if wells else 0.0
+    if innovation_kind_is_active(world, InnovationKind.ASEPSIS):
+        drink_bonus += HYGIENE_DRINK_RESTORE_BONUS
+    drink_at_well = clamp_unit(DEFAULT_DRINK_RESTORE + drink_bonus)
     # Food gather potential at a storehouse seat.
     food_at_storehouse = effective_gather_amount(
         world,

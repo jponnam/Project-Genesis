@@ -637,6 +637,7 @@ class TechnologiesObserved(DomainEvent):
     discovered_rhetoric_count: NonNegativeInt = 0
     discovered_medicine_count: NonNegativeInt = 0
     discovered_anatomy_count: NonNegativeInt = 0
+    discovered_hygiene_count: NonNegativeInt = 0
     locked_count: NonNegativeInt = 0
     researchable_count: NonNegativeInt = 0
 
@@ -705,6 +706,7 @@ class InnovationsObserved(DomainEvent):
     active_oration_count: NonNegativeInt = 0
     active_remedy_count: NonNegativeInt = 0
     active_dissection_count: NonNegativeInt = 0
+    active_asepsis_count: NonNegativeInt = 0
 
 
 class KnowledgeLearned(DomainEvent):
@@ -733,6 +735,7 @@ class KnowledgeObserved(DomainEvent):
     rhetoric_knower_count: NonNegativeInt = 0
     medicine_knower_count: NonNegativeInt = 0
     anatomy_knower_count: NonNegativeInt = 0
+    hygiene_knower_count: NonNegativeInt = 0
     total_fact_instances: NonNegativeInt
     coverage_bps: NonNegativeInt
 
