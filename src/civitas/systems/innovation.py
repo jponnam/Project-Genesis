@@ -119,6 +119,7 @@ class InnovationSystem:
                     active_loom_count=snap.active_loom_count,
                     active_mordant_count=snap.active_mordant_count,
                     active_tannery_count=snap.active_tannery_count,
+                    active_pickaxe_count=snap.active_pickaxe_count,
                 )
             )
         return world

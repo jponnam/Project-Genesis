@@ -59,6 +59,7 @@ FORESTRY_FACT: str = TechnologyKind.FORESTRY.value
 TEXTILES_FACT: str = TechnologyKind.TEXTILES.value
 DYEING_FACT: str = TechnologyKind.DYEING.value
 TANNING_FACT: str = TechnologyKind.TANNING.value
+MINING_FACT: str = TechnologyKind.MINING.value
 
 
 class KnowledgeSource(StrEnum):
@@ -102,6 +103,7 @@ class KnowledgeCensus(BaseModel):
     textiles_knower_count: NonNegativeInt = 0
     dyeing_knower_count: NonNegativeInt = 0
     tanning_knower_count: NonNegativeInt = 0
+    mining_knower_count: NonNegativeInt = 0
     total_fact_instances: NonNegativeInt
     coverage_bps: NonNegativeInt
 
@@ -380,6 +382,9 @@ def census_knowledge(world: World) -> KnowledgeCensus:
     tanning_knowers = sum(
         1 for agent in living if agent.knowledge.knows(TANNING_FACT)
     )
+    mining_knowers = sum(
+        1 for agent in living if agent.knowledge.knows(MINING_FACT)
+    )
     total_fact_instances = 0
     for agent in living:
         total_fact_instances += sum(
@@ -422,6 +427,7 @@ def census_knowledge(world: World) -> KnowledgeCensus:
         textiles_knower_count=textiles_knowers,
         dyeing_knower_count=dyeing_knowers,
         tanning_knower_count=tanning_knowers,
+        mining_knower_count=mining_knowers,
         total_fact_instances=total_fact_instances,
         coverage_bps=coverage_bps,
     )

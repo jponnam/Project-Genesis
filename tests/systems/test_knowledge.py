@@ -47,6 +47,7 @@ def test_observe_emits_without_mutating_world() -> None:
     assert events[0].textiles_knower_count == 0
     assert events[0].dyeing_knower_count == 0
     assert events[0].tanning_knower_count == 0
+    assert events[0].mining_knower_count == 0
     assert events[0].coverage_bps == 10_000
 
 
