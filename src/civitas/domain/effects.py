@@ -155,6 +155,10 @@ seats, the quarry city, and the mineral rights subject bonus). Phase 17
 Milestone 5 adds MINING_CAMP city STONE gather bonuses at the city seat
 (stacking with pickaxe and forge society-wide, the mason and miner seats,
 the mineshaft, the quarry city, and the mineral rights subject bonus).
+Phase 17 Milestone 6 adds SMELTER produce-energy discounts at the
+institution seat (stacking with guild, workshop, weaver, foundry,
+fulling mill, mill town, tannery, abacus, pulley, customs, labor, and
+loom).
 The action
 executor,
 retrieval
@@ -268,6 +272,7 @@ NAVIGATION_MOVE_ENERGY_DISCOUNT: float = 0.02
 GUILD_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 WORKSHOP_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 WEAVER_PRODUCE_ENERGY_DISCOUNT: float = 0.02
+SMELTER_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 FULLING_MILL_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 FOUNDRY_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 MILL_TOWN_PRODUCE_ENERGY_DISCOUNT: float = 0.02
@@ -656,6 +661,22 @@ def location_has_active_weaver(
     )
     return any(
         item.kind is InstitutionKind.WEAVER and item.location_id == target
+        for item in active_institutions(world)
+    )
+
+
+def location_has_active_smelter(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active SMELTER is seated at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InstitutionKind.SMELTER and item.location_id == target
         for item in active_institutions(world)
     )
 
@@ -1367,7 +1388,9 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
     ``GUILD_PRODUCE_ENERGY_DISCOUNT``. An active WORKSHOP at the agent's
     location contributes ``WORKSHOP_PRODUCE_ENERGY_DISCOUNT``. An active
     WEAVER at the agent's location contributes
-    ``WEAVER_PRODUCE_ENERGY_DISCOUNT``. An active FULLING_MILL at the
+    ``WEAVER_PRODUCE_ENERGY_DISCOUNT``. An active SMELTER at the agent's
+    location contributes ``SMELTER_PRODUCE_ENERGY_DISCOUNT``. An active
+    FULLING_MILL at the
     agent's location contributes ``FULLING_MILL_PRODUCE_ENERGY_DISCOUNT``.
     An active FOUNDRY city at the
     agent's location contributes ``FOUNDRY_PRODUCE_ENERGY_DISCOUNT``. An
@@ -1389,6 +1412,8 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
         discount += WORKSHOP_PRODUCE_ENERGY_DISCOUNT
     if location_has_active_weaver(world, agent.location_id):
         discount += WEAVER_PRODUCE_ENERGY_DISCOUNT
+    if location_has_active_smelter(world, agent.location_id):
+        discount += SMELTER_PRODUCE_ENERGY_DISCOUNT
     if location_has_active_fulling_mill(world, agent.location_id):
         discount += FULLING_MILL_PRODUCE_ENERGY_DISCOUNT
     if location_has_active_foundry(world, agent.location_id):
@@ -1734,6 +1759,11 @@ def census_effects(world: World) -> EffectsCensus:
         for item in active_institutions(world)
         if item.kind is InstitutionKind.WEAVER
     )
+    smelters = tuple(
+        item
+        for item in active_institutions(world)
+        if item.kind is InstitutionKind.SMELTER
+    )
     fulling_mills = tuple(
         item
         for item in active_infrastructure(world)
@@ -1804,6 +1834,8 @@ def census_effects(world: World) -> EffectsCensus:
         produce_discount += WORKSHOP_PRODUCE_ENERGY_DISCOUNT
     if weavers:
         produce_discount += WEAVER_PRODUCE_ENERGY_DISCOUNT
+    if smelters:
+        produce_discount += SMELTER_PRODUCE_ENERGY_DISCOUNT
     if fulling_mills:
         produce_discount += FULLING_MILL_PRODUCE_ENERGY_DISCOUNT
     if foundries:

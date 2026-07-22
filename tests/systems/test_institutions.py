@@ -53,6 +53,7 @@ def test_observe_emits_institutions_observed_without_mutating_world() -> None:
     assert events[0].active_dyer_count == 0
     assert events[0].active_tailor_count == 0
     assert events[0].active_miner_count == 0
+    assert events[0].active_smelter_count == 0
     assert events[0].vacant_officer_count == 1
     assert events[0].total_budget == 0
     assert events[0].funded_count == 0
@@ -87,6 +88,7 @@ def test_observe_emits_active_health_institution_counts() -> None:
             Institution.create(15, 0, 0, "Camp Dyer", InstitutionKind.DYER),
             Institution.create(16, 0, 0, "Camp Tailor", InstitutionKind.TAILOR),
             Institution.create(17, 0, 0, "Camp Miner", InstitutionKind.MINER),
+            Institution.create(18, 0, 0, "Camp Smelter", InstitutionKind.SMELTER),
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
     )
@@ -113,6 +115,7 @@ def test_observe_emits_active_health_institution_counts() -> None:
     assert events[0].active_dyer_count == 1
     assert events[0].active_tailor_count == 1
     assert events[0].active_miner_count == 1
+    assert events[0].active_smelter_count == 1
 
 
 def test_observe_can_suppress_events() -> None:
