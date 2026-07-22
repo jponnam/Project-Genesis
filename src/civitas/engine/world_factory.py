@@ -35,6 +35,7 @@ from civitas.domain import (
     default_institutions,
     default_laws,
     default_markets,
+    default_research_progress,
     default_technologies,
 )
 from civitas.domain.ids import AgentId
@@ -79,9 +80,10 @@ class WorldFactory:
            ``InfrastructureCreated``.
         9. Build canonical technologies; optionally publish
            ``TechnologyCreated``.
-        10. For each ``agent_id`` in ``0 .. agent_count-1``, spawn a child
+        10. Build canonical research progress rows (no create event).
+        11. For each ``agent_id`` in ``0 .. agent_count-1``, spawn a child
            RNG stream and sample personality + starting money at camp.
-        11. Optionally publish ``AgentSpawned`` for each agent in id order.
+        12. Optionally publish ``AgentSpawned`` for each agent in id order.
         """
         root_rng = SeededRNG.from_config(config)
         locations = default_world_map()
@@ -93,6 +95,7 @@ class WorldFactory:
         cities = default_cities()
         infrastructure = default_infrastructure()
         technologies = default_technologies()
+        research_progress = default_research_progress()
         agents: list[Agent] = []
 
         if bus is not None:
@@ -226,6 +229,7 @@ class WorldFactory:
             cities=cities,
             infrastructure=infrastructure,
             technologies=technologies,
+            research_progress=research_progress,
             agents=tuple(agents),
         )
 

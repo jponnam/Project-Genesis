@@ -35,6 +35,7 @@ from civitas.domain.institutions import Institution
 from civitas.domain.laws import Law, LawKind
 from civitas.domain.location import Location
 from civitas.domain.market import Market
+from civitas.domain.research import ResearchProgress
 from civitas.domain.technology import Technology
 from civitas.domain.time import Tick
 from civitas.domain.types import NonNegativeInt
@@ -56,6 +57,7 @@ class World(BaseModel):
         cities: Settlements, ordered by ascending ``city_id``.
         infrastructure: Built capacity, ordered by ascending ``infrastructure_id``.
         technologies: Society tech catalog, ordered by ascending ``technology_id``.
+        research_progress: Open research rows, ordered by ascending technology_id.
         agents: Agents ordered by ascending ``agent_id``.
         treasury: Public money balance collected from taxes.
     """
@@ -73,6 +75,7 @@ class World(BaseModel):
     cities: tuple[City, ...] = ()
     infrastructure: tuple[Infrastructure, ...] = ()
     technologies: tuple[Technology, ...] = ()
+    research_progress: tuple[ResearchProgress, ...] = ()
     agents: tuple[Agent, ...] = ()
     treasury: NonNegativeInt = 0
 
@@ -387,6 +390,30 @@ class World(BaseModel):
             msg = "technology kinds must be unique"
             raise ValueError(msg)
 
+        research_ids = [row.technology_id.value for row in self.research_progress]
+        if len(research_ids) != len(set(research_ids)):
+            msg = "research progress technology ids must be unique"
+            raise ValueError(msg)
+        if research_ids != sorted(research_ids):
+            msg = "research_progress must be ordered by ascending technology_id"
+            raise ValueError(msg)
+        tech_by_value = {tech.technology_id.value: tech for tech in self.technologies}
+        for row in self.research_progress:
+            tech_value = row.technology_id.value
+            if tech_value not in tech_by_value:
+                msg = f"research progress references unknown technology {tech_value}"
+                raise ValueError(msg)
+            tech = tech_by_value[tech_value]
+            if tech.discovered:
+                msg = (
+                    f"research progress not allowed for discovered technology "
+                    f"{row.technology_id.value}"
+                )
+                raise ValueError(msg)
+            if row.points > row.threshold:
+                msg = "research points must be <= threshold"
+                raise ValueError(msg)
+
         return self
 
     @property
@@ -565,6 +592,7 @@ class World(BaseModel):
             cities=self.cities,
             infrastructure=self.infrastructure,
             technologies=self.technologies,
+            research_progress=self.research_progress,
             agents=agents,
             treasury=self.treasury,
         )
@@ -751,3 +779,18 @@ class World(BaseModel):
             msg = f"technology id {technology.technology_id.value} not found in world"
             raise ValueError(msg)
         return self.model_copy(update={"technologies": tuple(updated)})
+
+    def with_research_progress(self, progress: ResearchProgress) -> World:
+        """Return a copy replacing or inserting ``progress`` by technology_id."""
+        updated: list[ResearchProgress] = []
+        found = False
+        for existing in self.research_progress:
+            if existing.technology_id == progress.technology_id:
+                updated.append(progress)
+                found = True
+            else:
+                updated.append(existing)
+        if not found:
+            updated.append(progress)
+            updated.sort(key=lambda item: item.technology_id.value)
+        return self.model_copy(update={"research_progress": tuple(updated)})

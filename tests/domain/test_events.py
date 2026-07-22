@@ -48,6 +48,8 @@ from civitas.domain import (
     RelationshipsObserved,
     RelationshipUpdated,
     ReputationObserved,
+    ResearchObserved,
+    ResearchProgressed,
     ResourceConsumed,
     ResourceGathered,
     ResourceProduced,
@@ -57,6 +59,7 @@ from civitas.domain import (
     TaxCollected,
     TechnologiesObserved,
     TechnologyCreated,
+    TechnologyDiscovered,
     TechnologyId,
     Tick,
     TickCompleted,
@@ -831,3 +834,42 @@ def test_technology_created_and_observed_round_trips() -> None:
     restored = event_from_record(observed.to_record())
     assert isinstance(restored, TechnologiesObserved)
     assert restored.discovered_fire_count == 1
+
+
+def test_research_events_round_trip() -> None:
+    """Research progress/discovery/observe events serialize losslessly."""
+    progressed = ResearchProgressed(
+        sequence=29,
+        tick=Tick(value=3),
+        technology_id=TechnologyId(value=1),
+        points_after=3,
+        threshold=10,
+        delta=1,
+    )
+    restored_progressed = event_from_record(progressed.to_record())
+    assert isinstance(restored_progressed, ResearchProgressed)
+    assert restored_progressed.points_after == 3
+
+    discovered = TechnologyDiscovered(
+        sequence=30,
+        tick=Tick(value=10),
+        technology_id=TechnologyId(value=1),
+        name="Camp Pottery",
+        kind="pottery",
+    )
+    restored_discovered = event_from_record(discovered.to_record())
+    assert isinstance(restored_discovered, TechnologyDiscovered)
+    assert restored_discovered.kind == "pottery"
+
+    observed = ResearchObserved(
+        sequence=31,
+        tick=Tick(value=4),
+        progress_count=1,
+        total_points=4,
+        total_threshold=10,
+        total_remaining=6,
+        completion_bps=4_000,
+    )
+    restored_observed = event_from_record(observed.to_record())
+    assert isinstance(restored_observed, ResearchObserved)
+    assert restored_observed.completion_bps == 4_000
