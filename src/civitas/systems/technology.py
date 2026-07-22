@@ -69,6 +69,8 @@ class TechSystem:
                     undiscovered_count=snap.undiscovered_count,
                     discovered_fire_count=snap.discovered_fire_count,
                     discovered_pottery_count=snap.discovered_pottery_count,
+                    locked_count=snap.locked_count,
+                    researchable_count=snap.researchable_count,
                 )
             )
         return world

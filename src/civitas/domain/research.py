@@ -18,6 +18,7 @@ from civitas.domain.ids import TechnologyId
 from civitas.domain.technology import (
     CAMP_POTTERY,
     discover_technology,
+    prerequisites_met,
     technology_by_id,
 )
 from civitas.domain.time import Tick
@@ -128,6 +129,10 @@ def advance_research(
     for progress in world.research_progress:
         technology = technology_by_id(world, progress.technology_id)
         if technology is None or technology.discovered:
+            continue
+        if not prerequisites_met(world, technology):
+            # Locked by unmet prerequisites: preserve row, no progress.
+            remaining.append(progress)
             continue
 
         points_before = progress.points

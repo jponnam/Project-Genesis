@@ -117,14 +117,16 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 | **6** | Technology, research, innovation, knowledge diffusion |
 | **7** | LLM integration, agent cognition, reflection, planning, memory retrieval |
 | **8** | Effect wiring from innovations into action outcomes |
+| **9** | Technology prerequisite trees and deeper tech progression |
 
 ## Current Milestone
 
-**Phase 8 — Milestone 4: Trust-gated teaching**
+**Phase 9 — Milestone 1: Technology prerequisite trees**
 
-Peer knowledge diffusion now requires the learner to trust the teacher at
-least `min_teach_trust` (default 0.5; missing bonds use default trust).
-Bootstrap and birth inheritance remain ungated.
+Technologies may declare `prerequisite_ids`. Discovery and research
+advance are blocked until every prerequisite is discovered. Pottery
+requires fire; the tech census reports `locked_count` /
+`researchable_count`.
 
 ### Completed
 
@@ -184,6 +186,9 @@ JSONL storage → `civitas run`
 - Milestone 2: Infrastructure effects
 - Milestone 3: Birth knowledge inheritance
 - Milestone 4: Trust-gated teaching
+
+**Phase 9:**
+- Milestone 1: Technology prerequisite trees
 
 ## License
 

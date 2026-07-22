@@ -5,7 +5,8 @@ Phase 6 Milestone 1. Technologies are world-level catalog rows with a
 (unknown). Research (Milestone 2) advances progress toward undiscovered
 entries. Innovation activates society adoptions of discovered techs.
 Knowledge diffusion syncs facts onto agents. Effect wiring (Phase 8)
-applies active-innovation bonuses. Prereq trees remain later.
+applies active-innovation bonuses. Phase 9 Milestone 1 adds prerequisite
+trees that gate discovery and research advance.
 """
 
 from __future__ import annotations
@@ -13,7 +14,7 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 
 from civitas.domain.ids import TechnologyId
 from civitas.domain.time import Tick
@@ -39,6 +40,23 @@ class Technology(BaseModel):
     name: NonEmptyStr
     kind: TechnologyKind
     discovered: bool = False
+    prerequisite_ids: tuple[TechnologyId, ...] = ()
+
+    @field_validator("prerequisite_ids")
+    @classmethod
+    def prerequisites_must_be_unique_and_sorted(
+        cls,
+        value: tuple[TechnologyId, ...],
+    ) -> tuple[TechnologyId, ...]:
+        """Reject duplicate or unsorted prerequisite ids."""
+        values = [item.value for item in value]
+        if len(values) != len(set(values)):
+            msg = "prerequisite ids must be unique"
+            raise ValueError(msg)
+        if values != sorted(values):
+            msg = "prerequisite ids must be ordered by ascending technology_id"
+            raise ValueError(msg)
+        return value
 
     @classmethod
     def create(
@@ -48,13 +66,18 @@ class Technology(BaseModel):
         kind: TechnologyKind | str,
         *,
         discovered: bool = False,
+        prerequisite_ids: tuple[int, ...] = (),
     ) -> Technology:
         """Construct a validated technology from primitive fields."""
+        prereqs = tuple(
+            TechnologyId(value=item) for item in sorted(set(prerequisite_ids))
+        )
         return cls(
             technology_id=TechnologyId(value=technology_id),
             name=name,
             kind=TechnologyKind(kind),
             discovered=discovered,
+            prerequisite_ids=prereqs,
         )
 
 
@@ -62,7 +85,11 @@ CAMP_FIRE: Technology = Technology.create(
     0, "Camp Fire", TechnologyKind.FIRE, discovered=True
 )
 CAMP_POTTERY: Technology = Technology.create(
-    1, "Camp Pottery", TechnologyKind.POTTERY, discovered=False
+    1,
+    "Camp Pottery",
+    TechnologyKind.POTTERY,
+    discovered=False,
+    prerequisite_ids=(0,),
 )
 
 
@@ -82,6 +109,8 @@ class TechnologyCensus(BaseModel):
     undiscovered_count: NonNegativeInt
     discovered_fire_count: NonNegativeInt
     discovered_pottery_count: NonNegativeInt
+    locked_count: NonNegativeInt
+    researchable_count: NonNegativeInt
 
 
 def technology_by_id(
@@ -117,6 +146,15 @@ def discovered_technologies(world: World) -> tuple[Technology, ...]:
     return tuple(tech for tech in world.technologies if tech.discovered)
 
 
+def prerequisites_met(world: World, technology: Technology) -> bool:
+    """Return True when every prerequisite of ``technology`` is discovered."""
+    for prerequisite_id in technology.prerequisite_ids:
+        required = technology_by_id(world, prerequisite_id)
+        if required is None or not required.discovered:
+            return False
+    return True
+
+
 def next_technology_id(world: World) -> TechnologyId:
     """Allocate the next unused ``TechnologyId`` (max existing + 1, or 0)."""
     if not world.technologies:
@@ -131,6 +169,11 @@ def create_technology(world: World, technology: Technology) -> World | None:
         return None
     if technology_by_kind(world, technology.kind) is not None:
         return None
+    for prerequisite_id in technology.prerequisite_ids:
+        if prerequisite_id.value == technology.technology_id.value:
+            return None
+        if technology_by_id(world, prerequisite_id) is None:
+            return None
     technologies = tuple(
         sorted(
             (*world.technologies, technology),
@@ -144,16 +187,18 @@ def discover_technology(
     world: World,
     technology_id: TechnologyId | int,
 ) -> World | None:
-    """Mark ``technology_id`` discovered when present.
+    """Mark ``technology_id`` discovered when present and unlocked.
 
-    Already-discovered technologies return the same world. Missing ids
-    return ``None``.
+    Already-discovered technologies return the same world. Missing ids or
+    unmet prerequisites return ``None``.
     """
     technology = technology_by_id(world, technology_id)
     if technology is None:
         return None
     if technology.discovered:
         return world
+    if not prerequisites_met(world, technology):
+        return None
     updated = technology.model_copy(update={"discovered": True})
     return world.with_technology(updated)
 
@@ -162,13 +207,18 @@ def census_technologies(world: World) -> TechnologyCensus:
     """Build a deterministic technology census for ``world``."""
     technologies = world.technologies
     discovered = [tech for tech in technologies if tech.discovered]
+    undiscovered = [tech for tech in technologies if not tech.discovered]
+    locked = [tech for tech in undiscovered if not prerequisites_met(world, tech)]
+    researchable = [tech for tech in undiscovered if prerequisites_met(world, tech)]
     fire = sum(1 for tech in discovered if tech.kind is TechnologyKind.FIRE)
     pottery = sum(1 for tech in discovered if tech.kind is TechnologyKind.POTTERY)
     return TechnologyCensus(
         tick=world.tick,
         technology_count=len(technologies),
         discovered_count=len(discovered),
-        undiscovered_count=len(technologies) - len(discovered),
+        undiscovered_count=len(undiscovered),
         discovered_fire_count=fire,
         discovered_pottery_count=pottery,
+        locked_count=len(locked),
+        researchable_count=len(researchable),
     )

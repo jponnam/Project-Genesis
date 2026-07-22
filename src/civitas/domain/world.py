@@ -393,6 +393,18 @@ class World(BaseModel):
         if len(tech_kinds) != len(set(tech_kinds)):
             msg = "technology kinds must be unique"
             raise ValueError(msg)
+        tech_by_value = {tech.technology_id.value: tech for tech in self.technologies}
+        for tech in self.technologies:
+            for prerequisite_id in tech.prerequisite_ids:
+                if prerequisite_id.value == tech.technology_id.value:
+                    msg = f"technology {tech.technology_id.value} cannot require itself"
+                    raise ValueError(msg)
+                if prerequisite_id.value not in tech_by_value:
+                    msg = (
+                        f"technology {tech.technology_id.value} references "
+                        f"unknown prerequisite {prerequisite_id.value}"
+                    )
+                    raise ValueError(msg)
 
         research_ids = [row.technology_id.value for row in self.research_progress]
         if len(research_ids) != len(set(research_ids)):
@@ -401,7 +413,6 @@ class World(BaseModel):
         if research_ids != sorted(research_ids):
             msg = "research_progress must be ordered by ascending technology_id"
             raise ValueError(msg)
-        tech_by_value = {tech.technology_id.value: tech for tech in self.technologies}
         for row in self.research_progress:
             tech_value = row.technology_id.value
             if tech_value not in tech_by_value:
