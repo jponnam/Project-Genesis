@@ -416,9 +416,21 @@ def test_wealth_observed_round_trips() -> None:
         mean_alive=5.0,
         min_alive=1,
         max_alive=9,
+        treasury=4,
+        society_total=24,
+        treasury_share_bps=1666,
+        median_alive=5,
+        gini_bps=2000,
+        top1_share_bps=6000,
+        top10_share_bps=6000,
+        zero_count=0,
     )
     restored = event_from_record(event.to_record())
     assert isinstance(restored, WealthObserved)
     assert restored.alive_total == 15
     assert restored.min_alive == 1
     assert restored.max_alive == 9
+    assert restored.treasury == 4
+    assert restored.society_total == 24
+    assert restored.gini_bps == 2000
+    assert restored.median_alive == 5

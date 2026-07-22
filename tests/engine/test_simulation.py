@@ -307,3 +307,17 @@ def test_enabled_taxes_collect_after_births_each_tick() -> None:
     assert wealth_total(result.world) + result.world.treasury == initial_money
     # No taxes at tick 0 observe; first levy is on tick 1.
     assert taxes[0].tick.value == 1
+
+
+def test_wealth_observed_reports_treasury_after_enabled_taxes() -> None:
+    """Post-levy WealthObserved society_total matches agents plus treasury."""
+    engine = SimulationEngine(
+        tax_system=TaxSystem(TaxConfig(enabled=True, flat_amount=1, rate_bps=0)),
+        birth_system=BirthSystem(BirthConfig(enabled=False)),
+    )
+    result = engine.run(SimulationConfig(seed=11, ticks=2, agent_count=3))
+    observed = [event for event in result.events if isinstance(event, WealthObserved)]
+    final = observed[-1]
+    assert final.treasury == result.world.treasury
+    assert final.society_total == wealth_total(result.world) + result.world.treasury
+    assert final.treasury == final.society_total - final.total
