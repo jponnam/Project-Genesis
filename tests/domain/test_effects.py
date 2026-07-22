@@ -6,6 +6,7 @@ import pytest
 
 from civitas.domain import (
     ARCHIVE_RETRIEVAL_LIMIT_BONUS,
+    BUREAUCRACY_MARKET_FEE_DISCOUNT,
     CAMP_FIRE,
     CAMP_FIRE_HEARTH,
     CAMP_FORGE,
@@ -53,6 +54,7 @@ from civitas.domain import (
     drink_restore_bonus,
     effective_drink_restore,
     effective_gather_amount,
+    effective_market_fee,
     effective_move_energy_cost,
     effective_produce_energy_cost,
     effective_rest_restore,
@@ -60,12 +62,14 @@ from civitas.domain import (
     effective_teachings_per_knower,
     gather_amount_bonus,
     location_has_active_archive,
+    location_has_active_bureaucracy,
     location_has_active_guild,
     location_has_active_library,
     location_has_active_road,
     location_has_active_scriptorium,
     location_has_active_storehouse,
     location_has_active_well,
+    market_fee_for,
     rest_restore_bonus,
     teachings_per_knower_bonus,
 )
@@ -536,3 +540,44 @@ def test_archive_and_library_retrieval_bonuses_stack() -> None:
         + ARCHIVE_RETRIEVAL_LIMIT_BONUS
         + LIBRARY_RETRIEVAL_LIMIT_BONUS
     )
+
+
+def test_bureaucracy_discounts_market_fee_at_seat() -> None:
+    """Active bureaucracy reduces market fee by 1 at its seat (floor 0)."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(Law.create(0, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=2),),
+        institutions=(
+            Institution.create(
+                0, 0, 0, "Camp Bureaucracy", InstitutionKind.BUREAUCRACY
+            ),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_bureaucracy(world, 0) is True
+    assert market_fee_for(world, 0) == 2
+    assert effective_market_fee(world, 0) == 2 - BUREAUCRACY_MARKET_FEE_DISCOUNT
+    floored = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(Law.create(0, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=1),),
+        institutions=(
+            Institution.create(
+                0, 0, 0, "Camp Bureaucracy", InstitutionKind.BUREAUCRACY
+            ),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert effective_market_fee(floored, 0) == 0
+    bare = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(Law.create(0, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=2),),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_bureaucracy(bare, 0) is False
+    assert effective_market_fee(bare, 0) == 2

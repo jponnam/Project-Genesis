@@ -5,10 +5,11 @@ drink-restore bonuses. Phase 9 adds location-scoped STOREHOUSE food-gather
 bonuses, ROAD move-energy discounts, and GUILD produce-energy discounts.
 Phase 10 adds ARCHIVE retrieval-limit bonuses, SCRIPTORIUM
 teachings-per-knower bonuses, CURRICULUM law teachings bonuses
-(stacking with the global scribe innovation), and LIBRARY city
-retrieval-limit bonuses (stacking with archive). The action executor,
-retrieval path, and knowledge diffusion read these helpers;
-``EffectsSystem`` only observes coverage. Systems never call each other.
+(stacking with the global scribe innovation), LIBRARY city
+retrieval-limit bonuses (stacking with archive), and BUREAUCRACY
+market-fee discounts. The action executor, retrieval path, market
+fills, and knowledge diffusion read these helpers; ``EffectsSystem``
+only observes coverage. Systems never call each other.
 """
 
 from __future__ import annotations
@@ -25,7 +26,7 @@ from civitas.domain.ids import LocationId
 from civitas.domain.infrastructure import InfrastructureKind, active_infrastructure
 from civitas.domain.innovation import InnovationKind, active_innovations
 from civitas.domain.institutions import InstitutionKind, active_institutions
-from civitas.domain.laws import curriculum_teachings_bonus_for
+from civitas.domain.laws import curriculum_teachings_bonus_for, market_fee_for
 from civitas.domain.numeric import clamp_unit
 from civitas.domain.production import DEFAULT_PRODUCE_ENERGY_COST
 from civitas.domain.resources import DEFAULT_GATHER_AMOUNT, ResourceKind
@@ -50,6 +51,7 @@ ROAD_MOVE_ENERGY_DISCOUNT: float = 0.02
 GUILD_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 ARCHIVE_RETRIEVAL_LIMIT_BONUS: int = 1
 LIBRARY_RETRIEVAL_LIMIT_BONUS: int = 1
+BUREAUCRACY_MARKET_FEE_DISCOUNT: int = 1
 
 
 class EffectsCensus(BaseModel):
@@ -177,6 +179,22 @@ def location_has_active_archive(
     )
 
 
+def location_has_active_bureaucracy(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active BUREAUCRACY is seated at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InstitutionKind.BUREAUCRACY and item.location_id == target
+        for item in active_institutions(world)
+    )
+
+
 def location_has_active_library(
     world: World,
     location_id: LocationId | int,
@@ -259,6 +277,24 @@ def retrieval_limit_bonus(world: World, agent: Agent) -> int:
     if location_has_active_library(world, agent.location_id):
         bonus += LIBRARY_RETRIEVAL_LIMIT_BONUS
     return bonus
+
+
+def market_fee_discount(world: World, location_id: LocationId | int) -> int:
+    """Return market-fee discount from a BUREAUCRACY at ``location_id``."""
+    if location_has_active_bureaucracy(world, location_id):
+        return BUREAUCRACY_MARKET_FEE_DISCOUNT
+    return 0
+
+
+def effective_market_fee(world: World, location_id: LocationId | int) -> int:
+    """Return market fill fee after bureaucracy discount (floor at 0).
+
+    ``effective_market_fee = max(0, market_fee_for(...) - discount)`` where
+    an active bureaucracy at the market location contributes a discount of
+    ``BUREAUCRACY_MARKET_FEE_DISCOUNT`` (1).
+    """
+    base = market_fee_for(world, location_id)
+    return max(0, base - market_fee_discount(world, location_id))
 
 
 def effective_rest_restore(

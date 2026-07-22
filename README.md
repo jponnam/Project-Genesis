@@ -122,13 +122,14 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 10 — Milestone 5: Library cities**
+**Phase 10 — Milestone 6: Bureaucracy institutions**
 
-``CityKind.LIBRARY`` adds a specialized non-capital city seat for
-record-keeping. Living residents at an active library city gain +1
-memory retrieval limit, stacking with the ARCHIVE institution bonus at
-the same seat. Libraries follow outpost capital rules (never capital)
-and are not seeded; Camp City remains the only default settlement.
+``InstitutionKind.BUREAUCRACY`` adds an administrative organization that
+reduces market fill fees at its seat. When an active bureaucracy sits at
+a market location, buyers filling listings there owe
+``max(0, market_fee_for(...) - 1)``; government treasury credit matches
+the discounted fee so money stays conserved. Bureaucracies are not
+seeded; Camp Council remains the only default institution.
 
 ### Completed
 
@@ -209,6 +210,7 @@ JSONL storage → `civitas run`
 - Milestone 3: Scriptorium infrastructure
 - Milestone 4: Curriculum laws
 - Milestone 5: Library cities
+- Milestone 6: Bureaucracy institutions
 
 ## License
 
