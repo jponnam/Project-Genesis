@@ -16,6 +16,11 @@ from civitas.domain import (
     POTTERY_FACT,
     WRITING_FACT,
     Agent,
+    City,
+    CityKind,
+    Government,
+    Infrastructure,
+    InfrastructureKind,
     Knowledge,
     KnowledgeSource,
     SimulationConfig,
@@ -225,6 +230,63 @@ def test_active_scribe_raises_teachings_per_knower() -> None:
     assert len(gains) == 2
     assert with_scribe.agents[1].knowledge.knows(POTTERY_FACT)
     assert with_scribe.agents[2].knowledge.knows(POTTERY_FACT)
+
+
+def test_scriptorium_stacks_with_scribe_in_diffusion() -> None:
+    """Scriptorium seat bonus stacks with scribe for peer teaching capacity."""
+    world = World(
+        config=SimulationConfig(agent_count=4, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        technologies=default_technologies(),
+        research_progress=default_research_progress(),
+        innovations=default_innovations(),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 0, 0, "Camp Scriptorium", InfrastructureKind.SCRIPTORIUM
+            ),
+        ),
+        agents=(
+            Agent.create(agent_id=0, name="A", knowledge=_FIRE_AND_POTTERY),
+            Agent.create(agent_id=1, name="B", knowledge=_FIRE),
+            Agent.create(agent_id=2, name="C", knowledge=_FIRE),
+            Agent.create(agent_id=3, name="D", knowledge=_FIRE),
+        ),
+    )
+    with_pottery = discover_technology(world, CAMP_POTTERY.technology_id)
+    assert with_pottery is not None
+    with_scriptorium, gains = diffuse_knowledge(
+        with_pottery, teachings_per_knower=DEFAULT_TEACHINGS_PER_KNOWER
+    )
+    # Base 1 + scriptorium 1 = two learners taught.
+    assert len(gains) == 2
+    assert with_scriptorium.agents[1].knowledge.knows(POTTERY_FACT)
+    assert with_scriptorium.agents[2].knowledge.knows(POTTERY_FACT)
+    assert not with_scriptorium.agents[3].knowledge.knows(POTTERY_FACT)
+
+    with_irrigation = discover_technology(with_pottery, CAMP_IRRIGATION.technology_id)
+    assert with_irrigation is not None
+    with_metallurgy = discover_technology(
+        with_irrigation, CAMP_METALLURGY.technology_id
+    )
+    assert with_metallurgy is not None
+    with_writing = discover_technology(with_metallurgy, CAMP_WRITING.technology_id)
+    assert with_writing is not None
+    active_scribe = CAMP_SCRIBE.model_copy(update={"active": True})
+    innovations = tuple(
+        active_scribe if item.innovation_id == CAMP_SCRIBE.innovation_id else item
+        for item in with_writing.innovations
+    )
+    stacked_world = with_writing.model_copy(update={"innovations": innovations})
+    stacked, gains = diffuse_knowledge(
+        stacked_world, teachings_per_knower=DEFAULT_TEACHINGS_PER_KNOWER
+    )
+    # Base 1 + scribe 1 + scriptorium 1 = three learners taught.
+    assert len(gains) == 3
+    assert stacked.agents[1].knowledge.knows(POTTERY_FACT)
+    assert stacked.agents[2].knowledge.knows(POTTERY_FACT)
+    assert stacked.agents[3].knowledge.knows(POTTERY_FACT)
 
 
 def test_census_knowledge_counts_coverage() -> None:

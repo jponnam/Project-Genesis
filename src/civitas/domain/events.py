@@ -583,6 +583,7 @@ class InfrastructuresObserved(DomainEvent):
     active_well_count: NonNegativeInt
     active_storehouse_count: NonNegativeInt = 0
     active_road_count: NonNegativeInt = 0
+    active_scriptorium_count: NonNegativeInt = 0
 
 
 class TechnologyCreated(DomainEvent):
