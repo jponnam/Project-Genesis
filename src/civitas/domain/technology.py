@@ -52,6 +52,7 @@ class TechnologyKind(StrEnum):
     TEXTILES = "textiles"
     DYEING = "dyeing"
     TANNING = "tanning"
+    MINING = "mining"
 
 
 class Technology(BaseModel):
@@ -275,6 +276,13 @@ CAMP_TANNING: Technology = Technology.create(
     discovered=False,
     prerequisite_ids=(23,),
 )
+CAMP_MINING: Technology = Technology.create(
+    25,
+    "Camp Mining",
+    TechnologyKind.MINING,
+    discovered=False,
+    prerequisite_ids=(24,),
+)
 
 
 def default_technologies() -> tuple[Technology, ...]:
@@ -305,6 +313,7 @@ def default_technologies() -> tuple[Technology, ...]:
         CAMP_TEXTILES,
         CAMP_DYEING,
         CAMP_TANNING,
+        CAMP_MINING,
     )
 
 
@@ -342,6 +351,7 @@ class TechnologyCensus(BaseModel):
     discovered_textiles_count: NonNegativeInt = 0
     discovered_dyeing_count: NonNegativeInt = 0
     discovered_tanning_count: NonNegativeInt = 0
+    discovered_mining_count: NonNegativeInt = 0
     locked_count: NonNegativeInt
     researchable_count: NonNegativeInt
 
@@ -480,6 +490,7 @@ def census_technologies(world: World) -> TechnologyCensus:
     textiles = sum(1 for tech in discovered if tech.kind is TechnologyKind.TEXTILES)
     dyeing = sum(1 for tech in discovered if tech.kind is TechnologyKind.DYEING)
     tanning = sum(1 for tech in discovered if tech.kind is TechnologyKind.TANNING)
+    mining = sum(1 for tech in discovered if tech.kind is TechnologyKind.MINING)
     return TechnologyCensus(
         tick=world.tick,
         technology_count=len(technologies),
@@ -510,6 +521,7 @@ def census_technologies(world: World) -> TechnologyCensus:
         discovered_textiles_count=textiles,
         discovered_dyeing_count=dyeing,
         discovered_tanning_count=tanning,
+        discovered_mining_count=mining,
         locked_count=len(locked),
         researchable_count=len(researchable),
     )

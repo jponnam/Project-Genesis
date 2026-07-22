@@ -141,7 +141,9 @@ guild, workshop, foundry, weaver, fulling mill, mill town, abacus, pulley,
 customs, labor, and loom). Phase 16 Milestone 12 adds EMPORIUM city
 market-fee discounts at the city seat (stacking with bureaucracy, harbor,
 merchant, dyer, mordant, warehouse, and the sumptuary subject discount).
-The action executor,
+Phase 17 Milestone 1 adds a global PICKAXE stone-gather bonus society-wide
+(stacking with the forge metallurgy bonus, the mason seat bonus, and the
+quarry city bonus). The action executor,
 retrieval
 path, market fills, knowledge
 diffusion, and research progression read these helpers; ``EffectsSystem``
@@ -205,6 +207,7 @@ SEAFARING_WATER_GATHER_BONUS: int = 1
 DITCH_WATER_GATHER_BONUS: int = 1
 FORESTRY_WOOD_GATHER_BONUS: int = 1
 METALLURGY_STONE_GATHER_BONUS: int = 1
+MINING_STONE_GATHER_BONUS: int = 1
 WRITING_TEACHINGS_PER_KNOWER_BONUS: int = 1
 SCRIPTORIUM_TEACHINGS_PER_KNOWER_BONUS: int = 1
 STOA_TEACHINGS_PER_KNOWER_BONUS: int = 1
@@ -1157,8 +1160,9 @@ def gather_amount_bonus(
     Water bonuses come from society innovations (pottery craft, irrigation
     canal, and sail), plus an active DITCH at ``location_id`` when provided
     (they stack). Stone bonuses come from an active FORGE innovation
-    society-wide, an active MASON seat at ``location_id`` when provided,
-    and an active QUARRY city at ``location_id`` when provided. Food
+    society-wide, an active PICKAXE innovation society-wide, an active MASON
+    seat at ``location_id`` when provided, and an active QUARRY city at
+    ``location_id`` when provided. Food
     bonuses come from an active PLOW innovation society-wide, plus an
     active STOREHOUSE, WAYSTATION, ENTREPOT city, FARMSTEAD city,
     GRANARY, HUSBANDMAN, and/or TERRACE at ``location_id`` when provided
@@ -1179,6 +1183,8 @@ def gather_amount_bonus(
     elif resource == ResourceKind.STONE.value:
         if innovation_kind_is_active(world, InnovationKind.FORGE):
             bonus += METALLURGY_STONE_GATHER_BONUS
+        if innovation_kind_is_active(world, InnovationKind.PICKAXE):
+            bonus += MINING_STONE_GATHER_BONUS
         if location_id is not None and location_has_active_mason(world, location_id):
             bonus += MASON_STONE_GATHER_BONUS
         if location_id is not None and location_has_active_quarry(world, location_id):

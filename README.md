@@ -125,19 +125,19 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 | **14** | Navigation and trade routes |
 | **15** | Agriculture and husbandry |
 | **16** | Textiles and craft goods |
+| **17** | Mining and minerals |
 
 ## Current Milestone
 
-**Phase 16 Milestone 12: Emporium cities**
+**Phase 17 Milestone 1: Mining technology**
 
-``CityKind.EMPORIUM`` is a non-capital specialized city seat for trade.
-An active emporium at a market location lowers the flat market fill fee by
-1. The discount is resolved at the market location and stacks with the
-bureaucracy, harbor, merchant, dyer, warehouse, mordant, and sumptuary
-market-fee discounts, flooring the effective fee at zero. Like other
-non-capital city kinds, emporiums can never be capitals and each occupies
-its own seat location inside its government's jurisdiction; they are not
-seeded.
+``TechnologyKind.MINING`` extends the research tree past tanning, gated
+behind the tanning prerequisite. Its society adoption,
+``InnovationKind.PICKAXE`` (``CAMP_PICKAXE``), activates once mining is
+discovered. An active pickaxe grants a society-wide ``+1`` STONE gather
+bonus that stacks with the forge metallurgy bonus, the mason seat bonus,
+and the quarry city bonus. Knowledge diffusion syncs the ``mining`` fact
+onto agents like every other technology fact.
 
 ### Completed
 
@@ -309,6 +309,9 @@ JSONL storage → `civitas run`
 - Milestone 10: Tanning technology
 - Milestone 11: Sumptuary laws
 - Milestone 12: Emporium cities
+
+**Phase 17:**
+- Milestone 1: Mining technology
 
 ## License
 

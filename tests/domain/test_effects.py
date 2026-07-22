@@ -52,10 +52,12 @@ from civitas.domain import (
     CAMP_MATHEMATICS,
     CAMP_MEDICINE,
     CAMP_METALLURGY,
+    CAMP_MINING,
     CAMP_MORDANT,
     CAMP_NAVIGATION,
     CAMP_ORATION,
     CAMP_PHILOSOPHY,
+    CAMP_PICKAXE,
     CAMP_PLOW,
     CAMP_PLUMB_LINE,
     CAMP_POTTERY,
@@ -124,6 +126,7 @@ from civitas.domain import (
     MERCHANT_MARKET_FEE_DISCOUNT,
     METALLURGY_STONE_GATHER_BONUS,
     MILL_TOWN_PRODUCE_ENERGY_DISCOUNT,
+    MINING_STONE_GATHER_BONUS,
     NAVIGATION_MOVE_ENERGY_DISCOUNT,
     OBSERVATORY_RETRIEVAL_LIMIT_BONUS,
     PASSAGE_MOVE_ENERGY_DISCOUNT,
@@ -1457,6 +1460,83 @@ def test_quarry_stacks_with_forge_and_mason_stone_gather() -> None:
     agent = world.agents[0]
     expected = (
         METALLURGY_STONE_GATHER_BONUS
+        + MASON_STONE_GATHER_BONUS
+        + QUARRY_STONE_GATHER_BONUS
+    )
+    assert location_has_active_quarry(world, agent.location_id) is True
+    assert location_has_active_mason(world, agent.location_id) is True
+    assert gather_amount_bonus(world, "stone", location_id=agent.location_id) == (
+        expected
+    )
+    assert effective_gather_amount(world, "stone", agent=agent) == (
+        DEFAULT_GATHER_AMOUNT + expected
+    )
+
+
+def test_pickaxe_boosts_stone_gather_society_wide() -> None:
+    """Active pickaxe adds a deterministic stone gather bonus society-wide."""
+    discovered_mining = CAMP_MINING.model_copy(update={"discovered": True})
+    active_pickaxe = CAMP_PICKAXE.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        technologies=tuple(
+            discovered_mining
+            if item.technology_id == CAMP_MINING.technology_id
+            else item
+            for item in default_technologies()
+        ),
+        innovations=tuple(
+            active_pickaxe
+            if item.innovation_id == CAMP_PICKAXE.innovation_id
+            else item
+            for item in default_innovations()
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert gather_amount_bonus(world, "stone") == MINING_STONE_GATHER_BONUS
+    assert gather_amount_bonus(world, "water") == 0
+    assert effective_gather_amount(world, "stone", agent=agent) == (
+        DEFAULT_GATHER_AMOUNT + MINING_STONE_GATHER_BONUS
+    )
+
+
+def test_pickaxe_stacks_with_forge_mason_and_quarry_stone_gather() -> None:
+    """Pickaxe stone bonus stacks with forge, mason seat, and quarry city."""
+    discovered = tuple(
+        item.model_copy(update={"discovered": True})
+        for item in default_technologies()
+    )
+    active_forge = CAMP_FORGE.model_copy(update={"active": True})
+    active_pickaxe = CAMP_PICKAXE.model_copy(update={"active": True})
+    innovations = tuple(
+        active_forge
+        if item.innovation_id == CAMP_FORGE.innovation_id
+        else active_pickaxe
+        if item.innovation_id == CAMP_PICKAXE.innovation_id
+        else item
+        for item in default_innovations()
+    )
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Quarry", CityKind.QUARRY),
+        ),
+        institutions=(
+            Institution.create(0, 0, 1, "Quarry Mason", InstitutionKind.MASON),
+        ),
+        technologies=discovered,
+        innovations=innovations,
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    agent = world.agents[0]
+    expected = (
+        METALLURGY_STONE_GATHER_BONUS
+        + MINING_STONE_GATHER_BONUS
         + MASON_STONE_GATHER_BONUS
         + QUARRY_STONE_GATHER_BONUS
     )
