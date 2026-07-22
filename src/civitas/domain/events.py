@@ -13,7 +13,12 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from civitas.domain.ids import AgentId, ListingId, LocationId, MarketId
 from civitas.domain.time import Tick
-from civitas.domain.types import NonEmptyStr, NonNegativeInt, UnitInterval
+from civitas.domain.types import (
+    AffinityScore,
+    NonEmptyStr,
+    NonNegativeInt,
+    UnitInterval,
+)
 
 
 class DomainEvent(BaseModel):
@@ -290,6 +295,27 @@ class WealthObserved(DomainEvent):
     zero_count: NonNegativeInt = 0
 
 
+class RelationshipUpdated(DomainEvent):
+    """Emitted when a directed relationship bond is created or updated."""
+
+    from_agent_id: AgentId
+    to_agent_id: AgentId
+    affinity: AffinityScore
+    trust: UnitInterval
+    created: bool = False
+
+
+class RelationshipsObserved(DomainEvent):
+    """Emitted when a relationship census is taken."""
+
+    bond_count: NonNegativeInt
+    agents_with_bonds: NonNegativeInt
+    living_bond_count: NonNegativeInt
+    mean_affinity: float
+    min_affinity: AffinityScore | None = None
+    max_affinity: AffinityScore | None = None
+
+
 CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     SimulationStarted,
     SimulationCompleted,
@@ -317,6 +343,8 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     MarketObserved,
     PriceObserved,
     WealthObserved,
+    RelationshipUpdated,
+    RelationshipsObserved,
 )
 
 EVENT_TYPE_REGISTRY: dict[str, type[DomainEvent]] = {

@@ -23,6 +23,7 @@ from civitas.systems import (
     NeedsSystem,
     PopulationSystem,
     PriceSystem,
+    RelationshipSystem,
     TaxSystem,
     UtilityPolicy,
 )
@@ -66,14 +67,16 @@ class SimulationEngine:
     11. ``EconomySystem.observe``
     12. ``MarketSystem.observe``
     13. ``PriceSystem.observe``
+    14. ``RelationshipSystem.observe``
 
-    Initial population, wealth, market, and price censuses are also
-    observed at tick 0 immediately after world creation. Death runs after
-    actions (recovery chance) and before birth so newly dead parents
-    cannot reproduce. Birth and death both complete before taxes so the
-    levy sees the settled roster. Taxes complete before ``TickCompleted``
-    so wealth censuses reflect post-levy balances. Taxes are disabled by
-    default.
+    Initial population, wealth, market, price, and relationship censuses
+    are also observed at tick 0 immediately after world creation. Death
+    runs after actions (recovery chance) and before birth so newly dead
+    parents cannot reproduce. Birth and death both complete before taxes
+    so the levy sees the settled roster. Taxes complete before
+    ``TickCompleted`` so wealth censuses reflect post-levy balances.
+    Taxes are disabled by default. Relationship mutations are not driven
+    by the tick loop yet — only observation is wired.
     """
 
     def __init__(
@@ -90,6 +93,7 @@ class SimulationEngine:
         economy_system: EconomySystem | None = None,
         market_system: MarketSystem | None = None,
         price_system: PriceSystem | None = None,
+        relationship_system: RelationshipSystem | None = None,
     ) -> None:
         self._world_factory = (
             world_factory if world_factory is not None else WorldFactory()
@@ -110,6 +114,11 @@ class SimulationEngine:
             market_system if market_system is not None else MarketSystem()
         )
         self._price_system = price_system if price_system is not None else PriceSystem()
+        self._relationship_system = (
+            relationship_system
+            if relationship_system is not None
+            else RelationshipSystem()
+        )
 
     def run(
         self,
@@ -127,6 +136,7 @@ class SimulationEngine:
         world = self._economy_system.observe(world, bus=event_bus)
         world = self._market_system.observe(world, bus=event_bus)
         world = self._price_system.observe(world, bus=event_bus)
+        world = self._relationship_system.observe(world, bus=event_bus)
 
         for tick in clock.run():
             world = world.with_tick(tick)
@@ -142,6 +152,7 @@ class SimulationEngine:
             world = self._economy_system.observe(world, bus=event_bus)
             world = self._market_system.observe(world, bus=event_bus)
             world = self._price_system.observe(world, bus=event_bus)
+            world = self._relationship_system.observe(world, bus=event_bus)
 
         event_bus.publish(
             SimulationCompleted(

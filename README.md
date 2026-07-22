@@ -118,12 +118,12 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 3 — Milestone 7: Wealth**
+**Phase 4 — Milestone 1: Relationships**
 
-Wealth analytics extend `WealthCensus` / `WealthObserved` with
-treasury-aware society totals and integer inequality metrics (Gini,
-median, top-share basis points). Observation stays on `EconomySystem`.
-Phase 3 is complete; Phase 4 begins relationships and social structure.
+Directed dyadic bonds (`Relationship` / `RelationshipSystem`) can be
+created, adjusted, and cleared between living agents. Each tick observes
+`RelationshipsObserved`; mutations emit `RelationshipUpdated`. Trust
+dynamics and SOCIALIZE partner bonding are later Phase 4 milestones.
 
 ### Completed
 
@@ -150,6 +150,9 @@ JSONL storage → `civitas run`
 - Milestone 5: Production
 - Milestone 6: Taxes
 - Milestone 7: Wealth
+
+**Phase 4:**
+- Milestone 1: Relationships
 
 ## License
 

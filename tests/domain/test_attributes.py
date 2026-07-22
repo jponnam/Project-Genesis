@@ -108,6 +108,21 @@ def test_relationship_map_toward_lookup() -> None:
     assert bond is not None
     assert bond.trust == 0.6
     assert rel_map.toward(AgentId(value=1)) is None
+    assert rel_map.toward(7) is not None
+
+
+def test_relationship_map_upsert_sorts_by_other_id() -> None:
+    """upsert inserts/replaces bonds and keeps ascending other_id order."""
+    rel_map = (
+        RelationshipMap()
+        .upsert(Relationship(other_id=AgentId(value=3), affinity=0.1))
+        .upsert(Relationship(other_id=AgentId(value=1), affinity=0.2))
+        .upsert(Relationship(other_id=AgentId(value=3), affinity=0.9))
+    )
+    assert [bond.other_id.value for bond in rel_map.bonds] == [1, 3]
+    assert rel_map.toward(3) is not None
+    assert rel_map.toward(3).affinity == 0.9
+    assert rel_map.without(1).toward(1) is None
 
 
 def test_skills_level_defaults_to_zero() -> None:
