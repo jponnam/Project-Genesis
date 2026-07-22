@@ -69,4 +69,6 @@ def test_census_memory_counts_records() -> None:
     assert snap.total_records == 1
     assert snap.agents_with_memory == 1
     assert snap.episode_records == 1
+    assert snap.reflection_records == 0
+    assert snap.belief_count == 0
     assert snap.mean_records_bps == 10_000

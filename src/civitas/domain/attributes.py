@@ -226,6 +226,17 @@ class Beliefs(BaseModel):
                 return belief.confidence
         return None
 
+    def upsert(self, belief: Belief) -> Beliefs:
+        """Return beliefs with ``belief`` inserted or replacing same proposition."""
+        updated: list[Belief] = [
+            existing
+            for existing in self.entries
+            if existing.proposition != belief.proposition
+        ]
+        updated.append(belief)
+        updated.sort(key=lambda item: item.proposition)
+        return Beliefs(entries=tuple(updated))
+
 
 class Relationship(BaseModel):
     """Directed social bond toward another agent."""

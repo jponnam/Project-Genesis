@@ -119,14 +119,12 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 7 — Milestone 1: Episodic memory encoding**
+**Phase 7 — Milestone 2: Reflection**
 
-Deterministic episode memories for living agents each tick, plus a
-Protocol-based `llm/` adapter layer (`NullLanguageModel`,
-`SeededMockLanguageModel`). Default cognition encoding never calls a
-network LLM. `CognitionSystem.observe` emits `CognitionObserved`.
-Reflection, planning, and memory retrieval remain later Phase 7
-milestones.
+After each episode encoding, agents reflect through the seeded mock LLM
+port, store a `reflection` memory, and upsert a `priority:*` belief from
+their dominant need. `AgentReflected` and `CognitionObserved` cover the
+cycle. Planning and memory retrieval remain later Phase 7 milestones.
 
 ### Completed
 
@@ -177,6 +175,7 @@ JSONL storage → `civitas run`
 
 **Phase 7:**
 - Milestone 1: Episodic memory encoding
+- Milestone 2: Reflection
 
 ## License
 

@@ -720,7 +720,9 @@ def test_cognition_observed_each_tick_including_start() -> None:
     assert observed[0].tick.value == 0
     assert observed[0].total_records == 0
     assert observed[-1].tick.value == 3
-    assert observed[-1].total_records == 12
+    assert observed[-1].total_records == 24
+    assert observed[-1].reflection_records == 12
+    assert observed[-1].belief_count == 4
     knowledge_indexes = [
         i
         for i, event in enumerate(result.events)

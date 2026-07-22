@@ -1,8 +1,8 @@
 """Episodic memory encoding for agent cognition.
 
 Phase 7 Milestone 1. Each apply tick appends a deterministic episode
-record to living agents. LLM reflection, planning, and retrieval remain
-later milestones.
+record to living agents. Reflection (Milestone 2) may append additional
+records. Planning and retrieval remain later milestones.
 """
 
 from __future__ import annotations
@@ -23,12 +23,14 @@ if TYPE_CHECKING:
     from civitas.domain.world import World
 
 EPISODE_KIND: str = "episode"
+REFLECTION_KIND: str = "reflection"
 
 
 class MemoryKind(StrEnum):
     """Supported memory record kinds."""
 
     EPISODE = "episode"
+    REFLECTION = "reflection"
 
 
 class MemoryCensus(BaseModel):
@@ -41,6 +43,8 @@ class MemoryCensus(BaseModel):
     total_records: NonNegativeInt
     agents_with_memory: NonNegativeInt
     episode_records: NonNegativeInt
+    reflection_records: NonNegativeInt
+    belief_count: NonNegativeInt
     mean_records_bps: NonNegativeInt
 
 
@@ -105,6 +109,8 @@ def census_memory(world: World) -> MemoryCensus:
     total_records = 0
     agents_with_memory = 0
     episode_records = 0
+    reflection_records = 0
+    belief_count = 0
     for agent in living:
         count = len(agent.memory.records)
         total_records += count
@@ -113,6 +119,10 @@ def census_memory(world: World) -> MemoryCensus:
         episode_records += sum(
             1 for record in agent.memory.records if record.kind == EPISODE_KIND
         )
+        reflection_records += sum(
+            1 for record in agent.memory.records if record.kind == REFLECTION_KIND
+        )
+        belief_count += len(agent.beliefs.entries)
     living_count = len(living)
     mean_records_bps = (
         0 if living_count == 0 else (total_records * 10_000) // living_count
@@ -123,5 +133,7 @@ def census_memory(world: World) -> MemoryCensus:
         total_records=total_records,
         agents_with_memory=agents_with_memory,
         episode_records=episode_records,
+        reflection_records=reflection_records,
+        belief_count=belief_count,
         mean_records_bps=mean_records_bps,
     )
