@@ -72,6 +72,7 @@ def test_fill_listing_transfers_goods_and_money() -> None:
     assert buyer.money == 3
     assert seller.money == 2
     assert filled.markets[0].listings[0].quantity == 1
+    assert filled.markets[0].last_trade_price("food") == 2
 
 
 def test_fill_listing_removes_exhausted_offer() -> None:

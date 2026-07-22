@@ -24,6 +24,7 @@ from civitas.domain import (
     MoneyTransferred,
     NeedDecayed,
     PopulationObserved,
+    PriceObserved,
     ResourceConsumed,
     ResourceGathered,
     ResourceTraded,
@@ -351,6 +352,22 @@ def test_market_observed_round_trips() -> None:
     assert isinstance(restored, MarketObserved)
     assert restored.total_units == 5
     assert restored.market_listings == ((0, 2),)
+
+
+def test_price_observed_round_trips() -> None:
+    """PriceObserved serializes quote tuples losslessly."""
+    event = PriceObserved(
+        sequence=10,
+        tick=Tick(value=4),
+        quote_count=1,
+        quotes=((0, "food", 3, 2, None, 1, 2, 3),),
+    )
+    restored = event_from_record(event.to_record())
+    assert isinstance(restored, PriceObserved)
+    assert restored.quote_count == 1
+    assert restored.quotes[0][1] == "food"
+    assert restored.quotes[0][2] == 3
+    assert restored.quotes[0][4] is None
 
 
 def test_wealth_observed_round_trips() -> None:

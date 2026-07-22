@@ -14,6 +14,7 @@ from civitas.domain import (
     MarketObserved,
     NeedDecayed,
     PopulationObserved,
+    PriceObserved,
     ResourceConsumed,
     ResourceGathered,
     SimulationCompleted,
@@ -263,3 +264,13 @@ def test_market_observed_each_tick_including_start() -> None:
     assert observed[-1].tick.value == 2
     assert all(event.market_count == 1 for event in observed)
     assert result.world.markets[0].name == "Camp Market"
+
+
+def test_price_observed_each_tick_including_start() -> None:
+    """Engine emits an initial price census plus one per executed tick."""
+    result = SimulationEngine().run(SimulationConfig(seed=42, ticks=2, agent_count=3))
+    observed = [event for event in result.events if isinstance(event, PriceObserved)]
+    assert len(observed) == 3  # tick 0 + ticks 1..2
+    assert observed[0].tick.value == 0
+    assert observed[-1].tick.value == 2
+    assert all(event.quote_count == 0 for event in observed)
