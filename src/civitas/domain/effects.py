@@ -67,7 +67,9 @@ calendar). Phase 13 Milestone 11 adds ZONING law EAT restore bonuses for
 living subjects. Phase 13 Milestone 12 adds QUARRY city stone-gather
 bonuses at the city seat (stacking with forge and mason). Phase 14
 Milestone 1 adds a global COMPASS MOVE energy discount (stacking with
-road, bridge, and building codes). The action executor, retrieval path,
+road, bridge, and building codes). Phase 14 Milestone 2 adds PASSAGE law
+MOVE energy discounts for living subjects (stacking with road, bridge,
+building codes, and compass). The action executor, retrieval path,
 market fills, knowledge diffusion, and research progression read these
 helpers; ``EffectsSystem`` only observes coverage. Systems never call
 each other.
@@ -93,6 +95,7 @@ from civitas.domain.laws import (
     calendar_retrieval_bonus_for,
     curriculum_teachings_bonus_for,
     market_fee_for,
+    passage_move_discount_for,
     quarantine_rest_bonus_for,
     sanitation_drink_bonus_for,
     zoning_eat_bonus_for,
@@ -821,6 +824,7 @@ def move_energy_discount(world: World, agent: Agent) -> float:
     ``ROAD_MOVE_ENERGY_DISCOUNT``. An active BRIDGE at the agent's
     location contributes ``BRIDGE_MOVE_ENERGY_DISCOUNT``. An active
     ``BUILDING_CODES`` statute contributes its subject discount. An
+    active ``PASSAGE`` statute contributes its subject discount. An
     active COMPASS innovation contributes
     ``NAVIGATION_MOVE_ENERGY_DISCOUNT`` society-wide. All stack when
     present.
@@ -831,6 +835,7 @@ def move_energy_discount(world: World, agent: Agent) -> float:
     if location_has_active_bridge(world, agent.location_id):
         discount += BRIDGE_MOVE_ENERGY_DISCOUNT
     discount += building_codes_move_discount_for(world, agent)
+    discount += passage_move_discount_for(world, agent)
     if innovation_kind_is_active(world, InnovationKind.COMPASS):
         discount += NAVIGATION_MOVE_ENERGY_DISCOUNT
     return discount

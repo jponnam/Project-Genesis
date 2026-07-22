@@ -24,6 +24,7 @@ from civitas.domain import (
     HYGIENE_DRINK_RESTORE_BONUS,
     INFIRMARY_REST_RESTORE_BONUS,
     LAZARETTO_DRINK_RESTORE_BONUS,
+    PASSAGE_MOVE_ENERGY_DISCOUNT,
     QUARANTINE_REST_RESTORE_BONUS,
     RHETORIC_SOCIALIZE_RESTORE_BONUS,
     ZONING_EAT_RESTORE_BONUS,
@@ -621,6 +622,35 @@ def test_move_uses_building_codes_effective_energy_cost() -> None:
     assert updated.agents[0].location_id.value == 1
     assert updated.agents[0].needs.energy == pytest.approx(
         0.04 - (DEFAULT_MOVE_ENERGY_COST - BUILDING_CODES_MOVE_ENERGY_DISCOUNT)
+    )
+
+
+def test_move_uses_passage_effective_energy_cost() -> None:
+    """MOVE through ActionExecutor applies passage subject discount."""
+    plain = Location.create(1, "Plain", 1, 0, kind=LocationKind.PLAIN)
+    agent = Agent.create(
+        agent_id=0,
+        name="A",
+        location_id=0,
+        needs=Needs(food=1.0, water=1.0, energy=0.04, social=1.0, safety=1.0),
+    )
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION, plain),
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        laws=(Law.create(0, 0, "Camp Passage", LawKind.PASSAGE),),
+        agents=(agent,),
+    )
+    choice = ActionChoice(
+        agent_id=AgentId(value=0),
+        action=ActionKind.MOVE,
+        utility=1.0,
+        target_location_id=LocationId(value=1),
+    )
+    updated = ActionExecutor().execute(world, choice)
+    assert updated.agents[0].location_id.value == 1
+    assert updated.agents[0].needs.energy == pytest.approx(
+        0.04 - (DEFAULT_MOVE_ENERGY_COST - PASSAGE_MOVE_ENERGY_DISCOUNT)
     )
 
 

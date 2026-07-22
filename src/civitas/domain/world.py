@@ -191,6 +191,7 @@ class World(BaseModel):
         active_quarantine_govs: set[int] = set()
         active_building_codes_govs: set[int] = set()
         active_zoning_govs: set[int] = set()
+        active_passage_govs: set[int] = set()
         for law in self.laws:
             if law.government_id.value not in known_governments:
                 msg = (
@@ -258,6 +259,12 @@ class World(BaseModel):
                     msg = "at most one active ZONING law per government"
                     raise ValueError(msg)
                 active_zoning_govs.add(gov_value)
+            if law.active and law.kind == LawKind.PASSAGE:
+                gov_value = law.government_id.value
+                if gov_value in active_passage_govs:
+                    msg = "at most one active PASSAGE law per government"
+                    raise ValueError(msg)
+                active_passage_govs.add(gov_value)
 
         election_ids = [election.election_id.value for election in self.elections]
         if len(election_ids) != len(set(election_ids)):
