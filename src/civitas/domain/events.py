@@ -521,6 +521,7 @@ class LawsObserved(DomainEvent):
     active_market_fee_count: NonNegativeInt
     active_curriculum_count: NonNegativeInt
     active_calendar_count: NonNegativeInt
+    active_ethics_count: NonNegativeInt
 
 
 class ElectionResolved(DomainEvent):

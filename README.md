@@ -123,16 +123,16 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 11 — Milestone 1: Philosophy technology**
+**Phase 11 — Milestone 2: Ethics laws**
 
-``TechnologyKind.PHILOSOPHY`` continues the tech tree after astronomy
-(``CAMP_PHILOSOPHY`` id=7, prerequisite astronomy). Research stays
-locked until astronomy is discovered. ``InnovationKind.DIALECTIC``
-seeds inactive; when active it grants ``+1`` teachings per knower
-society-wide (``PHILOSOPHY_TEACHINGS_PER_KNOWER_BONUS``), stacking with
-scribe via ``effective_teachings_per_knower``. Knowledge fact
-``PHILOSOPHY_FACT`` diffuses after discovery. Census tracks philosophy
-discovery, dialectic activation, and knower counts.
+``LawKind.ETHICS`` is one active statute per government. Living subject
+learners under an active ethics law get
+``ETHICS_MIN_TEACH_TRUST_DELTA`` (``-0.05``) via
+``ethics_min_teach_trust_delta_for``; peer diffusion uses
+``clamp_unit(base + delta)`` so the effective teach-trust floor is
+lower (easier knowledge spread). Census
+``active_ethics_count`` and ``LawsObserved`` track active ethics
+statutes.
 
 ### Completed
 
@@ -223,6 +223,7 @@ JSONL storage → `civitas run`
 
 **Phase 11:**
 - Milestone 1: Philosophy technology
+- Milestone 2: Ethics laws
 
 ## License
 
