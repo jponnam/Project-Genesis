@@ -15,6 +15,8 @@ from civitas.domain import (
     CAMP_METALLURGY,
     CAMP_POTTERY,
     CAMP_POTTERY_CRAFT,
+    CAMP_SCRIBE,
+    CAMP_WRITING,
     Agent,
     Innovation,
     InnovationKind,
@@ -48,13 +50,14 @@ def _world(
     )
 
 
-def test_default_innovations_seed_hearth_craft_canal_and_forge() -> None:
+def test_default_innovations_seed_hearth_through_scribe() -> None:
     """Canonical set has active hearth and inactive later adoptions."""
     assert default_innovations() == (
         CAMP_FIRE_HEARTH,
         CAMP_POTTERY_CRAFT,
         CAMP_IRRIGATION_CANAL,
         CAMP_FORGE,
+        CAMP_SCRIBE,
     )
     assert CAMP_FIRE_HEARTH.kind is InnovationKind.FIRE_HEARTH
     assert CAMP_FIRE_HEARTH.active is True
@@ -64,6 +67,8 @@ def test_default_innovations_seed_hearth_craft_canal_and_forge() -> None:
     assert CAMP_IRRIGATION_CANAL.active is False
     assert CAMP_FORGE.kind is InnovationKind.FORGE
     assert CAMP_FORGE.active is False
+    assert CAMP_SCRIBE.kind is InnovationKind.SCRIBE
+    assert CAMP_SCRIBE.active is False
 
 
 def test_activate_due_innovations_after_discovery() -> None:
@@ -104,6 +109,15 @@ def test_activate_due_innovations_after_discovery() -> None:
     assert innovation_by_id(world, 3).active is True
     assert innovation_for_technology(world, 3) is not None
 
+    discovered = discover_technology(world, CAMP_WRITING.technology_id)
+    assert discovered is not None
+    world, activations = activate_due_innovations(discovered)
+    assert len(activations) == 1
+    assert activations[0].kind is InnovationKind.SCRIBE
+    assert innovation_by_id(world, 4) is not None
+    assert innovation_by_id(world, 4).active is True
+    assert innovation_for_technology(world, 4) is not None
+
 
 def test_activate_innovation_requires_discovered_technology() -> None:
     """Manual activate fails while the linked technology is unknown."""
@@ -141,13 +155,14 @@ def test_census_innovations_counts() -> None:
         innovations=default_innovations(),
     )
     snap = census_innovations(world)
-    assert snap.innovation_count == 4
+    assert snap.innovation_count == 5
     assert snap.active_count == 1
-    assert snap.inactive_count == 3
+    assert snap.inactive_count == 4
     assert snap.active_fire_hearth_count == 1
     assert snap.active_pottery_craft_count == 0
     assert snap.active_irrigation_canal_count == 0
     assert snap.active_forge_count == 0
+    assert snap.active_scribe_count == 0
     assert census_innovations(world) == snap
 
 

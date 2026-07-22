@@ -14,6 +14,8 @@ from civitas.domain import (
     CAMP_METALLURGY_RESEARCH,
     CAMP_POTTERY,
     CAMP_POTTERY_RESEARCH,
+    CAMP_WRITING,
+    CAMP_WRITING_RESEARCH,
     Agent,
     ResearchProgress,
     SimulationConfig,
@@ -43,12 +45,13 @@ def _world(
     )
 
 
-def test_default_research_progress_seeds_pottery_irrigation_metallurgy() -> None:
+def test_default_research_progress_seeds_pottery_through_writing() -> None:
     """Canonical research tracks undiscovered technologies at zero points."""
     assert default_research_progress() == (
         CAMP_POTTERY_RESEARCH,
         CAMP_IRRIGATION_RESEARCH,
         CAMP_METALLURGY_RESEARCH,
+        CAMP_WRITING_RESEARCH,
     )
     assert CAMP_POTTERY_RESEARCH.technology_id == CAMP_POTTERY.technology_id
     assert CAMP_POTTERY_RESEARCH.points == 0
@@ -59,6 +62,9 @@ def test_default_research_progress_seeds_pottery_irrigation_metallurgy() -> None
     assert CAMP_METALLURGY_RESEARCH.technology_id == CAMP_METALLURGY.technology_id
     assert CAMP_METALLURGY_RESEARCH.points == 0
     assert CAMP_METALLURGY_RESEARCH.threshold == 10
+    assert CAMP_WRITING_RESEARCH.technology_id == CAMP_WRITING.technology_id
+    assert CAMP_WRITING_RESEARCH.points == 0
+    assert CAMP_WRITING_RESEARCH.threshold == 10
 
 
 def test_advance_research_increments_and_discovers() -> None:
@@ -80,6 +86,7 @@ def test_advance_research_increments_and_discovers() -> None:
     assert world.research_progress == (
         CAMP_IRRIGATION_RESEARCH,
         CAMP_METALLURGY_RESEARCH,
+        CAMP_WRITING_RESEARCH,
     )
     assert world.technologies[1].discovered is True
     assert world.technologies[1].kind is TechnologyKind.POTTERY
@@ -97,6 +104,7 @@ def test_advance_research_large_step_discovers_immediately() -> None:
     assert world.research_progress == (
         CAMP_IRRIGATION_RESEARCH,
         CAMP_METALLURGY_RESEARCH,
+        CAMP_WRITING_RESEARCH,
     )
     assert world.technologies[1].discovered is True
 
@@ -115,6 +123,8 @@ def test_irrigation_research_locked_until_pottery_discovered() -> None:
     assert irrigation == CAMP_IRRIGATION_RESEARCH
     metallurgy = research_by_technology_id(world, CAMP_METALLURGY.technology_id)
     assert metallurgy == CAMP_METALLURGY_RESEARCH
+    writing = research_by_technology_id(world, CAMP_WRITING.technology_id)
+    assert writing == CAMP_WRITING_RESEARCH
 
     discovered = discover_technology(world, CAMP_POTTERY.technology_id)
     assert discovered is not None
@@ -145,6 +155,32 @@ def test_metallurgy_research_locked_until_irrigation_discovered() -> None:
     world, outcomes = advance_research(with_irrigation, points_per_tick=1)
     assert [outcome.technology_id for outcome in outcomes] == [
         CAMP_METALLURGY.technology_id
+    ]
+    assert outcomes[0].points_after == 1
+
+
+def test_writing_research_locked_until_metallurgy_discovered() -> None:
+    """Writing progress is preserved but blocked until metallurgy is known."""
+    world = _world(
+        Agent.create(agent_id=0, name="A"),
+        research_progress=default_research_progress(),
+    )
+    with_pottery = discover_technology(world, CAMP_POTTERY.technology_id)
+    assert with_pottery is not None
+    with_irrigation = discover_technology(with_pottery, CAMP_IRRIGATION.technology_id)
+    assert with_irrigation is not None
+    world, outcomes = advance_research(with_irrigation, points_per_tick=1)
+    assert [outcome.technology_id for outcome in outcomes] == [
+        CAMP_METALLURGY.technology_id
+    ]
+    writing = research_by_technology_id(world, CAMP_WRITING.technology_id)
+    assert writing == CAMP_WRITING_RESEARCH
+
+    with_metallurgy = discover_technology(world, CAMP_METALLURGY.technology_id)
+    assert with_metallurgy is not None
+    world, outcomes = advance_research(with_metallurgy, points_per_tick=1)
+    assert [outcome.technology_id for outcome in outcomes] == [
+        CAMP_WRITING.technology_id
     ]
     assert outcomes[0].points_after == 1
 

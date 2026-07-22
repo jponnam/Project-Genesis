@@ -7,10 +7,14 @@ from civitas.domain import (
     CAMP_LOCATION,
     CAMP_METALLURGY,
     CAMP_POTTERY,
+    CAMP_SCRIBE,
+    CAMP_WRITING,
+    DEFAULT_TEACHINGS_PER_KNOWER,
     FIRE_FACT,
     IRRIGATION_FACT,
     METALLURGY_FACT,
     POTTERY_FACT,
+    WRITING_FACT,
     Agent,
     Knowledge,
     KnowledgeSource,
@@ -160,6 +164,69 @@ def test_bootstrap_uses_metallurgy_technology_fact() -> None:
     assert world.agents[0].knowledge.knows(METALLURGY_FACT)
 
 
+def test_bootstrap_uses_writing_technology_fact() -> None:
+    """Discovered writing bootstraps through the generic tech fact mapping."""
+    prior = Knowledge(
+        facts=frozenset({FIRE_FACT, POTTERY_FACT, IRRIGATION_FACT, METALLURGY_FACT})
+    )
+    world = _world(
+        Agent.create(agent_id=0, name="A", knowledge=prior),
+        Agent.create(agent_id=1, name="B", knowledge=prior),
+    )
+    with_pottery = discover_technology(world, CAMP_POTTERY.technology_id)
+    assert with_pottery is not None
+    with_irrigation = discover_technology(with_pottery, CAMP_IRRIGATION.technology_id)
+    assert with_irrigation is not None
+    with_metallurgy = discover_technology(
+        with_irrigation, CAMP_METALLURGY.technology_id
+    )
+    assert with_metallurgy is not None
+    with_writing = discover_technology(with_metallurgy, CAMP_WRITING.technology_id)
+    assert with_writing is not None
+    world, gains = bootstrap_discovered_knowledge(with_writing)
+    assert len(gains) == 1
+    assert gains[0].fact == WRITING_FACT
+    assert world.agents[0].knowledge.knows(WRITING_FACT)
+
+
+def test_active_scribe_raises_teachings_per_knower() -> None:
+    """Active scribe lets each knower teach one extra peer per diffusion pass."""
+    world = _world(
+        Agent.create(agent_id=0, name="A", knowledge=_FIRE_AND_POTTERY),
+        Agent.create(agent_id=1, name="B", knowledge=_FIRE),
+        Agent.create(agent_id=2, name="C", knowledge=_FIRE),
+    )
+    with_pottery = discover_technology(world, CAMP_POTTERY.technology_id)
+    assert with_pottery is not None
+    without_scribe, gains = diffuse_knowledge(
+        with_pottery, teachings_per_knower=DEFAULT_TEACHINGS_PER_KNOWER
+    )
+    assert len(gains) == 1
+    assert without_scribe.agents[1].knowledge.knows(POTTERY_FACT)
+    assert not without_scribe.agents[2].knowledge.knows(POTTERY_FACT)
+
+    with_irrigation = discover_technology(with_pottery, CAMP_IRRIGATION.technology_id)
+    assert with_irrigation is not None
+    with_metallurgy = discover_technology(
+        with_irrigation, CAMP_METALLURGY.technology_id
+    )
+    assert with_metallurgy is not None
+    with_writing = discover_technology(with_metallurgy, CAMP_WRITING.technology_id)
+    assert with_writing is not None
+    active_scribe = CAMP_SCRIBE.model_copy(update={"active": True})
+    innovations = tuple(
+        active_scribe if item.innovation_id == CAMP_SCRIBE.innovation_id else item
+        for item in with_writing.innovations
+    )
+    with_scribe_world = with_writing.model_copy(update={"innovations": innovations})
+    with_scribe, gains = diffuse_knowledge(
+        with_scribe_world, teachings_per_knower=DEFAULT_TEACHINGS_PER_KNOWER
+    )
+    assert len(gains) == 2
+    assert with_scribe.agents[1].knowledge.knows(POTTERY_FACT)
+    assert with_scribe.agents[2].knowledge.knows(POTTERY_FACT)
+
+
 def test_census_knowledge_counts_coverage() -> None:
     """Census reports fire coverage and zero pottery before discovery."""
     world = _world(
@@ -173,6 +240,7 @@ def test_census_knowledge_counts_coverage() -> None:
     assert snap.pottery_knower_count == 0
     assert snap.irrigation_knower_count == 0
     assert snap.metallurgy_knower_count == 0
+    assert snap.writing_knower_count == 0
     assert snap.total_fact_instances == 2
     assert snap.coverage_bps == 10_000
     assert agents_knowing(world, FIRE_FACT)[0].agent_id.value == 0

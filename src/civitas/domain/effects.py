@@ -35,6 +35,7 @@ FIRE_HEARTH_REST_BONUS: float = 0.05
 POTTERY_WATER_GATHER_BONUS: int = 1
 IRRIGATION_WATER_GATHER_BONUS: int = 1
 METALLURGY_STONE_GATHER_BONUS: int = 1
+WRITING_TEACHINGS_PER_KNOWER_BONUS: int = 1
 WELL_DRINK_RESTORE_BONUS: float = 0.05
 STOREHOUSE_FOOD_GATHER_BONUS: int = 1
 ROAD_MOVE_ENERGY_DISCOUNT: float = 0.02
@@ -141,6 +142,13 @@ def rest_restore_bonus(world: World) -> float:
     return 0.0
 
 
+def teachings_per_knower_bonus(world: World) -> int:
+    """Return peer-teaching capacity bonus from an active scribe innovation."""
+    if innovation_kind_is_active(world, InnovationKind.SCRIBE):
+        return WRITING_TEACHINGS_PER_KNOWER_BONUS
+    return 0
+
+
 def gather_amount_bonus(
     world: World,
     resource: str,
@@ -195,6 +203,17 @@ def effective_rest_restore(
 ) -> float:
     """Return REST restore amount including society innovation bonuses."""
     return clamp_unit(base + rest_restore_bonus(world))
+
+
+def effective_teachings_per_knower(
+    world: World,
+    *,
+    base: int = 1,
+) -> int:
+    """Return teachings-per-knower including active scribe innovation bonus."""
+    if base < 0:
+        return 0
+    return base + teachings_per_knower_bonus(world)
 
 
 def effective_gather_amount(
