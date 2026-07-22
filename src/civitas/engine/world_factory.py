@@ -20,6 +20,7 @@ from civitas.domain import (
     InfrastructureCreated,
     InnovationCreated,
     InstitutionCreated,
+    Knowledge,
     LawCreated,
     LocationCreated,
     LocationId,
@@ -54,6 +55,9 @@ ORIGIN_LOCATION_ID: int = CAMP_LOCATION.location_id.value
 # Inclusive starting money range sampled per agent.
 STARTING_MONEY_MIN: int = 0
 STARTING_MONEY_MAX: int = 20
+
+# Founders know fire (society tech already discovered at construction).
+FOUNDER_KNOWLEDGE: Knowledge = Knowledge(facts=frozenset({"fire"}))
 
 
 class WorldFactory:
@@ -268,4 +272,5 @@ class WorldFactory:
             money=money,
             birth_tick=0,
             personality=personality,
+            knowledge=FOUNDER_KNOWLEDGE,
         )

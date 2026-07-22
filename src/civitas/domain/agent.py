@@ -107,6 +107,7 @@ class Agent(BaseModel):
         parent_id: int | None = None,
         personality: Personality | None = None,
         needs: Needs | None = None,
+        knowledge: Knowledge | None = None,
     ) -> Agent:
         """Construct a living agent with validated identifiers.
 
@@ -124,4 +125,5 @@ class Agent(BaseModel):
             money=money,
             personality=personality if personality is not None else Personality(),
             needs=needs if needs is not None else Needs(),
+            knowledge=knowledge if knowledge is not None else Knowledge(),
         )

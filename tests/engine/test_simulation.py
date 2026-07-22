@@ -22,6 +22,7 @@ from civitas.domain import (
     InnovationsObserved,
     InstitutionCreated,
     InstitutionsObserved,
+    KnowledgeObserved,
     LawCreated,
     LawsObserved,
     LocationCreated,
@@ -677,3 +678,32 @@ def test_innovations_observed_each_tick_including_start() -> None:
         )
     )
     assert not any(isinstance(event, InnovationActivated) for event in result.events)
+
+
+def test_knowledge_observed_each_tick_including_start() -> None:
+    """Engine emits an initial knowledge census plus one per executed tick."""
+    result = SimulationEngine().run(SimulationConfig(seed=42, ticks=3, agent_count=4))
+    observed = [
+        event for event in result.events if isinstance(event, KnowledgeObserved)
+    ]
+    assert len(observed) == 4
+    assert observed[0].tick.value == 0
+    assert observed[-1].tick.value == 3
+    assert all(event.fire_knower_count == 4 for event in observed)
+    assert all(event.pottery_knower_count == 0 for event in observed)
+    innovation_indexes = [
+        i
+        for i, event in enumerate(result.events)
+        if isinstance(event, InnovationsObserved)
+    ]
+    knowledge_indexes = [
+        i
+        for i, event in enumerate(result.events)
+        if isinstance(event, KnowledgeObserved)
+    ]
+    assert all(
+        knowledge > innovation
+        for innovation, knowledge in zip(
+            innovation_indexes, knowledge_indexes, strict=True
+        )
+    )
