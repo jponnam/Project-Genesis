@@ -132,6 +132,7 @@ from civitas.domain.laws import (
     assembly_socialize_bonus_for,
     building_codes_move_discount_for,
     calendar_retrieval_bonus_for,
+    conservation_wood_bonus_for,
     curriculum_teachings_bonus_for,
     customs_produce_discount_for,
     land_tenure_eat_bonus_for,
@@ -1319,7 +1320,12 @@ def effective_gather_amount(
     location_id: LocationId | int | None = None,
     agent: Agent | None = None,
 ) -> int:
-    """Return gather amount for ``resource`` including effect bonuses."""
+    """Return gather amount for ``resource`` including effect bonuses.
+
+    Location-scoped bonuses come from ``gather_amount_bonus`` at the seat.
+    When an ``agent`` is given, WOOD gathering also gains the subject-scoped
+    ``CONSERVATION`` statute bonus for living subjects (Phase 15 M11).
+    """
     if base < 0:
         return 0
     seat = (
@@ -1327,7 +1333,10 @@ def effective_gather_amount(
         if location_id is not None
         else (None if agent is None else agent.location_id)
     )
-    return base + gather_amount_bonus(world, resource, location_id=seat)
+    amount = base + gather_amount_bonus(world, resource, location_id=seat)
+    if resource == ResourceKind.WOOD.value and agent is not None:
+        amount += conservation_wood_bonus_for(world, agent)
+    return amount
 
 
 def effective_drink_restore(

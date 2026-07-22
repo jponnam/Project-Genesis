@@ -72,6 +72,7 @@ from civitas.domain import (
     CARTOGRAPHY_RETRIEVAL_LIMIT_BONUS,
     CLINIC_DRINK_RESTORE_BONUS,
     COLLEGIUM_TEACHINGS_PER_KNOWER_BONUS,
+    CONSERVATION_WOOD_GATHER_BONUS,
     CROP_ROTATION_EAT_RESTORE_BONUS,
     CURRICULUM_TEACHINGS_PER_KNOWER_BONUS,
     CUSTOMS_PRODUCE_ENERGY_DISCOUNT,
@@ -152,6 +153,7 @@ from civitas.domain import (
     assembly_socialize_bonus_for,
     building_codes_move_discount_for,
     census_effects,
+    conservation_wood_bonus_for,
     customs_produce_discount_for,
     default_innovations,
     default_technologies,
@@ -1115,6 +1117,68 @@ def test_coppice_stacks_with_scaffold_wood_gather() -> None:
     assert gather_amount_bonus(world, "wood") == FORESTRY_WOOD_GATHER_BONUS
     assert (
         gather_amount_bonus(world, "wood", location_id=agent.location_id) == wood_bonus
+    )
+    assert effective_gather_amount(world, "wood", agent=agent) == (
+        DEFAULT_GATHER_AMOUNT + wood_bonus
+    )
+
+
+def test_conservation_boosts_wood_gather_for_living_subject() -> None:
+    """Active CONSERVATION adds a subject-scoped wood gather bonus."""
+    conservation = Law.create(0, 0, "Camp Conservation", LawKind.CONSERVATION)
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(conservation,),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert conservation_wood_bonus_for(world, agent) == CONSERVATION_WOOD_GATHER_BONUS
+    # gather_amount_bonus stays location-scoped and unaffected by conservation.
+    assert gather_amount_bonus(world, "wood", location_id=agent.location_id) == 0
+    assert effective_gather_amount(world, "wood", agent=agent) == (
+        DEFAULT_GATHER_AMOUNT + CONSERVATION_WOOD_GATHER_BONUS
+    )
+    # Without an agent there is no subject to scope the bonus to.
+    assert effective_gather_amount(world, "wood") == DEFAULT_GATHER_AMOUNT
+
+
+def test_conservation_stacks_with_coppice_and_scaffold_wood_gather() -> None:
+    """Conservation wood bonus stacks with coppice society-wide and scaffold."""
+    discovered_forestry = CAMP_FORESTRY.model_copy(update={"discovered": True})
+    active_coppice = CAMP_COPPICE.model_copy(update={"active": True})
+    conservation = Law.create(0, 0, "Camp Conservation", LawKind.CONSERVATION)
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 0, 0, "Camp Scaffold", InfrastructureKind.SCAFFOLD
+            ),
+        ),
+        laws=(conservation,),
+        technologies=tuple(
+            discovered_forestry
+            if item.technology_id == CAMP_FORESTRY.technology_id
+            else item
+            for item in default_technologies()
+        ),
+        innovations=tuple(
+            active_coppice
+            if item.innovation_id == CAMP_COPPICE.innovation_id
+            else item
+            for item in default_innovations()
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    wood_bonus = (
+        FORESTRY_WOOD_GATHER_BONUS
+        + SCAFFOLD_WOOD_GATHER_BONUS
+        + CONSERVATION_WOOD_GATHER_BONUS
     )
     assert effective_gather_amount(world, "wood", agent=agent) == (
         DEFAULT_GATHER_AMOUNT + wood_bonus

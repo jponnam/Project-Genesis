@@ -11,6 +11,7 @@ from civitas.domain import (
     CAMP_GOVERNMENT,
     CAMP_LOCATION,
     CAMP_POLL_TAX_LAW,
+    CONSERVATION_WOOD_GATHER_BONUS,
     CUSTOMS_PRODUCE_ENERGY_DISCOUNT,
     ETHICS_MIN_TEACH_TRUST_DELTA,
     LAND_TENURE_EAT_RESTORE_BONUS,
@@ -28,6 +29,7 @@ from civitas.domain import (
     active_assembly_law,
     active_building_codes_law,
     active_calendar_law,
+    active_conservation_law,
     active_curriculum_law,
     active_customs_law,
     active_ethics_law,
@@ -41,6 +43,7 @@ from civitas.domain import (
     building_codes_move_discount_for,
     calendar_retrieval_bonus_for,
     census_laws,
+    conservation_wood_bonus_for,
     curriculum_teachings_bonus_for,
     customs_produce_discount_for,
     default_laws,
@@ -988,6 +991,52 @@ def test_land_tenure_bonus_requires_living_subject() -> None:
     assert land_tenure_eat_bonus_for(bare, bare.agents[0]) == 0.0
 
 
+def test_enact_conservation_and_uniqueness() -> None:
+    """CONSERVATION enacts once per government; kind alone enables wood bonus."""
+    world = _world(Agent.create(agent_id=0, name="A"))
+    conservation = Law.create(0, 0, "Camp Conservation", LawKind.CONSERVATION)
+    enacted = enact_law(world, conservation)
+    assert enacted is not None
+    assert active_conservation_law(enacted, 0) == conservation
+    assert conservation_wood_bonus_for(enacted, enacted.agents[0]) == (
+        CONSERVATION_WOOD_GATHER_BONUS
+    )
+    assert CONSERVATION_WOOD_GATHER_BONUS == 1
+    duplicate = Law.create(1, 0, "Other Conservation", LawKind.CONSERVATION)
+    assert enact_law(enacted, duplicate) is None
+    # Other unique kinds may coexist with CONSERVATION.
+    land_tenure = Law.create(1, 0, "Camp Land Tenure", LawKind.LAND_TENURE)
+    with_tenure = enact_law(enacted, land_tenure)
+    assert with_tenure is not None
+    assert active_conservation_law(with_tenure, 0) == conservation
+
+
+def test_conservation_bonus_requires_living_subject() -> None:
+    """Only living agents under CONSERVATION receive the wood gather bonus."""
+    conservation = Law.create(0, 0, "Camp Conservation", LawKind.CONSERVATION)
+    world = _world(Agent.create(agent_id=0, name="A"), laws=(conservation,))
+    assert conservation_wood_bonus_for(world, world.agents[0]) == (
+        CONSERVATION_WOOD_GATHER_BONUS
+    )
+    dead = world.agents[0].model_copy(
+        update={
+            "status": AgentStatus.DEAD,
+            "health": world.agents[0].health.model_copy(update={"vitality": 0.0}),
+        }
+    )
+    assert conservation_wood_bonus_for(world, dead) == 0
+    ungoverned = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(),
+        laws=(),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert conservation_wood_bonus_for(ungoverned, ungoverned.agents[0]) == 0
+    bare = _world(Agent.create(agent_id=0, name="A"))
+    assert conservation_wood_bonus_for(bare, bare.agents[0]) == 0
+
+
 def test_tax_schedule_overrides_levy_fallback() -> None:
     """Active TAX_SCHEDULE beats levy_taxes fallback parameters."""
     law = Law.create(0, 0, "Heavy", LawKind.TAX_SCHEDULE, flat_amount=2)
@@ -1030,6 +1079,7 @@ def test_census_laws_counts() -> None:
     passage = Law.create(11, 0, "Passage", LawKind.PASSAGE, active=True)
     customs = Law.create(12, 0, "Customs", LawKind.CUSTOMS, active=True)
     land_tenure = Law.create(13, 0, "Land Tenure", LawKind.LAND_TENURE, active=True)
+    conservation = Law.create(14, 0, "Conservation", LawKind.CONSERVATION, active=True)
     world = _world(
         Agent.create(agent_id=0, name="A"),
         laws=(
@@ -1047,11 +1097,12 @@ def test_census_laws_counts() -> None:
             passage,
             customs,
             land_tenure,
+            conservation,
         ),
     )
     snap = census_laws(world)
-    assert snap.law_count == 14
-    assert snap.active_count == 13
+    assert snap.law_count == 15
+    assert snap.active_count == 14
     assert snap.inactive_count == 1
     assert snap.governments_with_active_laws == 1
     assert snap.active_tax_schedule_count == 1
@@ -1067,6 +1118,7 @@ def test_census_laws_counts() -> None:
     assert snap.active_passage_count == 1
     assert snap.active_customs_count == 1
     assert snap.active_land_tenure_count == 1
+    assert snap.active_conservation_count == 1
     assert census_laws(world) == snap
 
 
