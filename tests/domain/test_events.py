@@ -831,6 +831,7 @@ def test_institution_created_and_observed_round_trips() -> None:
         active_miner_count=1,
         active_smelter_count=1,
         active_smith_count=1,
+        active_woodcutter_count=1,
         total_budget=3,
         funded_count=1,
     )
@@ -863,6 +864,7 @@ def test_institution_created_and_observed_round_trips() -> None:
     assert restored.active_miner_count == 1
     assert restored.active_smelter_count == 1
     assert restored.active_smith_count == 1
+    assert restored.active_woodcutter_count == 1
     assert restored.total_budget == 3
     assert restored.funded_count == 1
 
