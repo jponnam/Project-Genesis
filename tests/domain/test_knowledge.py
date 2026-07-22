@@ -9,6 +9,7 @@ from civitas.domain import (
     CAMP_LOCATION,
     CAMP_LOGIC,
     CAMP_MATHEMATICS,
+    CAMP_MEDICINE,
     CAMP_METALLURGY,
     CAMP_PHILOSOPHY,
     CAMP_POTTERY,
@@ -20,6 +21,7 @@ from civitas.domain import (
     IRRIGATION_FACT,
     LOGIC_FACT,
     MATHEMATICS_FACT,
+    MEDICINE_FACT,
     METALLURGY_FACT,
     PHILOSOPHY_FACT,
     POTTERY_FACT,
@@ -441,6 +443,56 @@ def test_bootstrap_uses_rhetoric_technology_fact() -> None:
     assert world.agents[0].knowledge.knows(RHETORIC_FACT)
 
 
+def test_bootstrap_uses_medicine_technology_fact() -> None:
+    """Discovered medicine bootstraps through the generic tech fact mapping."""
+    prior = Knowledge(
+        facts=frozenset(
+            {
+                FIRE_FACT,
+                POTTERY_FACT,
+                IRRIGATION_FACT,
+                METALLURGY_FACT,
+                WRITING_FACT,
+                MATHEMATICS_FACT,
+                ASTRONOMY_FACT,
+                PHILOSOPHY_FACT,
+                LOGIC_FACT,
+                RHETORIC_FACT,
+            }
+        )
+    )
+    world = _world(
+        Agent.create(agent_id=0, name="A", knowledge=prior),
+        Agent.create(agent_id=1, name="B", knowledge=prior),
+    )
+    with_pottery = discover_technology(world, CAMP_POTTERY.technology_id)
+    assert with_pottery is not None
+    with_irrigation = discover_technology(with_pottery, CAMP_IRRIGATION.technology_id)
+    assert with_irrigation is not None
+    with_metallurgy = discover_technology(
+        with_irrigation, CAMP_METALLURGY.technology_id
+    )
+    assert with_metallurgy is not None
+    with_writing = discover_technology(with_metallurgy, CAMP_WRITING.technology_id)
+    assert with_writing is not None
+    with_math = discover_technology(with_writing, CAMP_MATHEMATICS.technology_id)
+    assert with_math is not None
+    with_astronomy = discover_technology(with_math, CAMP_ASTRONOMY.technology_id)
+    assert with_astronomy is not None
+    with_philosophy = discover_technology(with_astronomy, CAMP_PHILOSOPHY.technology_id)
+    assert with_philosophy is not None
+    with_logic = discover_technology(with_philosophy, CAMP_LOGIC.technology_id)
+    assert with_logic is not None
+    with_rhetoric = discover_technology(with_logic, CAMP_RHETORIC.technology_id)
+    assert with_rhetoric is not None
+    with_medicine = discover_technology(with_rhetoric, CAMP_MEDICINE.technology_id)
+    assert with_medicine is not None
+    world, gains = bootstrap_discovered_knowledge(with_medicine)
+    assert len(gains) == 1
+    assert gains[0].fact == MEDICINE_FACT
+    assert world.agents[0].knowledge.knows(MEDICINE_FACT)
+
+
 def test_active_scribe_raises_teachings_per_knower() -> None:
     """Active scribe lets each knower teach one extra peer per diffusion pass."""
     world = _world(
@@ -784,6 +836,7 @@ def test_census_knowledge_counts_coverage() -> None:
     assert snap.philosophy_knower_count == 0
     assert snap.logic_knower_count == 0
     assert snap.rhetoric_knower_count == 0
+    assert snap.medicine_knower_count == 0
     assert snap.total_fact_instances == 2
     assert snap.coverage_bps == 10_000
     assert agents_knowing(world, FIRE_FACT)[0].agent_id.value == 0

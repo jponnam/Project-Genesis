@@ -3,8 +3,20 @@
 from __future__ import annotations
 
 from civitas.domain import (
+    ASTRONOMY_FACT,
     CAMP_LOCATION,
+    FIRE_FACT,
+    IRRIGATION_FACT,
+    LOGIC_FACT,
+    MATHEMATICS_FACT,
+    MEDICINE_FACT,
+    METALLURGY_FACT,
+    PHILOSOPHY_FACT,
+    POTTERY_FACT,
+    RHETORIC_FACT,
+    WRITING_FACT,
     Agent,
+    Knowledge,
     Needs,
     SimulationConfig,
     Tick,
@@ -19,6 +31,7 @@ from civitas.domain import (
     dominant_need_name,
 )
 from civitas.llm import SeededMockLanguageModel
+from civitas.llm.protocol import LanguageModelRequest
 
 
 def _world(*agents: Agent) -> World:
@@ -65,3 +78,30 @@ def test_apply_reflections_updates_beliefs_and_memory() -> None:
     assert world.agents[0].beliefs.entries
     assert world.agents[0].beliefs.entries[0].proposition.startswith("priority:")
     assert any(record.kind == "reflection" for record in world.agents[0].memory.records)
+
+
+def test_reflection_prompt_accepts_full_technology_fact_content() -> None:
+    """Reflection prompt length still fits after adding medicine facts."""
+    all_facts = frozenset(
+        {
+            ASTRONOMY_FACT,
+            FIRE_FACT,
+            IRRIGATION_FACT,
+            LOGIC_FACT,
+            MATHEMATICS_FACT,
+            MEDICINE_FACT,
+            METALLURGY_FACT,
+            PHILOSOPHY_FACT,
+            POTTERY_FACT,
+            RHETORIC_FACT,
+            WRITING_FACT,
+        }
+    )
+    world = _world(
+        Agent.create(agent_id=0, name="A", knowledge=Knowledge(facts=all_facts))
+    ).with_tick(Tick(value=1))
+    world, _ = apply_memory_encoding(world)
+    prompt = build_reflection_prompt(world.agents[0])
+    assert len(prompt) == 175
+    assert "medicine" in prompt
+    LanguageModelRequest(prompt=prompt, seed=42)

@@ -37,6 +37,7 @@ class TechnologyKind(StrEnum):
     PHILOSOPHY = "philosophy"
     LOGIC = "logic"
     RHETORIC = "rhetoric"
+    MEDICINE = "medicine"
 
 
 class Technology(BaseModel):
@@ -155,6 +156,13 @@ CAMP_RHETORIC: Technology = Technology.create(
     discovered=False,
     prerequisite_ids=(8,),
 )
+CAMP_MEDICINE: Technology = Technology.create(
+    10,
+    "Camp Medicine",
+    TechnologyKind.MEDICINE,
+    discovered=False,
+    prerequisite_ids=(9,),
+)
 
 
 def default_technologies() -> tuple[Technology, ...]:
@@ -170,6 +178,7 @@ def default_technologies() -> tuple[Technology, ...]:
         CAMP_PHILOSOPHY,
         CAMP_LOGIC,
         CAMP_RHETORIC,
+        CAMP_MEDICINE,
     )
 
 
@@ -192,6 +201,7 @@ class TechnologyCensus(BaseModel):
     discovered_philosophy_count: NonNegativeInt = 0
     discovered_logic_count: NonNegativeInt = 0
     discovered_rhetoric_count: NonNegativeInt = 0
+    discovered_medicine_count: NonNegativeInt = 0
     locked_count: NonNegativeInt
     researchable_count: NonNegativeInt
 
@@ -305,6 +315,7 @@ def census_technologies(world: World) -> TechnologyCensus:
     philosophy = sum(1 for tech in discovered if tech.kind is TechnologyKind.PHILOSOPHY)
     logic = sum(1 for tech in discovered if tech.kind is TechnologyKind.LOGIC)
     rhetoric = sum(1 for tech in discovered if tech.kind is TechnologyKind.RHETORIC)
+    medicine = sum(1 for tech in discovered if tech.kind is TechnologyKind.MEDICINE)
     return TechnologyCensus(
         tick=world.tick,
         technology_count=len(technologies),
@@ -320,6 +331,7 @@ def census_technologies(world: World) -> TechnologyCensus:
         discovered_philosophy_count=philosophy,
         discovered_logic_count=logic,
         discovered_rhetoric_count=rhetoric,
+        discovered_medicine_count=medicine,
         locked_count=len(locked),
         researchable_count=len(researchable),
     )

@@ -23,11 +23,13 @@ from civitas.domain import (
     CAMP_LOCATION,
     CAMP_LOGIC,
     CAMP_MATHEMATICS,
+    CAMP_MEDICINE,
     CAMP_METALLURGY,
     CAMP_ORATION,
     CAMP_PHILOSOPHY,
     CAMP_POTTERY,
     CAMP_POTTERY_CRAFT,
+    CAMP_REMEDY,
     CAMP_RHETORIC,
     CAMP_SCRIBE,
     CAMP_STAR_CHART,
@@ -51,6 +53,7 @@ from civitas.domain import (
     LOGIC_RESEARCH_POINTS_BONUS,
     LYCEUM_RETRIEVAL_LIMIT_BONUS,
     MATHEMATICS_PRODUCE_ENERGY_DISCOUNT,
+    MEDICINE_REST_RESTORE_BONUS,
     METALLURGY_STONE_GATHER_BONUS,
     OBSERVATORY_RETRIEVAL_LIMIT_BONUS,
     PHILOSOPHY_TEACHINGS_PER_KNOWER_BONUS,
@@ -137,6 +140,7 @@ def _world(*, innovations: tuple = ()) -> World:
             CAMP_PHILOSOPHY,
             CAMP_LOGIC,
             CAMP_RHETORIC,
+            CAMP_MEDICINE,
         ),
         innovations=innovations,
         agents=(Agent.create(agent_id=0, name="A"),),
@@ -151,6 +155,75 @@ def test_fire_hearth_boosts_rest_restore() -> None:
     assert rest_restore_bonus(with_fire) == FIRE_HEARTH_REST_BONUS
     assert effective_rest_restore(with_fire) == pytest.approx(
         DEFAULT_REST_RESTORE + FIRE_HEARTH_REST_BONUS
+    )
+
+
+def test_remedy_boosts_rest_restore_and_stacks_with_rest_seats() -> None:
+    """Active remedy adds a society-wide REST restore bonus that stacks."""
+    discovered_medicine = CAMP_MEDICINE.model_copy(update={"discovered": True})
+    active_remedy = CAMP_REMEDY.model_copy(update={"active": True})
+    remedy_only = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        technologies=tuple(
+            discovered_medicine
+            if tech.technology_id == CAMP_MEDICINE.technology_id
+            else tech
+            for tech in default_technologies()
+        ),
+        innovations=tuple(
+            active_remedy
+            if innovation.innovation_id == CAMP_REMEDY.innovation_id
+            else innovation
+            for innovation in default_innovations()
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert rest_restore_bonus(remedy_only) == pytest.approx(
+        FIRE_HEARTH_REST_BONUS + MEDICINE_REST_RESTORE_BONUS
+    )
+    assert effective_rest_restore(remedy_only) == pytest.approx(
+        DEFAULT_REST_RESTORE + FIRE_HEARTH_REST_BONUS + MEDICINE_REST_RESTORE_BONUS
+    )
+
+    stacked = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp City", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Sanctuary", CityKind.SANCTUARY),
+        ),
+        institutions=(
+            Institution.create(0, 0, 1, "Seat Temple", InstitutionKind.TEMPLE),
+        ),
+        technologies=tuple(
+            discovered_medicine
+            if tech.technology_id == CAMP_MEDICINE.technology_id
+            else tech
+            for tech in default_technologies()
+        ),
+        innovations=tuple(
+            active_remedy
+            if innovation.innovation_id == CAMP_REMEDY.innovation_id
+            else innovation
+            for innovation in default_innovations()
+        ),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    agent = stacked.agents[0]
+    assert rest_restore_bonus(stacked, agent=agent) == pytest.approx(
+        FIRE_HEARTH_REST_BONUS
+        + MEDICINE_REST_RESTORE_BONUS
+        + TEMPLE_REST_RESTORE_BONUS
+        + SANCTUARY_REST_RESTORE_BONUS
+    )
+    assert effective_rest_restore(stacked, agent=agent) == pytest.approx(
+        DEFAULT_REST_RESTORE
+        + FIRE_HEARTH_REST_BONUS
+        + MEDICINE_REST_RESTORE_BONUS
+        + TEMPLE_REST_RESTORE_BONUS
+        + SANCTUARY_REST_RESTORE_BONUS
     )
 
 

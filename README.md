@@ -120,17 +120,17 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 | **9** | Technology prerequisite trees and deeper tech progression |
 | **10** | Writing, record-keeping, and institutional memory |
 | **11** | Philosophy, ethics, and reflective culture |
+| **12** | Medicine and public health |
 
 ## Current Milestone
 
-**Phase 11 — Milestone 12: Agora cities**
+**Phase 12 — Milestone 1: Medicine technology**
 
-``CityKind.AGORA`` adds a non-capital specialized city seat for civic
-social life. Agents at an active agora city seat gain a ``+0.05``
-SOCIALIZE restore bonus through ``effective_socialize_restore``; the seat
-bonus stacks with the society-wide ORATION innovation bonus and
-subject-scoped ASSEMBLY law bonus. City censuses and ``CitiesObserved``
-events track active agora counts without seeding an agora by default.
+``TechnologyKind.MEDICINE`` extends the prerequisite chain after rhetoric
+with an undiscovered ``CAMP_MEDICINE`` seed and matching research row.
+Once discovered, ``InnovationKind.REMEDY`` activates ``CAMP_REMEDY`` and
+adds a society-wide ``+0.05`` REST restore bonus that stacks with fire
+hearth, temple, and sanctuary bonuses.
 
 ### Completed
 
@@ -232,6 +232,9 @@ JSONL storage → `civitas run`
 - Milestone 10: Rhetoric technology
 - Milestone 11: Assembly laws
 - Milestone 12: Agora cities
+
+**Phase 12:**
+- Milestone 1: Medicine technology
 
 ## License
 
