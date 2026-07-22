@@ -130,14 +130,15 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 18 Milestone 6: Joiner institutions**
+**Phase 18 Milestone 7: Joinery technology**
 
-``InstitutionKind.JOINER`` institutions grant a PRODUCE energy discount to
-agents producing at the joiner's seat location. The seat discount stacks
-additively with the guild, workshop, weaver, smelter, foundry, fulling mill,
-forge works, mill town, ironworks, tannery, bellows, lathe, abacus, pulley,
-customs, labor, safety codes, and loom discounts. Joiners are gov-attached
-institutions seated inside the government's jurisdiction and are not seeded.
+``TechnologyKind.JOINERY`` is a society-level technology requiring
+carpentry, adopted through the ``PLANE`` innovation. An active plane
+grants a society-wide PRODUCE energy discount that stacks with guild,
+workshop, weaver, smelter, joiner, foundry, fulling mill, forge works,
+mill town, ironworks, tannery, bellows, lathe, abacus, pulley, customs,
+labor, safety codes, and loom. Discovery flows through the standard
+research, innovation, and knowledge-diffusion pipeline.
 
 ### Completed
 
@@ -331,6 +332,7 @@ JSONL storage → `civitas run`
 - Milestone 4: Lumber yard infrastructure
 - Milestone 5: Timber town cities
 - Milestone 6: Joiner institutions
+- Milestone 7: Joinery technology
 
 ## License
 

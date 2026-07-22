@@ -63,6 +63,7 @@ MINING_FACT: str = TechnologyKind.MINING.value
 SMITHING_FACT: str = TechnologyKind.SMITHING.value
 TOOLMAKING_FACT: str = TechnologyKind.TOOLMAKING.value
 CARPENTRY_FACT: str = TechnologyKind.CARPENTRY.value
+JOINERY_FACT: str = TechnologyKind.JOINERY.value
 
 
 class KnowledgeSource(StrEnum):
@@ -110,6 +111,7 @@ class KnowledgeCensus(BaseModel):
     smithing_knower_count: NonNegativeInt = 0
     toolmaking_knower_count: NonNegativeInt = 0
     carpentry_knower_count: NonNegativeInt = 0
+    joinery_knower_count: NonNegativeInt = 0
     total_fact_instances: NonNegativeInt
     coverage_bps: NonNegativeInt
 
@@ -400,6 +402,9 @@ def census_knowledge(world: World) -> KnowledgeCensus:
     carpentry_knowers = sum(
         1 for agent in living if agent.knowledge.knows(CARPENTRY_FACT)
     )
+    joinery_knowers = sum(
+        1 for agent in living if agent.knowledge.knows(JOINERY_FACT)
+    )
     total_fact_instances = 0
     for agent in living:
         total_fact_instances += sum(
@@ -446,6 +451,7 @@ def census_knowledge(world: World) -> KnowledgeCensus:
         smithing_knower_count=smithing_knowers,
         toolmaking_knower_count=toolmaking_knowers,
         carpentry_knower_count=carpentry_knowers,
+        joinery_knower_count=joinery_knowers,
         total_fact_instances=total_fact_instances,
         coverage_bps=coverage_bps,
     )
