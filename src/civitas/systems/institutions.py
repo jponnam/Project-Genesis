@@ -99,6 +99,7 @@ class InstitutionSystem:
                     active_husbandman_count=snap.active_husbandman_count,
                     active_agronomist_count=snap.active_agronomist_count,
                     active_weaver_count=snap.active_weaver_count,
+                    active_dyer_count=snap.active_dyer_count,
                     total_budget=snap.total_budget,
                     funded_count=snap.funded_count,
                 )

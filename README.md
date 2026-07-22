@@ -128,12 +128,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 16 Milestone 5: Mill town cities**
+**Phase 16 Milestone 6: Dyer institutions**
 
-``CityKind.MILL_TOWN`` is a non-capital specialized city seat whose
-active seat grants a PRODUCE energy discount that stacks with guild,
-workshop, foundry, weaver, fulling mill, abacus, pulley, customs, labor,
-and loom. Not seeded.
+``InstitutionKind.DYER`` is a gov-attached institution whose active seat
+grants a market-fee discount that stacks with bureaucracy, harbor, and
+merchant. Not seeded.
 
 ### Completed
 
@@ -298,6 +297,7 @@ JSONL storage → `civitas run`
 - Milestone 3: Weaver institutions
 - Milestone 4: Fulling mill infrastructure
 - Milestone 5: Mill town cities
+- Milestone 6: Dyer institutions
 
 ## License
 

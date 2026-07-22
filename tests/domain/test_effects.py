@@ -89,6 +89,7 @@ from civitas.domain import (
     DEFAULT_SOCIALIZE_RESTORE,
     DEFAULT_TEACHINGS_PER_KNOWER,
     DITCH_WATER_GATHER_BONUS,
+    DYER_MARKET_FEE_DISCOUNT,
     ENGINEERING_PRODUCE_ENERGY_DISCOUNT,
     ENTREPOT_FOOD_GATHER_BONUS,
     FARMSTEAD_FOOD_GATHER_BONUS,
@@ -197,6 +198,7 @@ from civitas.domain import (
     location_has_active_clinic,
     location_has_active_collegium,
     location_has_active_ditch,
+    location_has_active_dyer,
     location_has_active_entrepot,
     location_has_active_farmstead,
     location_has_active_forum,
@@ -5781,4 +5783,72 @@ def test_merchant_stacks_with_bureaucracy_and_harbor_market_fee_discount() -> No
         - BUREAUCRACY_MARKET_FEE_DISCOUNT
         - HARBOR_MARKET_FEE_DISCOUNT
         - MERCHANT_MARKET_FEE_DISCOUNT
+    )
+
+
+def test_dyer_discounts_market_fee_at_seat() -> None:
+    """Active dyer reduces market fee by 1 at its seat (floor 0)."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(Law.create(0, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=2),),
+        institutions=(
+            Institution.create(0, 0, 0, "Camp Dyer", InstitutionKind.DYER),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_dyer(world, 0) is True
+    assert market_fee_for(world, 0) == 2
+    assert effective_market_fee(world, 0) == 2 - DYER_MARKET_FEE_DISCOUNT
+    floored = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(Law.create(0, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=1),),
+        institutions=(
+            Institution.create(0, 0, 0, "Camp Dyer", InstitutionKind.DYER),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert effective_market_fee(floored, 0) == 0
+    bare = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(Law.create(0, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=2),),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_dyer(bare, 0) is False
+    assert effective_market_fee(bare, 0) == 2
+
+
+def test_dyer_stacks_with_bureaucracy_harbor_and_merchant_market_fee_discount() -> None:
+    """Dyer, bureaucracy, harbor, and merchant market-fee discounts stack."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp Harbor", CityKind.HARBOR),),
+        laws=(Law.create(0, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=5),),
+        institutions=(
+            Institution.create(
+                0, 0, 0, "Camp Bureaucracy", InstitutionKind.BUREAUCRACY
+            ),
+            Institution.create(1, 0, 0, "Camp Merchant", InstitutionKind.MERCHANT),
+            Institution.create(2, 0, 0, "Camp Dyer", InstitutionKind.DYER),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_harbor(world, 0) is True
+    assert location_has_active_bureaucracy(world, 0) is True
+    assert location_has_active_merchant(world, 0) is True
+    assert location_has_active_dyer(world, 0) is True
+    assert market_fee_for(world, 0) == 5
+    assert effective_market_fee(world, 0) == (
+        5
+        - BUREAUCRACY_MARKET_FEE_DISCOUNT
+        - HARBOR_MARKET_FEE_DISCOUNT
+        - MERCHANT_MARKET_FEE_DISCOUNT
+        - DYER_MARKET_FEE_DISCOUNT
     )
