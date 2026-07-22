@@ -19,10 +19,11 @@ and FORUM city teachings-per-knower bonuses (stacking with
 academy/scriptorium/curriculum/scribe), plus a global DIALECTIC
 teachings-per-knower bonus (stacking with scribe). Phase 11 adds
 TEMPLE REST restore bonuses (stacking with the global fire-hearth
-innovation) and SHRINE DRINK restore bonuses (stacking with WELL).
-The action executor, retrieval path, market fills, and knowledge
-diffusion read these helpers; ``EffectsSystem`` only observes coverage.
-Systems never call each other.
+innovation), SHRINE DRINK restore bonuses (stacking with WELL), and
+SANCTUARY city REST restore bonuses (stacking with fire hearth and
+temple). The action executor, retrieval path, market fills, and
+knowledge diffusion read these helpers; ``EffectsSystem`` only
+observes coverage. Systems never call each other.
 """
 
 from __future__ import annotations
@@ -58,6 +59,7 @@ if TYPE_CHECKING:
 
 FIRE_HEARTH_REST_BONUS: float = 0.05
 TEMPLE_REST_RESTORE_BONUS: float = 0.05
+SANCTUARY_REST_RESTORE_BONUS: float = 0.05
 POTTERY_WATER_GATHER_BONUS: int = 1
 IRRIGATION_WATER_GATHER_BONUS: int = 1
 METALLURGY_STONE_GATHER_BONUS: int = 1
@@ -302,17 +304,28 @@ def location_has_active_forum(
     return city is not None and city.active and city.kind is CityKind.FORUM
 
 
+def location_has_active_sanctuary(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active SANCTUARY city is seated at ``location_id``."""
+    city = city_at(world, location_id)
+    return city is not None and city.active and city.kind is CityKind.SANCTUARY
+
+
 def rest_restore_bonus(
     world: World,
     *,
     location_id: LocationId | int | None = None,
     agent: Agent | None = None,
 ) -> float:
-    """Return the REST restore bonus from fire hearth and temple seat.
+    """Return the REST restore bonus from fire hearth, temple, and sanctuary.
 
     An active FIRE_HEARTH innovation contributes ``FIRE_HEARTH_REST_BONUS``
     society-wide. An active TEMPLE at ``location_id`` or the agent's
-    location contributes ``TEMPLE_REST_RESTORE_BONUS``. Both stack.
+    location contributes ``TEMPLE_REST_RESTORE_BONUS``. An active
+    SANCTUARY city seat contributes ``SANCTUARY_REST_RESTORE_BONUS``.
+    All stack.
     """
     bonus = 0.0
     if innovation_kind_is_active(world, InnovationKind.FIRE_HEARTH):
@@ -324,6 +337,8 @@ def rest_restore_bonus(
     )
     if seat is not None and location_has_active_temple(world, seat):
         bonus += TEMPLE_REST_RESTORE_BONUS
+    if seat is not None and location_has_active_sanctuary(world, seat):
+        bonus += SANCTUARY_REST_RESTORE_BONUS
     return bonus
 
 
@@ -454,11 +469,11 @@ def effective_rest_restore(
     location_id: LocationId | int | None = None,
     agent: Agent | None = None,
 ) -> float:
-    """Return REST restore amount including fire-hearth and temple bonuses.
+    """Return REST restore amount including fire-hearth, temple, and sanctuary.
 
-    Fire-hearth is society-wide. Temple bonus applies only when
-    ``location_id`` or ``agent`` places the resting agent at an active
-    TEMPLE seat. Both stack via ``rest_restore_bonus``.
+    Fire-hearth is society-wide. Temple and sanctuary bonuses apply only
+    when ``location_id`` or ``agent`` places the resting agent at an
+    active TEMPLE or SANCTUARY seat. All stack via ``rest_restore_bonus``.
     """
     return clamp_unit(
         base + rest_restore_bonus(world, location_id=location_id, agent=agent)

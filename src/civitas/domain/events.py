@@ -578,6 +578,7 @@ class CitiesObserved(DomainEvent):
     active_outpost_count: NonNegativeInt = 0
     active_library_count: NonNegativeInt = 0
     active_forum_count: NonNegativeInt = 0
+    active_sanctuary_count: NonNegativeInt = 0
 
 
 class InfrastructuresObserved(DomainEvent):

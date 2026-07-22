@@ -46,6 +46,7 @@ from civitas.domain import (
     PHILOSOPHY_TEACHINGS_PER_KNOWER_BONUS,
     POTTERY_WATER_GATHER_BONUS,
     ROAD_MOVE_ENERGY_DISCOUNT,
+    SANCTUARY_REST_RESTORE_BONUS,
     SCRIPTORIUM_TEACHINGS_PER_KNOWER_BONUS,
     SHRINE_DRINK_RESTORE_BONUS,
     STOREHOUSE_FOOD_GATHER_BONUS,
@@ -84,6 +85,7 @@ from civitas.domain import (
     location_has_active_library,
     location_has_active_observatory,
     location_has_active_road,
+    location_has_active_sanctuary,
     location_has_active_scriptorium,
     location_has_active_shrine,
     location_has_active_storehouse,
@@ -170,6 +172,65 @@ def test_temple_boosts_rest_restore_and_stacks_with_fire_hearth() -> None:
     assert rest_restore_bonus(stacked) == FIRE_HEARTH_REST_BONUS
     bare = _world()
     assert location_has_active_temple(bare, bare.agents[0].location_id) is False
+
+
+def test_sanctuary_boosts_rest_restore_and_stacks_with_temple() -> None:
+    """Active sanctuary seat bonus stacks with temple and fire hearth."""
+    sanctuary_only = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp City", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Sanctuary", CityKind.SANCTUARY),
+        ),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    agent = sanctuary_only.agents[0]
+    assert location_has_active_sanctuary(sanctuary_only, agent.location_id) is True
+    assert rest_restore_bonus(sanctuary_only, agent=agent) == (
+        SANCTUARY_REST_RESTORE_BONUS
+    )
+    assert effective_rest_restore(sanctuary_only, agent=agent) == pytest.approx(
+        DEFAULT_REST_RESTORE + SANCTUARY_REST_RESTORE_BONUS
+    )
+    # Without agent/location, sanctuary (seat-scoped) does not apply.
+    assert rest_restore_bonus(sanctuary_only) == 0.0
+    assert effective_rest_restore(sanctuary_only) == pytest.approx(DEFAULT_REST_RESTORE)
+
+    stacked = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp City", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Sanctuary", CityKind.SANCTUARY),
+        ),
+        institutions=(
+            Institution.create(0, 0, 1, "Seat Temple", InstitutionKind.TEMPLE),
+        ),
+        technologies=(CAMP_FIRE,),
+        innovations=(CAMP_FIRE_HEARTH,),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    stacked_agent = stacked.agents[0]
+    assert location_has_active_sanctuary(stacked, stacked_agent.location_id) is True
+    assert location_has_active_temple(stacked, stacked_agent.location_id) is True
+    assert rest_restore_bonus(stacked, agent=stacked_agent) == pytest.approx(
+        FIRE_HEARTH_REST_BONUS
+        + TEMPLE_REST_RESTORE_BONUS
+        + SANCTUARY_REST_RESTORE_BONUS
+    )
+    assert effective_rest_restore(stacked, agent=stacked_agent) == pytest.approx(
+        DEFAULT_REST_RESTORE
+        + FIRE_HEARTH_REST_BONUS
+        + TEMPLE_REST_RESTORE_BONUS
+        + SANCTUARY_REST_RESTORE_BONUS
+    )
+    # Fire hearth still applies society-wide without a seat.
+    assert rest_restore_bonus(stacked) == FIRE_HEARTH_REST_BONUS
+    bare = _world()
+    assert location_has_active_sanctuary(bare, bare.agents[0].location_id) is False
 
 
 def test_pottery_and_irrigation_stack_water_gather_bonus() -> None:

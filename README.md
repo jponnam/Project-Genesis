@@ -123,14 +123,14 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 11 — Milestone 4: Shrine infrastructure**
+**Phase 11 — Milestone 5: Sanctuary cities**
 
-``InfrastructureKind.SHRINE`` is paid infrastructure
-(``DEFAULT_SHRINE_BUILD_COST`` = 7) like wells and observatories. An
-active shrine at an agent's location grants ``+0.05`` DRINK restore
-(``SHRINE_DRINK_RESTORE_BONUS``), stacking with WELL via
-``effective_drink_restore``. Census tracks ``active_shrine_count`` on
-``InfrastructuresObserved``. No shrine is seeded by default.
+``CityKind.SANCTUARY`` is a non-capital specialized seat for reflective
+culture. An active sanctuary at an agent's location grants ``+0.05``
+REST restore (``SANCTUARY_REST_RESTORE_BONUS``), stacking with fire hearth
+and temple via ``effective_rest_restore``. Census tracks
+``active_sanctuary_count`` on ``CitiesObserved``. No sanctuary is seeded
+by default.
 
 ### Completed
 
@@ -224,6 +224,7 @@ JSONL storage → `civitas run`
 - Milestone 2: Ethics laws
 - Milestone 3: Temple institutions
 - Milestone 4: Shrine infrastructure
+- Milestone 5: Sanctuary cities
 
 ## License
 
