@@ -124,11 +124,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 12 — Milestone 4: Clinic infrastructure**
+**Phase 12 — Milestone 5: Infirmary cities**
 
-``InfrastructureKind.CLINIC`` adds paid public-health infrastructure.
-An active clinic at the agent's location grants ``+0.05`` DRINK restore,
-stacking with well, shrine, and sanitation law bonuses.
+``CityKind.INFIRMARY`` adds non-capital public-health city seats. An
+active infirmary at the agent's location grants ``+0.05`` REST restore,
+stacking with fire hearth, remedy, temple, sanctuary, and hospital bonuses.
 
 ### Completed
 
@@ -236,6 +236,7 @@ JSONL storage → `civitas run`
 - Milestone 2: Sanitation laws
 - Milestone 3: Hospital institutions
 - Milestone 4: Clinic infrastructure
+- Milestone 5: Infirmary cities
 
 ## License
 
