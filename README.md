@@ -124,11 +124,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 12 Milestone 10: Hygiene technology**
+**Phase 12 Milestone 11: Quarantine laws**
 
-``TechnologyKind.HYGIENE`` adds Camp Hygiene after Anatomy with Camp Asepsis.
-Active asepsis adds ``+0.05`` DRINK restore society-wide, stacking with wells,
-shrines, clinics, apothecaries, and sanitation laws.
+``LawKind.QUARANTINE`` statutes grant living subjects ``+0.05`` REST restore.
+Quarantine laws are unique-active per government and stack with fire hearth,
+remedy, temple, sanctuary, hospital, infirmary, and bathhouse REST bonuses.
 
 ### Completed
 
@@ -242,6 +242,7 @@ JSONL storage → `civitas run`
 - Milestone 8: Collegium institutions
 - Milestone 9: Bathhouse infrastructure
 - Milestone 10: Hygiene technology
+- Milestone 11: Quarantine laws
 
 ## License
 

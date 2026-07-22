@@ -188,6 +188,7 @@ class World(BaseModel):
         active_ethics_govs: set[int] = set()
         active_assembly_govs: set[int] = set()
         active_sanitation_govs: set[int] = set()
+        active_quarantine_govs: set[int] = set()
         for law in self.laws:
             if law.government_id.value not in known_governments:
                 msg = (
@@ -237,6 +238,12 @@ class World(BaseModel):
                     msg = "at most one active SANITATION law per government"
                     raise ValueError(msg)
                 active_sanitation_govs.add(gov_value)
+            if law.active and law.kind == LawKind.QUARANTINE:
+                gov_value = law.government_id.value
+                if gov_value in active_quarantine_govs:
+                    msg = "at most one active QUARANTINE law per government"
+                    raise ValueError(msg)
+                active_quarantine_govs.add(gov_value)
 
         election_ids = [election.election_id.value for election in self.elections]
         if len(election_ids) != len(set(election_ids)):

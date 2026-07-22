@@ -42,7 +42,9 @@ DISSECTION research-points bonus (stacking with syllogism). Phase 12
 Milestone 8 adds COLLEGIUM teachings-per-knower bonuses (stacking with
 scribe/dialectic/scriptorium/academy/forum/school/stoa/curriculum).
 Phase 12 Milestone 10 adds a global ASEPSIS DRINK restore bonus (stacking
-with well, shrine, clinic, apothecary, and sanitation).
+with well, shrine, clinic, apothecary, and sanitation). Phase 12 Milestone
+11 adds QUARANTINE law REST restore bonuses for living subjects (stacking
+with every prior REST source).
 The action executor, retrieval path, market fills,
 knowledge diffusion, and research progression read these helpers;
 ``EffectsSystem`` only observes coverage. Systems never call each other.
@@ -67,6 +69,7 @@ from civitas.domain.laws import (
     calendar_retrieval_bonus_for,
     curriculum_teachings_bonus_for,
     market_fee_for,
+    quarantine_rest_bonus_for,
     sanitation_drink_bonus_for,
 )
 from civitas.domain.numeric import clamp_unit
@@ -506,12 +509,13 @@ def rest_restore_bonus(
     location_id: LocationId | int | None = None,
     agent: Agent | None = None,
 ) -> float:
-    """Return the REST restore bonus from hearth, remedy, and rest seats.
+    """Return the REST restore bonus from hearth, remedy, laws, and rest seats.
 
     An active FIRE_HEARTH innovation contributes ``FIRE_HEARTH_REST_BONUS``
     society-wide. An active REMEDY innovation contributes
-    ``MEDICINE_REST_RESTORE_BONUS`` society-wide. An active TEMPLE at
-    ``location_id`` or the agent's location contributes
+    ``MEDICINE_REST_RESTORE_BONUS`` society-wide. An active ``QUARANTINE``
+    statute contributes for living subjects when ``agent`` is provided. An
+    active TEMPLE at ``location_id`` or the agent's location contributes
     ``TEMPLE_REST_RESTORE_BONUS``. An active SANCTUARY city seat contributes
     ``SANCTUARY_REST_RESTORE_BONUS``. An active HOSPITAL seat contributes
     ``HOSPITAL_REST_RESTORE_BONUS``. An active INFIRMARY city seat contributes
@@ -523,6 +527,8 @@ def rest_restore_bonus(
         bonus += FIRE_HEARTH_REST_BONUS
     if innovation_kind_is_active(world, InnovationKind.REMEDY):
         bonus += MEDICINE_REST_RESTORE_BONUS
+    if agent is not None:
+        bonus += quarantine_rest_bonus_for(world, agent)
     seat = (
         location_id
         if location_id is not None
@@ -711,9 +717,10 @@ def effective_rest_restore(
     location_id: LocationId | int | None = None,
     agent: Agent | None = None,
 ) -> float:
-    """Return REST restore amount including hearth, remedy, and rest seats.
+    """Return REST restore amount including hearth, remedy, laws, and rest seats.
 
-    Fire-hearth and remedy are society-wide. Temple, sanctuary, hospital,
+    Fire-hearth and remedy are society-wide. Quarantine applies only for
+    living subjects when ``agent`` is provided. Temple, sanctuary, hospital,
     infirmary, and bathhouse bonuses apply only when ``location_id`` or
     ``agent`` places the resting agent at an active TEMPLE, SANCTUARY,
     HOSPITAL, INFIRMARY, or BATHHOUSE seat. All stack via

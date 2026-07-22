@@ -20,6 +20,7 @@ from civitas.domain import (
     HOSPITAL_REST_RESTORE_BONUS,
     HYGIENE_DRINK_RESTORE_BONUS,
     INFIRMARY_REST_RESTORE_BONUS,
+    QUARANTINE_REST_RESTORE_BONUS,
     RHETORIC_SOCIALIZE_RESTORE_BONUS,
     ActionChoice,
     ActionCompleted,
@@ -313,6 +314,26 @@ def test_rest_uses_active_bathhouse_restore_bonus() -> None:
     updated = ActionExecutor().execute(world, _choice(0, ActionKind.REST))
     assert updated.agents[0].needs.energy == pytest.approx(
         0.4 + DEFAULT_REST_RESTORE + BATHHOUSE_REST_RESTORE_BONUS
+    )
+
+
+def test_rest_uses_active_quarantine_restore_bonus() -> None:
+    """REST through ActionExecutor includes subject-scoped quarantine bonus."""
+    agent = Agent.create(
+        agent_id=0,
+        name="A",
+        needs=Needs(food=1.0, water=1.0, energy=0.4, social=1.0, safety=1.0),
+    )
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(Law.create(0, 0, "Camp Quarantine", LawKind.QUARANTINE),),
+        agents=(agent,),
+    )
+    updated = ActionExecutor().execute(world, _choice(0, ActionKind.REST))
+    assert updated.agents[0].needs.energy == pytest.approx(
+        0.4 + DEFAULT_REST_RESTORE + QUARANTINE_REST_RESTORE_BONUS
     )
 
 

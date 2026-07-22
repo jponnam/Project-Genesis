@@ -3,7 +3,8 @@
 Laws are first-class world aggregates. Domain helpers own enactment,
 repeal, tax-schedule lookup, market-fee lookup, curriculum teaching
 bonuses, calendar retrieval bonuses, ethics teach-trust deltas,
-assembly socialize bonuses, and sanitation drink bonuses.
+assembly socialize bonuses, sanitation drink bonuses, and quarantine
+rest bonuses.
 Active ``TAX_SCHEDULE`` statutes override fallback levy parameters
 when collecting taxes. Active ``MARKET_FEE`` statutes charge a flat
 buyer fee on market listing fills (Phase 9 M10). Active ``CURRICULUM``
@@ -13,7 +14,8 @@ Active ``CALENDAR`` statutes grant living subjects +1 retrieval limit
 threshold for living subject learners by 0.05 (Phase 11 M2).
 Active ``ASSEMBLY`` statutes grant living subjects +0.05 SOCIALIZE
 restore (Phase 11 M11). Active ``SANITATION`` statutes grant living
-subjects +0.05 DRINK restore (Phase 12 M2).
+subjects +0.05 DRINK restore (Phase 12 M2). Active ``QUARANTINE``
+statutes grant living subjects +0.05 REST restore (Phase 12 M11).
 Elections (voting) are a separate Phase 5 aggregate, as are
 institutions.
 """
@@ -45,6 +47,7 @@ class LawKind(StrEnum):
     ETHICS = "ethics"
     ASSEMBLY = "assembly"
     SANITATION = "sanitation"
+    QUARANTINE = "quarantine"
 
 
 # Statute kinds that allow at most one active law per government.
@@ -57,6 +60,7 @@ _UNIQUE_ACTIVE_KINDS: frozenset[LawKind] = frozenset(
         LawKind.ETHICS,
         LawKind.ASSEMBLY,
         LawKind.SANITATION,
+        LawKind.QUARANTINE,
     }
 )
 
@@ -75,6 +79,9 @@ ASSEMBLY_SOCIALIZE_RESTORE_BONUS: float = 0.05
 # Kind-only DRINK restore bonus for living subjects under active SANITATION.
 SANITATION_DRINK_RESTORE_BONUS: float = 0.05
 
+# Kind-only REST restore bonus for living subjects under active QUARANTINE.
+QUARANTINE_REST_RESTORE_BONUS: float = 0.05
+
 
 class Law(BaseModel):
     """One statute enacted by a government."""
@@ -91,7 +98,7 @@ class Law(BaseModel):
         description=(
             "TAX_SCHEDULE flat poll amount, or MARKET_FEE flat fill fee; "
             "ignored by CURRICULUM, CALENDAR, ETHICS, ASSEMBLY, SANITATION, "
-            "and other kinds."
+            "QUARANTINE, and other kinds."
         ),
     )
     rate_bps: NonNegativeInt = Field(
@@ -157,6 +164,7 @@ class LawCensus(BaseModel):
     active_ethics_count: NonNegativeInt
     active_assembly_count: NonNegativeInt
     active_sanitation_count: NonNegativeInt
+    active_quarantine_count: NonNegativeInt
 
 
 def law_by_id(world: World, law_id: LawId | int) -> Law | None:
@@ -395,6 +403,36 @@ def sanitation_drink_bonus_for(world: World, agent: Agent) -> float:
     return SANITATION_DRINK_RESTORE_BONUS
 
 
+def active_quarantine_law(
+    world: World,
+    government_id: GovernmentId | int,
+) -> Law | None:
+    """Return the active quarantine statute for ``government_id``, if any.
+
+    When multiple active ``QUARANTINE`` laws exist (should not under
+    uniqueness rules), the lowest ``law_id`` wins.
+    """
+    for law in active_laws(world, government_id):
+        if law.kind == LawKind.QUARANTINE:
+            return law
+    return None
+
+
+def quarantine_rest_bonus_for(world: World, agent: Agent) -> float:
+    """Return +0.05 when ``agent`` is a living subject under active QUARANTINE.
+
+    The statute kind alone enables the bonus; ``flat_amount`` is ignored.
+    """
+    if not agent.is_alive():
+        return 0.0
+    government = government_at(world, agent.location_id)
+    if government is None:
+        return 0.0
+    if active_quarantine_law(world, government.government_id) is None:
+        return 0.0
+    return QUARANTINE_REST_RESTORE_BONUS
+
+
 def _has_active_kind(
     world: World,
     government_id: GovernmentId,
@@ -469,6 +507,7 @@ def census_laws(world: World) -> LawCensus:
     active_ethics = sum(1 for law in active if law.kind == LawKind.ETHICS)
     active_assembly = sum(1 for law in active if law.kind == LawKind.ASSEMBLY)
     active_sanitation = sum(1 for law in active if law.kind == LawKind.SANITATION)
+    active_quarantine = sum(1 for law in active if law.kind == LawKind.QUARANTINE)
     return LawCensus(
         tick=world.tick,
         law_count=len(laws),
@@ -482,6 +521,7 @@ def census_laws(world: World) -> LawCensus:
         active_ethics_count=active_ethics,
         active_assembly_count=active_assembly,
         active_sanitation_count=active_sanitation,
+        active_quarantine_count=active_quarantine,
     )
 
 
@@ -491,6 +531,7 @@ __all__ = [
     "CAMP_POLL_TAX_LAW",
     "CURRICULUM_TEACHINGS_PER_KNOWER_BONUS",
     "ETHICS_MIN_TEACH_TRUST_DELTA",
+    "QUARANTINE_REST_RESTORE_BONUS",
     "SANITATION_DRINK_RESTORE_BONUS",
     "Law",
     "LawCensus",
@@ -501,6 +542,7 @@ __all__ = [
     "active_ethics_law",
     "active_laws",
     "active_market_fee_law",
+    "active_quarantine_law",
     "active_sanitation_law",
     "active_tax_schedule",
     "assembly_socialize_bonus_for",
@@ -513,6 +555,7 @@ __all__ = [
     "law_by_id",
     "laws_for",
     "market_fee_for",
+    "quarantine_rest_bonus_for",
     "repeal_law",
     "sanitation_drink_bonus_for",
     "set_law_active",
