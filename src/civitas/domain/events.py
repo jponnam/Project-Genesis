@@ -649,6 +649,7 @@ class TechnologiesObserved(DomainEvent):
     discovered_hygiene_count: NonNegativeInt = 0
     discovered_engineering_count: NonNegativeInt = 0
     discovered_architecture_count: NonNegativeInt = 0
+    discovered_surveying_count: NonNegativeInt = 0
     locked_count: NonNegativeInt = 0
     researchable_count: NonNegativeInt = 0
 
@@ -720,6 +721,7 @@ class InnovationsObserved(DomainEvent):
     active_asepsis_count: NonNegativeInt = 0
     active_pulley_count: NonNegativeInt = 0
     active_blueprint_count: NonNegativeInt = 0
+    active_plumb_line_count: NonNegativeInt = 0
 
 
 class KnowledgeLearned(DomainEvent):
@@ -751,6 +753,7 @@ class KnowledgeObserved(DomainEvent):
     hygiene_knower_count: NonNegativeInt = 0
     engineering_knower_count: NonNegativeInt = 0
     architecture_knower_count: NonNegativeInt = 0
+    surveying_knower_count: NonNegativeInt = 0
     total_fact_instances: NonNegativeInt
     coverage_bps: NonNegativeInt
 

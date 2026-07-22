@@ -37,6 +37,7 @@ def test_observe_emits_without_mutating_world() -> None:
     assert events[0].hygiene_knower_count == 0
     assert events[0].engineering_knower_count == 0
     assert events[0].architecture_knower_count == 0
+    assert events[0].surveying_knower_count == 0
     assert events[0].coverage_bps == 10_000
 
 

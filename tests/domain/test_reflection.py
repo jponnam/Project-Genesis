@@ -18,6 +18,7 @@ from civitas.domain import (
     PHILOSOPHY_FACT,
     POTTERY_FACT,
     RHETORIC_FACT,
+    SURVEYING_FACT,
     WRITING_FACT,
     Agent,
     Knowledge,
@@ -102,6 +103,7 @@ def test_reflection_prompt_accepts_full_technology_fact_content() -> None:
             PHILOSOPHY_FACT,
             POTTERY_FACT,
             RHETORIC_FACT,
+            SURVEYING_FACT,
             WRITING_FACT,
         }
     )
@@ -110,6 +112,6 @@ def test_reflection_prompt_accepts_full_technology_fact_content() -> None:
     ).with_tick(Tick(value=1))
     world, _ = apply_memory_encoding(world)
     prompt = build_reflection_prompt(world.agents[0])
-    assert len(prompt) == 216
-    assert "architecture" in prompt
+    assert len(prompt) == 226
+    assert "surveying" in prompt
     LanguageModelRequest(prompt=prompt, seed=42)

@@ -61,7 +61,9 @@ dissection). Phase 13 Milestone 8 adds ARCHITECT teachings-per-knower
 bonuses at the institution seat (stacking with
 scribe/dialectic/scriptorium/academy/forum/school/stoa/collegium/curriculum).
 Phase 13 Milestone 9 adds SCAFFOLD wood-gather bonuses at the infrastructure
-seat. The action executor, retrieval path, market fills, knowledge
+seat. Phase 13 Milestone 10 adds a global PLUMB_LINE retrieval-limit bonus
+(stacking with star chart, archive, library, observatory, lyceum, and
+calendar). The action executor, retrieval path, market fills, knowledge
 diffusion, and research progression read these helpers; ``EffectsSystem``
 only observes coverage. Systems never call each other.
 """
@@ -147,6 +149,7 @@ ARCHIVE_RETRIEVAL_LIMIT_BONUS: int = 1
 LIBRARY_RETRIEVAL_LIMIT_BONUS: int = 1
 OBSERVATORY_RETRIEVAL_LIMIT_BONUS: int = 1
 ASTRONOMY_RETRIEVAL_LIMIT_BONUS: int = 1
+SURVEYING_RETRIEVAL_LIMIT_BONUS: int = 1
 LYCEUM_RETRIEVAL_LIMIT_BONUS: int = 1
 BUREAUCRACY_MARKET_FEE_DISCOUNT: int = 1
 
@@ -835,8 +838,9 @@ def retrieval_limit_bonus(world: World, agent: Agent) -> int:
     OBSERVATORY infrastructure each contribute ``+1`` when present at
     the agent's location. An active STAR_CHART innovation contributes
     ``ASTRONOMY_RETRIEVAL_LIMIT_BONUS`` society-wide. An active
-    ``CALENDAR`` statute contributes ``+1`` for living subjects of that
-    government. All stack.
+    PLUMB_LINE innovation contributes ``SURVEYING_RETRIEVAL_LIMIT_BONUS``
+    society-wide. An active ``CALENDAR`` statute contributes ``+1`` for
+    living subjects of that government. All stack.
     """
     bonus = 0
     if location_has_active_archive(world, agent.location_id):
@@ -849,6 +853,8 @@ def retrieval_limit_bonus(world: World, agent: Agent) -> int:
         bonus += LYCEUM_RETRIEVAL_LIMIT_BONUS
     if innovation_kind_is_active(world, InnovationKind.STAR_CHART):
         bonus += ASTRONOMY_RETRIEVAL_LIMIT_BONUS
+    if innovation_kind_is_active(world, InnovationKind.PLUMB_LINE):
+        bonus += SURVEYING_RETRIEVAL_LIMIT_BONUS
     bonus += calendar_retrieval_bonus_for(world, agent)
     return bonus
 
