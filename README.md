@@ -129,15 +129,18 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 17 Milestone 3: Miner institutions**
+**Phase 17 Milestone 4: Mineshaft infrastructure**
 
-``InstitutionKind.MINER`` seats a durable civic organization inside a
-government's jurisdiction. An active miner grants a ``+1`` STONE gather
-bonus at its seat location (``MINER_STONE_GATHER_BONUS``, resolved via
-``location_has_active_miner``). The bonus stacks additively with the
-pickaxe and forge bonuses (society-wide), the mason seat bonus, the
-quarry city bonus, and the mineral rights subject bonus. Miners are
-observed in the institution census (``active_miner_count``) and are not
+``InfrastructureKind.MINESHAFT`` attaches a built capacity piece to a
+city seat inside a government's jurisdiction. An active mineshaft grants a
+``+1`` STONE gather bonus at its seat location
+(``MINESHAFT_STONE_GATHER_BONUS``, resolved via
+``location_has_active_mineshaft``). The bonus stacks additively with the
+pickaxe and forge bonuses (society-wide), the mason and miner seat
+bonuses, the quarry city bonus, and the mineral rights subject bonus.
+Governments fund construction from the treasury and institutions from
+their budgets (``DEFAULT_MINESHAFT_BUILD_COST``). Mineshafts are observed
+in the infrastructure census (``active_mineshaft_count``) and are not
 seeded.
 
 ### Completed
@@ -315,6 +318,7 @@ JSONL storage → `civitas run`
 - Milestone 1: Mining technology
 - Milestone 2: Mineral rights laws
 - Milestone 3: Miner institutions
+- Milestone 4: Mineshaft infrastructure
 
 ## License
 
