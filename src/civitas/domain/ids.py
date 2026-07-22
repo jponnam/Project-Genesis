@@ -201,3 +201,22 @@ class InfrastructureId(BaseModel):
         if isinstance(other, InfrastructureId):
             return self.value < other.value
         return NotImplemented
+
+
+class TechnologyId(BaseModel):
+    """Unique technology identifier within a simulation run."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid", validate_default=True)
+
+    value: NonNegativeInt = Field(description="Stable technology id for the run.")
+
+    def __int__(self) -> int:
+        return self.value
+
+    def __str__(self) -> str:
+        return str(self.value)
+
+    def __lt__(self, other: object) -> Any:
+        if isinstance(other, TechnologyId):
+            return self.value < other.value
+        return NotImplemented

@@ -33,6 +33,7 @@ from civitas.systems import (
     RelationshipSystem,
     ReputationSystem,
     TaxSystem,
+    TechSystem,
     UtilityPolicy,
     VoteSystem,
 )
@@ -86,30 +87,33 @@ class SimulationEngine:
     21. ``InstitutionSystem.observe``
     22. ``CitySystem.observe``
     23. ``InfrastructureSystem.observe``
+    24. ``TechSystem.observe``
 
     Initial population, wealth, market, price, relationship, reputation,
-    family, network, government, law, election, institution, city, and
-    infrastructure censuses are also observed at tick 0 immediately after
-    world creation. Death runs after actions (recovery chance) and before
-    birth so newly dead parents cannot reproduce. Birth and death both
-    complete before taxes so the levy sees the settled roster. Taxes
-    complete before ``TickCompleted`` so wealth censuses reflect post-levy
-    balances. Taxes are disabled by default; when enabled, active
-    ``TAX_SCHEDULE`` laws override levy parameters. Relationship
-    observation is wired each tick; SOCIALIZE may mutate bonds during
-    action execution. Reputation observation follows relationships so
-    standings reflect the latest bonds. Family observation follows
-    reputation and reads birth ``parent_id`` lineage without mutating
-    agents. Network observation follows families and measures the living
-    bond graph. Government observation follows networks and reports polity
-    coverage, treasuries, and subjects without mutating agents. Law
-    observation follows governments and reports statute activity. Election
-    observation follows laws and reports the archived vote history;
-    elections are not auto-conducted each tick. Institution observation
-    follows elections and reports civic organizations without mutating
-    agents. City observation follows institutions and reports settlement
-    residency without mutating agents. Infrastructure observation follows
-    cities and reports built capacity without mutating agents.
+    family, network, government, law, election, institution, city,
+    infrastructure, and technology censuses are also observed at tick 0
+    immediately after world creation. Death runs after actions (recovery
+    chance) and before birth so newly dead parents cannot reproduce. Birth
+    and death both complete before taxes so the levy sees the settled
+    roster. Taxes complete before ``TickCompleted`` so wealth censuses
+    reflect post-levy balances. Taxes are disabled by default; when
+    enabled, active ``TAX_SCHEDULE`` laws override levy parameters.
+    Relationship observation is wired each tick; SOCIALIZE may mutate
+    bonds during action execution. Reputation observation follows
+    relationships so standings reflect the latest bonds. Family
+    observation follows reputation and reads birth ``parent_id`` lineage
+    without mutating agents. Network observation follows families and
+    measures the living bond graph. Government observation follows
+    networks and reports polity coverage, treasuries, and subjects without
+    mutating agents. Law observation follows governments and reports
+    statute activity. Election observation follows laws and reports the
+    archived vote history; elections are not auto-conducted each tick.
+    Institution observation follows elections and reports civic
+    organizations without mutating agents. City observation follows
+    institutions and reports settlement residency without mutating agents.
+    Infrastructure observation follows cities and reports built capacity
+    without mutating agents. Technology observation follows infrastructure
+    and reports society-known techniques without mutating agents.
     """
 
     def __init__(
@@ -136,6 +140,7 @@ class SimulationEngine:
         institution_system: InstitutionSystem | None = None,
         city_system: CitySystem | None = None,
         infrastructure_system: InfrastructureSystem | None = None,
+        tech_system: TechSystem | None = None,
     ) -> None:
         self._world_factory = (
             world_factory if world_factory is not None else WorldFactory()
@@ -186,6 +191,7 @@ class SimulationEngine:
             if infrastructure_system is not None
             else InfrastructureSystem()
         )
+        self._tech_system = tech_system if tech_system is not None else TechSystem()
 
     def run(
         self,
@@ -213,6 +219,7 @@ class SimulationEngine:
         world = self._institution_system.observe(world, bus=event_bus)
         world = self._city_system.observe(world, bus=event_bus)
         world = self._infrastructure_system.observe(world, bus=event_bus)
+        world = self._tech_system.observe(world, bus=event_bus)
 
         for tick in clock.run():
             world = world.with_tick(tick)
@@ -238,6 +245,7 @@ class SimulationEngine:
             world = self._institution_system.observe(world, bus=event_bus)
             world = self._city_system.observe(world, bus=event_bus)
             world = self._infrastructure_system.observe(world, bus=event_bus)
+            world = self._tech_system.observe(world, bus=event_bus)
 
         event_bus.publish(
             SimulationCompleted(
