@@ -30,6 +30,8 @@ from civitas.domain import (
     PriceObserved,
     RelationshipsObserved,
     ReputationObserved,
+    ResearchObserved,
+    ResearchProgressed,
     ResourceConsumed,
     ResourceGathered,
     SimulationCompleted,
@@ -38,6 +40,7 @@ from civitas.domain import (
     TaxCollected,
     TechnologiesObserved,
     TechnologyCreated,
+    TechnologyDiscovered,
     TickCompleted,
     TickStarted,
     WealthObserved,
@@ -125,6 +128,7 @@ def test_run_emits_lifecycle_and_tick_events() -> None:
     assert len(result.world.cities) == 1
     assert len(result.world.infrastructure) == 1
     assert len(result.world.technologies) == 2
+    assert len(result.world.research_progress) == 1
 
 
 def test_each_tick_selects_and_executes_actions() -> None:
@@ -605,3 +609,34 @@ def test_technologies_observed_each_tick_including_start() -> None:
     assert all(
         tech > infra for infra, tech in zip(infra_indexes, tech_indexes, strict=True)
     )
+
+
+def test_research_observed_each_tick_including_start() -> None:
+    """Engine emits an initial research census plus one per executed tick."""
+    result = SimulationEngine().run(SimulationConfig(seed=42, ticks=3, agent_count=4))
+    observed = [event for event in result.events if isinstance(event, ResearchObserved)]
+    assert len(observed) == 4
+    assert observed[0].tick.value == 0
+    assert observed[0].total_points == 0
+    assert observed[-1].tick.value == 3
+    assert observed[-1].total_points == 3
+    assert all(event.progress_count == 1 for event in observed)
+    tech_indexes = [
+        i
+        for i, event in enumerate(result.events)
+        if isinstance(event, TechnologiesObserved)
+    ]
+    research_indexes = [
+        i
+        for i, event in enumerate(result.events)
+        if isinstance(event, ResearchObserved)
+    ]
+    assert all(
+        research > tech
+        for tech, research in zip(tech_indexes, research_indexes, strict=True)
+    )
+    progressed = [
+        event for event in result.events if isinstance(event, ResearchProgressed)
+    ]
+    assert len(progressed) == 3
+    assert not any(isinstance(event, TechnologyDiscovered) for event in result.events)

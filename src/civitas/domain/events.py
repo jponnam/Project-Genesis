@@ -544,6 +544,33 @@ class TechnologiesObserved(DomainEvent):
     discovered_pottery_count: NonNegativeInt
 
 
+class ResearchProgressed(DomainEvent):
+    """Emitted when research points increase for a technology."""
+
+    technology_id: TechnologyId
+    points_after: NonNegativeInt
+    threshold: NonNegativeInt
+    delta: NonNegativeInt
+
+
+class TechnologyDiscovered(DomainEvent):
+    """Emitted when research completes and a technology becomes known."""
+
+    technology_id: TechnologyId
+    name: NonEmptyStr
+    kind: NonEmptyStr
+
+
+class ResearchObserved(DomainEvent):
+    """Emitted when a research census is taken."""
+
+    progress_count: NonNegativeInt
+    total_points: NonNegativeInt
+    total_threshold: NonNegativeInt
+    total_remaining: NonNegativeInt
+    completion_bps: NonNegativeInt
+
+
 CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     SimulationStarted,
     SimulationCompleted,
@@ -590,6 +617,9 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     InfrastructuresObserved,
     TechnologyCreated,
     TechnologiesObserved,
+    ResearchProgressed,
+    TechnologyDiscovered,
+    ResearchObserved,
 )
 
 EVENT_TYPE_REGISTRY: dict[str, type[DomainEvent]] = {

@@ -118,12 +118,14 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 6 — Milestone 1: Technology**
+**Phase 6 — Milestone 2: Research**
 
-Society-level technology catalog with discovery flags. The factory seeds
-discovered `Camp Fire` (`FIRE`) and undiscovered `Camp Pottery`
-(`POTTERY`). `TechSystem.observe` emits `TechnologiesObserved`. Research,
-innovation, and knowledge diffusion remain later Phase 6 milestones.
+Deterministic research progress toward undiscovered technologies. The
+factory seeds pottery research at 0/10 points. Each tick
+`ResearchSystem.apply_research` adds one point; at threshold pottery is
+discovered and the progress row is removed. `ResearchSystem.observe`
+emits `ResearchObserved`. Innovation and knowledge diffusion remain later
+Phase 6 milestones.
 
 ### Completed
 
@@ -168,6 +170,7 @@ JSONL storage → `civitas run`
 
 **Phase 6:**
 - Milestone 1: Technology
+- Milestone 2: Research
 
 ## License
 
