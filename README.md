@@ -118,12 +118,13 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 4 — Milestone 5: Social networks**
+**Phase 5 — Milestone 1: Governments**
 
-Observe-only graph analytics over living directed bonds
-(`census_networks` / `NetworkSystem.observe`): degree, reciprocity,
-density, weakly connected components, and strongest-tie strength, emitted
-as `NetworksObserved`. Phase 4 completes with this milestone.
+Polities are first-class world aggregates with seat, disjoint jurisdiction,
+treasury, and optional leader. The factory seeds `Camp Authority` over the
+full map; `GovernmentSystem.observe` emits `GovernmentsObserved`. Laws,
+voting, institutions, cities, and infrastructure remain later Phase 5
+milestones.
 
 ### Completed
 
@@ -157,6 +158,9 @@ JSONL storage → `civitas run`
 - Milestone 3: Reputation
 - Milestone 4: Families
 - Milestone 5: Social networks
+
+**Phase 5:**
+- Milestone 1: Governments
 
 ## License
 

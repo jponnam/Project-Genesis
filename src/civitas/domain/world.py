@@ -16,7 +16,8 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from civitas.domain.agent import Agent
 from civitas.domain.config import SimulationConfig
-from civitas.domain.ids import AgentId, LocationId, MarketId
+from civitas.domain.governments import Government
+from civitas.domain.ids import AgentId, GovernmentId, LocationId, MarketId
 from civitas.domain.location import Location
 from civitas.domain.market import Market
 from civitas.domain.time import Tick
@@ -31,6 +32,7 @@ class World(BaseModel):
         tick: Current discrete time (``0`` at construction).
         locations: Places on the map, ordered by ascending ``location_id``.
         markets: Market venues, ordered by ascending ``market_id``.
+        governments: Polities, ordered by ascending ``government_id``.
         agents: Agents ordered by ascending ``agent_id``.
         treasury: Public money balance collected from taxes.
     """
@@ -41,12 +43,13 @@ class World(BaseModel):
     tick: Tick = Field(default_factory=Tick)
     locations: tuple[Location, ...] = ()
     markets: tuple[Market, ...] = ()
+    governments: tuple[Government, ...] = ()
     agents: tuple[Agent, ...] = ()
     treasury: NonNegativeInt = 0
 
     @model_validator(mode="after")
     def world_must_be_consistent(self) -> Self:
-        """Enforce agent/location/market integrity constraints."""
+        """Enforce agent/location/market/government integrity constraints."""
         agent_ids = [agent.agent_id.value for agent in self.agents]
         if len(agent_ids) != len(set(agent_ids)):
             msg = "agent ids must be unique"
@@ -101,6 +104,38 @@ class World(BaseModel):
                 )
                 raise ValueError(msg)
 
+        government_ids = [
+            government.government_id.value for government in self.governments
+        ]
+        if len(government_ids) != len(set(government_ids)):
+            msg = "government ids must be unique"
+            raise ValueError(msg)
+        if government_ids != sorted(government_ids):
+            msg = "governments must be ordered by ascending government_id"
+            raise ValueError(msg)
+
+        claimed: set[int] = set()
+        for government in self.governments:
+            for location in government.jurisdiction:
+                if location.value not in known:
+                    msg = (
+                        f"government {government.government_id.value} references "
+                        f"unknown location {location.value}"
+                    )
+                    raise ValueError(msg)
+                if location.value in claimed:
+                    msg = "government jurisdictions must be disjoint"
+                    raise ValueError(msg)
+                claimed.add(location.value)
+            if government.leader_id is not None:
+                leader = self.agent_by_id(government.leader_id)
+                if leader is None:
+                    msg = (
+                        f"government {government.government_id.value} references "
+                        f"unknown leader {government.leader_id.value}"
+                    )
+                    raise ValueError(msg)
+
         return self
 
     @property
@@ -136,6 +171,21 @@ class World(BaseModel):
         for market in self.markets:
             if market.market_id == target:
                 return market
+        return None
+
+    def government_by_id(
+        self,
+        government_id: GovernmentId | int,
+    ) -> Government | None:
+        """Return the government with ``government_id``, or ``None`` if absent."""
+        target = (
+            government_id
+            if isinstance(government_id, GovernmentId)
+            else GovernmentId(value=government_id)
+        )
+        for government in self.governments:
+            if government.government_id == target:
+                return government
         return None
 
     def agents_at(self, location_id: LocationId | int) -> tuple[Agent, ...]:
@@ -184,6 +234,7 @@ class World(BaseModel):
             tick=self.tick,
             locations=self.locations,
             markets=self.markets,
+            governments=self.governments,
             agents=agents,
             treasury=self.treasury,
         )
@@ -236,3 +287,22 @@ class World(BaseModel):
             msg = f"market id {market.market_id.value} not found in world"
             raise ValueError(msg)
         return self.model_copy(update={"markets": tuple(updated)})
+
+    def with_government(self, government: Government) -> World:
+        """Return a copy replacing the government that shares ``government_id``.
+
+        Raises:
+            ValueError: If no government with that id exists.
+        """
+        updated: list[Government] = []
+        found = False
+        for existing in self.governments:
+            if existing.government_id == government.government_id:
+                updated.append(government)
+                found = True
+            else:
+                updated.append(existing)
+        if not found:
+            msg = f"government id {government.government_id.value} not found in world"
+            raise ValueError(msg)
+        return self.model_copy(update={"governments": tuple(updated)})

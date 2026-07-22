@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING
 from civitas.domain import (
     Agent,
     AgentSpawned,
+    GovernmentCreated,
     LocationCreated,
     LocationId,
     MarketCreated,
@@ -22,6 +23,7 @@ from civitas.domain import (
     SimulationStarted,
     Tick,
     World,
+    default_governments,
     default_markets,
 )
 from civitas.domain.ids import AgentId
@@ -56,13 +58,16 @@ class WorldFactory:
         2. Build the canonical location map; optionally publish
            ``LocationCreated`` for each location in id order.
         3. Build canonical markets; optionally publish ``MarketCreated``.
-        4. For each ``agent_id`` in ``0 .. agent_count-1``, spawn a child
+        4. Build canonical governments; optionally publish
+           ``GovernmentCreated``.
+        5. For each ``agent_id`` in ``0 .. agent_count-1``, spawn a child
            RNG stream and sample personality + starting money at camp.
-        5. Optionally publish ``AgentSpawned`` for each agent in id order.
+        6. Optionally publish ``AgentSpawned`` for each agent in id order.
         """
         root_rng = SeededRNG.from_config(config)
         locations = default_world_map()
         markets = default_markets()
+        governments = default_governments()
         agents: list[Agent] = []
 
         if bus is not None:
@@ -95,6 +100,19 @@ class WorldFactory:
                         name=market.name,
                     )
                 )
+            for government in governments:
+                bus.publish(
+                    GovernmentCreated(
+                        tick=Tick(value=0),
+                        government_id=government.government_id,
+                        name=government.name,
+                        seat_location_id=government.seat_location_id,
+                        jurisdiction=tuple(
+                            location.value for location in government.jurisdiction
+                        ),
+                        leader_id=government.leader_id,
+                    )
+                )
 
         for agent_id in range(config.agent_count):
             agent = self._build_agent(root_rng=root_rng, agent_id=agent_id)
@@ -114,6 +132,7 @@ class WorldFactory:
             tick=Tick(value=0),
             locations=locations,
             markets=markets,
+            governments=governments,
             agents=tuple(agents),
         )
 

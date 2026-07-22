@@ -15,6 +15,9 @@ from civitas.domain import (
     AgentSpawned,
     DomainEvent,
     FamiliesObserved,
+    GovernmentCreated,
+    GovernmentId,
+    GovernmentsObserved,
     ListingFilled,
     ListingId,
     ListingPosted,
@@ -574,3 +577,40 @@ def test_networks_observed_round_trips() -> None:
     assert restored.density_bps == 3333
     assert restored.strongest_from_id == AgentId(value=0)
     assert restored.strongest_strength == 0.75
+
+
+def test_government_created_and_observed_round_trips() -> None:
+    """Government create/observe events serialize losslessly."""
+    created = GovernmentCreated(
+        sequence=15,
+        tick=Tick(value=0),
+        government_id=GovernmentId(value=0),
+        name="Camp Authority",
+        seat_location_id=LocationId(value=0),
+        jurisdiction=(0, 1, 2),
+        leader_id=None,
+    )
+    restored_created = event_from_record(created.to_record())
+    assert isinstance(restored_created, GovernmentCreated)
+    assert restored_created.name == "Camp Authority"
+    assert restored_created.jurisdiction == (0, 1, 2)
+
+    observed = GovernmentsObserved(
+        sequence=16,
+        tick=Tick(value=9),
+        government_count=1,
+        covered_location_count=9,
+        uncovered_location_count=0,
+        total_treasury=4,
+        led_count=0,
+        vacant_leader_count=1,
+        living_subject_count=5,
+        mean_subjects=5.0,
+        max_subjects=5,
+        max_subjects_government_id=GovernmentId(value=0),
+    )
+    restored = event_from_record(observed.to_record())
+    assert isinstance(restored, GovernmentsObserved)
+    assert restored.covered_location_count == 9
+    assert restored.total_treasury == 4
+    assert restored.max_subjects_government_id == GovernmentId(value=0)

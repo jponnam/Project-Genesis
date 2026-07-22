@@ -10,6 +10,8 @@ from civitas.domain import (
     AgentMoved,
     AgentSpawned,
     FamiliesObserved,
+    GovernmentCreated,
+    GovernmentsObserved,
     LocationCreated,
     MarketCreated,
     MarketObserved,
@@ -81,10 +83,12 @@ def test_run_emits_lifecycle_and_tick_events() -> None:
     assert types[0] == SimulationStarted.__name__
     assert types.count(LocationCreated.__name__) == 9
     assert types.count(MarketCreated.__name__) == 1
+    assert types.count(GovernmentCreated.__name__) == 1
     assert types.count(AgentSpawned.__name__) == 2
     assert types[1] == LocationCreated.__name__
     assert types[10] == MarketCreated.__name__
-    assert types[11] == AgentSpawned.__name__
+    assert types[11] == GovernmentCreated.__name__
+    assert types[12] == AgentSpawned.__name__
     assert types.count(TickStarted.__name__) == 2
     assert types.count(TickCompleted.__name__) == 2
     assert types[-1] == SimulationCompleted.__name__
@@ -93,6 +97,7 @@ def test_run_emits_lifecycle_and_tick_events() -> None:
     assert result.world.tick.value == 2
     assert len(result.world.locations) == 9
     assert len(result.world.markets) == 1
+    assert len(result.world.governments) == 1
 
 
 def test_each_tick_selects_and_executes_actions() -> None:
@@ -405,3 +410,28 @@ def test_networks_observed_each_tick_including_start() -> None:
         if isinstance(event, NetworksObserved)
     ]
     assert all(net > fam for fam, net in zip(fam_indexes, net_indexes, strict=True))
+
+
+def test_governments_observed_each_tick_including_start() -> None:
+    """Engine emits an initial government census plus one per executed tick."""
+    result = SimulationEngine().run(SimulationConfig(seed=42, ticks=3, agent_count=4))
+    observed = [
+        event for event in result.events if isinstance(event, GovernmentsObserved)
+    ]
+    assert len(observed) == 4  # tick 0 + ticks 1..3
+    assert observed[0].tick.value == 0
+    assert observed[-1].tick.value == 3
+    assert all(event.government_count == 1 for event in observed)
+    assert all(event.covered_location_count == 9 for event in observed)
+    # Governments follow networks in the observe chain.
+    net_indexes = [
+        i
+        for i, event in enumerate(result.events)
+        if isinstance(event, NetworksObserved)
+    ]
+    gov_indexes = [
+        i
+        for i, event in enumerate(result.events)
+        if isinstance(event, GovernmentsObserved)
+    ]
+    assert all(gov > net for net, gov in zip(net_indexes, gov_indexes, strict=True))
