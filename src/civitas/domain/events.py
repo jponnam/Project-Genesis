@@ -314,6 +314,9 @@ class RelationshipsObserved(DomainEvent):
     mean_affinity: float
     min_affinity: AffinityScore | None = None
     max_affinity: AffinityScore | None = None
+    mean_trust: float = 0.0
+    min_trust: UnitInterval | None = None
+    max_trust: UnitInterval | None = None
 
 
 CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (

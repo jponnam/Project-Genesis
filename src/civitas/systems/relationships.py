@@ -16,6 +16,7 @@ from civitas.domain import (
     RelationshipsObserved,
     RelationshipUpdated,
     adjust_relationship,
+    adjust_relationship_trust,
     census_relationships,
     clear_relationship,
     get_bond,
@@ -71,6 +72,9 @@ class RelationshipSystem:
                     mean_affinity=snap.mean_affinity,
                     min_affinity=snap.min_affinity,
                     max_affinity=snap.max_affinity,
+                    mean_trust=snap.mean_trust,
+                    min_trust=snap.min_trust,
+                    max_trust=snap.max_trust,
                 )
             )
         return world
@@ -128,6 +132,36 @@ class RelationshipSystem:
         source = world.agent_by_id(from_id)
         created = source is None or get_bond(source, to_id) is None
         updated = adjust_relationship(world, from_id, to_id, delta)
+        if updated is None:
+            return world
+        if bus is not None and self._config.emit_events:
+            source_after = updated.agent_by_id(from_id)
+            bond = get_bond(source_after, to_id) if source_after is not None else None
+            if source_after is not None and bond is not None:
+                bus.publish(
+                    RelationshipUpdated(
+                        tick=updated.tick,
+                        from_agent_id=source_after.agent_id,
+                        to_agent_id=bond.other_id,
+                        affinity=bond.affinity,
+                        trust=bond.trust,
+                        created=created,
+                    )
+                )
+        return updated
+
+    def adjust_trust(
+        self,
+        world: World,
+        from_id: AgentId | int,
+        to_id: AgentId | int,
+        delta: float,
+        bus: EventBus | None = None,
+    ) -> World:
+        """Adjust trust when legal; emit ``RelationshipUpdated``."""
+        source = world.agent_by_id(from_id)
+        created = source is None or get_bond(source, to_id) is None
+        updated = adjust_relationship_trust(world, from_id, to_id, delta)
         if updated is None:
             return world
         if bus is not None and self._config.emit_events:
