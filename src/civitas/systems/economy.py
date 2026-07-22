@@ -1,9 +1,10 @@
 """Economy system: money transfers and wealth observation.
 
 Owns economic mutations that emit ``MoneyTransferred`` and tick-level
-wealth censuses that emit ``WealthObserved``. Transfer legality and
-census math live in domain helpers so other layers can reason about
-money without calling this system.
+wealth censuses that emit ``WealthObserved`` (including treasury-aware
+society totals and inequality metrics). Transfer legality and census
+math live in domain helpers so other layers can reason about money
+without calling this system.
 """
 
 from __future__ import annotations
