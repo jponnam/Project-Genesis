@@ -85,6 +85,7 @@ class CitySystem:
                     active_entrepot_count=snap.active_entrepot_count,
                     active_farmstead_count=snap.active_farmstead_count,
                     active_pastoral_count=snap.active_pastoral_count,
+                    active_mill_town_count=snap.active_mill_town_count,
                 )
             )
         return world
