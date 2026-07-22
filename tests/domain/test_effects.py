@@ -13,6 +13,7 @@ from civitas.domain import (
     ASSEMBLY_SOCIALIZE_RESTORE_BONUS,
     ASTRONOMY_RETRIEVAL_LIMIT_BONUS,
     BATHHOUSE_REST_RESTORE_BONUS,
+    BUILDING_CODES_MOVE_ENERGY_DISCOUNT,
     BUREAUCRACY_MARKET_FEE_DISCOUNT,
     CALENDAR_RETRIEVAL_LIMIT_BONUS,
     CAMP_ABACUS,
@@ -100,6 +101,7 @@ from civitas.domain import (
     SimulationConfig,
     World,
     assembly_socialize_bonus_for,
+    building_codes_move_discount_for,
     census_effects,
     default_innovations,
     default_technologies,
@@ -142,6 +144,7 @@ from civitas.domain import (
     location_has_active_temple,
     location_has_active_well,
     market_fee_for,
+    move_energy_discount,
     quarantine_rest_bonus_for,
     research_points_bonus,
     rest_restore_bonus,
@@ -1848,6 +1851,35 @@ def test_road_reduces_move_energy_for_colocated_agents() -> None:
     )
     assert snap.active_guild_count == 0
     assert snap.produce_energy_cost_bps == round(DEFAULT_PRODUCE_ENERGY_COST * 10_000)
+
+
+def test_building_codes_reduce_move_energy_and_stack_with_road() -> None:
+    """Building-code laws discount MOVE energy and stack with road seats."""
+    law = Law.create(0, 0, "Camp Building Codes", LawKind.BUILDING_CODES)
+    road = Infrastructure.create(0, 0, 0, 0, "Camp Road", InfrastructureKind.ROAD)
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(law,),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        infrastructure=(road,),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    expected_discount = ROAD_MOVE_ENERGY_DISCOUNT + BUILDING_CODES_MOVE_ENERGY_DISCOUNT
+    assert building_codes_move_discount_for(world, agent) == (
+        BUILDING_CODES_MOVE_ENERGY_DISCOUNT
+    )
+    assert move_energy_discount(world, agent) == pytest.approx(expected_discount)
+    assert effective_move_energy_cost(world, agent) == pytest.approx(
+        DEFAULT_MOVE_ENERGY_COST - expected_discount
+    )
+
+    without_road = world.model_copy(update={"infrastructure": ()})
+    assert effective_move_energy_cost(without_road, without_road.agents[0]) == (
+        pytest.approx(DEFAULT_MOVE_ENERGY_COST - BUILDING_CODES_MOVE_ENERGY_DISCOUNT)
+    )
 
 
 def test_guild_reduces_produce_energy_for_colocated_agents() -> None:

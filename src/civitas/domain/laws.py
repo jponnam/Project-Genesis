@@ -3,8 +3,8 @@
 Laws are first-class world aggregates. Domain helpers own enactment,
 repeal, tax-schedule lookup, market-fee lookup, curriculum teaching
 bonuses, calendar retrieval bonuses, ethics teach-trust deltas,
-assembly socialize bonuses, sanitation drink bonuses, and quarantine
-rest bonuses.
+assembly socialize bonuses, sanitation drink bonuses, quarantine rest
+bonuses, and building-code move discounts.
 Active ``TAX_SCHEDULE`` statutes override fallback levy parameters
 when collecting taxes. Active ``MARKET_FEE`` statutes charge a flat
 buyer fee on market listing fills (Phase 9 M10). Active ``CURRICULUM``
@@ -16,6 +16,8 @@ Active ``ASSEMBLY`` statutes grant living subjects +0.05 SOCIALIZE
 restore (Phase 11 M11). Active ``SANITATION`` statutes grant living
 subjects +0.05 DRINK restore (Phase 12 M2). Active ``QUARANTINE``
 statutes grant living subjects +0.05 REST restore (Phase 12 M11).
+Active ``BUILDING_CODES`` statutes grant living subjects -0.02 MOVE
+energy cost (Phase 13 M2).
 Elections (voting) are a separate Phase 5 aggregate, as are
 institutions.
 """
@@ -48,6 +50,7 @@ class LawKind(StrEnum):
     ASSEMBLY = "assembly"
     SANITATION = "sanitation"
     QUARANTINE = "quarantine"
+    BUILDING_CODES = "building_codes"
 
 
 # Statute kinds that allow at most one active law per government.
@@ -61,6 +64,7 @@ _UNIQUE_ACTIVE_KINDS: frozenset[LawKind] = frozenset(
         LawKind.ASSEMBLY,
         LawKind.SANITATION,
         LawKind.QUARANTINE,
+        LawKind.BUILDING_CODES,
     }
 )
 
@@ -82,6 +86,9 @@ SANITATION_DRINK_RESTORE_BONUS: float = 0.05
 # Kind-only REST restore bonus for living subjects under active QUARANTINE.
 QUARANTINE_REST_RESTORE_BONUS: float = 0.05
 
+# Kind-only MOVE energy discount for living subjects under active BUILDING_CODES.
+BUILDING_CODES_MOVE_ENERGY_DISCOUNT: float = 0.02
+
 
 class Law(BaseModel):
     """One statute enacted by a government."""
@@ -98,7 +105,7 @@ class Law(BaseModel):
         description=(
             "TAX_SCHEDULE flat poll amount, or MARKET_FEE flat fill fee; "
             "ignored by CURRICULUM, CALENDAR, ETHICS, ASSEMBLY, SANITATION, "
-            "QUARANTINE, and other kinds."
+            "QUARANTINE, BUILDING_CODES, and other kinds."
         ),
     )
     rate_bps: NonNegativeInt = Field(
@@ -165,6 +172,7 @@ class LawCensus(BaseModel):
     active_assembly_count: NonNegativeInt
     active_sanitation_count: NonNegativeInt
     active_quarantine_count: NonNegativeInt
+    active_building_codes_count: NonNegativeInt
 
 
 def law_by_id(world: World, law_id: LawId | int) -> Law | None:
@@ -433,6 +441,36 @@ def quarantine_rest_bonus_for(world: World, agent: Agent) -> float:
     return QUARANTINE_REST_RESTORE_BONUS
 
 
+def active_building_codes_law(
+    world: World,
+    government_id: GovernmentId | int,
+) -> Law | None:
+    """Return the active building-code statute for ``government_id``, if any.
+
+    When multiple active ``BUILDING_CODES`` laws exist (should not under
+    uniqueness rules), the lowest ``law_id`` wins.
+    """
+    for law in active_laws(world, government_id):
+        if law.kind == LawKind.BUILDING_CODES:
+            return law
+    return None
+
+
+def building_codes_move_discount_for(world: World, agent: Agent) -> float:
+    """Return -0.02 MOVE cost when ``agent`` is under active BUILDING_CODES.
+
+    The statute kind alone enables the discount; ``flat_amount`` is ignored.
+    """
+    if not agent.is_alive():
+        return 0.0
+    government = government_at(world, agent.location_id)
+    if government is None:
+        return 0.0
+    if active_building_codes_law(world, government.government_id) is None:
+        return 0.0
+    return BUILDING_CODES_MOVE_ENERGY_DISCOUNT
+
+
 def _has_active_kind(
     world: World,
     government_id: GovernmentId,
@@ -508,6 +546,9 @@ def census_laws(world: World) -> LawCensus:
     active_assembly = sum(1 for law in active if law.kind == LawKind.ASSEMBLY)
     active_sanitation = sum(1 for law in active if law.kind == LawKind.SANITATION)
     active_quarantine = sum(1 for law in active if law.kind == LawKind.QUARANTINE)
+    active_building_codes = sum(
+        1 for law in active if law.kind == LawKind.BUILDING_CODES
+    )
     return LawCensus(
         tick=world.tick,
         law_count=len(laws),
@@ -522,11 +563,13 @@ def census_laws(world: World) -> LawCensus:
         active_assembly_count=active_assembly,
         active_sanitation_count=active_sanitation,
         active_quarantine_count=active_quarantine,
+        active_building_codes_count=active_building_codes,
     )
 
 
 __all__ = [
     "ASSEMBLY_SOCIALIZE_RESTORE_BONUS",
+    "BUILDING_CODES_MOVE_ENERGY_DISCOUNT",
     "CALENDAR_RETRIEVAL_LIMIT_BONUS",
     "CAMP_POLL_TAX_LAW",
     "CURRICULUM_TEACHINGS_PER_KNOWER_BONUS",
@@ -537,6 +580,7 @@ __all__ = [
     "LawCensus",
     "LawKind",
     "active_assembly_law",
+    "active_building_codes_law",
     "active_calendar_law",
     "active_curriculum_law",
     "active_ethics_law",
@@ -546,6 +590,7 @@ __all__ = [
     "active_sanitation_law",
     "active_tax_schedule",
     "assembly_socialize_bonus_for",
+    "building_codes_move_discount_for",
     "calendar_retrieval_bonus_for",
     "census_laws",
     "curriculum_teachings_bonus_for",

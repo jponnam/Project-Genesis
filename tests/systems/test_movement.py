@@ -5,11 +5,16 @@ from __future__ import annotations
 import pytest
 
 from civitas.domain import (
+    BUILDING_CODES_MOVE_ENERGY_DISCOUNT,
     CAMP_LOCATION,
+    DEFAULT_MOVE_ENERGY_COST,
     Agent,
     AgentMoved,
     AgentStatus,
+    Government,
     Health,
+    Law,
+    LawKind,
     Location,
     LocationKind,
     NeedDecayed,
@@ -48,6 +53,30 @@ def test_move_to_emits_agent_moved_and_energy_decay() -> None:
         isinstance(event, NeedDecayed) and event.need == "energy"
         for event in bus.history
     )
+
+
+def test_move_to_uses_building_codes_discount() -> None:
+    """MOVE spends the effective energy cost for building-code subjects."""
+    plain = Location.create(1, "Plain", 1, 0, kind=LocationKind.PLAIN)
+    agent = Agent.create(
+        agent_id=0,
+        name="A",
+        location_id=0,
+        needs=Needs(food=1.0, water=1.0, energy=0.04, social=1.0, safety=1.0),
+    )
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION, plain),
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        laws=(Law.create(0, 0, "Camp Building Codes", LawKind.BUILDING_CODES),),
+        agents=(agent,),
+    )
+    expected_cost = DEFAULT_MOVE_ENERGY_COST - BUILDING_CODES_MOVE_ENERGY_DISCOUNT
+    system = MovementSystem()
+    assert system.can_move(world, 0, 1) is True
+    updated = system.move_to(world, 0, 1)
+    assert updated.agents[0].location_id.value == 1
+    assert updated.agents[0].needs.energy == pytest.approx(0.04 - expected_cost)
 
 
 def test_move_to_illegal_destination_is_noop() -> None:

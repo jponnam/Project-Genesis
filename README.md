@@ -125,10 +125,10 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 13 Milestone 1: Engineering technology**
+**Phase 13 Milestone 2: Building codes laws**
 
-``TechnologyKind.ENGINEERING`` and ``InnovationKind.PULLEY`` extend the tech
-tree after hygiene and grant an active society-wide PRODUCE energy discount.
+``LawKind.BUILDING_CODES`` grants living subjects a MOVE energy discount that
+stacks with road infrastructure.
 
 ### Completed
 
@@ -247,6 +247,7 @@ JSONL storage → `civitas run`
 
 **Phase 13:**
 - Milestone 1: Engineering technology
+- Milestone 2: Building codes laws
 
 ## License
 

@@ -47,7 +47,8 @@ with well, shrine, clinic, apothecary, and sanitation). Phase 12 Milestone
 with every prior REST source). Phase 12 Milestone 12 adds LAZARETTO city
 DRINK restore bonuses (stacking with every prior DRINK source). Phase 13
 Milestone 1 adds a global PULLEY produce-energy discount (stacking with
-guild seat and abacus discounts).
+guild seat and abacus discounts). Phase 13 Milestone 2 adds BUILDING_CODES
+law MOVE energy discounts for living subjects (stacking with ROAD seats).
 The action executor, retrieval path, market fills,
 knowledge diffusion, and research progression read these helpers;
 ``EffectsSystem`` only observes coverage. Systems never call each other.
@@ -69,6 +70,7 @@ from civitas.domain.innovation import InnovationKind, active_innovations
 from civitas.domain.institutions import InstitutionKind, active_institutions
 from civitas.domain.laws import (
     assembly_socialize_bonus_for,
+    building_codes_move_discount_for,
     calendar_retrieval_bonus_for,
     curriculum_teachings_bonus_for,
     market_fee_for,
@@ -662,10 +664,12 @@ def drink_restore_bonus(world: World, agent: Agent) -> float:
 
 
 def move_energy_discount(world: World, agent: Agent) -> float:
-    """Return MOVE energy discount from a ROAD at the agent's location."""
+    """Return MOVE energy discount from road seats and building-code laws."""
+    discount = 0.0
     if location_has_active_road(world, agent.location_id):
-        return ROAD_MOVE_ENERGY_DISCOUNT
-    return 0.0
+        discount += ROAD_MOVE_ENERGY_DISCOUNT
+    discount += building_codes_move_discount_for(world, agent)
+    return discount
 
 
 def produce_energy_discount(world: World, agent: Agent) -> float:
@@ -852,7 +856,7 @@ def effective_move_energy_cost(
     *,
     base: float = DEFAULT_MOVE_ENERGY_COST,
 ) -> float:
-    """Return MOVE energy cost including road discounts at the origin seat."""
+    """Return MOVE cost including road and building-code law discounts."""
     if base < 0:
         return 0.0
     discounted = base - move_energy_discount(world, agent)

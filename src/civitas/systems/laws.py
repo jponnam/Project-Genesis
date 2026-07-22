@@ -73,6 +73,7 @@ class LawSystem:
                     active_assembly_count=snap.active_assembly_count,
                     active_sanitation_count=snap.active_sanitation_count,
                     active_quarantine_count=snap.active_quarantine_count,
+                    active_building_codes_count=snap.active_building_codes_count,
                 )
             )
         return world
