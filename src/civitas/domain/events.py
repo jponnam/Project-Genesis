@@ -563,6 +563,7 @@ class InstitutionsObserved(DomainEvent):
     active_temple_count: NonNegativeInt = 0
     active_school_count: NonNegativeInt = 0
     active_lyceum_count: NonNegativeInt = 0
+    active_hospital_count: NonNegativeInt = 0
     total_budget: NonNegativeInt = 0
     funded_count: NonNegativeInt = 0
 

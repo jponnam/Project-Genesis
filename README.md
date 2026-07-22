@@ -124,11 +124,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 12 — Milestone 2: Sanitation laws**
+**Phase 12 — Milestone 3: Hospital institutions**
 
-``LawKind.SANITATION`` adds a unique-active public health statute. Living
-subjects under an active sanitation law gain ``+0.05`` DRINK restore,
-stacking with WELL and SHRINE seat bonuses.
+``InstitutionKind.HOSPITAL`` adds a gov-attached public health institution.
+An active hospital at the agent's location grants ``+0.05`` REST restore,
+stacking with fire hearth, remedy, temple, and sanctuary bonuses.
 
 ### Completed
 
@@ -234,6 +234,7 @@ JSONL storage → `civitas run`
 **Phase 12:**
 - Milestone 1: Medicine technology
 - Milestone 2: Sanitation laws
+- Milestone 3: Hospital institutions
 
 ## License
 
