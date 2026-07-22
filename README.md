@@ -125,10 +125,10 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 13 Milestone 3: Workshop institutions**
+**Phase 13 Milestone 4: Bridge infrastructure**
 
-``InstitutionKind.WORKSHOP`` grants a seat-scoped PRODUCE energy discount that
-stacks with guild, abacus, and pulley.
+``InfrastructureKind.BRIDGE`` (build cost 9) grants a seat-scoped MOVE energy
+discount that stacks with road seats and building-code laws.
 
 ### Completed
 
@@ -249,6 +249,7 @@ JSONL storage → `civitas run`
 - Milestone 1: Engineering technology
 - Milestone 2: Building codes laws
 - Milestone 3: Workshop institutions
+- Milestone 4: Bridge infrastructure
 
 ## License
 

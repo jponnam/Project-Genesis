@@ -13,6 +13,7 @@ from civitas.domain import (
     ASSEMBLY_SOCIALIZE_RESTORE_BONUS,
     ASTRONOMY_RETRIEVAL_LIMIT_BONUS,
     BATHHOUSE_REST_RESTORE_BONUS,
+    BRIDGE_MOVE_ENERGY_DISCOUNT,
     BUILDING_CODES_MOVE_ENERGY_DISCOUNT,
     BUREAUCRACY_MARKET_FEE_DISCOUNT,
     CALENDAR_RETRIEVAL_LIMIT_BONUS,
@@ -124,6 +125,7 @@ from civitas.domain import (
     location_has_active_apothecary,
     location_has_active_archive,
     location_has_active_bathhouse,
+    location_has_active_bridge,
     location_has_active_bureaucracy,
     location_has_active_clinic,
     location_has_active_collegium,
@@ -1875,6 +1877,65 @@ def test_building_codes_reduce_move_energy_and_stack_with_road() -> None:
     without_road = world.model_copy(update={"infrastructure": ()})
     assert effective_move_energy_cost(without_road, without_road.agents[0]) == (
         pytest.approx(DEFAULT_MOVE_ENERGY_COST - BUILDING_CODES_MOVE_ENERGY_DISCOUNT)
+    )
+
+
+def test_bridge_reduces_move_energy_for_colocated_agents() -> None:
+    """Active bridges discount MOVE energy at their seat location."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        infrastructure=(
+            Infrastructure.create(0, 0, 0, 0, "Camp Bridge", InfrastructureKind.BRIDGE),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_bridge(world, agent.location_id) is True
+    assert effective_move_energy_cost(world, agent) == pytest.approx(
+        DEFAULT_MOVE_ENERGY_COST - BRIDGE_MOVE_ENERGY_DISCOUNT
+    )
+    snap = census_effects(world)
+    assert snap.move_energy_cost_bps == round(
+        (DEFAULT_MOVE_ENERGY_COST - BRIDGE_MOVE_ENERGY_DISCOUNT) * 10_000
+    )
+
+
+def test_bridge_stacks_with_road_and_building_codes() -> None:
+    """Bridge seat discount stacks with road seats and building-code laws."""
+    law = Law.create(0, 0, "Camp Building Codes", LawKind.BUILDING_CODES)
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(law,),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        infrastructure=(
+            Infrastructure.create(0, 0, 0, 0, "Camp Road", InfrastructureKind.ROAD),
+            Infrastructure.create(1, 0, 0, 0, "Camp Bridge", InfrastructureKind.BRIDGE),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    expected_discount = (
+        ROAD_MOVE_ENERGY_DISCOUNT
+        + BRIDGE_MOVE_ENERGY_DISCOUNT
+        + BUILDING_CODES_MOVE_ENERGY_DISCOUNT
+    )
+    assert location_has_active_bridge(world, agent.location_id) is True
+    assert move_energy_discount(world, agent) == pytest.approx(expected_discount)
+    # Full stack exceeds the default move cost and clamps to zero.
+    assert effective_move_energy_cost(world, agent) == pytest.approx(0.0)
+    assert census_effects(world).move_energy_cost_bps == round(
+        max(
+            0.0,
+            DEFAULT_MOVE_ENERGY_COST
+            - ROAD_MOVE_ENERGY_DISCOUNT
+            - BRIDGE_MOVE_ENERGY_DISCOUNT,
+        )
+        * 10_000
     )
 
 
