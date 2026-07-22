@@ -1,9 +1,10 @@
 """Cities: settlement designations under governments.
 
-Phase 5 Milestone 5. A city designates a location inside a government's
-jurisdiction as a settlement, with an optional capital flag. Resident
-counts are derived from living agents at the seat. Infrastructure is a
-separate Phase 5 aggregate; extra city kinds remain later milestones.
+Phase 5 Milestone 5 introduced settlement capitals. Phase 9 Milestone 11
+adds ``CityKind.OUTPOST`` for non-capital secondary seats that may share a
+government with the capital but must occupy their own location. Resident
+counts are derived from living agents at the seat. Infrastructure remains
+a separate aggregate. Camp City stays the only seeded settlement capital.
 """
 
 from __future__ import annotations
@@ -29,6 +30,7 @@ class CityKind(StrEnum):
     """Supported city / settlement kinds."""
 
     SETTLEMENT = "settlement"
+    OUTPOST = "outpost"
 
 
 class City(BaseModel):
@@ -100,6 +102,7 @@ class CityCensus(BaseModel):
     max_residents: NonNegativeInt
     max_residents_city_id: CityId | None = None
     active_settlement_count: NonNegativeInt
+    active_outpost_count: NonNegativeInt = 0
 
 
 def city_by_id(world: World, city_id: CityId | int) -> City | None:
@@ -122,6 +125,18 @@ def cities_for(
         else GovernmentId(value=government_id)
     )
     return tuple(city for city in world.cities if city.government_id == target)
+
+
+def outposts_for(
+    world: World,
+    government_id: GovernmentId | int,
+) -> tuple[City, ...]:
+    """Return outpost cities for ``government_id`` in ascending id order."""
+    return tuple(
+        city
+        for city in cities_for(world, government_id)
+        if city.kind is CityKind.OUTPOST
+    )
 
 
 def city_at(world: World, location_id: LocationId | int) -> City | None:
@@ -198,7 +213,14 @@ def _has_active_capital(
 
 
 def create_city(world: World, city: City) -> World | None:
-    """Add ``city`` to the world when legal."""
+    """Add ``city`` to the world when legal.
+
+    Outposts cannot be capitals. Settlement capital uniqueness is unchanged:
+    at most one active capital per government. Every city still needs a
+    unique seat location inside its government jurisdiction.
+    """
+    if city.kind is CityKind.OUTPOST and city.is_capital:
+        return None
     if government_by_id(world, city.government_id) is None:
         return None
     if world.location_by_id(city.location_id) is None:
@@ -262,6 +284,8 @@ def set_capital(
     city = city_by_id(world, city_id)
     if city is None:
         return None
+    if is_capital and city.kind is CityKind.OUTPOST:
+        return None
     if is_capital and not city.active:
         return None
     if city.is_capital == is_capital:
@@ -301,6 +325,7 @@ def census_cities(world: World) -> CityCensus:
         max_residents = 0
         max_residents_city_id = None
     active_settlements = sum(1 for city in active if city.kind is CityKind.SETTLEMENT)
+    active_outposts = sum(1 for city in active if city.kind is CityKind.OUTPOST)
     return CityCensus(
         tick=world.tick,
         city_count=len(cities),
@@ -313,4 +338,5 @@ def census_cities(world: World) -> CityCensus:
         max_residents=max_residents,
         max_residents_city_id=max_residents_city_id,
         active_settlement_count=active_settlements,
+        active_outpost_count=active_outposts,
     )

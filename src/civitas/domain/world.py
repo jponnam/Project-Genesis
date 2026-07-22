@@ -15,7 +15,7 @@ from typing import Self
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from civitas.domain.agent import Agent
-from civitas.domain.cities import City
+from civitas.domain.cities import City, CityKind
 from civitas.domain.config import SimulationConfig
 from civitas.domain.governments import Government
 from civitas.domain.ids import (
@@ -323,6 +323,9 @@ class World(BaseModel):
                     f"city {city.city_id.value} seat must lie "
                     f"inside government jurisdiction"
                 )
+                raise ValueError(msg)
+            if city.is_capital and city.kind is CityKind.OUTPOST:
+                msg = "outpost cities cannot be capitals"
                 raise ValueError(msg)
             if city.active and city.is_capital:
                 if gov_value in active_capitals:
