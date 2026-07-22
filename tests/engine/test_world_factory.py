@@ -14,6 +14,7 @@ from civitas.domain import (
     CAMP_POLL_TAX_LAW,
     CAMP_POTTERY,
     CAMP_WELL,
+    CAMP_WRITING,
     CANONICAL_SEED,
     AgentSpawned,
     CityCreated,
@@ -91,6 +92,7 @@ def test_agents_have_stable_ids_names_and_origin_location() -> None:
     assert world.technologies[1] == CAMP_POTTERY
     assert world.technologies[2] == CAMP_IRRIGATION
     assert world.technologies[3] == CAMP_METALLURGY
+    assert world.technologies[4] == CAMP_WRITING
     assert world.treasury == 0
     assert world.agents_at(0) == world.agents
 

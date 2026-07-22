@@ -11,6 +11,7 @@ from civitas.domain import (
     CAMP_LOCATION,
     CAMP_METALLURGY,
     CAMP_POTTERY,
+    CAMP_WRITING,
     Agent,
     SimulationConfig,
     Technology,
@@ -37,13 +38,14 @@ def _world(*agents: Agent, technologies: tuple[Technology, ...] = ()) -> World:
     )
 
 
-def test_default_technologies_seed_fire_pottery_irrigation_metallurgy() -> None:
-    """Canonical catalog has fire through metallurgy progression."""
+def test_default_technologies_seed_fire_through_writing() -> None:
+    """Canonical catalog has fire through writing progression."""
     assert default_technologies() == (
         CAMP_FIRE,
         CAMP_POTTERY,
         CAMP_IRRIGATION,
         CAMP_METALLURGY,
+        CAMP_WRITING,
     )
     assert CAMP_FIRE.kind is TechnologyKind.FIRE
     assert CAMP_FIRE.discovered is True
@@ -56,6 +58,9 @@ def test_default_technologies_seed_fire_pottery_irrigation_metallurgy() -> None:
     assert CAMP_METALLURGY.kind is TechnologyKind.METALLURGY
     assert CAMP_METALLURGY.discovered is False
     assert CAMP_METALLURGY.prerequisite_ids == (CAMP_IRRIGATION.technology_id,)
+    assert CAMP_WRITING.kind is TechnologyKind.WRITING
+    assert CAMP_WRITING.discovered is False
+    assert CAMP_WRITING.prerequisite_ids == (CAMP_METALLURGY.technology_id,)
 
 
 def test_create_and_discover_technology() -> None:
@@ -96,18 +101,20 @@ def test_census_technologies_counts() -> None:
         technologies=default_technologies(),
     )
     snap = census_technologies(world)
-    assert snap.technology_count == 4
+    assert snap.technology_count == 5
     assert snap.discovered_count == 1
-    assert snap.undiscovered_count == 3
+    assert snap.undiscovered_count == 4
     assert snap.discovered_fire_count == 1
     assert snap.discovered_pottery_count == 0
     assert snap.discovered_irrigation_count == 0
     assert snap.discovered_metallurgy_count == 0
-    assert snap.locked_count == 2
+    assert snap.discovered_writing_count == 0
+    assert snap.locked_count == 3
     assert snap.researchable_count == 1
     assert prerequisites_met(world, CAMP_POTTERY) is True
     assert prerequisites_met(world, CAMP_IRRIGATION) is False
     assert prerequisites_met(world, CAMP_METALLURGY) is False
+    assert prerequisites_met(world, CAMP_WRITING) is False
     assert census_technologies(world) == snap
 
 
@@ -172,6 +179,32 @@ def test_metallurgy_locked_until_irrigation_discovered() -> None:
     )
     assert with_metallurgy is not None
     assert with_metallurgy.technologies[3].discovered is True
+
+
+def test_writing_locked_until_metallurgy_discovered() -> None:
+    """Writing cannot be discovered until metallurgy is already known."""
+    world = _world(
+        Agent.create(agent_id=0, name="A"),
+        technologies=default_technologies(),
+    )
+    assert prerequisites_met(world, CAMP_WRITING) is False
+    assert discover_technology(world, CAMP_WRITING.technology_id) is None
+
+    with_pottery = discover_technology(world, CAMP_POTTERY.technology_id)
+    assert with_pottery is not None
+    with_irrigation = discover_technology(with_pottery, CAMP_IRRIGATION.technology_id)
+    assert with_irrigation is not None
+    assert prerequisites_met(with_irrigation, CAMP_WRITING) is False
+    assert discover_technology(with_irrigation, CAMP_WRITING.technology_id) is None
+
+    with_metallurgy = discover_technology(
+        with_irrigation, CAMP_METALLURGY.technology_id
+    )
+    assert with_metallurgy is not None
+    assert prerequisites_met(with_metallurgy, CAMP_WRITING) is True
+    with_writing = discover_technology(with_metallurgy, CAMP_WRITING.technology_id)
+    assert with_writing is not None
+    assert with_writing.technologies[4].discovered is True
 
 
 def test_world_rejects_duplicate_kinds() -> None:

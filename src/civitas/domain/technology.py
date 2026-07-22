@@ -31,6 +31,7 @@ class TechnologyKind(StrEnum):
     POTTERY = "pottery"
     IRRIGATION = "irrigation"
     METALLURGY = "metallurgy"
+    WRITING = "writing"
 
 
 class Technology(BaseModel):
@@ -107,11 +108,24 @@ CAMP_METALLURGY: Technology = Technology.create(
     discovered=False,
     prerequisite_ids=(2,),
 )
+CAMP_WRITING: Technology = Technology.create(
+    4,
+    "Camp Writing",
+    TechnologyKind.WRITING,
+    discovered=False,
+    prerequisite_ids=(3,),
+)
 
 
 def default_technologies() -> tuple[Technology, ...]:
     """Return the canonical initial technology catalog."""
-    return (CAMP_FIRE, CAMP_POTTERY, CAMP_IRRIGATION, CAMP_METALLURGY)
+    return (
+        CAMP_FIRE,
+        CAMP_POTTERY,
+        CAMP_IRRIGATION,
+        CAMP_METALLURGY,
+        CAMP_WRITING,
+    )
 
 
 class TechnologyCensus(BaseModel):
@@ -127,6 +141,7 @@ class TechnologyCensus(BaseModel):
     discovered_pottery_count: NonNegativeInt
     discovered_irrigation_count: NonNegativeInt
     discovered_metallurgy_count: NonNegativeInt = 0
+    discovered_writing_count: NonNegativeInt = 0
     locked_count: NonNegativeInt
     researchable_count: NonNegativeInt
 
@@ -232,6 +247,7 @@ def census_technologies(world: World) -> TechnologyCensus:
     pottery = sum(1 for tech in discovered if tech.kind is TechnologyKind.POTTERY)
     irrigation = sum(1 for tech in discovered if tech.kind is TechnologyKind.IRRIGATION)
     metallurgy = sum(1 for tech in discovered if tech.kind is TechnologyKind.METALLURGY)
+    writing = sum(1 for tech in discovered if tech.kind is TechnologyKind.WRITING)
     return TechnologyCensus(
         tick=world.tick,
         technology_count=len(technologies),
@@ -241,6 +257,7 @@ def census_technologies(world: World) -> TechnologyCensus:
         discovered_pottery_count=pottery,
         discovered_irrigation_count=irrigation,
         discovered_metallurgy_count=metallurgy,
+        discovered_writing_count=writing,
         locked_count=len(locked),
         researchable_count=len(researchable),
     )

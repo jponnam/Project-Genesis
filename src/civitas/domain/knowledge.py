@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
+from civitas.domain.effects import effective_teachings_per_knower
 from civitas.domain.ids import AgentId
 from civitas.domain.relationships import DEFAULT_TRUST, get_bond
 from civitas.domain.technology import (
@@ -35,6 +36,7 @@ FIRE_FACT: str = TechnologyKind.FIRE.value
 POTTERY_FACT: str = TechnologyKind.POTTERY.value
 IRRIGATION_FACT: str = TechnologyKind.IRRIGATION.value
 METALLURGY_FACT: str = TechnologyKind.METALLURGY.value
+WRITING_FACT: str = TechnologyKind.WRITING.value
 
 
 class KnowledgeSource(StrEnum):
@@ -57,6 +59,7 @@ class KnowledgeCensus(BaseModel):
     pottery_knower_count: NonNegativeInt
     irrigation_knower_count: NonNegativeInt
     metallurgy_knower_count: NonNegativeInt = 0
+    writing_knower_count: NonNegativeInt = 0
     total_fact_instances: NonNegativeInt
     coverage_bps: NonNegativeInt
 
@@ -171,7 +174,8 @@ def diffuse_knowledge(
     if teachings_per_knower < 0:
         msg = f"teachings_per_knower must be >= 0, got {teachings_per_knower}"
         raise ValueError(msg)
-    if teachings_per_knower == 0:
+    teaching_limit = effective_teachings_per_knower(world, base=teachings_per_knower)
+    if teaching_limit == 0:
         return world, ()
     if min_trust < 0.0 or min_trust > 1.0:
         msg = f"min_trust must be in [0, 1], got {min_trust}"
@@ -208,7 +212,7 @@ def diffuse_knowledge(
     learned: set[tuple[int, str]] = set()
     gains: list[KnowledgeGain] = []
     for fact, teacher_value, learner_value in candidates:
-        if taught_counts.get(teacher_value, 0) >= teachings_per_knower:
+        if taught_counts.get(teacher_value, 0) >= teaching_limit:
             continue
         if (learner_value, fact) in learned:
             continue
@@ -260,6 +264,7 @@ def census_knowledge(world: World) -> KnowledgeCensus:
     metallurgy_knowers = sum(
         1 for agent in living if agent.knowledge.knows(METALLURGY_FACT)
     )
+    writing_knowers = sum(1 for agent in living if agent.knowledge.knows(WRITING_FACT))
     total_fact_instances = 0
     for agent in living:
         total_fact_instances += sum(
@@ -281,6 +286,7 @@ def census_knowledge(world: World) -> KnowledgeCensus:
         pottery_knower_count=pottery_knowers,
         irrigation_knower_count=irrigation_knowers,
         metallurgy_knower_count=metallurgy_knowers,
+        writing_knower_count=writing_knowers,
         total_fact_instances=total_fact_instances,
         coverage_bps=coverage_bps,
     )

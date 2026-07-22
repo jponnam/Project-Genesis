@@ -118,16 +118,17 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 | **7** | LLM integration, agent cognition, reflection, planning, memory retrieval |
 | **8** | Effect wiring from innovations into action outcomes |
 | **9** | Technology prerequisite trees and deeper tech progression |
+| **10** | Writing, record-keeping, and institutional memory |
 
 ## Current Milestone
 
-**Phase 9 — Milestone 12: Metallurgy technology**
+**Phase 10 — Milestone 1: Writing technology**
 
-``TechnologyKind.METALLURGY`` deepens the prereq tree past irrigation.
-Camp Metallurgy seeds undiscovered (requires irrigation), with research
-progress locked until irrigation is known, an inactive forge innovation,
-a metallurgy knowledge fact, and a +1 stone gather bonus when the forge
-is active.
+``TechnologyKind.WRITING`` extends the prereq tree past metallurgy.
+Camp Writing seeds undiscovered (requires metallurgy), with research
+progress locked until metallurgy is known, an inactive scribe innovation,
+a writing knowledge fact, and a +1 teachings-per-knower bonus when the
+scribe is active.
 
 ### Completed
 
@@ -201,6 +202,9 @@ JSONL storage → `civitas run`
 - Milestone 10: Market fee laws
 - Milestone 11: Outpost cities
 - Milestone 12: Metallurgy technology
+
+**Phase 10:**
+- Milestone 1: Writing technology
 
 ## License
 
