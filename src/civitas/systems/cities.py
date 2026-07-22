@@ -74,6 +74,7 @@ class CitySystem:
                     active_settlement_count=snap.active_settlement_count,
                     active_outpost_count=snap.active_outpost_count,
                     active_library_count=snap.active_library_count,
+                    active_forum_count=snap.active_forum_count,
                 )
             )
         return world
