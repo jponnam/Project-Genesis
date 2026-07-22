@@ -101,6 +101,7 @@ class InfrastructureSystem:
                     active_mineshaft_count=snap.active_mineshaft_count,
                     active_forge_works_count=snap.active_forge_works_count,
                     active_lumber_yard_count=snap.active_lumber_yard_count,
+                    active_sawpit_count=snap.active_sawpit_count,
                 )
             )
         return world

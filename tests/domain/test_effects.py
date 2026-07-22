@@ -159,6 +159,7 @@ from civitas.domain import (
     SAFETY_CODES_PRODUCE_ENERGY_DISCOUNT,
     SANCTUARY_REST_RESTORE_BONUS,
     SANITATION_DRINK_RESTORE_BONUS,
+    SAWPIT_PRODUCE_ENERGY_DISCOUNT,
     SCAFFOLD_WOOD_GATHER_BONUS,
     SCHOOL_TEACHINGS_PER_KNOWER_BONUS,
     SCRIPTORIUM_TEACHINGS_PER_KNOWER_BONUS,
@@ -270,6 +271,7 @@ from civitas.domain import (
     location_has_active_quarry,
     location_has_active_road,
     location_has_active_sanctuary,
+    location_has_active_sawpit,
     location_has_active_scaffold,
     location_has_active_school,
     location_has_active_scriptorium,
@@ -6220,6 +6222,81 @@ def test_forge_works_stacks_with_guild_workshop_weaver_and_fulling_mill() -> Non
         + FORGE_WORKS_PRODUCE_ENERGY_DISCOUNT
     )
     assert location_has_active_forge_works(world, agent.location_id) is True
+    assert produce_energy_discount(world, agent) == pytest.approx(expected_discount)
+    expected = DEFAULT_PRODUCE_ENERGY_COST - expected_discount
+    assert effective_produce_energy_cost(
+        world,
+        agent,
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(expected)
+    assert census_effects(world).produce_energy_cost_bps == round(expected * 10_000)
+
+
+def test_sawpit_reduces_produce_energy_for_colocated_agents() -> None:
+    """Active sawpits discount PRODUCE energy at their seat location."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 0, 0, "Camp Sawpit", InfrastructureKind.SAWPIT
+            ),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_sawpit(world, agent.location_id) is True
+    assert effective_produce_energy_cost(
+        world,
+        agent,
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(
+        DEFAULT_PRODUCE_ENERGY_COST - SAWPIT_PRODUCE_ENERGY_DISCOUNT
+    )
+    assert census_effects(world).produce_energy_cost_bps == round(
+        (DEFAULT_PRODUCE_ENERGY_COST - SAWPIT_PRODUCE_ENERGY_DISCOUNT) * 10_000
+    )
+    bare = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_sawpit(bare, bare.agents[0].location_id) is False
+
+
+def test_sawpit_stacks_with_guild_workshop_weaver_and_forge_works() -> None:
+    """Sawpit seat discount stacks with guild/workshop/weaver/forge works."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        institutions=(
+            Institution.create(0, 0, 0, "Camp Guild", InstitutionKind.GUILD),
+            Institution.create(1, 0, 0, "Camp Workshop", InstitutionKind.WORKSHOP),
+            Institution.create(2, 0, 0, "Camp Weaver", InstitutionKind.WEAVER),
+        ),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 0, 0, "Camp Forge Works", InfrastructureKind.FORGE_WORKS
+            ),
+            Infrastructure.create(
+                1, 0, 0, 0, "Camp Sawpit", InfrastructureKind.SAWPIT
+            ),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    expected_discount = (
+        GUILD_PRODUCE_ENERGY_DISCOUNT
+        + WORKSHOP_PRODUCE_ENERGY_DISCOUNT
+        + WEAVER_PRODUCE_ENERGY_DISCOUNT
+        + FORGE_WORKS_PRODUCE_ENERGY_DISCOUNT
+        + SAWPIT_PRODUCE_ENERGY_DISCOUNT
+    )
+    assert location_has_active_sawpit(world, agent.location_id) is True
     assert produce_energy_discount(world, agent) == pytest.approx(expected_discount)
     expected = DEFAULT_PRODUCE_ENERGY_COST - expected_discount
     assert effective_produce_energy_cost(
