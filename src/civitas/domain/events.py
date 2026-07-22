@@ -673,6 +673,7 @@ class TechnologiesObserved(DomainEvent):
     discovered_seafaring_count: NonNegativeInt = 0
     discovered_agriculture_count: NonNegativeInt = 0
     discovered_crop_rotation_count: NonNegativeInt = 0
+    discovered_forestry_count: NonNegativeInt = 0
     locked_count: NonNegativeInt = 0
     researchable_count: NonNegativeInt = 0
 
@@ -750,6 +751,7 @@ class InnovationsObserved(DomainEvent):
     active_sail_count: NonNegativeInt = 0
     active_plow_count: NonNegativeInt = 0
     active_fallow_count: NonNegativeInt = 0
+    active_coppice_count: NonNegativeInt = 0
 
 
 class KnowledgeLearned(DomainEvent):
@@ -787,6 +789,7 @@ class KnowledgeObserved(DomainEvent):
     seafaring_knower_count: NonNegativeInt = 0
     agriculture_knower_count: NonNegativeInt = 0
     crop_rotation_knower_count: NonNegativeInt = 0
+    forestry_knower_count: NonNegativeInt = 0
     total_fact_instances: NonNegativeInt
     coverage_bps: NonNegativeInt
 

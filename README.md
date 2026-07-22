@@ -127,16 +127,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 15 Milestone 9: Terrace infrastructure**
+**Phase 15 Milestone 10: Forestry technology**
 
-``InfrastructureKind.TERRACE`` is a built-capacity piece attached to a
-city seat inside a government's jurisdiction. An active terrace raises
-FOOD gather amount by ``TERRACE_FOOD_GATHER_BONUS`` (1) at its location,
-stacking with every other food-gather source (plow, storehouse,
-waystation, entrepot, granary, farmstead, and husbandman). Governments
-fund construction via ``build_infrastructure`` and institutions via
-``build_infrastructure_from_institution`` at
-``DEFAULT_TERRACE_BUILD_COST`` (8). Terraces are not seeded.
+``TechnologyKind.FORESTRY`` (id 21) requires crop rotation. Research
+threshold 10. ``InnovationKind.COPPICE`` raises WOOD gather by 1
+society-wide when active, stacking with the scaffold seat.
 
 ### Completed
 
@@ -291,6 +286,7 @@ JSONL storage → `civitas run`
 - Milestone 7: Crop rotation technology
 - Milestone 8: Agronomist institutions
 - Milestone 9: Terrace infrastructure
+- Milestone 10: Forestry technology
 
 ## License
 

@@ -14,6 +14,7 @@ from civitas.domain import (
     CAMP_CROP_ROTATION,
     CAMP_ENGINEERING,
     CAMP_FIRE,
+    CAMP_FORESTRY,
     CAMP_HYGIENE,
     CAMP_IRRIGATION,
     CAMP_LOCATION,
@@ -54,8 +55,8 @@ def _world(*agents: Agent, technologies: tuple[Technology, ...] = ()) -> World:
     )
 
 
-def test_default_technologies_seed_fire_through_crop_rotation() -> None:
-    """Canonical catalog has fire through crop rotation progression."""
+def test_default_technologies_seed_fire_through_forestry() -> None:
+    """Canonical catalog has fire through forestry progression."""
     assert default_technologies() == (
         CAMP_FIRE,
         CAMP_POTTERY,
@@ -78,6 +79,7 @@ def test_default_technologies_seed_fire_through_crop_rotation() -> None:
         CAMP_SEAFARING,
         CAMP_AGRICULTURE,
         CAMP_CROP_ROTATION,
+        CAMP_FORESTRY,
     )
     assert CAMP_FIRE.kind is TechnologyKind.FIRE
     assert CAMP_FIRE.discovered is True
@@ -141,6 +143,9 @@ def test_default_technologies_seed_fire_through_crop_rotation() -> None:
     assert CAMP_CROP_ROTATION.kind is TechnologyKind.CROP_ROTATION
     assert CAMP_CROP_ROTATION.discovered is False
     assert CAMP_CROP_ROTATION.prerequisite_ids == (CAMP_AGRICULTURE.technology_id,)
+    assert CAMP_FORESTRY.kind is TechnologyKind.FORESTRY
+    assert CAMP_FORESTRY.discovered is False
+    assert CAMP_FORESTRY.prerequisite_ids == (CAMP_CROP_ROTATION.technology_id,)
 
 
 def test_create_and_discover_technology() -> None:
@@ -181,9 +186,9 @@ def test_census_technologies_counts() -> None:
         technologies=default_technologies(),
     )
     snap = census_technologies(world)
-    assert snap.technology_count == 21
+    assert snap.technology_count == 22
     assert snap.discovered_count == 1
-    assert snap.undiscovered_count == 20
+    assert snap.undiscovered_count == 21
     assert snap.discovered_fire_count == 1
     assert snap.discovered_pottery_count == 0
     assert snap.discovered_irrigation_count == 0
@@ -205,7 +210,8 @@ def test_census_technologies_counts() -> None:
     assert snap.discovered_seafaring_count == 0
     assert snap.discovered_agriculture_count == 0
     assert snap.discovered_crop_rotation_count == 0
-    assert snap.locked_count == 19
+    assert snap.discovered_forestry_count == 0
+    assert snap.locked_count == 20
     assert snap.researchable_count == 1
     assert prerequisites_met(world, CAMP_POTTERY) is True
     assert prerequisites_met(world, CAMP_IRRIGATION) is False
@@ -927,6 +933,55 @@ def test_crop_rotation_locked_until_agriculture_discovered() -> None:
     )
     assert with_crop_rotation is not None
     assert with_crop_rotation.technologies[20].discovered is True
+
+
+def test_forestry_locked_until_crop_rotation_discovered() -> None:
+    """Forestry cannot be discovered until crop rotation is already known."""
+    world = _world(
+        Agent.create(agent_id=0, name="A"),
+        technologies=default_technologies(),
+    )
+    assert prerequisites_met(world, CAMP_FORESTRY) is False
+    assert discover_technology(world, CAMP_FORESTRY.technology_id) is None
+
+    current = world
+    for technology in (
+        CAMP_POTTERY,
+        CAMP_IRRIGATION,
+        CAMP_METALLURGY,
+        CAMP_WRITING,
+        CAMP_MATHEMATICS,
+        CAMP_ASTRONOMY,
+        CAMP_PHILOSOPHY,
+        CAMP_LOGIC,
+        CAMP_RHETORIC,
+        CAMP_MEDICINE,
+        CAMP_ANATOMY,
+        CAMP_HYGIENE,
+        CAMP_ENGINEERING,
+        CAMP_ARCHITECTURE,
+        CAMP_SURVEYING,
+        CAMP_NAVIGATION,
+        CAMP_CARTOGRAPHY,
+        CAMP_SEAFARING,
+        CAMP_AGRICULTURE,
+    ):
+        updated = discover_technology(current, technology.technology_id)
+        assert updated is not None
+        current = updated
+    assert prerequisites_met(current, CAMP_FORESTRY) is False
+    assert discover_technology(current, CAMP_FORESTRY.technology_id) is None
+
+    with_crop_rotation = discover_technology(
+        current, CAMP_CROP_ROTATION.technology_id
+    )
+    assert with_crop_rotation is not None
+    assert prerequisites_met(with_crop_rotation, CAMP_FORESTRY) is True
+    with_forestry = discover_technology(
+        with_crop_rotation, CAMP_FORESTRY.technology_id
+    )
+    assert with_forestry is not None
+    assert with_forestry.technologies[21].discovered is True
 
 
 def test_world_rejects_duplicate_kinds() -> None:

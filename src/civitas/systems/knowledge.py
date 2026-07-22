@@ -115,6 +115,7 @@ class KnowledgeSystem:
                     seafaring_knower_count=snap.seafaring_knower_count,
                     agriculture_knower_count=snap.agriculture_knower_count,
                     crop_rotation_knower_count=snap.crop_rotation_knower_count,
+                    forestry_knower_count=snap.forestry_knower_count,
                     total_fact_instances=snap.total_fact_instances,
                     coverage_bps=snap.coverage_bps,
                 )

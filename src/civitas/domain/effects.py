@@ -108,9 +108,10 @@ with scribe/dialectic/scriptorium/academy/forum/school/stoa/collegium/
 architect/cartographer/curriculum). Phase 15 Milestone 9 adds TERRACE
 food-gather bonuses at the infrastructure seat (stacking with plow,
 storehouse, waystation, entrepot, granary, farmstead, and husbandman).
-The action executor, retrieval path, market fills, knowledge diffusion,
-and research progression read these helpers; ``EffectsSystem`` only
-observes coverage. Systems never call each other.
+Phase 15 Milestone 10 adds a global COPPICE wood-gather bonus (stacking
+with the scaffold seat). The action executor, retrieval path, market
+fills, knowledge diffusion, and research progression read these helpers;
+``EffectsSystem`` only observes coverage. Systems never call each other.
 """
 
 from __future__ import annotations
@@ -165,6 +166,7 @@ POTTERY_WATER_GATHER_BONUS: int = 1
 IRRIGATION_WATER_GATHER_BONUS: int = 1
 SEAFARING_WATER_GATHER_BONUS: int = 1
 DITCH_WATER_GATHER_BONUS: int = 1
+FORESTRY_WOOD_GATHER_BONUS: int = 1
 METALLURGY_STONE_GATHER_BONUS: int = 1
 WRITING_TEACHINGS_PER_KNOWER_BONUS: int = 1
 SCRIPTORIUM_TEACHINGS_PER_KNOWER_BONUS: int = 1
@@ -1005,8 +1007,9 @@ def gather_amount_bonus(
     bonuses come from an active PLOW innovation society-wide, plus an
     active STOREHOUSE, WAYSTATION, ENTREPOT city, FARMSTEAD city,
     GRANARY, HUSBANDMAN, and/or TERRACE at ``location_id`` when provided
-    (they stack). Wood bonuses come from an active SCAFFOLD at
-    ``location_id`` when provided.
+    (they stack). Wood bonuses come from an active COPPICE innovation
+    society-wide, plus an active SCAFFOLD at ``location_id`` when provided
+    (they stack).
     """
     bonus = 0
     if resource == WATER_RESOURCE:
@@ -1043,8 +1046,12 @@ def gather_amount_bonus(
                 bonus += HUSBANDMAN_FOOD_GATHER_BONUS
             if location_has_active_terrace(world, location_id):
                 bonus += TERRACE_FOOD_GATHER_BONUS
-    elif resource == ResourceKind.WOOD.value and location_id is not None:
-        if location_has_active_scaffold(world, location_id):
+    elif resource == ResourceKind.WOOD.value:
+        if innovation_kind_is_active(world, InnovationKind.COPPICE):
+            bonus += FORESTRY_WOOD_GATHER_BONUS
+        if location_id is not None and location_has_active_scaffold(
+            world, location_id
+        ):
             bonus += SCAFFOLD_WOOD_GATHER_BONUS
     return bonus
 

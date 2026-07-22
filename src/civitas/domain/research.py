@@ -23,6 +23,7 @@ from civitas.domain.technology import (
     CAMP_CARTOGRAPHY,
     CAMP_CROP_ROTATION,
     CAMP_ENGINEERING,
+    CAMP_FORESTRY,
     CAMP_HYGIENE,
     CAMP_IRRIGATION,
     CAMP_LOGIC,
@@ -175,6 +176,11 @@ CAMP_CROP_ROTATION_RESEARCH: ResearchProgress = ResearchProgress.create(
     points=0,
     threshold=DEFAULT_POTTERY_THRESHOLD,
 )
+CAMP_FORESTRY_RESEARCH: ResearchProgress = ResearchProgress.create(
+    CAMP_FORESTRY.technology_id.value,
+    points=0,
+    threshold=DEFAULT_POTTERY_THRESHOLD,
+)
 
 
 def default_research_progress() -> tuple[ResearchProgress, ...]:
@@ -202,6 +208,7 @@ def default_research_progress() -> tuple[ResearchProgress, ...]:
                 CAMP_SEAFARING_RESEARCH,
                 CAMP_AGRICULTURE_RESEARCH,
                 CAMP_CROP_ROTATION_RESEARCH,
+                CAMP_FORESTRY_RESEARCH,
             ),
             key=lambda item: item.technology_id.value,
         )

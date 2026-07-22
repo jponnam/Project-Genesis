@@ -21,6 +21,8 @@ from civitas.domain import (
     CAMP_ENGINEERING,
     CAMP_ENGINEERING_RESEARCH,
     CAMP_FIRE,
+    CAMP_FORESTRY,
+    CAMP_FORESTRY_RESEARCH,
     CAMP_HYGIENE,
     CAMP_HYGIENE_RESEARCH,
     CAMP_IRRIGATION,
@@ -82,7 +84,7 @@ def _world(
     )
 
 
-def test_default_research_progress_seeds_pottery_through_crop_rotation() -> None:
+def test_default_research_progress_seeds_pottery_through_forestry() -> None:
     """Canonical research tracks undiscovered technologies at zero points."""
     assert default_research_progress() == (
         CAMP_POTTERY_RESEARCH,
@@ -105,6 +107,7 @@ def test_default_research_progress_seeds_pottery_through_crop_rotation() -> None
         CAMP_SEAFARING_RESEARCH,
         CAMP_AGRICULTURE_RESEARCH,
         CAMP_CROP_ROTATION_RESEARCH,
+        CAMP_FORESTRY_RESEARCH,
     )
     assert CAMP_POTTERY_RESEARCH.technology_id == CAMP_POTTERY.technology_id
     assert CAMP_POTTERY_RESEARCH.points == 0
@@ -166,6 +169,9 @@ def test_default_research_progress_seeds_pottery_through_crop_rotation() -> None
     assert CAMP_CROP_ROTATION_RESEARCH.technology_id == CAMP_CROP_ROTATION.technology_id
     assert CAMP_CROP_ROTATION_RESEARCH.points == 0
     assert CAMP_CROP_ROTATION_RESEARCH.threshold == 10
+    assert CAMP_FORESTRY_RESEARCH.technology_id == CAMP_FORESTRY.technology_id
+    assert CAMP_FORESTRY_RESEARCH.points == 0
+    assert CAMP_FORESTRY_RESEARCH.threshold == 10
 
 
 def test_advance_research_increments_and_discovers() -> None:
@@ -204,6 +210,7 @@ def test_advance_research_increments_and_discovers() -> None:
         CAMP_SEAFARING_RESEARCH,
         CAMP_AGRICULTURE_RESEARCH,
         CAMP_CROP_ROTATION_RESEARCH,
+        CAMP_FORESTRY_RESEARCH,
     )
     assert world.technologies[1].discovered is True
     assert world.technologies[1].kind is TechnologyKind.POTTERY
@@ -238,6 +245,7 @@ def test_advance_research_large_step_discovers_immediately() -> None:
         CAMP_SEAFARING_RESEARCH,
         CAMP_AGRICULTURE_RESEARCH,
         CAMP_CROP_ROTATION_RESEARCH,
+        CAMP_FORESTRY_RESEARCH,
     )
     assert world.technologies[1].discovered is True
 
@@ -696,6 +704,7 @@ def test_active_syllogism_adds_research_point_per_tick() -> None:
             CAMP_SEAFARING,
             CAMP_AGRICULTURE,
             CAMP_CROP_ROTATION,
+            CAMP_FORESTRY,
         ),
         research_progress=(CAMP_POTTERY_RESEARCH,),
         innovations=tuple(
