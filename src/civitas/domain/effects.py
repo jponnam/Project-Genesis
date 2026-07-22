@@ -78,7 +78,10 @@ seat (stacking with BUREAUCRACY). Phase 14 Milestone 6 adds MERCHANT
 market-fee discounts at the institution seat (stacking with BUREAUCRACY
 and HARBOR). Phase 14 Milestone 7 adds a global MAP retrieval-limit bonus
 (stacking with star chart, plumb line, archive, library, observatory,
-lyceum, and calendar). The action executor, retrieval path, market fills,
+lyceum, and calendar). Phase 14 Milestone 8 adds CARTOGRAPHER
+teachings-per-knower bonuses at the institution seat (stacking with
+scribe/dialectic/scriptorium/academy/forum/school/stoa/collegium/
+architect/curriculum). The action executor, retrieval path, market fills,
 knowledge diffusion, and research progression read these helpers;
 ``EffectsSystem`` only observes coverage. Systems never call each
 other.
@@ -141,6 +144,7 @@ FORUM_TEACHINGS_PER_KNOWER_BONUS: int = 1
 SCHOOL_TEACHINGS_PER_KNOWER_BONUS: int = 1
 COLLEGIUM_TEACHINGS_PER_KNOWER_BONUS: int = 1
 ARCHITECT_TEACHINGS_PER_KNOWER_BONUS: int = 1
+CARTOGRAPHER_TEACHINGS_PER_KNOWER_BONUS: int = 1
 PHILOSOPHY_TEACHINGS_PER_KNOWER_BONUS: int = 1
 LOGIC_RESEARCH_POINTS_BONUS: int = 1
 ANATOMY_RESEARCH_POINTS_BONUS: int = 1
@@ -478,6 +482,22 @@ def location_has_active_architect(
     )
     return any(
         item.kind is InstitutionKind.ARCHITECT and item.location_id == target
+        for item in active_institutions(world)
+    )
+
+
+def location_has_active_cartographer(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active CARTOGRAPHER is seated at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InstitutionKind.CARTOGRAPHER and item.location_id == target
         for item in active_institutions(world)
     )
 
@@ -1039,12 +1059,12 @@ def effective_teachings_per_knower(
     """Return teachings-per-knower including scribe, dialectic, seats, laws.
 
     The scribe and dialectic innovation bonuses are society-wide. The
-    scriptorium, stoa, academy, forum, school, collegium, and architect
-    bonuses apply only when ``location_id`` or ``agent`` places the knower
-    at an active SCRIPTORIUM, STOA, ACADEMY, FORUM, SCHOOL, COLLEGIUM, or
-    ARCHITECT seat. The curriculum law bonus applies when ``agent`` is a
-    living subject of a government with an active ``CURRICULUM`` statute.
-    All bonuses stack.
+    scriptorium, stoa, academy, forum, school, collegium, architect, and
+    cartographer bonuses apply only when ``location_id`` or ``agent`` places
+    the knower at an active SCRIPTORIUM, STOA, ACADEMY, FORUM, SCHOOL,
+    COLLEGIUM, ARCHITECT, or CARTOGRAPHER seat. The curriculum law bonus
+    applies when ``agent`` is a living subject of a government with an
+    active ``CURRICULUM`` statute. All bonuses stack.
     """
     if base < 0:
         return 0
@@ -1068,6 +1088,8 @@ def effective_teachings_per_knower(
         bonus += COLLEGIUM_TEACHINGS_PER_KNOWER_BONUS
     if seat is not None and location_has_active_architect(world, seat):
         bonus += ARCHITECT_TEACHINGS_PER_KNOWER_BONUS
+    if seat is not None and location_has_active_cartographer(world, seat):
+        bonus += CARTOGRAPHER_TEACHINGS_PER_KNOWER_BONUS
     if agent is not None:
         bonus += curriculum_teachings_bonus_for(world, agent)
     return base + bonus

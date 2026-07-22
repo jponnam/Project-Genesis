@@ -126,12 +126,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 14 Milestone 7: Cartography technology**
+**Phase 14 Milestone 8: Cartographer institutions**
 
-``TechnologyKind.CARTOGRAPHY`` (id 17) requires navigation. Research
-threshold 10. ``InnovationKind.MAP`` raises the memory retrieval limit
-by 1 society-wide when active, stacking with star chart, plumb line,
-archive/library/observatory/lyceum seats, and calendar.
+``InstitutionKind.CARTOGRAPHER`` sits beside caravans and merchants. Active
+cartographers add ``+1`` teachings-per-knower at their seat, stacking with
+prior teaching bonuses.
 
 ### Completed
 
@@ -270,6 +269,7 @@ JSONL storage → `civitas run`
 - Milestone 5: Harbor cities
 - Milestone 6: Merchant institutions
 - Milestone 7: Cartography technology
+- Milestone 8: Cartographer institutions
 
 ## License
 
