@@ -15,6 +15,7 @@ from civitas.domain import (
     DEFAULT_BRIDGE_BUILD_COST,
     DEFAULT_CLINIC_BUILD_COST,
     DEFAULT_DITCH_BUILD_COST,
+    DEFAULT_FORGE_WORKS_BUILD_COST,
     DEFAULT_FULLING_MILL_BUILD_COST,
     DEFAULT_MINESHAFT_BUILD_COST,
     DEFAULT_OBSERVATORY_BUILD_COST,
@@ -216,6 +217,7 @@ def test_census_infrastructure_counts() -> None:
     assert snap.active_fulling_mill_count == 0
     assert snap.active_warehouse_count == 0
     assert snap.active_mineshaft_count == 0
+    assert snap.active_forge_works_count == 0
     assert census_infrastructure(world) == snap
 
 
@@ -867,6 +869,46 @@ def test_create_and_build_mineshaft() -> None:
     )
     assert built is not None
     assert built.governments[0].treasury == 20 - DEFAULT_MINESHAFT_BUILD_COST
+
+
+def test_create_and_build_forge_works() -> None:
+    """FORGE_WORKS is a distinct kind with its own catalog build cost."""
+    assert (
+        build_cost_for(InfrastructureKind.FORGE_WORKS)
+        == DEFAULT_FORGE_WORKS_BUILD_COST
+    )
+    world = _world(
+        Agent.create(agent_id=0, name="A"),
+        governments=(Government.create(0, "Camp", 0, (0,), treasury=20),),
+        infrastructure=(
+            Infrastructure.create(0, 0, 0, 0, "Well", InfrastructureKind.WELL),
+        ),
+    )
+    # Forge works may coexist with a well at the same seat.
+    created = create_infrastructure(
+        world,
+        Infrastructure.create(
+            1, 0, 0, 0, "Forge Works", InfrastructureKind.FORGE_WORKS
+        ),
+    )
+    assert created is not None
+    assert created.infrastructure[1].kind is InfrastructureKind.FORGE_WORKS
+    snap = census_infrastructure(created)
+    assert snap.active_well_count == 1
+    assert snap.active_forge_works_count == 1
+
+    empty = _world(
+        Agent.create(agent_id=0, name="A"),
+        governments=(Government.create(0, "Camp", 0, (0,), treasury=20),),
+    )
+    built = build_infrastructure(
+        empty,
+        Infrastructure.create(
+            0, 0, 0, 0, "Paid Forge Works", InfrastructureKind.FORGE_WORKS
+        ),
+    )
+    assert built is not None
+    assert built.governments[0].treasury == 20 - DEFAULT_FORGE_WORKS_BUILD_COST
 
 
 def test_world_rejects_city_location_mismatch() -> None:

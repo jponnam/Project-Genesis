@@ -99,6 +99,7 @@ class InfrastructureSystem:
                     active_fulling_mill_count=snap.active_fulling_mill_count,
                     active_warehouse_count=snap.active_warehouse_count,
                     active_mineshaft_count=snap.active_mineshaft_count,
+                    active_forge_works_count=snap.active_forge_works_count,
                 )
             )
         return world
