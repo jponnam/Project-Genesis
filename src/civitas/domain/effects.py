@@ -7,11 +7,12 @@ Phase 10 adds ARCHIVE retrieval-limit bonuses, SCRIPTORIUM
 teachings-per-knower bonuses, CURRICULUM law teachings bonuses
 (stacking with the global scribe innovation), LIBRARY city
 retrieval-limit bonuses (stacking with archive), BUREAUCRACY
-market-fee discounts, and a global ABACUS produce-energy discount
-(stacking with guild seat discounts). The action executor, retrieval
-path, market fills, and knowledge diffusion read these helpers;
-``EffectsSystem`` only observes coverage. Systems never call each
-other.
+market-fee discounts, a global ABACUS produce-energy discount
+(stacking with guild seat discounts), and ACADEMY
+teachings-per-knower bonuses (stacking with scribe/scriptorium/
+curriculum). The action executor, retrieval path, market fills, and
+knowledge diffusion read these helpers; ``EffectsSystem`` only observes
+coverage. Systems never call each other.
 """
 
 from __future__ import annotations
@@ -47,6 +48,7 @@ IRRIGATION_WATER_GATHER_BONUS: int = 1
 METALLURGY_STONE_GATHER_BONUS: int = 1
 WRITING_TEACHINGS_PER_KNOWER_BONUS: int = 1
 SCRIPTORIUM_TEACHINGS_PER_KNOWER_BONUS: int = 1
+ACADEMY_TEACHINGS_PER_KNOWER_BONUS: int = 1
 WELL_DRINK_RESTORE_BONUS: float = 0.05
 STOREHOUSE_FOOD_GATHER_BONUS: int = 1
 ROAD_MOVE_ENERGY_DISCOUNT: float = 0.02
@@ -198,6 +200,22 @@ def location_has_active_bureaucracy(
     )
 
 
+def location_has_active_academy(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active ACADEMY is seated at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InstitutionKind.ACADEMY and item.location_id == target
+        for item in active_institutions(world)
+    )
+
+
 def location_has_active_library(
     world: World,
     location_id: LocationId | int,
@@ -325,13 +343,13 @@ def effective_teachings_per_knower(
     location_id: LocationId | int | None = None,
     agent: Agent | None = None,
 ) -> int:
-    """Return teachings-per-knower including scribe, scriptorium, curriculum.
+    """Return teachings-per-knower including scribe, scriptorium, curriculum, academy.
 
-    The scribe innovation bonus is society-wide. The scriptorium bonus
-    applies only when ``location_id`` or ``agent`` places the knower at an
-    active SCRIPTORIUM seat. The curriculum law bonus applies when
-    ``agent`` is a living subject of a government with an active
-    ``CURRICULUM`` statute.
+    The scribe innovation bonus is society-wide. The scriptorium and academy
+    bonuses apply only when ``location_id`` or ``agent`` places the knower at
+    an active SCRIPTORIUM or ACADEMY seat. The curriculum law bonus applies
+    when ``agent`` is a living subject of a government with an active
+    ``CURRICULUM`` statute. All bonuses stack.
     """
     if base < 0:
         return 0
@@ -343,6 +361,8 @@ def effective_teachings_per_knower(
     bonus = teachings_per_knower_bonus(world)
     if seat is not None and location_has_active_scriptorium(world, seat):
         bonus += SCRIPTORIUM_TEACHINGS_PER_KNOWER_BONUS
+    if seat is not None and location_has_active_academy(world, seat):
+        bonus += ACADEMY_TEACHINGS_PER_KNOWER_BONUS
     if agent is not None:
         bonus += curriculum_teachings_bonus_for(world, agent)
     return base + bonus

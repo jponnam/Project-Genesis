@@ -89,6 +89,7 @@ from civitas.domain.economy import (
     wealth_total,
 )
 from civitas.domain.effects import (
+    ACADEMY_TEACHINGS_PER_KNOWER_BONUS,
     ARCHIVE_RETRIEVAL_LIMIT_BONUS,
     BUREAUCRACY_MARKET_FEE_DISCOUNT,
     FIRE_HEARTH_REST_BONUS,
@@ -116,6 +117,7 @@ from civitas.domain.effects import (
     effective_teachings_per_knower,
     gather_amount_bonus,
     innovation_kind_is_active,
+    location_has_active_academy,
     location_has_active_archive,
     location_has_active_bureaucracy,
     location_has_active_guild,
@@ -616,6 +618,7 @@ from civitas.domain.wealth import (
 from civitas.domain.world import World
 
 __all__ = [
+    "ACADEMY_TEACHINGS_PER_KNOWER_BONUS",
     "ACTION_CATALOG",
     "ACTION_NEED_TARGET",
     "ACTION_RESOURCE",
@@ -1060,6 +1063,7 @@ __all__ = [
     "lineages",
     "living_subjects",
     "location_density",
+    "location_has_active_academy",
     "location_has_active_archive",
     "location_has_active_bureaucracy",
     "location_has_active_guild",

@@ -122,14 +122,15 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 10 — Milestone 7: Mathematics technology**
+**Phase 10 — Milestone 8: Academy institutions**
 
-``TechnologyKind.MATHEMATICS`` extends the prereq tree past writing.
-Camp Mathematics seeds undiscovered (requires writing), with research
-progress locked until writing is known, an inactive abacus innovation,
-a mathematics knowledge fact, and a society-wide produce-energy discount
-of ``0.02`` when the abacus is active (stacks with guild seat discounts
-via ``effective_produce_energy_cost``).
+``InstitutionKind.ACADEMY`` is a durable government-attached organization
+with seat, officer, and budget like guilds and archives. An active
+academy at a knower's location grants ``+1`` teachings per knower
+(``ACADEMY_TEACHINGS_PER_KNOWER_BONUS``), stacking with scribe,
+scriptorium, and curriculum via ``effective_teachings_per_knower``.
+Census tracks ``active_academy_count`` on ``InstitutionsObserved``. No
+academy is seeded by default.
 
 ### Completed
 
@@ -212,6 +213,7 @@ JSONL storage → `civitas run`
 - Milestone 5: Library cities
 - Milestone 6: Bureaucracy institutions
 - Milestone 7: Mathematics technology
+- Milestone 8: Academy institutions
 
 ## License
 
