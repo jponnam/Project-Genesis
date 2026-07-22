@@ -322,7 +322,9 @@ class ActionExecutor:
     ) -> tuple[Agent, bool]:
         """Apply REST energy recovery; emit NeedDecayed on success."""
         previous_energy = agent.needs.energy
-        restore = effective_rest_restore(world, base=float(self._config.rest))
+        restore = effective_rest_restore(
+            world, base=float(self._config.rest), agent=agent
+        )
         updated = apply_rest(agent, restore=restore)
         if updated is None:
             return agent, False

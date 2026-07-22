@@ -66,7 +66,9 @@ class EnergySystem:
             raise ValueError(msg)
 
         previous_energy = agent.needs.energy
-        restore = effective_rest_restore(world, base=float(self._config.restore))
+        restore = effective_rest_restore(
+            world, base=float(self._config.restore), agent=agent
+        )
         updated = apply_rest(agent, restore=restore)
         if updated is None:
             return world
