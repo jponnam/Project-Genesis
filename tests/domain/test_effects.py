@@ -6,6 +6,7 @@ import pytest
 
 from civitas.domain import (
     ACADEMY_TEACHINGS_PER_KNOWER_BONUS,
+    AGORA_SOCIALIZE_RESTORE_BONUS,
     ARCHIVE_RETRIEVAL_LIMIT_BONUS,
     ASSEMBLY_SOCIALIZE_RESTORE_BONUS,
     ASTRONOMY_RETRIEVAL_LIMIT_BONUS,
@@ -95,6 +96,7 @@ from civitas.domain import (
     effective_teachings_per_knower,
     gather_amount_bonus,
     location_has_active_academy,
+    location_has_active_agora,
     location_has_active_archive,
     location_has_active_bureaucracy,
     location_has_active_forum,
@@ -1789,6 +1791,94 @@ def test_assembly_stacks_with_oration_socialize_restore() -> None:
         + ASSEMBLY_SOCIALIZE_RESTORE_BONUS
     )
     # Without an agent, the subject-scoped assembly law does not apply.
+    assert socialize_restore_bonus(world) == RHETORIC_SOCIALIZE_RESTORE_BONUS
+
+
+def test_agora_boosts_socialize_restore_for_residents() -> None:
+    """Active agora cities raise SOCIALIZE restore for residents."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Agora", CityKind.AGORA),
+        ),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_agora(world, agent.location_id) is True
+    assert socialize_restore_bonus(world, agent=agent) == (
+        AGORA_SOCIALIZE_RESTORE_BONUS
+    )
+    assert effective_socialize_restore(world, agent=agent) == pytest.approx(
+        DEFAULT_SOCIALIZE_RESTORE + AGORA_SOCIALIZE_RESTORE_BONUS
+    )
+    # Without agent, agora (seat-scoped) does not apply.
+    assert socialize_restore_bonus(world) == 0.0
+    assert effective_socialize_restore(world) == pytest.approx(
+        DEFAULT_SOCIALIZE_RESTORE
+    )
+
+    at_capital = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Agora", CityKind.AGORA),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_agora(at_capital, 0) is False
+    assert effective_socialize_restore(at_capital, agent=at_capital.agents[0]) == (
+        DEFAULT_SOCIALIZE_RESTORE
+    )
+    bare = _world()
+    assert location_has_active_agora(bare, bare.agents[0].location_id) is False
+
+
+def test_agora_stacks_with_oration_and_assembly_socialize_restore() -> None:
+    """Agora seat bonus stacks with society-wide oration and assembly law."""
+    discovered_rhetoric = CAMP_RHETORIC.model_copy(update={"discovered": True})
+    active_oration = CAMP_ORATION.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        laws=(Law.create(0, 0, "Camp Assembly", LawKind.ASSEMBLY),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Agora", CityKind.AGORA),
+        ),
+        technologies=tuple(
+            discovered_rhetoric
+            if tech.technology_id == CAMP_RHETORIC.technology_id
+            else tech
+            for tech in default_technologies()
+        ),
+        innovations=tuple(
+            active_oration
+            if innovation.innovation_id == CAMP_ORATION.innovation_id
+            else innovation
+            for innovation in default_innovations()
+        ),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_agora(world, agent.location_id) is True
+    assert socialize_restore_bonus(world, agent=agent) == pytest.approx(
+        RHETORIC_SOCIALIZE_RESTORE_BONUS
+        + ASSEMBLY_SOCIALIZE_RESTORE_BONUS
+        + AGORA_SOCIALIZE_RESTORE_BONUS
+    )
+    assert effective_socialize_restore(world, agent=agent) == pytest.approx(
+        DEFAULT_SOCIALIZE_RESTORE
+        + RHETORIC_SOCIALIZE_RESTORE_BONUS
+        + ASSEMBLY_SOCIALIZE_RESTORE_BONUS
+        + AGORA_SOCIALIZE_RESTORE_BONUS
+    )
+    # Without an agent, only the society-wide oration bonus applies.
     assert socialize_restore_bonus(world) == RHETORIC_SOCIALIZE_RESTORE_BONUS
 
 

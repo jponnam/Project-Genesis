@@ -26,10 +26,11 @@ scribe/scriptorium/stoa/curriculum/academy/forum/dialectic), a global
 SYLLOGISM research-points bonus, LYCEUM retrieval-limit bonuses
 (stacking with archive/library/observatory/star-chart/calendar), a
 global ORATION SOCIALIZE restore bonus, and ASSEMBLY law SOCIALIZE
-restore bonuses for living subjects (stacking with oration). The
-action executor, retrieval path, market fills, knowledge diffusion, and
-research progression read these helpers; ``EffectsSystem`` only observes
-coverage. Systems never call each other.
+restore bonuses for living subjects (stacking with oration), and AGORA
+city SOCIALIZE restore bonuses for agents at the city seat (stacking with
+oration and assembly). The action executor, retrieval path, market fills,
+knowledge diffusion, and research progression read these helpers;
+``EffectsSystem`` only observes coverage. Systems never call each other.
 """
 
 from __future__ import annotations
@@ -81,6 +82,7 @@ SCHOOL_TEACHINGS_PER_KNOWER_BONUS: int = 1
 PHILOSOPHY_TEACHINGS_PER_KNOWER_BONUS: int = 1
 LOGIC_RESEARCH_POINTS_BONUS: int = 1
 RHETORIC_SOCIALIZE_RESTORE_BONUS: float = 0.05
+AGORA_SOCIALIZE_RESTORE_BONUS: float = 0.05
 WELL_DRINK_RESTORE_BONUS: float = 0.05
 SHRINE_DRINK_RESTORE_BONUS: float = 0.05
 STOREHOUSE_FOOD_GATHER_BONUS: int = 1
@@ -375,6 +377,15 @@ def location_has_active_sanctuary(
     return city is not None and city.active and city.kind is CityKind.SANCTUARY
 
 
+def location_has_active_agora(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active AGORA city is seated at ``location_id``."""
+    city = city_at(world, location_id)
+    return city is not None and city.active and city.kind is CityKind.AGORA
+
+
 def rest_restore_bonus(
     world: World,
     *,
@@ -431,17 +442,19 @@ def socialize_restore_bonus(
     *,
     agent: Agent | None = None,
 ) -> float:
-    """Return SOCIALIZE restore bonuses from active oration and assembly.
+    """Return SOCIALIZE restore bonuses from active oration, assembly, and agora.
 
     An active ORATION innovation contributes society-wide. An active
     ``ASSEMBLY`` statute contributes for living subjects when ``agent`` is
-    provided. Both stack.
+    provided. An active AGORA city contributes at the agent's seat. All stack.
     """
     bonus = 0.0
     if innovation_kind_is_active(world, InnovationKind.ORATION):
         bonus += RHETORIC_SOCIALIZE_RESTORE_BONUS
     if agent is not None:
         bonus += assembly_socialize_bonus_for(world, agent)
+        if location_has_active_agora(world, agent.location_id):
+            bonus += AGORA_SOCIALIZE_RESTORE_BONUS
     return bonus
 
 
@@ -626,7 +639,7 @@ def effective_socialize_restore(
     base: float = DEFAULT_SOCIALIZE_RESTORE,
     agent: Agent | None = None,
 ) -> float:
-    """Return SOCIALIZE restore amount including active oration/assembly bonuses."""
+    """Return SOCIALIZE restore amount including active oration/assembly/agora."""
     return clamp_unit(base + socialize_restore_bonus(world, agent=agent))
 
 
