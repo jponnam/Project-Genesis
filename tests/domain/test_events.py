@@ -12,6 +12,7 @@ from civitas.domain import (
     AgentDied,
     AgentId,
     AgentMoved,
+    AgentReflected,
     AgentSpawned,
     CitiesObserved,
     CityCreated,
@@ -986,9 +987,23 @@ def test_cognition_events_round_trip() -> None:
         living_count=3,
         total_records=6,
         agents_with_memory=3,
-        episode_records=6,
+        episode_records=3,
+        reflection_records=3,
+        belief_count=3,
         mean_records_bps=20_000,
     )
     restored_observed = event_from_record(observed.to_record())
     assert isinstance(restored_observed, CognitionObserved)
-    assert restored_observed.mean_records_bps == 20_000
+    assert restored_observed.reflection_records == 3
+
+    reflected = AgentReflected(
+        sequence=40,
+        tick=Tick(value=2),
+        agent_id=AgentId(value=0),
+        proposition="priority:food",
+        confidence=0.75,
+        model_name="seeded-mock",
+    )
+    restored_reflected = event_from_record(reflected.to_record())
+    assert isinstance(restored_reflected, AgentReflected)
+    assert restored_reflected.proposition == "priority:food"

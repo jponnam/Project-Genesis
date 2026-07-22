@@ -636,7 +636,18 @@ class CognitionObserved(DomainEvent):
     total_records: NonNegativeInt
     agents_with_memory: NonNegativeInt
     episode_records: NonNegativeInt
+    reflection_records: NonNegativeInt
+    belief_count: NonNegativeInt
     mean_records_bps: NonNegativeInt
+
+
+class AgentReflected(DomainEvent):
+    """Emitted when an agent completes a reflection cycle."""
+
+    agent_id: AgentId
+    proposition: NonEmptyStr
+    confidence: UnitInterval
+    model_name: NonEmptyStr
 
 
 CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
@@ -695,6 +706,7 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     KnowledgeObserved,
     MemoryRecorded,
     CognitionObserved,
+    AgentReflected,
 )
 
 EVENT_TYPE_REGISTRY: dict[str, type[DomainEvent]] = {

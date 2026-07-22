@@ -1,8 +1,8 @@
-"""Cognition system: encode episodic memories and observe coverage.
+"""Cognition system: encode memories, reflect, and observe coverage.
 
-Owns tick-time ``apply_cognition`` (deterministic episode encoding) and
-observe-time ``CognitionObserved``. An optional ``LanguageModel`` may be
-injected for later milestones; Milestone 1 does not call it during apply.
+Owns tick-time ``apply_cognition`` (episode encoding + optional reflection)
+and observe-time ``CognitionObserved``. Reflection uses an injected
+``LanguageModel`` port; the default is ``SeededMockLanguageModel``.
 """
 
 from __future__ import annotations
@@ -12,11 +12,14 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict
 
 from civitas.domain import (
+    AgentReflected,
     CognitionObserved,
     MemoryRecorded,
     apply_memory_encoding,
+    apply_reflections,
     census_memory,
 )
+from civitas.llm import SeededMockLanguageModel
 
 if TYPE_CHECKING:
     from civitas.domain import MemoryCensus, World
@@ -31,10 +34,11 @@ class CognitionConfig(BaseModel):
 
     enabled: bool = True
     emit_events: bool = True
+    reflect: bool = True
 
 
 class CognitionSystem:
-    """Encode episodic memories and observe agent memory censuses."""
+    """Encode episodic memories, run reflections, and observe censuses."""
 
     def __init__(
         self,
@@ -43,7 +47,9 @@ class CognitionSystem:
         language_model: LanguageModel | None = None,
     ) -> None:
         self._config = config if config is not None else CognitionConfig()
-        self._language_model = language_model
+        self._language_model = (
+            language_model if language_model is not None else SeededMockLanguageModel()
+        )
 
     @property
     def config(self) -> CognitionConfig:
@@ -51,8 +57,8 @@ class CognitionSystem:
         return self._config
 
     @property
-    def language_model(self) -> LanguageModel | None:
-        """Return the optional injected language model, if any."""
+    def language_model(self) -> LanguageModel:
+        """Return the language model used for reflection."""
         return self._language_model
 
     def census(self, world: World) -> MemoryCensus:
@@ -64,11 +70,7 @@ class CognitionSystem:
         world: World,
         bus: EventBus | None = None,
     ) -> World:
-        """Encode one episode memory per living agent.
-
-        The optional language model is intentionally unused in Milestone 1
-        so default runs stay offline and deterministic.
-        """
+        """Encode episode memories, then optionally reflect via the LLM port."""
         if not self._config.enabled:
             return world
 
@@ -83,6 +85,32 @@ class CognitionSystem:
                         content=write.content,
                     )
                 )
+
+        if self._config.reflect:
+            world, outcomes = apply_reflections(
+                world,
+                self._language_model,
+                seed=world.config.seed + world.tick.value,
+            )
+            if bus is not None and self._config.emit_events:
+                for outcome in outcomes:
+                    bus.publish(
+                        MemoryRecorded(
+                            tick=world.tick,
+                            agent_id=outcome.agent_id,
+                            kind="reflection",
+                            content=outcome.response_text,
+                        )
+                    )
+                    bus.publish(
+                        AgentReflected(
+                            tick=world.tick,
+                            agent_id=outcome.agent_id,
+                            proposition=outcome.proposition,
+                            confidence=outcome.confidence,
+                            model_name=outcome.model_name,
+                        )
+                    )
         return world
 
     def observe(
@@ -90,7 +118,7 @@ class CognitionSystem:
         world: World,
         bus: EventBus | None = None,
     ) -> World:
-        """Observe memory coverage and optionally emit ``CognitionObserved``.
+        """Observe memory/belief coverage and emit ``CognitionObserved``.
 
         The world is never modified.
         """
@@ -103,6 +131,8 @@ class CognitionSystem:
                     total_records=snap.total_records,
                     agents_with_memory=snap.agents_with_memory,
                     episode_records=snap.episode_records,
+                    reflection_records=snap.reflection_records,
+                    belief_count=snap.belief_count,
                     mean_records_bps=snap.mean_records_bps,
                 )
             )
