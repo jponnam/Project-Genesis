@@ -4,11 +4,14 @@ from __future__ import annotations
 
 from civitas.domain import (
     CAMP_LOCATION,
+    CAMP_MARKET,
     CANONICAL_SEED,
     AgentSpawned,
     LocationCreated,
+    MarketCreated,
     SimulationConfig,
     SimulationStarted,
+    default_markets,
     default_world_map,
 )
 from civitas.engine import EventBus, WorldFactory
@@ -55,6 +58,8 @@ def test_agents_have_stable_ids_names_and_origin_location() -> None:
     assert world.tick.value == 0
     assert world.locations == default_world_map()
     assert world.locations[0] == CAMP_LOCATION
+    assert world.markets == default_markets()
+    assert world.markets[0] == CAMP_MARKET
     assert world.agents_at(0) == world.agents
 
 
@@ -75,8 +80,8 @@ def test_starting_money_within_configured_bounds() -> None:
     assert len(set(monies)) > 1
 
 
-def test_create_publishes_started_locations_and_spawned_events() -> None:
-    """Bus receives Started, then LocationCreated, then AgentSpawned events."""
+def test_create_publishes_started_locations_markets_and_spawned_events() -> None:
+    """Bus receives Started, locations, markets, then AgentSpawned events."""
     bus = EventBus()
     config = SimulationConfig(seed=42, agent_count=2, ticks=5, run_name="w")
     world = WorldFactory().create(config, bus=bus)
@@ -86,10 +91,26 @@ def test_create_publishes_started_locations_and_spawned_events() -> None:
     created = [event for event in bus.history if isinstance(event, LocationCreated)]
     assert len(created) == 9
     assert created[0].name == "Camp"
+    markets = [event for event in bus.history if isinstance(event, MarketCreated)]
+    assert len(markets) == 1
+    assert markets[0].name == "Camp Market"
     spawned = [event for event in bus.history if isinstance(event, AgentSpawned)]
     assert len(spawned) == 2
     assert spawned[0].name == world.agents[0].name
     assert spawned[1].agent_id.value == 1
+    # Markets are published after locations and before agent spawns.
+    first_market = next(
+        index
+        for index, event in enumerate(bus.history)
+        if isinstance(event, MarketCreated)
+    )
+    first_spawn = next(
+        index
+        for index, event in enumerate(bus.history)
+        if isinstance(event, AgentSpawned)
+    )
+    assert created[-1].sequence < markets[0].sequence < spawned[0].sequence
+    assert first_market < first_spawn
 
 
 def test_map_is_independent_of_seed() -> None:
@@ -98,4 +119,5 @@ def test_map_is_independent_of_seed() -> None:
     left = factory.create(SimulationConfig(seed=1, agent_count=3))
     right = factory.create(SimulationConfig(seed=2, agent_count=3))
     assert left.locations == right.locations
+    assert left.markets == right.markets
     assert left.agents[0].personality != right.agents[0].personality

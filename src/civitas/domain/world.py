@@ -16,8 +16,9 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from civitas.domain.agent import Agent
 from civitas.domain.config import SimulationConfig
-from civitas.domain.ids import AgentId, LocationId
+from civitas.domain.ids import AgentId, LocationId, MarketId
 from civitas.domain.location import Location
+from civitas.domain.market import Market
 from civitas.domain.time import Tick
 
 
@@ -28,6 +29,7 @@ class World(BaseModel):
         config: Configuration used to construct this world.
         tick: Current discrete time (``0`` at construction).
         locations: Places on the map, ordered by ascending ``location_id``.
+        markets: Market venues, ordered by ascending ``market_id``.
         agents: Agents ordered by ascending ``agent_id``.
     """
 
@@ -36,11 +38,12 @@ class World(BaseModel):
     config: SimulationConfig
     tick: Tick = Field(default_factory=Tick)
     locations: tuple[Location, ...] = ()
+    markets: tuple[Market, ...] = ()
     agents: tuple[Agent, ...] = ()
 
     @model_validator(mode="after")
     def world_must_be_consistent(self) -> Self:
-        """Enforce agent/location integrity constraints."""
+        """Enforce agent/location/market integrity constraints."""
         agent_ids = [agent.agent_id.value for agent in self.agents]
         if len(agent_ids) != len(set(agent_ids)):
             msg = "agent ids must be unique"
@@ -75,6 +78,26 @@ class World(BaseModel):
             msg = "location coordinates must be unique"
             raise ValueError(msg)
 
+        market_ids = [market.market_id.value for market in self.markets]
+        if len(market_ids) != len(set(market_ids)):
+            msg = "market ids must be unique"
+            raise ValueError(msg)
+        if market_ids != sorted(market_ids):
+            msg = "markets must be ordered by ascending market_id"
+            raise ValueError(msg)
+
+        market_locations = [market.location_id.value for market in self.markets]
+        if len(market_locations) != len(set(market_locations)):
+            msg = "at most one market is allowed per location"
+            raise ValueError(msg)
+        for market in self.markets:
+            if market.location_id.value not in known:
+                msg = (
+                    f"market {market.market_id.value} references unknown "
+                    f"location {market.location_id.value}"
+                )
+                raise ValueError(msg)
+
         return self
 
     @property
@@ -100,6 +123,16 @@ class World(BaseModel):
         for location in self.locations:
             if location.location_id == target:
                 return location
+        return None
+
+    def market_by_id(self, market_id: MarketId | int) -> Market | None:
+        """Return the market with ``market_id``, or ``None`` if absent."""
+        target = (
+            market_id if isinstance(market_id, MarketId) else MarketId(value=market_id)
+        )
+        for market in self.markets:
+            if market.market_id == target:
+                return market
         return None
 
     def agents_at(self, location_id: LocationId | int) -> tuple[Agent, ...]:
@@ -147,6 +180,7 @@ class World(BaseModel):
             config=self.config,
             tick=self.tick,
             locations=self.locations,
+            markets=self.markets,
             agents=agents,
         )
 
@@ -168,3 +202,22 @@ class World(BaseModel):
             msg = f"location id {location.location_id.value} not found in world"
             raise ValueError(msg)
         return self.model_copy(update={"locations": tuple(updated)})
+
+    def with_market(self, market: Market) -> World:
+        """Return a copy replacing the market that shares ``market_id``.
+
+        Raises:
+            ValueError: If no market with that id exists.
+        """
+        updated: list[Market] = []
+        found = False
+        for existing in self.markets:
+            if existing.market_id == market.market_id:
+                updated.append(market)
+                found = True
+            else:
+                updated.append(existing)
+        if not found:
+            msg = f"market id {market.market_id.value} not found in world"
+            raise ValueError(msg)
+        return self.model_copy(update={"markets": tuple(updated)})
