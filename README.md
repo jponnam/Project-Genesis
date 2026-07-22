@@ -129,17 +129,16 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 17 Milestone 5: Mining camp cities**
+**Phase 17 Milestone 6: Smelter institutions**
 
-``CityKind.MINING_CAMP`` is a non-capital specialized settlement seated at
-its own location inside a government's jurisdiction. An active mining camp
-grants a ``+1`` STONE gather bonus at its seat location
-(``MINING_CAMP_STONE_GATHER_BONUS``, resolved via
-``location_has_active_mining_camp``). The bonus stacks additively with the
-pickaxe and forge bonuses (society-wide), the mason and miner seat
-bonuses, the mineshaft bonus, the quarry city bonus, and the mineral
-rights subject bonus. Mining camps can never be capitals, are observed in
-the city census (``active_mining_camp_count``), and are not seeded.
+``InstitutionKind.SMELTER`` seats a durable civic organization inside a
+government's jurisdiction. An active smelter grants a seat-scoped PRODUCE
+energy discount at its location (``SMELTER_PRODUCE_ENERGY_DISCOUNT``,
+resolved via ``location_has_active_smelter``). The discount stacks
+additively with guild, workshop, weaver, foundry, fulling mill, mill
+town, tannery, abacus, pulley, customs, labor, and loom. Smelters are
+observed in the institution census (``active_smelter_count``) and are not
+seeded.
 
 ### Completed
 
@@ -318,6 +317,7 @@ JSONL storage → `civitas run`
 - Milestone 3: Miner institutions
 - Milestone 4: Mineshaft infrastructure
 - Milestone 5: Mining camp cities
+- Milestone 6: Smelter institutions
 
 ## License
 
