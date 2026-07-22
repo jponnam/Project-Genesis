@@ -125,10 +125,10 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 13 Milestone 5: Foundry cities**
+**Phase 13 Milestone 6: Mason institutions**
 
-``CityKind.FOUNDRY`` is a non-capital industrial seat that grants a PRODUCE
-energy discount stacking with guild, workshop, abacus, and pulley.
+``InstitutionKind.MASON`` grants a seat-scoped stone gather bonus that stacks
+with forge metallurgy.
 
 ### Completed
 
@@ -251,6 +251,7 @@ JSONL storage → `civitas run`
 - Milestone 3: Workshop institutions
 - Milestone 4: Bridge infrastructure
 - Milestone 5: Foundry cities
+- Milestone 6: Mason institutions
 
 ## License
 

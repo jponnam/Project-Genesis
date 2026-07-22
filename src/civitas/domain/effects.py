@@ -54,9 +54,11 @@ institution seat (stacking with guild, abacus, and pulley). Phase 13
 Milestone 4 adds BRIDGE MOVE energy discounts at the infrastructure seat
 (stacking with ROAD and BUILDING_CODES). Phase 13 Milestone 5 adds FOUNDRY
 city PRODUCE energy discounts at the city seat (stacking with guild,
-workshop, abacus, and pulley). The action executor, retrieval path, market
-fills, knowledge diffusion, and research progression read these helpers;
-``EffectsSystem`` only observes coverage. Systems never call each other.
+workshop, abacus, and pulley). Phase 13 Milestone 6 adds MASON stone-gather
+bonuses at the institution seat (stacking with forge). The action executor,
+retrieval path, market fills, knowledge diffusion, and research progression
+read these helpers; ``EffectsSystem`` only observes coverage. Systems never
+call each other.
 """
 
 from __future__ import annotations
@@ -125,6 +127,7 @@ APOTHECARY_DRINK_RESTORE_BONUS: float = 0.05
 HYGIENE_DRINK_RESTORE_BONUS: float = 0.05
 LAZARETTO_DRINK_RESTORE_BONUS: float = 0.05
 STOREHOUSE_FOOD_GATHER_BONUS: int = 1
+MASON_STONE_GATHER_BONUS: int = 1
 ROAD_MOVE_ENERGY_DISCOUNT: float = 0.02
 BRIDGE_MOVE_ENERGY_DISCOUNT: float = 0.02
 GUILD_PRODUCE_ENERGY_DISCOUNT: float = 0.02
@@ -357,6 +360,22 @@ def location_has_active_workshop(
     )
     return any(
         item.kind is InstitutionKind.WORKSHOP and item.location_id == target
+        for item in active_institutions(world)
+    )
+
+
+def location_has_active_mason(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active MASON is seated at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InstitutionKind.MASON and item.location_id == target
         for item in active_institutions(world)
     )
 
@@ -666,8 +685,10 @@ def gather_amount_bonus(
 ) -> int:
     """Return gather-amount bonuses for ``resource``.
 
-    Water and stone bonuses come from society innovations. Food bonuses come
-    from an active STOREHOUSE at ``location_id`` when provided.
+    Water bonuses come from society innovations. Stone bonuses come from an
+    active FORGE innovation society-wide and an active MASON seat at
+    ``location_id`` when provided. Food bonuses come from an active
+    STOREHOUSE at ``location_id`` when provided.
     """
     bonus = 0
     if resource == WATER_RESOURCE:
@@ -678,6 +699,8 @@ def gather_amount_bonus(
     elif resource == ResourceKind.STONE.value:
         if innovation_kind_is_active(world, InnovationKind.FORGE):
             bonus += METALLURGY_STONE_GATHER_BONUS
+        if location_id is not None and location_has_active_mason(world, location_id):
+            bonus += MASON_STONE_GATHER_BONUS
     elif resource == FOOD_RESOURCE and location_id is not None:
         if location_has_active_storehouse(world, location_id):
             bonus += STOREHOUSE_FOOD_GATHER_BONUS

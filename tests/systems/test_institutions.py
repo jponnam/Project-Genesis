@@ -41,6 +41,7 @@ def test_observe_emits_institutions_observed_without_mutating_world() -> None:
     assert events[0].active_apothecary_count == 0
     assert events[0].active_collegium_count == 0
     assert events[0].active_workshop_count == 0
+    assert events[0].active_mason_count == 0
     assert events[0].vacant_officer_count == 1
     assert events[0].total_budget == 0
     assert events[0].funded_count == 0
@@ -59,6 +60,7 @@ def test_observe_emits_active_health_institution_counts() -> None:
             Institution.create(3, 0, 0, "Camp Apothecary", InstitutionKind.APOTHECARY),
             Institution.create(4, 0, 0, "Camp Collegium", InstitutionKind.COLLEGIUM),
             Institution.create(5, 0, 0, "Camp Workshop", InstitutionKind.WORKSHOP),
+            Institution.create(6, 0, 0, "Camp Mason", InstitutionKind.MASON),
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
     )
@@ -73,6 +75,7 @@ def test_observe_emits_active_health_institution_counts() -> None:
     assert events[0].active_apothecary_count == 1
     assert events[0].active_collegium_count == 1
     assert events[0].active_workshop_count == 1
+    assert events[0].active_mason_count == 1
 
 
 def test_observe_can_suppress_events() -> None:

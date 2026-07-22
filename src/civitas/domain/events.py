@@ -569,6 +569,7 @@ class InstitutionsObserved(DomainEvent):
     active_apothecary_count: NonNegativeInt = 0
     active_collegium_count: NonNegativeInt = 0
     active_workshop_count: NonNegativeInt = 0
+    active_mason_count: NonNegativeInt = 0
     total_budget: NonNegativeInt = 0
     funded_count: NonNegativeInt = 0
 
