@@ -130,15 +130,15 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 18 Milestone 4: Lumber yard infrastructure**
+**Phase 18 Milestone 5: Timber town cities**
 
-``InfrastructureKind.LUMBER_YARD`` seats grant +1 WOOD gather at the
-infrastructure's seat location. The seat bonus stacks additively with the
-sawmill society-wide bonus, the coppice society-wide bonus, the scaffold
-seat, the woodcutter seat, the timber rights subject bonus, and the
-pastoral city seat. Governments fund construction via the treasury
-(``DEFAULT_LUMBER_YARD_BUILD_COST`` = 9) or institutions fund it from
-their budget. Lumber yards are not seeded.
+``CityKind.TIMBER_TOWN`` non-capital city seats grant +1 WOOD gather at
+the city's seat location. The seat bonus stacks additively with the sawmill
+society-wide bonus, the coppice society-wide bonus, the scaffold seat, the
+woodcutter seat, the lumber yard seat, the timber rights subject bonus, and
+the pastoral city seat. Timber towns share a government with the capital but
+must occupy their own seat location and can never be flagged as capital.
+Timber towns are not seeded.
 
 ### Completed
 
@@ -330,6 +330,7 @@ JSONL storage → `civitas run`
 - Milestone 2: Timber rights laws
 - Milestone 3: Woodcutter institutions
 - Milestone 4: Lumber yard infrastructure
+- Milestone 5: Timber town cities
 
 ## License
 
