@@ -104,6 +104,7 @@ class InstitutionSystem:
                     active_miner_count=snap.active_miner_count,
                     active_smelter_count=snap.active_smelter_count,
                     active_smith_count=snap.active_smith_count,
+                    active_woodcutter_count=snap.active_woodcutter_count,
                     total_budget=snap.total_budget,
                     funded_count=snap.funded_count,
                 )

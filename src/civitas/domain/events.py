@@ -593,6 +593,7 @@ class InstitutionsObserved(DomainEvent):
     active_miner_count: NonNegativeInt = 0
     active_smelter_count: NonNegativeInt = 0
     active_smith_count: NonNegativeInt = 0
+    active_woodcutter_count: NonNegativeInt = 0
     total_budget: NonNegativeInt = 0
     funded_count: NonNegativeInt = 0
 

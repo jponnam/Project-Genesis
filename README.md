@@ -130,14 +130,13 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 18 Milestone 2: Timber rights laws**
+**Phase 18 Milestone 3: Woodcutter institutions**
 
-``LawKind.TIMBER_RIGHTS`` statutes grant living subjects +1 WOOD gather
-within the enacting government. At most one active timber rights law is
-allowed per government. The subject bonus stacks additively with the
+``InstitutionKind.WOODCUTTER`` seats grant +1 WOOD gather at the
+institution's seat location. The seat bonus stacks additively with the
 sawmill society-wide bonus, the coppice society-wide bonus, the scaffold
-seat, the conservation subject bonus, and the pastoral city seat.
-Timber rights laws are not seeded.
+seat, the timber rights subject bonus, and the pastoral city seat.
+Woodcutter institutions are not seeded.
 
 ### Completed
 
@@ -327,6 +326,7 @@ JSONL storage → `civitas run`
 **Phase 18:**
 - Milestone 1: Carpentry technology
 - Milestone 2: Timber rights laws
+- Milestone 3: Woodcutter institutions
 
 ## License
 
