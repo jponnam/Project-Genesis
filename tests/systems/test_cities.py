@@ -31,6 +31,7 @@ def test_observe_emits_cities_observed_without_mutating_world() -> None:
     assert events[0].active_outpost_count == 0
     assert events[0].active_library_count == 0
     assert events[0].active_forum_count == 0
+    assert events[0].active_sanctuary_count == 0
 
 
 def test_observe_can_suppress_events() -> None:

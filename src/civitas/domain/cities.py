@@ -7,9 +7,12 @@ Milestone 5 adds ``CityKind.LIBRARY`` as another non-capital specialized
 seat for record-keeping (living residents gain a retrieval-limit bonus).
 Phase 10 Milestone 12 adds ``CityKind.FORUM`` as a non-capital specialized
 seat for teaching (living residents gain a teachings-per-knower bonus).
-Resident counts are derived from living agents at the seat. Infrastructure
-remains a separate aggregate. Camp City stays the only seeded settlement
-capital; libraries and forums are not seeded.
+Phase 11 Milestone 5 adds ``CityKind.SANCTUARY`` as a non-capital
+specialized seat for reflective culture (living residents gain a REST
+restore bonus). Resident counts are derived from living agents at the
+seat. Infrastructure remains a separate aggregate. Camp City stays the
+only seeded settlement capital; libraries, forums, and sanctuaries are
+not seeded.
 """
 
 from __future__ import annotations
@@ -38,11 +41,12 @@ class CityKind(StrEnum):
     OUTPOST = "outpost"
     LIBRARY = "library"
     FORUM = "forum"
+    SANCTUARY = "sanctuary"
 
 
 # City kinds that may never be flagged as capital.
 _NON_CAPITAL_KINDS: frozenset[CityKind] = frozenset(
-    {CityKind.OUTPOST, CityKind.LIBRARY, CityKind.FORUM}
+    {CityKind.OUTPOST, CityKind.LIBRARY, CityKind.FORUM, CityKind.SANCTUARY}
 )
 
 
@@ -118,6 +122,7 @@ class CityCensus(BaseModel):
     active_outpost_count: NonNegativeInt = 0
     active_library_count: NonNegativeInt = 0
     active_forum_count: NonNegativeInt = 0
+    active_sanctuary_count: NonNegativeInt = 0
 
 
 def city_by_id(world: World, city_id: CityId | int) -> City | None:
@@ -173,6 +178,18 @@ def forums_for(
     """Return forum cities for ``government_id`` in ascending id order."""
     return tuple(
         city for city in cities_for(world, government_id) if city.kind is CityKind.FORUM
+    )
+
+
+def sanctuaries_for(
+    world: World,
+    government_id: GovernmentId | int,
+) -> tuple[City, ...]:
+    """Return sanctuary cities for ``government_id`` in ascending id order."""
+    return tuple(
+        city
+        for city in cities_for(world, government_id)
+        if city.kind is CityKind.SANCTUARY
     )
 
 
@@ -252,10 +269,10 @@ def _has_active_capital(
 def create_city(world: World, city: City) -> World | None:
     """Add ``city`` to the world when legal.
 
-    Outposts, libraries, and forums cannot be capitals. Settlement capital
-    uniqueness is unchanged: at most one active capital per government.
-    Every city still needs a unique seat location inside its government
-    jurisdiction.
+    Outposts, libraries, forums, and sanctuaries cannot be capitals.
+    Settlement capital uniqueness is unchanged: at most one active capital
+    per government. Every city still needs a unique seat location inside
+    its government jurisdiction.
     """
     if city.kind in _NON_CAPITAL_KINDS and city.is_capital:
         return None
@@ -366,6 +383,7 @@ def census_cities(world: World) -> CityCensus:
     active_outposts = sum(1 for city in active if city.kind is CityKind.OUTPOST)
     active_libraries = sum(1 for city in active if city.kind is CityKind.LIBRARY)
     active_forums = sum(1 for city in active if city.kind is CityKind.FORUM)
+    active_sanctuaries = sum(1 for city in active if city.kind is CityKind.SANCTUARY)
     return CityCensus(
         tick=world.tick,
         city_count=len(cities),
@@ -381,4 +399,5 @@ def census_cities(world: World) -> CityCensus:
         active_outpost_count=active_outposts,
         active_library_count=active_libraries,
         active_forum_count=active_forums,
+        active_sanctuary_count=active_sanctuaries,
     )

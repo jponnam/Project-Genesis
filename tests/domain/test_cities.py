@@ -28,6 +28,7 @@ from civitas.domain import (
     next_city_id,
     outposts_for,
     resident_count,
+    sanctuaries_for,
     set_capital,
 )
 from civitas.engine import WorldFactory
@@ -245,6 +246,7 @@ def test_factory_still_seeds_one_settlement_capital() -> None:
     assert snap.active_outpost_count == 0
     assert snap.active_library_count == 0
     assert snap.active_forum_count == 0
+    assert snap.active_sanctuary_count == 0
 
 
 def test_create_library_under_camp_government() -> None:
@@ -434,6 +436,105 @@ def test_world_rejects_capital_forum() -> None:
                     0,
                     "Bad",
                     CityKind.FORUM,
+                    is_capital=True,
+                ),
+            ),
+            agents=(Agent.create(agent_id=0, name="A"),),
+        )
+
+
+def test_create_sanctuary_under_camp_government() -> None:
+    """Sanctuaries may share a government with the capital on a distinct seat."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map(),
+        governments=(CAMP_GOVERNMENT,),
+        cities=(CAMP_CITY,),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    sanctuary = City.create(
+        1,
+        CAMP_GOVERNMENT.government_id.value,
+        1,
+        "Plain Sanctuary",
+        CityKind.SANCTUARY,
+    )
+    created = create_city(world, sanctuary)
+    assert created is not None
+    assert city_by_id(created, 1) is not None
+    assert city_by_id(created, 1).kind is CityKind.SANCTUARY  # type: ignore[union-attr]
+    assert city_by_id(created, 1).is_capital is False  # type: ignore[union-attr]
+    assert sanctuaries_for(created, CAMP_GOVERNMENT.government_id.value) == (
+        sanctuary,
+    )
+    snap = census_cities(created)
+    assert snap.active_settlement_count == 1
+    assert snap.active_sanctuary_count == 1
+    assert snap.capital_count == 1
+    assert snap.city_count == 2
+
+
+def test_create_rejects_capital_sanctuary() -> None:
+    """Sanctuaries cannot be capitals."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map(),
+        governments=(CAMP_GOVERNMENT,),
+        cities=(CAMP_CITY,),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert (
+        create_city(
+            world,
+            City.create(
+                1,
+                CAMP_GOVERNMENT.government_id.value,
+                1,
+                "Bad Sanctuary",
+                CityKind.SANCTUARY,
+                is_capital=True,
+            ),
+        )
+        is None
+    )
+
+
+def test_set_capital_rejects_sanctuary() -> None:
+    """set_capital cannot promote a sanctuary to capital."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map(),
+        governments=(CAMP_GOVERNMENT,),
+        cities=(
+            CAMP_CITY,
+            City.create(
+                1,
+                CAMP_GOVERNMENT.government_id.value,
+                1,
+                "Plain Sanctuary",
+                CityKind.SANCTUARY,
+            ),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert set_capital(world, 1, True) is None
+    assert capital_for(world, 0) == CAMP_CITY
+
+
+def test_world_rejects_capital_sanctuary() -> None:
+    """World validation rejects sanctuaries flagged as capital."""
+    with pytest.raises(ValidationError):
+        World(
+            config=SimulationConfig(agent_count=1, seed=1),
+            locations=default_world_map()[:2],
+            governments=(Government.create(0, "Camp", 0, (0, 1)),),
+            cities=(
+                City.create(
+                    0,
+                    0,
+                    0,
+                    "Bad",
+                    CityKind.SANCTUARY,
                     is_capital=True,
                 ),
             ),
