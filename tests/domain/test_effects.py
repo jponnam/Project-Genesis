@@ -126,6 +126,7 @@ from civitas.domain import (
     MERCHANT_MARKET_FEE_DISCOUNT,
     METALLURGY_STONE_GATHER_BONUS,
     MILL_TOWN_PRODUCE_ENERGY_DISCOUNT,
+    MINERAL_RIGHTS_STONE_GATHER_BONUS,
     MINING_STONE_GATHER_BONUS,
     NAVIGATION_MOVE_ENERGY_DISCOUNT,
     OBSERVATORY_RETRIEVAL_LIMIT_BONUS,
@@ -250,6 +251,7 @@ from civitas.domain import (
     location_has_active_well,
     location_has_active_workshop,
     market_fee_for,
+    mineral_rights_stone_bonus_for,
     move_energy_discount,
     passage_move_discount_for,
     produce_energy_discount,
@@ -1547,6 +1549,77 @@ def test_pickaxe_stacks_with_forge_mason_and_quarry_stone_gather() -> None:
     )
     assert effective_gather_amount(world, "stone", agent=agent) == (
         DEFAULT_GATHER_AMOUNT + expected
+    )
+
+
+def test_mineral_rights_boosts_stone_gather_for_living_subject() -> None:
+    """Active MINERAL_RIGHTS adds a subject-scoped stone gather bonus."""
+    mineral_rights = Law.create(0, 0, "Camp Mineral Rights", LawKind.MINERAL_RIGHTS)
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(mineral_rights,),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert mineral_rights_stone_bonus_for(world, agent) == (
+        MINERAL_RIGHTS_STONE_GATHER_BONUS
+    )
+    # gather_amount_bonus stays location-scoped and unaffected by mineral rights.
+    assert gather_amount_bonus(world, "stone", location_id=agent.location_id) == 0
+    assert effective_gather_amount(world, "stone", agent=agent) == (
+        DEFAULT_GATHER_AMOUNT + MINERAL_RIGHTS_STONE_GATHER_BONUS
+    )
+    # Without an agent there is no subject to scope the bonus to.
+    assert effective_gather_amount(world, "stone") == DEFAULT_GATHER_AMOUNT
+
+
+def test_mineral_rights_stacks_with_pickaxe_forge_mason_and_quarry() -> None:
+    """Mineral rights stone bonus stacks with pickaxe, forge, mason, quarry."""
+    discovered = tuple(
+        item.model_copy(update={"discovered": True})
+        for item in default_technologies()
+    )
+    active_forge = CAMP_FORGE.model_copy(update={"active": True})
+    active_pickaxe = CAMP_PICKAXE.model_copy(update={"active": True})
+    innovations = tuple(
+        active_forge
+        if item.innovation_id == CAMP_FORGE.innovation_id
+        else active_pickaxe
+        if item.innovation_id == CAMP_PICKAXE.innovation_id
+        else item
+        for item in default_innovations()
+    )
+    mineral_rights = Law.create(0, 0, "Camp Mineral Rights", LawKind.MINERAL_RIGHTS)
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Quarry", CityKind.QUARRY),
+        ),
+        institutions=(
+            Institution.create(0, 0, 1, "Quarry Mason", InstitutionKind.MASON),
+        ),
+        laws=(mineral_rights,),
+        technologies=discovered,
+        innovations=innovations,
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    agent = world.agents[0]
+    seat_bonus = (
+        METALLURGY_STONE_GATHER_BONUS
+        + MINING_STONE_GATHER_BONUS
+        + MASON_STONE_GATHER_BONUS
+        + QUARRY_STONE_GATHER_BONUS
+    )
+    assert gather_amount_bonus(world, "stone", location_id=agent.location_id) == (
+        seat_bonus
+    )
+    assert effective_gather_amount(world, "stone", agent=agent) == (
+        DEFAULT_GATHER_AMOUNT + seat_bonus + MINERAL_RIGHTS_STONE_GATHER_BONUS
     )
 
 

@@ -81,6 +81,7 @@ class LawSystem:
                     active_conservation_count=snap.active_conservation_count,
                     active_labor_count=snap.active_labor_count,
                     active_sumptuary_count=snap.active_sumptuary_count,
+                    active_mineral_rights_count=snap.active_mineral_rights_count,
                 )
             )
         return world

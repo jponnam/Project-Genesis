@@ -30,8 +30,10 @@ M11), stacking with coppice society-wide and the scaffold seat. Active
 customs, and loom. Active ``SUMPTUARY`` statutes lower the market fill
 fee at the enacting government's markets by 1 (Phase 16 M11), stacking
 with bureaucracy, harbor, merchant, dyer, warehouse, and mordant.
-Elections (voting) are a separate Phase 5 aggregate, as are
-institutions.
+Active ``MINERAL_RIGHTS`` statutes grant living subjects +1 STONE gather
+(Phase 17 M2), stacking with pickaxe and forge society-wide, the mason
+seat, and the quarry city. Elections (voting) are a separate Phase 5
+aggregate, as are institutions.
 """
 
 from __future__ import annotations
@@ -70,6 +72,7 @@ class LawKind(StrEnum):
     CONSERVATION = "conservation"
     LABOR = "labor"
     SUMPTUARY = "sumptuary"
+    MINERAL_RIGHTS = "mineral_rights"
 
 
 # Statute kinds that allow at most one active law per government.
@@ -91,6 +94,7 @@ _UNIQUE_ACTIVE_KINDS: frozenset[LawKind] = frozenset(
         LawKind.CONSERVATION,
         LawKind.LABOR,
         LawKind.SUMPTUARY,
+        LawKind.MINERAL_RIGHTS,
     }
 )
 
@@ -136,6 +140,9 @@ LABOR_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 # Kind-only market fill-fee discount at markets under an active SUMPTUARY law.
 SUMPTUARY_MARKET_FEE_DISCOUNT: int = 1
 
+# Kind-only STONE gather bonus for living subjects under active MINERAL_RIGHTS.
+MINERAL_RIGHTS_STONE_GATHER_BONUS: int = 1
+
 
 class Law(BaseModel):
     """One statute enacted by a government."""
@@ -153,7 +160,8 @@ class Law(BaseModel):
             "TAX_SCHEDULE flat poll amount, or MARKET_FEE flat fill fee; "
             "ignored by CURRICULUM, CALENDAR, ETHICS, ASSEMBLY, SANITATION, "
             "QUARANTINE, BUILDING_CODES, ZONING, PASSAGE, CUSTOMS, "
-            "LAND_TENURE, CONSERVATION, LABOR, SUMPTUARY, and other kinds."
+            "LAND_TENURE, CONSERVATION, LABOR, SUMPTUARY, MINERAL_RIGHTS, "
+            "and other kinds."
         ),
     )
     rate_bps: NonNegativeInt = Field(
@@ -228,6 +236,7 @@ class LawCensus(BaseModel):
     active_conservation_count: NonNegativeInt = 0
     active_labor_count: NonNegativeInt = 0
     active_sumptuary_count: NonNegativeInt = 0
+    active_mineral_rights_count: NonNegativeInt = 0
 
 
 def law_by_id(world: World, law_id: LawId | int) -> Law | None:
@@ -739,6 +748,36 @@ def sumptuary_market_discount_for(
     return SUMPTUARY_MARKET_FEE_DISCOUNT
 
 
+def active_mineral_rights_law(
+    world: World,
+    government_id: GovernmentId | int,
+) -> Law | None:
+    """Return the active mineral-rights statute for ``government_id``, if any.
+
+    When multiple active ``MINERAL_RIGHTS`` laws exist (should not under
+    uniqueness rules), the lowest ``law_id`` wins.
+    """
+    for law in active_laws(world, government_id):
+        if law.kind == LawKind.MINERAL_RIGHTS:
+            return law
+    return None
+
+
+def mineral_rights_stone_bonus_for(world: World, agent: Agent) -> int:
+    """Return +1 when ``agent`` is a living subject under MINERAL_RIGHTS.
+
+    The statute kind alone enables the bonus; ``flat_amount`` is ignored.
+    """
+    if not agent.is_alive():
+        return 0
+    government = government_at(world, agent.location_id)
+    if government is None:
+        return 0
+    if active_mineral_rights_law(world, government.government_id) is None:
+        return 0
+    return MINERAL_RIGHTS_STONE_GATHER_BONUS
+
+
 def _has_active_kind(
     world: World,
     government_id: GovernmentId,
@@ -826,6 +865,9 @@ def census_laws(world: World) -> LawCensus:
     )
     active_labor = sum(1 for law in active if law.kind == LawKind.LABOR)
     active_sumptuary = sum(1 for law in active if law.kind == LawKind.SUMPTUARY)
+    active_mineral_rights = sum(
+        1 for law in active if law.kind == LawKind.MINERAL_RIGHTS
+    )
     return LawCensus(
         tick=world.tick,
         law_count=len(laws),
@@ -848,6 +890,7 @@ def census_laws(world: World) -> LawCensus:
         active_conservation_count=active_conservation,
         active_labor_count=active_labor,
         active_sumptuary_count=active_sumptuary,
+        active_mineral_rights_count=active_mineral_rights,
     )
 
 
@@ -862,6 +905,7 @@ __all__ = [
     "ETHICS_MIN_TEACH_TRUST_DELTA",
     "LABOR_PRODUCE_ENERGY_DISCOUNT",
     "LAND_TENURE_EAT_RESTORE_BONUS",
+    "MINERAL_RIGHTS_STONE_GATHER_BONUS",
     "PASSAGE_MOVE_ENERGY_DISCOUNT",
     "QUARANTINE_REST_RESTORE_BONUS",
     "SANITATION_DRINK_RESTORE_BONUS",
@@ -881,6 +925,7 @@ __all__ = [
     "active_land_tenure_law",
     "active_laws",
     "active_market_fee_law",
+    "active_mineral_rights_law",
     "active_passage_law",
     "active_quarantine_law",
     "active_sanitation_law",
@@ -902,6 +947,7 @@ __all__ = [
     "law_by_id",
     "laws_for",
     "market_fee_for",
+    "mineral_rights_stone_bonus_for",
     "passage_move_discount_for",
     "quarantine_rest_bonus_for",
     "repeal_law",

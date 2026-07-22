@@ -129,15 +129,14 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 17 Milestone 1: Mining technology**
+**Phase 17 Milestone 2: Mineral rights laws**
 
-``TechnologyKind.MINING`` extends the research tree past tanning, gated
-behind the tanning prerequisite. Its society adoption,
-``InnovationKind.PICKAXE`` (``CAMP_PICKAXE``), activates once mining is
-discovered. An active pickaxe grants a society-wide ``+1`` STONE gather
-bonus that stacks with the forge metallurgy bonus, the mason seat bonus,
-and the quarry city bonus. Knowledge diffusion syncs the ``mining`` fact
-onto agents like every other technology fact.
+``LawKind.MINERAL_RIGHTS`` statutes attach to a government and grant its
+living subjects a ``+1`` STONE gather bonus. The bonus is subject-scoped
+(resolved via ``government_at`` on the gathering agent's location) and
+stacks additively with the pickaxe and forge bonuses (society-wide), the
+mason seat bonus, and the quarry city bonus. At most one active mineral
+rights law is allowed per government. The statute is not seeded.
 
 ### Completed
 
@@ -312,6 +311,7 @@ JSONL storage → `civitas run`
 
 **Phase 17:**
 - Milestone 1: Mining technology
+- Milestone 2: Mineral rights laws
 
 ## License
 

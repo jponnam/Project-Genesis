@@ -143,7 +143,9 @@ market-fee discounts at the city seat (stacking with bureaucracy, harbor,
 merchant, dyer, mordant, warehouse, and the sumptuary subject discount).
 Phase 17 Milestone 1 adds a global PICKAXE stone-gather bonus society-wide
 (stacking with the forge metallurgy bonus, the mason seat bonus, and the
-quarry city bonus). The action executor,
+quarry city bonus). Phase 17 Milestone 2 adds MINERAL_RIGHTS law STONE
+gather bonuses for living subjects (stacking with pickaxe and forge
+society-wide, the mason seat, and the quarry city). The action executor,
 retrieval
 path, market fills, knowledge
 diffusion, and research progression read these helpers; ``EffectsSystem``
@@ -174,6 +176,7 @@ from civitas.domain.laws import (
     labor_produce_discount_for,
     land_tenure_eat_bonus_for,
     market_fee_for,
+    mineral_rights_stone_bonus_for,
     passage_move_discount_for,
     quarantine_rest_bonus_for,
     sanitation_drink_bonus_for,
@@ -1529,7 +1532,9 @@ def effective_gather_amount(
 
     Location-scoped bonuses come from ``gather_amount_bonus`` at the seat.
     When an ``agent`` is given, WOOD gathering also gains the subject-scoped
-    ``CONSERVATION`` statute bonus for living subjects (Phase 15 M11).
+    ``CONSERVATION`` statute bonus for living subjects (Phase 15 M11), and
+    STONE gathering also gains the subject-scoped ``MINERAL_RIGHTS`` statute
+    bonus for living subjects (Phase 17 M2).
     """
     if base < 0:
         return 0
@@ -1541,6 +1546,8 @@ def effective_gather_amount(
     amount = base + gather_amount_bonus(world, resource, location_id=seat)
     if resource == ResourceKind.WOOD.value and agent is not None:
         amount += conservation_wood_bonus_for(world, agent)
+    if resource == ResourceKind.STONE.value and agent is not None:
+        amount += mineral_rights_stone_bonus_for(world, agent)
     return amount
 
 
