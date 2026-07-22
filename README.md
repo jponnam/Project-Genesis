@@ -124,11 +124,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 12 Milestone 7: Anatomy technology**
+**Phase 12 Milestone 8: Collegium institutions**
 
-``TechnologyKind.ANATOMY`` extends the medicine branch with ``CAMP_ANATOMY``.
-Discovering anatomy activates ``InnovationKind.DISSECTION``; active dissection
-adds ``+1`` research point per tick, stacking with syllogism.
+``InstitutionKind.COLLEGIUM`` adds medical colleges / physicians' collegia as
+government-attached institutions. Active collegia add ``+1``
+teachings-per-knower at their seat, stacking with prior teaching bonuses.
 
 ### Completed
 
@@ -239,6 +239,7 @@ JSONL storage → `civitas run`
 - Milestone 5: Infirmary cities
 - Milestone 6: Apothecary institutions
 - Milestone 7: Anatomy technology
+- Milestone 8: Collegium institutions
 
 ## License
 

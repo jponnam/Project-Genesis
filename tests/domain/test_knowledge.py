@@ -7,6 +7,7 @@ from civitas.domain import (
     ASTRONOMY_FACT,
     CAMP_ANATOMY,
     CAMP_ASTRONOMY,
+    CAMP_DIALECTIC,
     CAMP_IRRIGATION,
     CAMP_LOCATION,
     CAMP_LOGIC,
@@ -807,6 +808,84 @@ def test_school_stacks_with_academy_in_diffusion() -> None:
     assert stacked.agents[4].knowledge.knows(POTTERY_FACT)
     assert stacked.agents[5].knowledge.knows(POTTERY_FACT)
     assert stacked.agents[6].knowledge.knows(POTTERY_FACT)
+
+
+def test_collegium_stacks_with_teaching_sources_in_diffusion() -> None:
+    """Collegium seat bonus contributes to actual peer teaching capacity."""
+    active_scribe = CAMP_SCRIBE.model_copy(update={"active": True})
+    active_dialectic = CAMP_DIALECTIC.model_copy(update={"active": True})
+    discovered_writing = CAMP_WRITING.model_copy(update={"discovered": True})
+    discovered_philosophy = CAMP_PHILOSOPHY.model_copy(update={"discovered": True})
+    technologies = tuple(
+        discovered_writing
+        if item.technology_id == CAMP_WRITING.technology_id
+        else discovered_philosophy
+        if item.technology_id == CAMP_PHILOSOPHY.technology_id
+        else item
+        for item in default_technologies()
+    )
+    research_progress = tuple(
+        item
+        for item in default_research_progress()
+        if item.technology_id
+        not in {CAMP_WRITING.technology_id, CAMP_PHILOSOPHY.technology_id}
+    )
+    innovations = tuple(
+        active_scribe
+        if item.innovation_id == CAMP_SCRIBE.innovation_id
+        else active_dialectic
+        if item.innovation_id == CAMP_DIALECTIC.innovation_id
+        else item
+        for item in default_innovations()
+    )
+    world = World(
+        config=SimulationConfig(agent_count=10, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        laws=(Law.create(0, 0, "Camp Schools", LawKind.CURRICULUM),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Forum", CityKind.FORUM),
+        ),
+        technologies=technologies,
+        research_progress=research_progress,
+        innovations=innovations,
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 1, 1, "Forum Scriptorium", InfrastructureKind.SCRIPTORIUM
+            ),
+            Infrastructure.create(1, 0, 1, 1, "Forum Stoa", InfrastructureKind.STOA),
+        ),
+        institutions=(
+            Institution.create(0, 0, 1, "Forum Academy", InstitutionKind.ACADEMY),
+            Institution.create(1, 0, 1, "Forum School", InstitutionKind.SCHOOL),
+            Institution.create(2, 0, 1, "Forum Collegium", InstitutionKind.COLLEGIUM),
+        ),
+        agents=(
+            Agent.create(
+                agent_id=0, name="A", location_id=1, knowledge=_FIRE_AND_POTTERY
+            ),
+            *(
+                Agent.create(
+                    agent_id=agent_id,
+                    name=f"L{agent_id}",
+                    location_id=1,
+                    knowledge=_FIRE,
+                )
+                for agent_id in range(1, 10)
+            ),
+        ),
+    )
+    with_pottery = discover_technology(world, CAMP_POTTERY.technology_id)
+    assert with_pottery is not None
+    stacked, gains = diffuse_knowledge(with_pottery, teachings_per_knower=0)
+    # Scribe + dialectic + scriptorium + stoa + academy + forum + school
+    # + curriculum + collegium = nine learners taught from a zero base.
+    assert len(gains) == 9
+    assert all(
+        stacked.agents[agent_id].knowledge.knows(POTTERY_FACT)
+        for agent_id in range(1, 10)
+    )
 
 
 def test_forum_stacks_with_academy_scriptorium_in_diffusion() -> None:

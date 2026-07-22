@@ -37,7 +37,9 @@ shrine, and sanitation), and INFIRMARY city REST restore bonuses
 (stacking with fire hearth, remedy, temple, sanctuary, and hospital).
 Phase 12 Milestone 6 adds APOTHECARY DRINK restore bonuses (stacking with
 well, shrine, clinic, and sanitation). Phase 12 Milestone 7 adds a global
-DISSECTION research-points bonus (stacking with syllogism).
+DISSECTION research-points bonus (stacking with syllogism). Phase 12
+Milestone 8 adds COLLEGIUM teachings-per-knower bonuses (stacking with
+scribe/dialectic/scriptorium/academy/forum/school/stoa/curriculum).
 The action executor, retrieval path, market fills,
 knowledge diffusion, and research progression read these helpers;
 ``EffectsSystem`` only observes coverage. Systems never call each other.
@@ -93,6 +95,7 @@ STOA_TEACHINGS_PER_KNOWER_BONUS: int = 1
 ACADEMY_TEACHINGS_PER_KNOWER_BONUS: int = 1
 FORUM_TEACHINGS_PER_KNOWER_BONUS: int = 1
 SCHOOL_TEACHINGS_PER_KNOWER_BONUS: int = 1
+COLLEGIUM_TEACHINGS_PER_KNOWER_BONUS: int = 1
 PHILOSOPHY_TEACHINGS_PER_KNOWER_BONUS: int = 1
 LOGIC_RESEARCH_POINTS_BONUS: int = 1
 ANATOMY_RESEARCH_POINTS_BONUS: int = 1
@@ -379,6 +382,22 @@ def location_has_active_apothecary(
     )
     return any(
         item.kind is InstitutionKind.APOTHECARY and item.location_id == target
+        for item in active_institutions(world)
+    )
+
+
+def location_has_active_collegium(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active COLLEGIUM is seated at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InstitutionKind.COLLEGIUM and item.location_id == target
         for item in active_institutions(world)
     )
 
@@ -687,11 +706,11 @@ def effective_teachings_per_knower(
     """Return teachings-per-knower including scribe, dialectic, seats, laws.
 
     The scribe and dialectic innovation bonuses are society-wide. The
-    scriptorium, stoa, academy, forum, and school bonuses apply only when
-    ``location_id`` or ``agent`` places the knower at an active
-    SCRIPTORIUM, STOA, ACADEMY, FORUM, or SCHOOL seat. The curriculum law
-    bonus applies when ``agent`` is a living subject of a government with
-    an active ``CURRICULUM`` statute. All bonuses stack.
+    scriptorium, stoa, academy, forum, school, and collegium bonuses apply
+    only when ``location_id`` or ``agent`` places the knower at an active
+    SCRIPTORIUM, STOA, ACADEMY, FORUM, SCHOOL, or COLLEGIUM seat. The
+    curriculum law bonus applies when ``agent`` is a living subject of a
+    government with an active ``CURRICULUM`` statute. All bonuses stack.
     """
     if base < 0:
         return 0
@@ -711,6 +730,8 @@ def effective_teachings_per_knower(
         bonus += FORUM_TEACHINGS_PER_KNOWER_BONUS
     if seat is not None and location_has_active_school(world, seat):
         bonus += SCHOOL_TEACHINGS_PER_KNOWER_BONUS
+    if seat is not None and location_has_active_collegium(world, seat):
+        bonus += COLLEGIUM_TEACHINGS_PER_KNOWER_BONUS
     if agent is not None:
         bonus += curriculum_teachings_bonus_for(world, agent)
     return base + bonus
