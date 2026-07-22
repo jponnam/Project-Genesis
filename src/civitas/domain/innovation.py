@@ -19,6 +19,7 @@ from civitas.domain.ids import InnovationId, TechnologyId
 from civitas.domain.technology import (
     CAMP_ANATOMY,
     CAMP_ASTRONOMY,
+    CAMP_ENGINEERING,
     CAMP_FIRE,
     CAMP_HYGIENE,
     CAMP_IRRIGATION,
@@ -55,6 +56,7 @@ class InnovationKind(StrEnum):
     REMEDY = "remedy"
     DISSECTION = "dissection"
     ASEPSIS = "asepsis"
+    PULLEY = "pulley"
 
 
 class Innovation(BaseModel):
@@ -192,6 +194,14 @@ CAMP_ASEPSIS: Innovation = Innovation.create(
     active=False,
 )
 
+CAMP_PULLEY: Innovation = Innovation.create(
+    13,
+    CAMP_ENGINEERING.technology_id.value,
+    "Camp Pulley",
+    InnovationKind.PULLEY,
+    active=False,
+)
+
 
 def default_innovations() -> tuple[Innovation, ...]:
     """Return the canonical initial innovation set."""
@@ -209,6 +219,7 @@ def default_innovations() -> tuple[Innovation, ...]:
         CAMP_REMEDY,
         CAMP_DISSECTION,
         CAMP_ASEPSIS,
+        CAMP_PULLEY,
     )
 
 
@@ -234,6 +245,7 @@ class InnovationCensus(BaseModel):
     active_remedy_count: NonNegativeInt = 0
     active_dissection_count: NonNegativeInt = 0
     active_asepsis_count: NonNegativeInt = 0
+    active_pulley_count: NonNegativeInt = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -394,6 +406,7 @@ def census_innovations(world: World) -> InnovationCensus:
     remedy = sum(1 for item in active if item.kind is InnovationKind.REMEDY)
     dissection = sum(1 for item in active if item.kind is InnovationKind.DISSECTION)
     asepsis = sum(1 for item in active if item.kind is InnovationKind.ASEPSIS)
+    pulley = sum(1 for item in active if item.kind is InnovationKind.PULLEY)
     return InnovationCensus(
         tick=world.tick,
         innovation_count=len(innovations),
@@ -412,4 +425,5 @@ def census_innovations(world: World) -> InnovationCensus:
         active_remedy_count=remedy,
         active_dissection_count=dissection,
         active_asepsis_count=asepsis,
+        active_pulley_count=pulley,
     )

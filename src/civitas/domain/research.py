@@ -18,6 +18,7 @@ from civitas.domain.ids import TechnologyId
 from civitas.domain.technology import (
     CAMP_ANATOMY,
     CAMP_ASTRONOMY,
+    CAMP_ENGINEERING,
     CAMP_HYGIENE,
     CAMP_IRRIGATION,
     CAMP_LOGIC,
@@ -127,6 +128,11 @@ CAMP_HYGIENE_RESEARCH: ResearchProgress = ResearchProgress.create(
     points=0,
     threshold=DEFAULT_POTTERY_THRESHOLD,
 )
+CAMP_ENGINEERING_RESEARCH: ResearchProgress = ResearchProgress.create(
+    CAMP_ENGINEERING.technology_id.value,
+    points=0,
+    threshold=DEFAULT_POTTERY_THRESHOLD,
+)
 
 
 def default_research_progress() -> tuple[ResearchProgress, ...]:
@@ -146,6 +152,7 @@ def default_research_progress() -> tuple[ResearchProgress, ...]:
                 CAMP_MEDICINE_RESEARCH,
                 CAMP_ANATOMY_RESEARCH,
                 CAMP_HYGIENE_RESEARCH,
+                CAMP_ENGINEERING_RESEARCH,
             ),
             key=lambda item: item.technology_id.value,
         )

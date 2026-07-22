@@ -10,6 +10,8 @@ from civitas.domain import (
     CAMP_ANATOMY_RESEARCH,
     CAMP_ASTRONOMY,
     CAMP_ASTRONOMY_RESEARCH,
+    CAMP_ENGINEERING,
+    CAMP_ENGINEERING_RESEARCH,
     CAMP_FIRE,
     CAMP_HYGIENE,
     CAMP_HYGIENE_RESEARCH,
@@ -66,7 +68,7 @@ def _world(
     )
 
 
-def test_default_research_progress_seeds_pottery_through_hygiene() -> None:
+def test_default_research_progress_seeds_pottery_through_engineering() -> None:
     """Canonical research tracks undiscovered technologies at zero points."""
     assert default_research_progress() == (
         CAMP_POTTERY_RESEARCH,
@@ -81,6 +83,7 @@ def test_default_research_progress_seeds_pottery_through_hygiene() -> None:
         CAMP_MEDICINE_RESEARCH,
         CAMP_ANATOMY_RESEARCH,
         CAMP_HYGIENE_RESEARCH,
+        CAMP_ENGINEERING_RESEARCH,
     )
     assert CAMP_POTTERY_RESEARCH.technology_id == CAMP_POTTERY.technology_id
     assert CAMP_POTTERY_RESEARCH.points == 0
@@ -118,6 +121,9 @@ def test_default_research_progress_seeds_pottery_through_hygiene() -> None:
     assert CAMP_HYGIENE_RESEARCH.technology_id == CAMP_HYGIENE.technology_id
     assert CAMP_HYGIENE_RESEARCH.points == 0
     assert CAMP_HYGIENE_RESEARCH.threshold == 10
+    assert CAMP_ENGINEERING_RESEARCH.technology_id == CAMP_ENGINEERING.technology_id
+    assert CAMP_ENGINEERING_RESEARCH.points == 0
+    assert CAMP_ENGINEERING_RESEARCH.threshold == 10
 
 
 def test_advance_research_increments_and_discovers() -> None:
@@ -148,6 +154,7 @@ def test_advance_research_increments_and_discovers() -> None:
         CAMP_MEDICINE_RESEARCH,
         CAMP_ANATOMY_RESEARCH,
         CAMP_HYGIENE_RESEARCH,
+        CAMP_ENGINEERING_RESEARCH,
     )
     assert world.technologies[1].discovered is True
     assert world.technologies[1].kind is TechnologyKind.POTTERY
@@ -174,6 +181,7 @@ def test_advance_research_large_step_discovers_immediately() -> None:
         CAMP_MEDICINE_RESEARCH,
         CAMP_ANATOMY_RESEARCH,
         CAMP_HYGIENE_RESEARCH,
+        CAMP_ENGINEERING_RESEARCH,
     )
     assert world.technologies[1].discovered is True
 
@@ -210,6 +218,8 @@ def test_irrigation_research_locked_until_pottery_discovered() -> None:
     assert anatomy == CAMP_ANATOMY_RESEARCH
     hygiene = research_by_technology_id(world, CAMP_HYGIENE.technology_id)
     assert hygiene == CAMP_HYGIENE_RESEARCH
+    engineering = research_by_technology_id(world, CAMP_ENGINEERING.technology_id)
+    assert engineering == CAMP_ENGINEERING_RESEARCH
 
     discovered = discover_technology(world, CAMP_POTTERY.technology_id)
     assert discovered is not None
@@ -566,6 +576,46 @@ def test_hygiene_research_locked_until_anatomy_discovered() -> None:
     assert outcomes[0].points_after == 1
 
 
+def test_engineering_research_locked_until_hygiene_discovered() -> None:
+    """Engineering progress is preserved but blocked until hygiene is known."""
+    world = _world(
+        Agent.create(agent_id=0, name="A"),
+        research_progress=default_research_progress(),
+    )
+    current = world
+    for technology in (
+        CAMP_POTTERY,
+        CAMP_IRRIGATION,
+        CAMP_METALLURGY,
+        CAMP_WRITING,
+        CAMP_MATHEMATICS,
+        CAMP_ASTRONOMY,
+        CAMP_PHILOSOPHY,
+        CAMP_LOGIC,
+        CAMP_RHETORIC,
+        CAMP_MEDICINE,
+        CAMP_ANATOMY,
+    ):
+        updated = discover_technology(current, technology.technology_id)
+        assert updated is not None
+        current = updated
+
+    world, outcomes = advance_research(current, points_per_tick=1)
+    assert [outcome.technology_id for outcome in outcomes] == [
+        CAMP_HYGIENE.technology_id
+    ]
+    engineering = research_by_technology_id(world, CAMP_ENGINEERING.technology_id)
+    assert engineering == CAMP_ENGINEERING_RESEARCH
+
+    with_hygiene = discover_technology(world, CAMP_HYGIENE.technology_id)
+    assert with_hygiene is not None
+    world, outcomes = advance_research(with_hygiene, points_per_tick=1)
+    assert [outcome.technology_id for outcome in outcomes] == [
+        CAMP_ENGINEERING.technology_id
+    ]
+    assert outcomes[0].points_after == 1
+
+
 def test_active_syllogism_adds_research_point_per_tick() -> None:
     """Active syllogism increases effective research progress by one."""
     discovered_logic = CAMP_LOGIC.model_copy(update={"discovered": True})
@@ -586,6 +636,7 @@ def test_active_syllogism_adds_research_point_per_tick() -> None:
             CAMP_MEDICINE,
             CAMP_ANATOMY,
             CAMP_HYGIENE,
+            CAMP_ENGINEERING,
         ),
         research_progress=(CAMP_POTTERY_RESEARCH,),
         innovations=tuple(

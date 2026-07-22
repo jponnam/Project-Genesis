@@ -121,13 +121,14 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 | **10** | Writing, record-keeping, and institutional memory |
 | **11** | Philosophy, ethics, and reflective culture |
 | **12** | Medicine and public health |
+| **13** | Engineering and construction |
 
 ## Current Milestone
 
-**Phase 12 Milestone 12: Lazaretto cities**
+**Phase 13 Milestone 1: Engineering technology**
 
-``CityKind.LAZARETTO`` seats model quarantine / isolation hospital cities and
-grant colocated living residents ``+0.05`` DRINK restore.
+``TechnologyKind.ENGINEERING`` and ``InnovationKind.PULLEY`` extend the tech
+tree after hygiene and grant an active society-wide PRODUCE energy discount.
 
 ### Completed
 
@@ -243,6 +244,9 @@ JSONL storage → `civitas run`
 - Milestone 10: Hygiene technology
 - Milestone 11: Quarantine laws
 - Milestone 12: Lazaretto cities
+
+**Phase 13:**
+- Milestone 1: Engineering technology
 
 ## License
 

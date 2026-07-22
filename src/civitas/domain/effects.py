@@ -45,7 +45,9 @@ Phase 12 Milestone 10 adds a global ASEPSIS DRINK restore bonus (stacking
 with well, shrine, clinic, apothecary, and sanitation). Phase 12 Milestone
 11 adds QUARANTINE law REST restore bonuses for living subjects (stacking
 with every prior REST source). Phase 12 Milestone 12 adds LAZARETTO city
-DRINK restore bonuses (stacking with every prior DRINK source).
+DRINK restore bonuses (stacking with every prior DRINK source). Phase 13
+Milestone 1 adds a global PULLEY produce-energy discount (stacking with
+guild seat and abacus discounts).
 The action executor, retrieval path, market fills,
 knowledge diffusion, and research progression read these helpers;
 ``EffectsSystem`` only observes coverage. Systems never call each other.
@@ -119,6 +121,7 @@ STOREHOUSE_FOOD_GATHER_BONUS: int = 1
 ROAD_MOVE_ENERGY_DISCOUNT: float = 0.02
 GUILD_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 MATHEMATICS_PRODUCE_ENERGY_DISCOUNT: float = 0.02
+ENGINEERING_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 ARCHIVE_RETRIEVAL_LIMIT_BONUS: int = 1
 LIBRARY_RETRIEVAL_LIMIT_BONUS: int = 1
 OBSERVATORY_RETRIEVAL_LIMIT_BONUS: int = 1
@@ -666,18 +669,22 @@ def move_energy_discount(world: World, agent: Agent) -> float:
 
 
 def produce_energy_discount(world: World, agent: Agent) -> float:
-    """Return PRODUCE energy discount from guild seat and abacus innovation.
+    """Return PRODUCE energy discount from guild, abacus, and pulley.
 
     An active GUILD at the agent's location contributes
     ``GUILD_PRODUCE_ENERGY_DISCOUNT``. An active ABACUS innovation
-    contributes ``MATHEMATICS_PRODUCE_ENERGY_DISCOUNT`` society-wide.
-    Both stack when present.
+    contributes ``MATHEMATICS_PRODUCE_ENERGY_DISCOUNT`` society-wide. An
+    active PULLEY innovation contributes
+    ``ENGINEERING_PRODUCE_ENERGY_DISCOUNT`` society-wide. All stack when
+    present.
     """
     discount = 0.0
     if location_has_active_guild(world, agent.location_id):
         discount += GUILD_PRODUCE_ENERGY_DISCOUNT
     if innovation_kind_is_active(world, InnovationKind.ABACUS):
         discount += MATHEMATICS_PRODUCE_ENERGY_DISCOUNT
+    if innovation_kind_is_active(world, InnovationKind.PULLEY):
+        discount += ENGINEERING_PRODUCE_ENERGY_DISCOUNT
     return discount
 
 
@@ -858,7 +865,7 @@ def effective_produce_energy_cost(
     *,
     base: float,
 ) -> float:
-    """Return PRODUCE energy cost including guild and abacus discounts."""
+    """Return PRODUCE energy cost including guild, abacus, and pulley discounts."""
     if base < 0:
         return 0.0
     discounted = base - produce_energy_discount(world, agent)
@@ -919,10 +926,12 @@ def census_effects(world: World) -> EffectsCensus:
             DEFAULT_MOVE_ENERGY_COST - (ROAD_MOVE_ENERGY_DISCOUNT if roads else 0.0),
         )
     )
-    # Produce cost potential at a guild seat, plus society abacus discount.
+    # Produce cost potential at a guild seat, plus society-wide discounts.
     produce_discount = GUILD_PRODUCE_ENERGY_DISCOUNT if guilds else 0.0
     if innovation_kind_is_active(world, InnovationKind.ABACUS):
         produce_discount += MATHEMATICS_PRODUCE_ENERGY_DISCOUNT
+    if innovation_kind_is_active(world, InnovationKind.PULLEY):
+        produce_discount += ENGINEERING_PRODUCE_ENERGY_DISCOUNT
     produce_at_guild = clamp_unit(
         max(
             0.0,
