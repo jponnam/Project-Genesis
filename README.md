@@ -123,14 +123,14 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 11 — Milestone 8: Lyceum institutions**
+**Phase 11 — Milestone 9: Stoa infrastructure**
 
-``InstitutionKind.LYCEUM`` adds a government-attached institution kind.
-Lyceums are not seeded by default, but an active lyceum at an agent's seat
-adds ``+1`` to the memory retrieval limit through
-``effective_retrieval_limit``. The bonus stacks with archive, library,
-observatory, star chart, and calendar retrieval bonuses. Institution census
-and observed events track active lyceum counts.
+``InfrastructureKind.STOA`` adds a paid government-attached infrastructure
+kind. Stoas are not seeded by default, but an active stoa at a knower's seat
+adds ``+1`` to teachings per knower through
+``effective_teachings_per_knower``. The bonus stacks with scriptorium,
+academy, forum, school, scribe, dialectic, and curriculum teaching bonuses.
+Infrastructure census and observed events track active stoa counts.
 
 ### Completed
 
@@ -228,6 +228,7 @@ JSONL storage → `civitas run`
 - Milestone 6: School institutions
 - Milestone 7: Logic technology
 - Milestone 8: Lyceum institutions
+- Milestone 9: Stoa infrastructure
 
 ## License
 

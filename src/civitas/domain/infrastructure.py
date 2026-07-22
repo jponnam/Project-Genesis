@@ -1,17 +1,16 @@
 """Infrastructure: built capacity at settlement locations.
 
 Phase 5 Milestone 6 plus Phase 9 Milestones 5-8, Phase 10
-Milestones 3 and 9, and Phase 11 Milestone 4. Infrastructure pieces
+Milestones 3 and 9, and Phase 11 Milestones 4 and 9. Infrastructure pieces
 attach to a city seat inside a government jurisdiction. This package
 seeds a single ``WELL`` kind; ``STOREHOUSE``, ``ROAD``,
-``SCRIPTORIUM``, ``OBSERVATORY``, and ``SHRINE`` are available via free
-create or paid construction. Governments pay via
+``SCRIPTORIUM``, ``STOA``, ``OBSERVATORY``, and ``SHRINE`` are available
+via free create or paid construction. Governments pay via
 ``build_infrastructure``; institutions pay via
 ``build_infrastructure_from_institution``. Effect wiring applies WELL
 drink restore, STOREHOUSE food gather, ROAD move-energy discounts,
-SCRIPTORIUM teachings-per-knower bonuses, OBSERVATORY retrieval-limit
-bonuses, and SHRINE drink restore (stacking with WELL) for colocated
-agents.
+SCRIPTORIUM/STOA teachings-per-knower bonuses, OBSERVATORY retrieval-limit
+bonuses, and SHRINE drink restore (stacking with WELL) for colocated agents.
 """
 
 from __future__ import annotations
@@ -46,6 +45,7 @@ class InfrastructureKind(StrEnum):
     STOREHOUSE = "storehouse"
     ROAD = "road"
     SCRIPTORIUM = "scriptorium"
+    STOA = "stoa"
     OBSERVATORY = "observatory"
     SHRINE = "shrine"
 
@@ -55,6 +55,7 @@ DEFAULT_WELL_BUILD_COST: int = 5
 DEFAULT_STOREHOUSE_BUILD_COST: int = 8
 DEFAULT_ROAD_BUILD_COST: int = 6
 DEFAULT_SCRIPTORIUM_BUILD_COST: int = 10
+DEFAULT_STOA_BUILD_COST: int = 10
 DEFAULT_OBSERVATORY_BUILD_COST: int = 12
 DEFAULT_SHRINE_BUILD_COST: int = 7
 INFRASTRUCTURE_BUILD_COSTS: dict[InfrastructureKind, int] = {
@@ -62,6 +63,7 @@ INFRASTRUCTURE_BUILD_COSTS: dict[InfrastructureKind, int] = {
     InfrastructureKind.STOREHOUSE: DEFAULT_STOREHOUSE_BUILD_COST,
     InfrastructureKind.ROAD: DEFAULT_ROAD_BUILD_COST,
     InfrastructureKind.SCRIPTORIUM: DEFAULT_SCRIPTORIUM_BUILD_COST,
+    InfrastructureKind.STOA: DEFAULT_STOA_BUILD_COST,
     InfrastructureKind.OBSERVATORY: DEFAULT_OBSERVATORY_BUILD_COST,
     InfrastructureKind.SHRINE: DEFAULT_SHRINE_BUILD_COST,
 }
@@ -135,6 +137,7 @@ class InfrastructureCensus(BaseModel):
     active_storehouse_count: NonNegativeInt = 0
     active_road_count: NonNegativeInt = 0
     active_scriptorium_count: NonNegativeInt = 0
+    active_stoa_count: NonNegativeInt = 0
     active_observatory_count: NonNegativeInt = 0
     active_shrine_count: NonNegativeInt = 0
 
@@ -367,6 +370,7 @@ def census_infrastructure(world: World) -> InfrastructureCensus:
     active_scriptoria = sum(
         1 for item in active if item.kind is InfrastructureKind.SCRIPTORIUM
     )
+    active_stoas = sum(1 for item in active if item.kind is InfrastructureKind.STOA)
     active_observatories = sum(
         1 for item in active if item.kind is InfrastructureKind.OBSERVATORY
     )
@@ -382,6 +386,7 @@ def census_infrastructure(world: World) -> InfrastructureCensus:
         active_storehouse_count=active_storehouses,
         active_road_count=active_roads,
         active_scriptorium_count=active_scriptoria,
+        active_stoa_count=active_stoas,
         active_observatory_count=active_observatories,
         active_shrine_count=active_shrines,
     )

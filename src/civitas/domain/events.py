@@ -596,6 +596,7 @@ class InfrastructuresObserved(DomainEvent):
     active_storehouse_count: NonNegativeInt = 0
     active_road_count: NonNegativeInt = 0
     active_scriptorium_count: NonNegativeInt = 0
+    active_stoa_count: NonNegativeInt = 0
     active_observatory_count: NonNegativeInt = 0
     active_shrine_count: NonNegativeInt = 0
 
