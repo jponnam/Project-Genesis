@@ -79,6 +79,7 @@ from civitas.domain import (
     DEFAULT_RETRIEVAL_LIMIT,
     DEFAULT_SOCIALIZE_RESTORE,
     DEFAULT_TEACHINGS_PER_KNOWER,
+    DITCH_WATER_GATHER_BONUS,
     ENGINEERING_PRODUCE_ENERGY_DISCOUNT,
     ENTREPOT_FOOD_GATHER_BONUS,
     FIRE_HEARTH_REST_BONUS,
@@ -173,6 +174,7 @@ from civitas.domain import (
     location_has_active_cartographer,
     location_has_active_clinic,
     location_has_active_collegium,
+    location_has_active_ditch,
     location_has_active_entrepot,
     location_has_active_forum,
     location_has_active_foundry,
@@ -2631,6 +2633,96 @@ def test_scaffold_boosts_wood_gather_for_colocated_agents() -> None:
     )
     assert snap.active_storehouse_count == 0
     assert snap.food_gather_amount == DEFAULT_GATHER_AMOUNT
+
+
+def test_ditch_boosts_water_gather_for_colocated_agents() -> None:
+    """Active ditches add a water gather bonus at their seat location."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        infrastructure=(
+            Infrastructure.create(0, 0, 0, 0, "Camp Ditch", InfrastructureKind.DITCH),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_ditch(world, agent.location_id) is True
+    assert (
+        gather_amount_bonus(world, "water", location_id=agent.location_id)
+        == DITCH_WATER_GATHER_BONUS
+    )
+    assert gather_amount_bonus(world, "water") == 0
+    assert (
+        effective_gather_amount(world, "water", agent=agent)
+        == DEFAULT_GATHER_AMOUNT + DITCH_WATER_GATHER_BONUS
+    )
+    snap = census_effects(world)
+    assert snap.active_ditch_count == 1
+    assert snap.water_gather_amount == (
+        DEFAULT_GATHER_AMOUNT + DITCH_WATER_GATHER_BONUS
+    )
+    assert snap.active_scaffold_count == 0
+    assert snap.wood_gather_amount == DEFAULT_GATHER_AMOUNT
+
+
+def test_ditch_stacks_with_pottery_irrigation_and_sail_water_gather() -> None:
+    """Ditch water gather bonus stacks with pottery, irrigation canal, and sail."""
+    discovered_pottery = CAMP_POTTERY.model_copy(update={"discovered": True})
+    discovered_irrigation = CAMP_IRRIGATION.model_copy(update={"discovered": True})
+    discovered_seafaring = CAMP_SEAFARING.model_copy(update={"discovered": True})
+    active_pottery = CAMP_POTTERY_CRAFT.model_copy(update={"active": True})
+    active_irrigation = CAMP_IRRIGATION_CANAL.model_copy(update={"active": True})
+    active_sail = CAMP_SAIL.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        technologies=tuple(
+            discovered_pottery
+            if item.technology_id == CAMP_POTTERY.technology_id
+            else discovered_irrigation
+            if item.technology_id == CAMP_IRRIGATION.technology_id
+            else discovered_seafaring
+            if item.technology_id == CAMP_SEAFARING.technology_id
+            else item
+            for item in default_technologies()
+        ),
+        innovations=tuple(
+            active_pottery
+            if item.innovation_id == CAMP_POTTERY_CRAFT.innovation_id
+            else active_irrigation
+            if item.innovation_id == CAMP_IRRIGATION_CANAL.innovation_id
+            else active_sail
+            if item.innovation_id == CAMP_SAIL.innovation_id
+            else item
+            for item in default_innovations()
+        ),
+        infrastructure=(
+            Infrastructure.create(0, 0, 0, 0, "Camp Ditch", InfrastructureKind.DITCH),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    water_bonus = (
+        POTTERY_WATER_GATHER_BONUS
+        + IRRIGATION_WATER_GATHER_BONUS
+        + SEAFARING_WATER_GATHER_BONUS
+        + DITCH_WATER_GATHER_BONUS
+    )
+    assert gather_amount_bonus(world, "water", location_id=agent.location_id) == (
+        water_bonus
+    )
+    assert gather_amount_bonus(world, "water") == (
+        POTTERY_WATER_GATHER_BONUS
+        + IRRIGATION_WATER_GATHER_BONUS
+        + SEAFARING_WATER_GATHER_BONUS
+    )
+    assert effective_gather_amount(world, "water", agent=agent) == (
+        DEFAULT_GATHER_AMOUNT + water_bonus
+    )
 
 
 def test_road_reduces_move_energy_for_colocated_agents() -> None:

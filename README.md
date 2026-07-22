@@ -127,11 +127,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 15 Milestone 3: Granary institutions**
+**Phase 15 Milestone 4: Ditch infrastructure**
 
-``InstitutionKind.GRANARY`` seats add +1 FOOD gather at the institution
-location, stacking with plow (society-wide), storehouse, waystation, and
-entrepot. Not seeded in ``default_institutions()``.
+``InfrastructureKind.DITCH`` (build cost 7) grants a seat-scoped water
+gather bonus, stacking with pottery craft, irrigation canal, and sail.
+Not seeded in ``default_infrastructure()``.
 
 ### Completed
 
@@ -280,6 +280,7 @@ JSONL storage → `civitas run`
 - Milestone 1: Agriculture technology
 - Milestone 2: Land tenure laws
 - Milestone 3: Granary institutions
+- Milestone 4: Ditch infrastructure
 
 ## License
 

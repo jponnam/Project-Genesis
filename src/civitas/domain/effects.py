@@ -94,7 +94,9 @@ gather bonus (stacking with storehouse, waystation, and entrepot seat
 bonuses). Phase 15 Milestone 2 adds LAND_TENURE law EAT restore bonuses
 for living subjects (stacking with zoning). Phase 15 Milestone 3 adds
 GRANARY food-gather bonuses at the institution seat (stacking with plow,
-storehouse, waystation, and entrepot). The action executor, retrieval
+storehouse, waystation, and entrepot). Phase 15 Milestone 4 adds DITCH
+water-gather bonuses at the infrastructure seat (stacking with pottery
+craft, irrigation canal, and sail). The action executor, retrieval
 path, market fills, knowledge diffusion, and research progression read
 these helpers; ``EffectsSystem`` only observes coverage. Systems never
 call each other.
@@ -151,6 +153,7 @@ BATHHOUSE_REST_RESTORE_BONUS: float = 0.05
 POTTERY_WATER_GATHER_BONUS: int = 1
 IRRIGATION_WATER_GATHER_BONUS: int = 1
 SEAFARING_WATER_GATHER_BONUS: int = 1
+DITCH_WATER_GATHER_BONUS: int = 1
 METALLURGY_STONE_GATHER_BONUS: int = 1
 WRITING_TEACHINGS_PER_KNOWER_BONUS: int = 1
 SCRIPTORIUM_TEACHINGS_PER_KNOWER_BONUS: int = 1
@@ -220,6 +223,7 @@ class EffectsCensus(BaseModel):
     food_gather_amount: NonNegativeInt = DEFAULT_GATHER_AMOUNT
     active_scaffold_count: NonNegativeInt = 0
     wood_gather_amount: NonNegativeInt = DEFAULT_GATHER_AMOUNT
+    active_ditch_count: NonNegativeInt = 0
     active_road_count: NonNegativeInt = 0
     move_energy_cost_bps: NonNegativeInt = round(DEFAULT_MOVE_ENERGY_COST * 10_000)
     active_guild_count: NonNegativeInt = 0
@@ -294,6 +298,22 @@ def location_has_active_scaffold(
     )
     return any(
         item.kind is InfrastructureKind.SCAFFOLD and item.location_id == target
+        for item in active_infrastructure(world)
+    )
+
+
+def location_has_active_ditch(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active DITCH stands at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InfrastructureKind.DITCH and item.location_id == target
         for item in active_infrastructure(world)
     )
 
@@ -905,7 +925,8 @@ def gather_amount_bonus(
     """Return gather-amount bonuses for ``resource``.
 
     Water bonuses come from society innovations (pottery craft, irrigation
-    canal, and sail). Stone bonuses come from an active FORGE innovation
+    canal, and sail), plus an active DITCH at ``location_id`` when provided
+    (they stack). Stone bonuses come from an active FORGE innovation
     society-wide, an active MASON seat at ``location_id`` when provided,
     and an active QUARRY city at ``location_id`` when provided. Food
     bonuses come from an active PLOW innovation society-wide, plus an
@@ -921,6 +942,8 @@ def gather_amount_bonus(
             bonus += IRRIGATION_WATER_GATHER_BONUS
         if innovation_kind_is_active(world, InnovationKind.SAIL):
             bonus += SEAFARING_WATER_GATHER_BONUS
+        if location_id is not None and location_has_active_ditch(world, location_id):
+            bonus += DITCH_WATER_GATHER_BONUS
     elif resource == ResourceKind.STONE.value:
         if innovation_kind_is_active(world, InnovationKind.FORGE):
             bonus += METALLURGY_STONE_GATHER_BONUS
@@ -1278,11 +1301,21 @@ def effective_retrieval_limit(
 def census_effects(world: World) -> EffectsCensus:
     """Build a deterministic society-effects census for ``world``."""
     restore = effective_rest_restore(world)
-    water_amount = effective_gather_amount(world, WATER_RESOURCE)
     wells = tuple(
         item
         for item in active_infrastructure(world)
         if item.kind is InfrastructureKind.WELL
+    )
+    ditches = tuple(
+        item
+        for item in active_infrastructure(world)
+        if item.kind is InfrastructureKind.DITCH
+    )
+    # Water gather potential at a ditch seat (society bonuses always apply).
+    water_amount = effective_gather_amount(
+        world,
+        WATER_RESOURCE,
+        location_id=ditches[0].location_id if ditches else None,
     )
     storehouses = tuple(
         item
@@ -1398,6 +1431,7 @@ def census_effects(world: World) -> EffectsCensus:
         food_gather_amount=food_at_storehouse,
         active_scaffold_count=len(scaffolds),
         wood_gather_amount=wood_at_scaffold,
+        active_ditch_count=len(ditches),
         active_road_count=len(roads),
         move_energy_cost_bps=round(move_at_road * 10_000),
         active_guild_count=len(guilds),
