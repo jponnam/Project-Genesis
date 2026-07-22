@@ -65,10 +65,12 @@ seat. Phase 13 Milestone 10 adds a global PLUMB_LINE retrieval-limit bonus
 (stacking with star chart, archive, library, observatory, lyceum, and
 calendar). Phase 13 Milestone 11 adds ZONING law EAT restore bonuses for
 living subjects. Phase 13 Milestone 12 adds QUARRY city stone-gather
-bonuses at the city seat (stacking with forge and mason). The action
-executor, retrieval path, market fills, knowledge diffusion, and research
-progression read these helpers; ``EffectsSystem`` only observes coverage.
-Systems never call each other.
+bonuses at the city seat (stacking with forge and mason). Phase 14
+Milestone 1 adds a global COMPASS MOVE energy discount (stacking with
+road, bridge, and building codes). The action executor, retrieval path,
+market fills, knowledge diffusion, and research progression read these
+helpers; ``EffectsSystem`` only observes coverage. Systems never call
+each other.
 """
 
 from __future__ import annotations
@@ -145,6 +147,7 @@ MASON_STONE_GATHER_BONUS: int = 1
 QUARRY_STONE_GATHER_BONUS: int = 1
 ROAD_MOVE_ENERGY_DISCOUNT: float = 0.02
 BRIDGE_MOVE_ENERGY_DISCOUNT: float = 0.02
+NAVIGATION_MOVE_ENERGY_DISCOUNT: float = 0.02
 GUILD_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 WORKSHOP_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 FOUNDRY_PRODUCE_ENERGY_DISCOUNT: float = 0.02
@@ -812,13 +815,15 @@ def eat_restore_bonus(world: World, agent: Agent) -> float:
 
 
 def move_energy_discount(world: World, agent: Agent) -> float:
-    """Return MOVE energy discount from road/bridge seats and building codes.
+    """Return MOVE energy discount from seats, statutes, and compass.
 
     An active ROAD at the agent's location contributes
     ``ROAD_MOVE_ENERGY_DISCOUNT``. An active BRIDGE at the agent's
     location contributes ``BRIDGE_MOVE_ENERGY_DISCOUNT``. An active
-    ``BUILDING_CODES`` statute contributes its subject discount. All
-    stack when present.
+    ``BUILDING_CODES`` statute contributes its subject discount. An
+    active COMPASS innovation contributes
+    ``NAVIGATION_MOVE_ENERGY_DISCOUNT`` society-wide. All stack when
+    present.
     """
     discount = 0.0
     if location_has_active_road(world, agent.location_id):
@@ -826,6 +831,8 @@ def move_energy_discount(world: World, agent: Agent) -> float:
     if location_has_active_bridge(world, agent.location_id):
         discount += BRIDGE_MOVE_ENERGY_DISCOUNT
     discount += building_codes_move_discount_for(world, agent)
+    if innovation_kind_is_active(world, InnovationKind.COMPASS):
+        discount += NAVIGATION_MOVE_ENERGY_DISCOUNT
     return discount
 
 
@@ -1130,10 +1137,12 @@ def census_effects(world: World) -> EffectsCensus:
         for item in active_infrastructure(world)
         if item.kind is InfrastructureKind.BRIDGE
     )
-    # Move cost potential at a road/bridge seat.
+    # Move cost potential at a road/bridge seat, plus society-wide discounts.
     move_discount = ROAD_MOVE_ENERGY_DISCOUNT if roads else 0.0
     if bridges:
         move_discount += BRIDGE_MOVE_ENERGY_DISCOUNT
+    if innovation_kind_is_active(world, InnovationKind.COMPASS):
+        move_discount += NAVIGATION_MOVE_ENERGY_DISCOUNT
     move_at_road = clamp_unit(
         max(
             0.0,

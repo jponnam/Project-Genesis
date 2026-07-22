@@ -83,6 +83,7 @@ class TechSystem:
                     discovered_engineering_count=snap.discovered_engineering_count,
                     discovered_architecture_count=snap.discovered_architecture_count,
                     discovered_surveying_count=snap.discovered_surveying_count,
+                    discovered_navigation_count=snap.discovered_navigation_count,
                     locked_count=snap.locked_count,
                     researchable_count=snap.researchable_count,
                 )

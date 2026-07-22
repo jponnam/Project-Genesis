@@ -110,6 +110,7 @@ class InnovationSystem:
                     active_pulley_count=snap.active_pulley_count,
                     active_blueprint_count=snap.active_blueprint_count,
                     active_plumb_line_count=snap.active_plumb_line_count,
+                    active_compass_count=snap.active_compass_count,
                 )
             )
         return world

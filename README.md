@@ -122,13 +122,14 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 | **11** | Philosophy, ethics, and reflective culture |
 | **12** | Medicine and public health |
 | **13** | Engineering and construction |
+| **14** | Navigation and trade routes |
 
 ## Current Milestone
 
-**Phase 13 Milestone 12: Quarry cities**
+**Phase 14 Milestone 1: Navigation technology**
 
-``CityKind.QUARRY`` is a non-capital specialized seat. Gatherers at an
-active quarry gain ``+1`` stone gather (stacks with forge and mason).
+``TechnologyKind.NAVIGATION`` requires surveying. Its inactive
+``COMPASS`` innovation grants ``-0.02`` MOVE energy when activated.
 
 ### Completed
 
@@ -258,6 +259,9 @@ JSONL storage → `civitas run`
 - Milestone 10: Surveying technology
 - Milestone 11: Zoning laws
 - Milestone 12: Quarry cities
+
+**Phase 14:**
+- Milestone 1: Navigation technology
 
 ## License
 
