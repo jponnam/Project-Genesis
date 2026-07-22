@@ -36,6 +36,9 @@ seat, and the quarry city. Active ``SAFETY_CODES`` statutes grant living
 subjects -0.02 PRODUCE energy cost (Phase 17 M11), stacking with guild,
 workshop, weaver, smelter, foundry, fulling mill, forge works, mill
 town, tannery, bellows, lathe, abacus, pulley, customs, labor, and loom.
+Active ``TIMBER_RIGHTS`` statutes grant living subjects +1 WOOD gather
+(Phase 18 M2), stacking with sawmill and coppice society-wide, the
+scaffold seat, the conservation subject bonus, and the pastoral city.
 Elections (voting) are a separate Phase 5 aggregate, as are institutions.
 """
 
@@ -77,6 +80,7 @@ class LawKind(StrEnum):
     SUMPTUARY = "sumptuary"
     MINERAL_RIGHTS = "mineral_rights"
     SAFETY_CODES = "safety_codes"
+    TIMBER_RIGHTS = "timber_rights"
 
 
 # Statute kinds that allow at most one active law per government.
@@ -100,6 +104,7 @@ _UNIQUE_ACTIVE_KINDS: frozenset[LawKind] = frozenset(
         LawKind.SUMPTUARY,
         LawKind.MINERAL_RIGHTS,
         LawKind.SAFETY_CODES,
+        LawKind.TIMBER_RIGHTS,
     }
 )
 
@@ -151,6 +156,9 @@ MINERAL_RIGHTS_STONE_GATHER_BONUS: int = 1
 # Kind-only PRODUCE energy discount for living subjects under SAFETY_CODES.
 SAFETY_CODES_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 
+# Kind-only WOOD gather bonus for living subjects under active TIMBER_RIGHTS.
+TIMBER_RIGHTS_WOOD_GATHER_BONUS: int = 1
+
 
 class Law(BaseModel):
     """One statute enacted by a government."""
@@ -169,7 +177,7 @@ class Law(BaseModel):
             "ignored by CURRICULUM, CALENDAR, ETHICS, ASSEMBLY, SANITATION, "
             "QUARANTINE, BUILDING_CODES, ZONING, PASSAGE, CUSTOMS, "
             "LAND_TENURE, CONSERVATION, LABOR, SUMPTUARY, MINERAL_RIGHTS, "
-            "SAFETY_CODES, and other kinds."
+            "SAFETY_CODES, TIMBER_RIGHTS, and other kinds."
         ),
     )
     rate_bps: NonNegativeInt = Field(
@@ -246,6 +254,7 @@ class LawCensus(BaseModel):
     active_sumptuary_count: NonNegativeInt = 0
     active_mineral_rights_count: NonNegativeInt = 0
     active_safety_codes_count: NonNegativeInt = 0
+    active_timber_rights_count: NonNegativeInt = 0
 
 
 def law_by_id(world: World, law_id: LawId | int) -> Law | None:
@@ -817,6 +826,36 @@ def safety_codes_produce_discount_for(world: World, agent: Agent) -> float:
     return SAFETY_CODES_PRODUCE_ENERGY_DISCOUNT
 
 
+def active_timber_rights_law(
+    world: World,
+    government_id: GovernmentId | int,
+) -> Law | None:
+    """Return the active timber-rights statute for ``government_id``, if any.
+
+    When multiple active ``TIMBER_RIGHTS`` laws exist (should not under
+    uniqueness rules), the lowest ``law_id`` wins.
+    """
+    for law in active_laws(world, government_id):
+        if law.kind == LawKind.TIMBER_RIGHTS:
+            return law
+    return None
+
+
+def timber_rights_wood_bonus_for(world: World, agent: Agent) -> int:
+    """Return +1 when ``agent`` is a living subject under TIMBER_RIGHTS.
+
+    The statute kind alone enables the bonus; ``flat_amount`` is ignored.
+    """
+    if not agent.is_alive():
+        return 0
+    government = government_at(world, agent.location_id)
+    if government is None:
+        return 0
+    if active_timber_rights_law(world, government.government_id) is None:
+        return 0
+    return TIMBER_RIGHTS_WOOD_GATHER_BONUS
+
+
 def _has_active_kind(
     world: World,
     government_id: GovernmentId,
@@ -910,6 +949,9 @@ def census_laws(world: World) -> LawCensus:
     active_safety_codes = sum(
         1 for law in active if law.kind == LawKind.SAFETY_CODES
     )
+    active_timber_rights = sum(
+        1 for law in active if law.kind == LawKind.TIMBER_RIGHTS
+    )
     return LawCensus(
         tick=world.tick,
         law_count=len(laws),
@@ -934,6 +976,7 @@ def census_laws(world: World) -> LawCensus:
         active_sumptuary_count=active_sumptuary,
         active_mineral_rights_count=active_mineral_rights,
         active_safety_codes_count=active_safety_codes,
+        active_timber_rights_count=active_timber_rights,
     )
 
 
@@ -954,6 +997,7 @@ __all__ = [
     "SAFETY_CODES_PRODUCE_ENERGY_DISCOUNT",
     "SANITATION_DRINK_RESTORE_BONUS",
     "SUMPTUARY_MARKET_FEE_DISCOUNT",
+    "TIMBER_RIGHTS_WOOD_GATHER_BONUS",
     "ZONING_EAT_RESTORE_BONUS",
     "Law",
     "LawCensus",
@@ -976,6 +1020,7 @@ __all__ = [
     "active_sanitation_law",
     "active_sumptuary_law",
     "active_tax_schedule",
+    "active_timber_rights_law",
     "active_zoning_law",
     "assembly_socialize_bonus_for",
     "building_codes_move_discount_for",
@@ -1001,5 +1046,6 @@ __all__ = [
     "set_law_active",
     "sumptuary_market_discount_for",
     "tax_schedule_for_agent",
+    "timber_rights_wood_bonus_for",
     "zoning_eat_bonus_for",
 ]

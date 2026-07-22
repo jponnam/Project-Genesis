@@ -83,6 +83,7 @@ class LawSystem:
                     active_sumptuary_count=snap.active_sumptuary_count,
                     active_mineral_rights_count=snap.active_mineral_rights_count,
                     active_safety_codes_count=snap.active_safety_codes_count,
+                    active_timber_rights_count=snap.active_timber_rights_count,
                 )
             )
         return world
