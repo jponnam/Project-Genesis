@@ -11,6 +11,7 @@ from civitas.domain import (
     CAMP_LOCATION,
     CAMP_POLL_TAX_LAW,
     ETHICS_MIN_TEACH_TRUST_DELTA,
+    SANITATION_DRINK_RESTORE_BONUS,
     Agent,
     AgentStatus,
     Government,
@@ -23,6 +24,7 @@ from civitas.domain import (
     active_curriculum_law,
     active_ethics_law,
     active_market_fee_law,
+    active_sanitation_law,
     assembly_socialize_bonus_for,
     calendar_retrieval_bonus_for,
     census_laws,
@@ -34,6 +36,7 @@ from civitas.domain import (
     levy_taxes,
     market_fee_for,
     repeal_law,
+    sanitation_drink_bonus_for,
     set_law_active,
     tax_schedule_for_agent,
 )
@@ -60,6 +63,7 @@ def test_default_laws_seed_camp_poll_tax() -> None:
     assert CAMP_POLL_TAX_LAW.flat_amount == 1
     assert CAMP_POLL_TAX_LAW.active is True
     assert CAMP_POLL_TAX_LAW.government_id.value == CAMP_GOVERNMENT.government_id.value
+    assert all(law.kind is not LawKind.SANITATION for law in default_laws())
 
 
 def test_world_rejects_unknown_government_and_duplicate_active_tax() -> None:
@@ -113,6 +117,14 @@ def test_world_rejects_duplicate_active_assembly() -> None:
     left = Law.create(0, 0, "Assembly A", LawKind.ASSEMBLY)
     right = Law.create(1, 0, "Assembly B", LawKind.ASSEMBLY)
     with pytest.raises(ValidationError, match="ASSEMBLY"):
+        _world(Agent.create(agent_id=0, name="A"), laws=(left, right))
+
+
+def test_world_rejects_duplicate_active_sanitation() -> None:
+    """At most one active SANITATION law per government."""
+    left = Law.create(0, 0, "Sanitation A", LawKind.SANITATION)
+    right = Law.create(1, 0, "Sanitation B", LawKind.SANITATION)
+    with pytest.raises(ValidationError, match="SANITATION"):
         _world(Agent.create(agent_id=0, name="A"), laws=(left, right))
 
 
@@ -363,6 +375,70 @@ def test_assembly_bonus_requires_living_subject() -> None:
     assert assembly_socialize_bonus_for(bare, bare.agents[0]) == 0.0
 
 
+def test_enact_sanitation_and_uniqueness() -> None:
+    """SANITATION enacts once per government; kind alone enables the bonus."""
+    world = _world(Agent.create(agent_id=0, name="A"))
+    sanitation = Law.create(0, 0, "Camp Sanitation", LawKind.SANITATION)
+    enacted = enact_law(world, sanitation)
+    assert enacted is not None
+    assert active_sanitation_law(enacted, 0) == sanitation
+    assert sanitation_drink_bonus_for(enacted, enacted.agents[0]) == (
+        SANITATION_DRINK_RESTORE_BONUS
+    )
+    assert SANITATION_DRINK_RESTORE_BONUS == 0.05
+    duplicate = Law.create(1, 0, "Other Sanitation", LawKind.SANITATION)
+    assert enact_law(enacted, duplicate) is None
+    # Other unique kinds may coexist with SANITATION.
+    tax = Law.create(1, 0, "Poll", LawKind.TAX_SCHEDULE, flat_amount=1)
+    with_tax = enact_law(enacted, tax)
+    assert with_tax is not None
+    fee = Law.create(2, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=1)
+    with_fee = enact_law(with_tax, fee)
+    assert with_fee is not None
+    curriculum = Law.create(3, 0, "Camp Schools", LawKind.CURRICULUM)
+    with_curriculum = enact_law(with_fee, curriculum)
+    assert with_curriculum is not None
+    calendar = Law.create(4, 0, "Camp Calendar", LawKind.CALENDAR)
+    with_calendar = enact_law(with_curriculum, calendar)
+    assert with_calendar is not None
+    ethics = Law.create(5, 0, "Camp Ethics", LawKind.ETHICS)
+    with_ethics = enact_law(with_calendar, ethics)
+    assert with_ethics is not None
+    assembly = Law.create(6, 0, "Camp Assembly", LawKind.ASSEMBLY)
+    with_assembly = enact_law(with_ethics, assembly)
+    assert with_assembly is not None
+    assert active_sanitation_law(with_assembly, 0) == sanitation
+    assert sanitation_drink_bonus_for(with_assembly, with_assembly.agents[0]) == (
+        SANITATION_DRINK_RESTORE_BONUS
+    )
+
+
+def test_sanitation_bonus_requires_living_subject() -> None:
+    """Only living agents under a SANITATION polity receive the drink bonus."""
+    sanitation = Law.create(0, 0, "Camp Sanitation", LawKind.SANITATION)
+    world = _world(Agent.create(agent_id=0, name="A"), laws=(sanitation,))
+    assert sanitation_drink_bonus_for(world, world.agents[0]) == (
+        SANITATION_DRINK_RESTORE_BONUS
+    )
+    dead = world.agents[0].model_copy(
+        update={
+            "status": AgentStatus.DEAD,
+            "health": world.agents[0].health.model_copy(update={"vitality": 0.0}),
+        }
+    )
+    assert sanitation_drink_bonus_for(world, dead) == 0.0
+    ungoverned = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(),
+        laws=(),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert sanitation_drink_bonus_for(ungoverned, ungoverned.agents[0]) == 0.0
+    bare = _world(Agent.create(agent_id=0, name="A"))
+    assert sanitation_drink_bonus_for(bare, bare.agents[0]) == 0.0
+
+
 def test_tax_schedule_overrides_levy_fallback() -> None:
     """Active TAX_SCHEDULE beats levy_taxes fallback parameters."""
     law = Law.create(0, 0, "Heavy", LawKind.TAX_SCHEDULE, flat_amount=2)
@@ -392,13 +468,23 @@ def test_census_laws_counts() -> None:
     calendar = Law.create(4, 0, "Calendar", LawKind.CALENDAR, active=True)
     ethics = Law.create(5, 0, "Ethics", LawKind.ETHICS, active=True)
     assembly = Law.create(6, 0, "Assembly", LawKind.ASSEMBLY, active=True)
+    sanitation = Law.create(7, 0, "Sanitation", LawKind.SANITATION, active=True)
     world = _world(
         Agent.create(agent_id=0, name="A"),
-        laws=(active, inactive, fee, curriculum, calendar, ethics, assembly),
+        laws=(
+            active,
+            inactive,
+            fee,
+            curriculum,
+            calendar,
+            ethics,
+            assembly,
+            sanitation,
+        ),
     )
     snap = census_laws(world)
-    assert snap.law_count == 7
-    assert snap.active_count == 6
+    assert snap.law_count == 8
+    assert snap.active_count == 7
     assert snap.inactive_count == 1
     assert snap.governments_with_active_laws == 1
     assert snap.active_tax_schedule_count == 1
@@ -407,6 +493,7 @@ def test_census_laws_counts() -> None:
     assert snap.active_calendar_count == 1
     assert snap.active_ethics_count == 1
     assert snap.active_assembly_count == 1
+    assert snap.active_sanitation_count == 1
     assert census_laws(world) == snap
 
 

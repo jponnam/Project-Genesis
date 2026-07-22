@@ -2,8 +2,8 @@
 
 Laws are first-class world aggregates. Domain helpers own enactment,
 repeal, tax-schedule lookup, market-fee lookup, curriculum teaching
-bonuses, calendar retrieval bonuses, ethics teach-trust deltas, and
-assembly socialize bonuses.
+bonuses, calendar retrieval bonuses, ethics teach-trust deltas,
+assembly socialize bonuses, and sanitation drink bonuses.
 Active ``TAX_SCHEDULE`` statutes override fallback levy parameters
 when collecting taxes. Active ``MARKET_FEE`` statutes charge a flat
 buyer fee on market listing fills (Phase 9 M10). Active ``CURRICULUM``
@@ -12,7 +12,8 @@ Active ``CALENDAR`` statutes grant living subjects +1 retrieval limit
 (Phase 10 M11). Active ``ETHICS`` statutes lower the peer teach-trust
 threshold for living subject learners by 0.05 (Phase 11 M2).
 Active ``ASSEMBLY`` statutes grant living subjects +0.05 SOCIALIZE
-restore (Phase 11 M11).
+restore (Phase 11 M11). Active ``SANITATION`` statutes grant living
+subjects +0.05 DRINK restore (Phase 12 M2).
 Elections (voting) are a separate Phase 5 aggregate, as are
 institutions.
 """
@@ -43,6 +44,7 @@ class LawKind(StrEnum):
     CALENDAR = "calendar"
     ETHICS = "ethics"
     ASSEMBLY = "assembly"
+    SANITATION = "sanitation"
 
 
 # Statute kinds that allow at most one active law per government.
@@ -54,6 +56,7 @@ _UNIQUE_ACTIVE_KINDS: frozenset[LawKind] = frozenset(
         LawKind.CALENDAR,
         LawKind.ETHICS,
         LawKind.ASSEMBLY,
+        LawKind.SANITATION,
     }
 )
 
@@ -68,6 +71,9 @@ ETHICS_MIN_TEACH_TRUST_DELTA: float = -0.05
 
 # Kind-only SOCIALIZE restore bonus for living subjects under active ASSEMBLY.
 ASSEMBLY_SOCIALIZE_RESTORE_BONUS: float = 0.05
+
+# Kind-only DRINK restore bonus for living subjects under active SANITATION.
+SANITATION_DRINK_RESTORE_BONUS: float = 0.05
 
 
 class Law(BaseModel):
@@ -84,7 +90,8 @@ class Law(BaseModel):
         default=0,
         description=(
             "TAX_SCHEDULE flat poll amount, or MARKET_FEE flat fill fee; "
-            "ignored by CURRICULUM, CALENDAR, ETHICS, ASSEMBLY, and other kinds."
+            "ignored by CURRICULUM, CALENDAR, ETHICS, ASSEMBLY, SANITATION, "
+            "and other kinds."
         ),
     )
     rate_bps: NonNegativeInt = Field(
@@ -149,6 +156,7 @@ class LawCensus(BaseModel):
     active_calendar_count: NonNegativeInt
     active_ethics_count: NonNegativeInt
     active_assembly_count: NonNegativeInt
+    active_sanitation_count: NonNegativeInt
 
 
 def law_by_id(world: World, law_id: LawId | int) -> Law | None:
@@ -357,6 +365,36 @@ def assembly_socialize_bonus_for(world: World, agent: Agent) -> float:
     return ASSEMBLY_SOCIALIZE_RESTORE_BONUS
 
 
+def active_sanitation_law(
+    world: World,
+    government_id: GovernmentId | int,
+) -> Law | None:
+    """Return the active sanitation statute for ``government_id``, if any.
+
+    When multiple active ``SANITATION`` laws exist (should not under
+    uniqueness rules), the lowest ``law_id`` wins.
+    """
+    for law in active_laws(world, government_id):
+        if law.kind == LawKind.SANITATION:
+            return law
+    return None
+
+
+def sanitation_drink_bonus_for(world: World, agent: Agent) -> float:
+    """Return +0.05 when ``agent`` is a living subject under active SANITATION.
+
+    The statute kind alone enables the bonus; ``flat_amount`` is ignored.
+    """
+    if not agent.is_alive():
+        return 0.0
+    government = government_at(world, agent.location_id)
+    if government is None:
+        return 0.0
+    if active_sanitation_law(world, government.government_id) is None:
+        return 0.0
+    return SANITATION_DRINK_RESTORE_BONUS
+
+
 def _has_active_kind(
     world: World,
     government_id: GovernmentId,
@@ -430,6 +468,7 @@ def census_laws(world: World) -> LawCensus:
     active_calendar = sum(1 for law in active if law.kind == LawKind.CALENDAR)
     active_ethics = sum(1 for law in active if law.kind == LawKind.ETHICS)
     active_assembly = sum(1 for law in active if law.kind == LawKind.ASSEMBLY)
+    active_sanitation = sum(1 for law in active if law.kind == LawKind.SANITATION)
     return LawCensus(
         tick=world.tick,
         law_count=len(laws),
@@ -442,6 +481,7 @@ def census_laws(world: World) -> LawCensus:
         active_calendar_count=active_calendar,
         active_ethics_count=active_ethics,
         active_assembly_count=active_assembly,
+        active_sanitation_count=active_sanitation,
     )
 
 
@@ -451,6 +491,7 @@ __all__ = [
     "CAMP_POLL_TAX_LAW",
     "CURRICULUM_TEACHINGS_PER_KNOWER_BONUS",
     "ETHICS_MIN_TEACH_TRUST_DELTA",
+    "SANITATION_DRINK_RESTORE_BONUS",
     "Law",
     "LawCensus",
     "LawKind",
@@ -460,6 +501,7 @@ __all__ = [
     "active_ethics_law",
     "active_laws",
     "active_market_fee_law",
+    "active_sanitation_law",
     "active_tax_schedule",
     "assembly_socialize_bonus_for",
     "calendar_retrieval_bonus_for",
@@ -472,6 +514,7 @@ __all__ = [
     "laws_for",
     "market_fee_for",
     "repeal_law",
+    "sanitation_drink_bonus_for",
     "set_law_active",
     "tax_schedule_for_agent",
 ]

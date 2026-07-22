@@ -275,6 +275,30 @@ def test_drink_consumes_water_and_restores_need() -> None:
     )
 
 
+def test_drink_action_uses_sanitation_bonus() -> None:
+    """DRINK restore includes subject-scoped SANITATION law bonuses."""
+    agent = Agent.create(
+        agent_id=0,
+        name="A",
+        needs=Needs(food=1.0, water=0.4, energy=1.0, social=1.0, safety=1.0),
+    ).model_copy(
+        update={
+            "inventory": Inventory(
+                stacks=(ResourceStack(resource="water", quantity=1),)
+            )
+        }
+    )
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(Law.create(0, 0, "Camp Sanitation", LawKind.SANITATION),),
+        agents=(agent,),
+    )
+    updated = ActionExecutor().execute(world, _choice(0, ActionKind.DRINK))
+    assert updated.agents[0].needs.water == pytest.approx(0.75)
+
+
 def test_restore_clamps_at_one() -> None:
     """Need restoration cannot exceed 1.0."""
     agent = _with_food(0, food_need=0.9, quantity=1)

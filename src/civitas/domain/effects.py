@@ -29,8 +29,9 @@ global ORATION SOCIALIZE restore bonus, and ASSEMBLY law SOCIALIZE
 restore bonuses for living subjects (stacking with oration), and AGORA
 city SOCIALIZE restore bonuses for agents at the city seat (stacking with
 oration and assembly). Phase 12 adds a global REMEDY REST restore bonus
-(stacking with fire hearth, temple, and sanctuary). The action executor,
-retrieval path, market fills,
+(stacking with fire hearth, temple, and sanctuary) and SANITATION law
+DRINK restore bonuses for living subjects (stacking with well and shrine).
+The action executor, retrieval path, market fills,
 knowledge diffusion, and research progression read these helpers;
 ``EffectsSystem`` only observes coverage. Systems never call each other.
 """
@@ -54,6 +55,7 @@ from civitas.domain.laws import (
     calendar_retrieval_bonus_for,
     curriculum_teachings_bonus_for,
     market_fee_for,
+    sanitation_drink_bonus_for,
 )
 from civitas.domain.numeric import clamp_unit
 from civitas.domain.production import DEFAULT_PRODUCE_ENERGY_COST
@@ -491,17 +493,18 @@ def gather_amount_bonus(
 
 
 def drink_restore_bonus(world: World, agent: Agent) -> float:
-    """Return the DRINK restore bonus from WELL/SHRINE at the agent's location.
+    """Return the DRINK restore bonus from WELL/SHRINE/SANITATION.
 
     An active WELL contributes ``WELL_DRINK_RESTORE_BONUS``. An active
-    SHRINE contributes ``SHRINE_DRINK_RESTORE_BONUS``. Both stack when
-    present at the same seat.
+    SHRINE contributes ``SHRINE_DRINK_RESTORE_BONUS``. An active
+    ``SANITATION`` statute contributes for living subjects. All stack.
     """
     bonus = 0.0
     if location_has_active_well(world, agent.location_id):
         bonus += WELL_DRINK_RESTORE_BONUS
     if location_has_active_shrine(world, agent.location_id):
         bonus += SHRINE_DRINK_RESTORE_BONUS
+    bonus += sanitation_drink_bonus_for(world, agent)
     return bonus
 
 
@@ -675,10 +678,9 @@ def effective_drink_restore(
     *,
     base: float = DEFAULT_DRINK_RESTORE,
 ) -> float:
-    """Return DRINK restore amount including well and shrine bonuses.
+    """Return DRINK restore amount including well, shrine, and sanitation bonuses.
 
-    ``effective_drink_restore = clamp_unit(base + well_bonus + shrine_bonus)``
-    where each active seat kind contributes ``+0.05`` when colocated.
+    ``effective_drink_restore = clamp_unit(base + drink_restore_bonus(...))``.
     """
     return clamp_unit(base + drink_restore_bonus(world, agent))
 

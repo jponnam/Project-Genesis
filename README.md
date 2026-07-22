@@ -124,13 +124,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 12 — Milestone 1: Medicine technology**
+**Phase 12 — Milestone 2: Sanitation laws**
 
-``TechnologyKind.MEDICINE`` extends the prerequisite chain after rhetoric
-with an undiscovered ``CAMP_MEDICINE`` seed and matching research row.
-Once discovered, ``InnovationKind.REMEDY`` activates ``CAMP_REMEDY`` and
-adds a society-wide ``+0.05`` REST restore bonus that stacks with fire
-hearth, temple, and sanctuary bonuses.
+``LawKind.SANITATION`` adds a unique-active public health statute. Living
+subjects under an active sanitation law gain ``+0.05`` DRINK restore,
+stacking with WELL and SHRINE seat bonuses.
 
 ### Completed
 
@@ -235,6 +233,7 @@ JSONL storage → `civitas run`
 
 **Phase 12:**
 - Milestone 1: Medicine technology
+- Milestone 2: Sanitation laws
 
 ## License
 
