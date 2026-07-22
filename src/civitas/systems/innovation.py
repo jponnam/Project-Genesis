@@ -99,6 +99,7 @@ class InnovationSystem:
                     active_irrigation_canal_count=(snap.active_irrigation_canal_count),
                     active_forge_count=snap.active_forge_count,
                     active_scribe_count=snap.active_scribe_count,
+                    active_abacus_count=snap.active_abacus_count,
                 )
             )
         return world
