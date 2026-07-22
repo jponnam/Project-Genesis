@@ -126,11 +126,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 14 Milestone 5: Harbor cities**
+**Phase 14 Milestone 6: Merchant institutions**
 
-``CityKind.HARBOR`` is a non-capital specialized seat. An active harbor at
-a market location discounts the market fill fee by 1, stacking with
-bureaucracy.
+``InstitutionKind.MERCHANT`` is a non-seeded institution kind. An active
+merchant at a market location discounts the market fill fee by 1,
+stacking with bureaucracy and harbor.
 
 ### Completed
 
@@ -267,6 +267,7 @@ JSONL storage → `civitas run`
 - Milestone 3: Caravan institutions
 - Milestone 4: Waystation infrastructure
 - Milestone 5: Harbor cities
+- Milestone 6: Merchant institutions
 
 ## License
 

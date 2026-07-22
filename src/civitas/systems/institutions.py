@@ -93,6 +93,7 @@ class InstitutionSystem:
                     active_mason_count=snap.active_mason_count,
                     active_architect_count=snap.active_architect_count,
                     active_caravan_count=snap.active_caravan_count,
+                    active_merchant_count=snap.active_merchant_count,
                     total_budget=snap.total_budget,
                     funded_count=snap.funded_count,
                 )
