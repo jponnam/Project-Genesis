@@ -128,13 +128,13 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 16 Milestone 8: Tailor institutions**
+**Phase 16 Milestone 9: Warehouse infrastructure**
 
-``InstitutionKind.TAILOR`` is a gov-attached institution whose active
-seat grants a teachings-per-knower bonus at its location. The bonus
-stacks with scribe, dialectic, scriptorium, academy, forum, school,
-stoa, collegium, architect, cartographer, agronomist, and the
-curriculum law. Tailors are not seeded.
+``InfrastructureKind.WAREHOUSE`` is a city-seat infrastructure piece
+whose active seat grants a market-fee discount at its location. The
+discount stacks with bureaucracy, harbor, merchant, dyer, and mordant.
+Governments fund construction from their treasury and institutions may
+commission it from their budget. Warehouses are not seeded.
 
 ### Completed
 
@@ -302,6 +302,7 @@ JSONL storage → `civitas run`
 - Milestone 6: Dyer institutions
 - Milestone 7: Dyeing technology
 - Milestone 8: Tailor institutions
+- Milestone 9: Warehouse infrastructure
 
 ## License
 
