@@ -87,6 +87,7 @@ from civitas.domain import (
     CARPENTRY_WOOD_GATHER_BONUS,
     CARTOGRAPHER_TEACHINGS_PER_KNOWER_BONUS,
     CARTOGRAPHY_RETRIEVAL_LIMIT_BONUS,
+    CARVER_TEACHINGS_PER_KNOWER_BONUS,
     CLINIC_DRINK_RESTORE_BONUS,
     COLLEGIUM_TEACHINGS_PER_KNOWER_BONUS,
     CONSERVATION_WOOD_GATHER_BONUS,
@@ -234,6 +235,7 @@ from civitas.domain import (
     location_has_active_bureaucracy,
     location_has_active_caravan,
     location_has_active_cartographer,
+    location_has_active_carver,
     location_has_active_clinic,
     location_has_active_collegium,
     location_has_active_ditch,
@@ -2604,6 +2606,7 @@ def test_collegium_stacks_with_all_teaching_bonuses() -> None:
             ),
             Institution.create(6, 0, 1, "Forum Tailor", InstitutionKind.TAILOR),
             Institution.create(7, 0, 1, "Forum Smith", InstitutionKind.SMITH),
+            Institution.create(8, 0, 1, "Forum Carver", InstitutionKind.CARVER),
         ),
         agents=(Agent.create(agent_id=0, name="A", location_id=1),),
     )
@@ -2619,6 +2622,7 @@ def test_collegium_stacks_with_all_teaching_bonuses() -> None:
     assert location_has_active_agronomist(world, agent.location_id) is True
     assert location_has_active_tailor(world, agent.location_id) is True
     assert location_has_active_smith(world, agent.location_id) is True
+    assert location_has_active_carver(world, agent.location_id) is True
     assert (
         effective_teachings_per_knower(
             world, base=DEFAULT_TEACHINGS_PER_KNOWER, agent=agent
@@ -2637,6 +2641,7 @@ def test_collegium_stacks_with_all_teaching_bonuses() -> None:
         + AGRONOMIST_TEACHINGS_PER_KNOWER_BONUS
         + TAILOR_TEACHINGS_PER_KNOWER_BONUS
         + SMITH_TEACHINGS_PER_KNOWER_BONUS
+        + CARVER_TEACHINGS_PER_KNOWER_BONUS
         + CURRICULUM_TEACHINGS_PER_KNOWER_BONUS
     )
 
@@ -3458,6 +3463,110 @@ def test_smith_boosts_teachings_and_stacks_with_tailor() -> None:
     )
     bare = _world()
     assert location_has_active_smith(bare, bare.agents[0].location_id) is False
+
+
+def test_carver_boosts_teachings_and_stacks_with_smith() -> None:
+    """Active carver seat bonus stacks with smith and prior sources."""
+    discovered_pottery = CAMP_POTTERY.model_copy(update={"discovered": True})
+    discovered_irrigation = CAMP_IRRIGATION.model_copy(update={"discovered": True})
+    discovered_metallurgy = CAMP_METALLURGY.model_copy(update={"discovered": True})
+    discovered_writing = CAMP_WRITING.model_copy(update={"discovered": True})
+    active_scribe = CAMP_SCRIBE.model_copy(update={"active": True})
+    curriculum = Law.create(0, 0, "Camp Schools", LawKind.CURRICULUM)
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(curriculum,),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        technologies=(
+            CAMP_FIRE,
+            discovered_pottery,
+            discovered_irrigation,
+            discovered_metallurgy,
+            discovered_writing,
+            CAMP_MATHEMATICS,
+            CAMP_ASTRONOMY,
+            CAMP_PHILOSOPHY,
+        ),
+        innovations=(
+            CAMP_FIRE_HEARTH,
+            CAMP_POTTERY_CRAFT,
+            CAMP_IRRIGATION_CANAL,
+            CAMP_FORGE,
+            active_scribe,
+            CAMP_ABACUS,
+            CAMP_STAR_CHART,
+            CAMP_DIALECTIC,
+        ),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 0, 0, "Camp Scriptorium", InfrastructureKind.SCRIPTORIUM
+            ),
+        ),
+        institutions=(
+            Institution.create(0, 0, 0, "Camp Academy", InstitutionKind.ACADEMY),
+            Institution.create(1, 0, 0, "Camp School", InstitutionKind.SCHOOL),
+            Institution.create(2, 0, 0, "Camp Collegium", InstitutionKind.COLLEGIUM),
+            Institution.create(3, 0, 0, "Camp Architect", InstitutionKind.ARCHITECT),
+            Institution.create(
+                4, 0, 0, "Camp Cartographer", InstitutionKind.CARTOGRAPHER
+            ),
+            Institution.create(
+                5, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST
+            ),
+            Institution.create(6, 0, 0, "Camp Tailor", InstitutionKind.TAILOR),
+            Institution.create(7, 0, 0, "Camp Smith", InstitutionKind.SMITH),
+            Institution.create(8, 0, 0, "Camp Carver", InstitutionKind.CARVER),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_carver(world, agent.location_id) is True
+    assert location_has_active_smith(world, agent.location_id) is True
+    assert (
+        effective_teachings_per_knower(
+            world, base=DEFAULT_TEACHINGS_PER_KNOWER, agent=agent
+        )
+        == DEFAULT_TEACHINGS_PER_KNOWER
+        + WRITING_TEACHINGS_PER_KNOWER_BONUS
+        + SCRIPTORIUM_TEACHINGS_PER_KNOWER_BONUS
+        + CURRICULUM_TEACHINGS_PER_KNOWER_BONUS
+        + ACADEMY_TEACHINGS_PER_KNOWER_BONUS
+        + SCHOOL_TEACHINGS_PER_KNOWER_BONUS
+        + COLLEGIUM_TEACHINGS_PER_KNOWER_BONUS
+        + ARCHITECT_TEACHINGS_PER_KNOWER_BONUS
+        + CARTOGRAPHER_TEACHINGS_PER_KNOWER_BONUS
+        + AGRONOMIST_TEACHINGS_PER_KNOWER_BONUS
+        + TAILOR_TEACHINGS_PER_KNOWER_BONUS
+        + SMITH_TEACHINGS_PER_KNOWER_BONUS
+        + CARVER_TEACHINGS_PER_KNOWER_BONUS
+    )
+    # Without agent/location, carver (seat-scoped) and curriculum do not apply.
+    assert (
+        effective_teachings_per_knower(world, base=DEFAULT_TEACHINGS_PER_KNOWER)
+        == DEFAULT_TEACHINGS_PER_KNOWER + WRITING_TEACHINGS_PER_KNOWER_BONUS
+    )
+    carver_only = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        institutions=(
+            Institution.create(0, 0, 0, "Camp Carver", InstitutionKind.CARVER),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_carver(carver_only, 0) is True
+    assert (
+        effective_teachings_per_knower(
+            carver_only,
+            base=DEFAULT_TEACHINGS_PER_KNOWER,
+            agent=carver_only.agents[0],
+        )
+        == DEFAULT_TEACHINGS_PER_KNOWER + CARVER_TEACHINGS_PER_KNOWER_BONUS
+    )
+    bare = _world()
+    assert location_has_active_carver(bare, bare.agents[0].location_id) is False
 
 
 def test_forum_boosts_teachings_and_stacks_with_academy_scriptorium() -> None:

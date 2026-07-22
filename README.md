@@ -130,15 +130,16 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 18 Milestone 7: Joinery technology**
+**Phase 18 Milestone 8: Carver institutions**
 
-``TechnologyKind.JOINERY`` is a society-level technology requiring
-carpentry, adopted through the ``PLANE`` innovation. An active plane
-grants a society-wide PRODUCE energy discount that stacks with guild,
-workshop, weaver, smelter, joiner, foundry, fulling mill, forge works,
-mill town, ironworks, tannery, bellows, lathe, abacus, pulley, customs,
-labor, safety codes, and loom. Discovery flows through the standard
-research, innovation, and knowledge-diffusion pipeline.
+``InstitutionKind.CARVER`` is a gov-attached teaching institution seated
+inside its government's jurisdiction. An active carver grants a
+teachings-per-knower bonus at its seat location that stacks with the
+scribe and dialectic society-wide bonuses and the scriptorium, stoa,
+academy, forum, school, collegium, architect, cartographer, agronomist,
+tailor, smith, and curriculum bonuses. Carvers are not seeded; the
+institution census and ``InstitutionsObserved`` event report the active
+carver count.
 
 ### Completed
 
@@ -333,6 +334,7 @@ JSONL storage → `civitas run`
 - Milestone 5: Timber town cities
 - Milestone 6: Joiner institutions
 - Milestone 7: Joinery technology
+- Milestone 8: Carver institutions
 
 ## License
 
