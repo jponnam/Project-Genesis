@@ -96,6 +96,7 @@ from civitas.domain import (
     FORESTRY_WOOD_GATHER_BONUS,
     FORUM_TEACHINGS_PER_KNOWER_BONUS,
     FOUNDRY_PRODUCE_ENERGY_DISCOUNT,
+    FULLING_MILL_PRODUCE_ENERGY_DISCOUNT,
     GRANARY_FOOD_GATHER_BONUS,
     GUILD_PRODUCE_ENERGY_DISCOUNT,
     HARBOR_MARKET_FEE_DISCOUNT,
@@ -199,6 +200,7 @@ from civitas.domain import (
     location_has_active_farmstead,
     location_has_active_forum,
     location_has_active_foundry,
+    location_has_active_fulling_mill,
     location_has_active_granary,
     location_has_active_guild,
     location_has_active_harbor,
@@ -4255,6 +4257,77 @@ def test_weaver_stacks_with_guild_workshop_abacus_and_pulley() -> None:
         - ENGINEERING_PRODUCE_ENERGY_DISCOUNT
     )
     assert location_has_active_weaver(world, agent.location_id) is True
+    assert effective_produce_energy_cost(
+        world,
+        agent,
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(expected)
+    assert census_effects(world).produce_energy_cost_bps == round(expected * 10_000)
+
+
+def test_fulling_mill_reduces_produce_energy_for_colocated_agents() -> None:
+    """Active fulling mills discount PRODUCE energy at their seat location."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 0, 0, "Camp Fulling Mill", InfrastructureKind.FULLING_MILL
+            ),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_fulling_mill(world, agent.location_id) is True
+    assert effective_produce_energy_cost(
+        world,
+        agent,
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(
+        DEFAULT_PRODUCE_ENERGY_COST - FULLING_MILL_PRODUCE_ENERGY_DISCOUNT
+    )
+    assert census_effects(world).produce_energy_cost_bps == round(
+        (DEFAULT_PRODUCE_ENERGY_COST - FULLING_MILL_PRODUCE_ENERGY_DISCOUNT) * 10_000
+    )
+    bare = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_fulling_mill(bare, bare.agents[0].location_id) is False
+
+
+def test_fulling_mill_stacks_with_guild_workshop_and_weaver() -> None:
+    """Fulling mill seat discount stacks with guild, workshop, and weaver."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        institutions=(
+            Institution.create(0, 0, 0, "Camp Guild", InstitutionKind.GUILD),
+            Institution.create(1, 0, 0, "Camp Workshop", InstitutionKind.WORKSHOP),
+            Institution.create(2, 0, 0, "Camp Weaver", InstitutionKind.WEAVER),
+        ),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 0, 0, "Camp Fulling Mill", InfrastructureKind.FULLING_MILL
+            ),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    expected_discount = (
+        GUILD_PRODUCE_ENERGY_DISCOUNT
+        + WORKSHOP_PRODUCE_ENERGY_DISCOUNT
+        + WEAVER_PRODUCE_ENERGY_DISCOUNT
+        + FULLING_MILL_PRODUCE_ENERGY_DISCOUNT
+    )
+    assert location_has_active_fulling_mill(world, agent.location_id) is True
+    assert produce_energy_discount(world, agent) == pytest.approx(expected_discount)
+    expected = DEFAULT_PRODUCE_ENERGY_COST - expected_discount
     assert effective_produce_energy_cost(
         world,
         agent,
