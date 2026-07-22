@@ -125,10 +125,10 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 13 Milestone 9: Scaffold infrastructure**
+**Phase 13 Milestone 10: Surveying technology**
 
-``InfrastructureKind.SCAFFOLD`` (build cost 10) grants a seat-scoped wood
-gather bonus.
+``TechnologyKind.SURVEYING`` requires architecture. Its inactive
+``PLUMB_LINE`` innovation grants +1 memory retrieval limit when activated.
 
 ### Completed
 
@@ -255,6 +255,7 @@ JSONL storage → `civitas run`
 - Milestone 7: Architecture technology
 - Milestone 8: Architect institutions
 - Milestone 9: Scaffold infrastructure
+- Milestone 10: Surveying technology
 
 ## License
 

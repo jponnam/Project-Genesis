@@ -41,6 +41,7 @@ from civitas.domain import (
     CAMP_METALLURGY,
     CAMP_ORATION,
     CAMP_PHILOSOPHY,
+    CAMP_PLUMB_LINE,
     CAMP_POTTERY,
     CAMP_POTTERY_CRAFT,
     CAMP_PULLEY,
@@ -48,6 +49,7 @@ from civitas.domain import (
     CAMP_RHETORIC,
     CAMP_SCRIBE,
     CAMP_STAR_CHART,
+    CAMP_SURVEYING,
     CAMP_SYLLOGISM,
     CAMP_WRITING,
     CLINIC_DRINK_RESTORE_BONUS,
@@ -93,6 +95,7 @@ from civitas.domain import (
     SHRINE_DRINK_RESTORE_BONUS,
     STOA_TEACHINGS_PER_KNOWER_BONUS,
     STOREHOUSE_FOOD_GATHER_BONUS,
+    SURVEYING_RETRIEVAL_LIMIT_BONUS,
     TEMPLE_REST_RESTORE_BONUS,
     WELL_DRINK_RESTORE_BONUS,
     WORKSHOP_PRODUCE_ENERGY_DISCOUNT,
@@ -2764,6 +2767,111 @@ def test_star_chart_raises_retrieval_limit_society_wide() -> None:
     )
     bare = _world()
     assert effective_retrieval_limit(bare, bare.agents[0]) == DEFAULT_RETRIEVAL_LIMIT
+
+
+def test_plumb_line_raises_retrieval_limit_society_wide() -> None:
+    """Active plumb line raises retrieval limit for every agent."""
+    discovered_surveying = CAMP_SURVEYING.model_copy(update={"discovered": True})
+    active_plumb_line = CAMP_PLUMB_LINE.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        technologies=tuple(
+            discovered_surveying
+            if item.technology_id == CAMP_SURVEYING.technology_id
+            else item
+            for item in default_technologies()
+        ),
+        innovations=tuple(
+            active_plumb_line
+            if item.innovation_id == CAMP_PLUMB_LINE.innovation_id
+            else item
+            for item in default_innovations()
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert effective_retrieval_limit(world, agent) == (
+        DEFAULT_RETRIEVAL_LIMIT + SURVEYING_RETRIEVAL_LIMIT_BONUS
+    )
+    bare = _world()
+    assert effective_retrieval_limit(bare, bare.agents[0]) == DEFAULT_RETRIEVAL_LIMIT
+
+
+def test_plumb_line_stacks_with_star_chart_and_retrieval_seats() -> None:
+    """Plumb line retrieval bonus stacks with star chart and retrieval seats."""
+    discovered_pottery = CAMP_POTTERY.model_copy(update={"discovered": True})
+    discovered_irrigation = CAMP_IRRIGATION.model_copy(update={"discovered": True})
+    discovered_metallurgy = CAMP_METALLURGY.model_copy(update={"discovered": True})
+    discovered_writing = CAMP_WRITING.model_copy(update={"discovered": True})
+    discovered_math = CAMP_MATHEMATICS.model_copy(update={"discovered": True})
+    discovered_astronomy = CAMP_ASTRONOMY.model_copy(update={"discovered": True})
+    discovered_surveying = CAMP_SURVEYING.model_copy(update={"discovered": True})
+    active_star_chart = CAMP_STAR_CHART.model_copy(update={"active": True})
+    active_plumb_line = CAMP_PLUMB_LINE.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Library", CityKind.LIBRARY),
+        ),
+        institutions=(
+            Institution.create(0, 0, 1, "Library Archive", InstitutionKind.ARCHIVE),
+        ),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 1, 1, "Library Observatory", InfrastructureKind.OBSERVATORY
+            ),
+        ),
+        technologies=(
+            CAMP_FIRE,
+            discovered_pottery,
+            discovered_irrigation,
+            discovered_metallurgy,
+            discovered_writing,
+            discovered_math,
+            discovered_astronomy,
+            CAMP_PHILOSOPHY,
+            CAMP_LOGIC,
+            CAMP_RHETORIC,
+            CAMP_MEDICINE,
+            CAMP_ANATOMY,
+            CAMP_HYGIENE,
+            CAMP_ENGINEERING,
+            CAMP_ARCHITECTURE,
+            discovered_surveying,
+        ),
+        innovations=(
+            CAMP_FIRE_HEARTH,
+            CAMP_POTTERY_CRAFT,
+            CAMP_IRRIGATION_CANAL,
+            CAMP_FORGE,
+            CAMP_SCRIBE,
+            CAMP_ABACUS,
+            active_star_chart,
+            CAMP_DIALECTIC,
+            CAMP_SYLLOGISM,
+            CAMP_ORATION,
+            CAMP_REMEDY,
+            CAMP_DISSECTION,
+            CAMP_ASEPSIS,
+            CAMP_PULLEY,
+            CAMP_BLUEPRINT,
+            active_plumb_line,
+        ),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    agent = world.agents[0]
+    assert effective_retrieval_limit(world, agent) == (
+        DEFAULT_RETRIEVAL_LIMIT
+        + ARCHIVE_RETRIEVAL_LIMIT_BONUS
+        + LIBRARY_RETRIEVAL_LIMIT_BONUS
+        + OBSERVATORY_RETRIEVAL_LIMIT_BONUS
+        + ASTRONOMY_RETRIEVAL_LIMIT_BONUS
+        + SURVEYING_RETRIEVAL_LIMIT_BONUS
+    )
 
 
 def test_star_chart_stacks_with_archive_library_and_observatory() -> None:

@@ -109,6 +109,7 @@ class InnovationSystem:
                     active_asepsis_count=snap.active_asepsis_count,
                     active_pulley_count=snap.active_pulley_count,
                     active_blueprint_count=snap.active_blueprint_count,
+                    active_plumb_line_count=snap.active_plumb_line_count,
                 )
             )
         return world
