@@ -69,6 +69,8 @@ from civitas.domain import (
     CAMP_STAR_CHART,
     CAMP_SURVEYING,
     CAMP_SYLLOGISM,
+    CAMP_TANNERY,
+    CAMP_TANNING,
     CAMP_TEXTILES,
     CAMP_WRITING,
     CARAVAN_MOVE_ENERGY_DISCOUNT,
@@ -142,6 +144,7 @@ from civitas.domain import (
     STOREHOUSE_FOOD_GATHER_BONUS,
     SURVEYING_RETRIEVAL_LIMIT_BONUS,
     TAILOR_TEACHINGS_PER_KNOWER_BONUS,
+    TANNING_PRODUCE_ENERGY_DISCOUNT,
     TEMPLE_REST_RESTORE_BONUS,
     TERRACE_FOOD_GATHER_BONUS,
     TEXTILES_PRODUCE_ENERGY_DISCOUNT,
@@ -4184,6 +4187,91 @@ def test_loom_raises_produce_discount_society_wide() -> None:
     )
     agent = world.agents[0]
     expected = DEFAULT_PRODUCE_ENERGY_COST - TEXTILES_PRODUCE_ENERGY_DISCOUNT
+    assert effective_produce_energy_cost(
+        world,
+        agent,
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(expected)
+    assert census_effects(world).produce_energy_cost_bps == round(expected * 10_000)
+    bare = _world()
+    assert census_effects(bare).produce_energy_cost_bps == round(
+        DEFAULT_PRODUCE_ENERGY_COST * 10_000
+    )
+
+
+def test_tannery_reduces_produce_energy_and_stacks_with_guild_abacus_loom() -> None:
+    """Active tannery discounts PRODUCE energy society-wide and stacks."""
+    discovered = tuple(
+        item.model_copy(update={"discovered": True})
+        for item in default_technologies()
+    )
+    active_abacus = CAMP_ABACUS.model_copy(update={"active": True})
+    active_pulley = CAMP_PULLEY.model_copy(update={"active": True})
+    active_loom = CAMP_LOOM.model_copy(update={"active": True})
+    active_tannery = CAMP_TANNERY.model_copy(update={"active": True})
+    innovations = tuple(
+        active_abacus
+        if item.innovation_id == CAMP_ABACUS.innovation_id
+        else active_pulley
+        if item.innovation_id == CAMP_PULLEY.innovation_id
+        else active_loom
+        if item.innovation_id == CAMP_LOOM.innovation_id
+        else active_tannery
+        if item.innovation_id == CAMP_TANNERY.innovation_id
+        else item
+        for item in default_innovations()
+    )
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        institutions=(
+            Institution.create(0, 0, 0, "Camp Guild", InstitutionKind.GUILD),
+        ),
+        technologies=discovered,
+        innovations=innovations,
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    expected = (
+        DEFAULT_PRODUCE_ENERGY_COST
+        - GUILD_PRODUCE_ENERGY_DISCOUNT
+        - MATHEMATICS_PRODUCE_ENERGY_DISCOUNT
+        - ENGINEERING_PRODUCE_ENERGY_DISCOUNT
+        - TEXTILES_PRODUCE_ENERGY_DISCOUNT
+        - TANNING_PRODUCE_ENERGY_DISCOUNT
+    )
+    assert effective_produce_energy_cost(
+        world,
+        agent,
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(expected)
+    assert census_effects(world).produce_energy_cost_bps == round(expected * 10_000)
+
+
+def test_tannery_raises_produce_discount_society_wide() -> None:
+    """Active tannery discounts PRODUCE energy for every agent society-wide."""
+    discovered_tanning = CAMP_TANNING.model_copy(update={"discovered": True})
+    active_tannery = CAMP_TANNERY.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        technologies=tuple(
+            discovered_tanning
+            if item.technology_id == CAMP_TANNING.technology_id
+            else item
+            for item in default_technologies()
+        ),
+        innovations=tuple(
+            active_tannery
+            if item.innovation_id == CAMP_TANNERY.innovation_id
+            else item
+            for item in default_innovations()
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    expected = DEFAULT_PRODUCE_ENERGY_COST - TANNING_PRODUCE_ENERGY_DISCOUNT
     assert effective_produce_energy_cost(
         world,
         agent,

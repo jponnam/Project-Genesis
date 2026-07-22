@@ -39,6 +39,7 @@ from civitas.domain.technology import (
     CAMP_RHETORIC,
     CAMP_SEAFARING,
     CAMP_SURVEYING,
+    CAMP_TANNING,
     CAMP_TEXTILES,
     CAMP_WRITING,
     technology_by_id,
@@ -77,6 +78,7 @@ class InnovationKind(StrEnum):
     COPPICE = "coppice"
     LOOM = "loom"
     MORDANT = "mordant"
+    TANNERY = "tannery"
 
 
 class Innovation(BaseModel):
@@ -302,6 +304,14 @@ CAMP_MORDANT: Innovation = Innovation.create(
     active=False,
 )
 
+CAMP_TANNERY: Innovation = Innovation.create(
+    24,
+    CAMP_TANNING.technology_id.value,
+    "Camp Tannery",
+    InnovationKind.TANNERY,
+    active=False,
+)
+
 
 def default_innovations() -> tuple[Innovation, ...]:
     """Return the canonical initial innovation set."""
@@ -330,6 +340,7 @@ def default_innovations() -> tuple[Innovation, ...]:
         CAMP_COPPICE,
         CAMP_LOOM,
         CAMP_MORDANT,
+        CAMP_TANNERY,
     )
 
 
@@ -366,6 +377,7 @@ class InnovationCensus(BaseModel):
     active_coppice_count: NonNegativeInt = 0
     active_loom_count: NonNegativeInt = 0
     active_mordant_count: NonNegativeInt = 0
+    active_tannery_count: NonNegativeInt = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -537,6 +549,7 @@ def census_innovations(world: World) -> InnovationCensus:
     coppice = sum(1 for item in active if item.kind is InnovationKind.COPPICE)
     loom = sum(1 for item in active if item.kind is InnovationKind.LOOM)
     mordant = sum(1 for item in active if item.kind is InnovationKind.MORDANT)
+    tannery = sum(1 for item in active if item.kind is InnovationKind.TANNERY)
     return InnovationCensus(
         tick=world.tick,
         innovation_count=len(innovations),
@@ -566,4 +579,5 @@ def census_innovations(world: World) -> InnovationCensus:
         active_coppice_count=coppice,
         active_loom_count=loom,
         active_mordant_count=mordant,
+        active_tannery_count=tannery,
     )

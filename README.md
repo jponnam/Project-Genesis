@@ -128,13 +128,14 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 16 Milestone 9: Warehouse infrastructure**
+**Phase 16 Milestone 10: Tanning technology**
 
-``InfrastructureKind.WAREHOUSE`` is a city-seat infrastructure piece
-whose active seat grants a market-fee discount at its location. The
-discount stacks with bureaucracy, harbor, merchant, dyer, and mordant.
-Governments fund construction from their treasury and institutions may
-commission it from their budget. Warehouses are not seeded.
+``TechnologyKind.TANNING`` is a society-level technology requiring
+dyeing, adopted through the ``TANNERY`` innovation. An active tannery
+grants a society-wide PRODUCE energy discount that stacks with guild,
+workshop, foundry, weaver, fulling mill, mill town, abacus, pulley,
+customs, labor, and loom. Discovery flows through the standard research,
+innovation, and knowledge-diffusion pipeline.
 
 ### Completed
 
@@ -303,6 +304,7 @@ JSONL storage → `civitas run`
 - Milestone 7: Dyeing technology
 - Milestone 8: Tailor institutions
 - Milestone 9: Warehouse infrastructure
+- Milestone 10: Tanning technology
 
 ## License
 
