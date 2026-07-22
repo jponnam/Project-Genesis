@@ -16,6 +16,7 @@ from civitas.domain import (
     PopulationObserved,
     PriceObserved,
     RelationshipsObserved,
+    ReputationObserved,
     ResourceConsumed,
     ResourceGathered,
     SimulationCompleted,
@@ -334,3 +335,27 @@ def test_relationships_observed_each_tick_including_start() -> None:
     assert observed[0].tick.value == 0
     assert observed[-1].tick.value == 3
     assert all(event.bond_count == 0 for event in observed)
+
+
+def test_reputation_observed_each_tick_including_start() -> None:
+    """Engine emits an initial reputation census plus one per executed tick."""
+    result = SimulationEngine().run(SimulationConfig(seed=42, ticks=3, agent_count=4))
+    observed = [
+        event for event in result.events if isinstance(event, ReputationObserved)
+    ]
+    assert len(observed) == 4  # tick 0 + ticks 1..3
+    assert observed[0].tick.value == 0
+    assert observed[-1].tick.value == 3
+    assert all(event.living_agent_count == 4 for event in observed)
+    # Reputation follows relationships in the observe chain.
+    rel_indexes = [
+        i
+        for i, event in enumerate(result.events)
+        if isinstance(event, RelationshipsObserved)
+    ]
+    rep_indexes = [
+        i
+        for i, event in enumerate(result.events)
+        if isinstance(event, ReputationObserved)
+    ]
+    assert all(rep > rel for rel, rep in zip(rel_indexes, rep_indexes, strict=True))

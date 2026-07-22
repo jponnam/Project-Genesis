@@ -22,6 +22,7 @@ from civitas.systems.population import PopulationConfig, PopulationSystem
 from civitas.systems.prices import PriceConfig, PriceSystem
 from civitas.systems.production import ProductionConfig, ProductionSystem
 from civitas.systems.relationships import RelationshipConfig, RelationshipSystem
+from civitas.systems.reputation import ReputationConfig, ReputationSystem
 from civitas.systems.taxes import TaxConfig, TaxSystem
 from civitas.systems.trading import TradingConfig, TradingSystem
 from civitas.systems.water import WaterConfig, WaterSystem
@@ -57,6 +58,8 @@ __all__ = [
     "ProductionSystem",
     "RelationshipConfig",
     "RelationshipSystem",
+    "ReputationConfig",
+    "ReputationSystem",
     "TaxConfig",
     "TaxSystem",
     "TradingConfig",

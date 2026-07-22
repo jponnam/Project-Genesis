@@ -27,6 +27,7 @@ from civitas.domain import (
     PriceObserved,
     RelationshipsObserved,
     RelationshipUpdated,
+    ReputationObserved,
     ResourceConsumed,
     ResourceGathered,
     ResourceProduced,
@@ -481,3 +482,29 @@ def test_relationships_observed_round_trips() -> None:
     assert restored.mean_trust == 0.55
     assert restored.min_trust == 0.4
     assert restored.max_trust == 0.7
+
+
+def test_reputation_observed_round_trips() -> None:
+    """ReputationObserved serializes standing census fields losslessly."""
+    event = ReputationObserved(
+        sequence=12,
+        tick=Tick(value=6),
+        living_agent_count=3,
+        mean_standing=0.375,
+        median_standing_bps=3750,
+        gini_standing_bps=2000,
+        top_standing_share_bps=5000,
+        agents_with_inbound_bonds=2,
+        top_agent_id=AgentId(value=0),
+        top_standing=0.75,
+    )
+    restored = event_from_record(event.to_record())
+    assert isinstance(restored, ReputationObserved)
+    assert restored.living_agent_count == 3
+    assert restored.mean_standing == 0.375
+    assert restored.median_standing_bps == 3750
+    assert restored.gini_standing_bps == 2000
+    assert restored.top_standing_share_bps == 5000
+    assert restored.agents_with_inbound_bonds == 2
+    assert restored.top_agent_id == AgentId(value=0)
+    assert restored.top_standing == 0.75
