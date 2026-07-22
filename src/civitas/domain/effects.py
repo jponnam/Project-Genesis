@@ -4,8 +4,9 @@ Phase 8 wired active innovations into REST/GATHER outcomes and WELL
 drink-restore bonuses. Phase 9 adds location-scoped STOREHOUSE food-gather
 bonuses, ROAD move-energy discounts, and GUILD produce-energy discounts.
 Phase 10 adds ARCHIVE retrieval-limit bonuses, SCRIPTORIUM
-teachings-per-knower bonuses, and CURRICULUM law teachings bonuses
-(stacking with the global scribe innovation). The action executor,
+teachings-per-knower bonuses, CURRICULUM law teachings bonuses
+(stacking with the global scribe innovation), and LIBRARY city
+retrieval-limit bonuses (stacking with archive). The action executor,
 retrieval path, and knowledge diffusion read these helpers;
 ``EffectsSystem`` only observes coverage. Systems never call each other.
 """
@@ -16,6 +17,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
+from civitas.domain.cities import CityKind, city_at
 from civitas.domain.energy import DEFAULT_REST_RESTORE
 from civitas.domain.food import FOOD_RESOURCE
 from civitas.domain.geography import DEFAULT_MOVE_ENERGY_COST
@@ -47,6 +49,7 @@ STOREHOUSE_FOOD_GATHER_BONUS: int = 1
 ROAD_MOVE_ENERGY_DISCOUNT: float = 0.02
 GUILD_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 ARCHIVE_RETRIEVAL_LIMIT_BONUS: int = 1
+LIBRARY_RETRIEVAL_LIMIT_BONUS: int = 1
 
 
 class EffectsCensus(BaseModel):
@@ -174,6 +177,15 @@ def location_has_active_archive(
     )
 
 
+def location_has_active_library(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active LIBRARY city is seated at ``location_id``."""
+    city = city_at(world, location_id)
+    return city is not None and city.active and city.kind is CityKind.LIBRARY
+
+
 def rest_restore_bonus(world: World) -> float:
     """Return the REST restore bonus from active fire-hearth innovations."""
     if innovation_kind_is_active(world, InnovationKind.FIRE_HEARTH):
@@ -236,10 +248,17 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
 
 
 def retrieval_limit_bonus(world: World, agent: Agent) -> int:
-    """Return retrieval-limit bonus from an ARCHIVE at the agent's location."""
+    """Return retrieval-limit bonuses at the agent's seat.
+
+    Active ARCHIVE institutions and LIBRARY city seats each contribute
+    ``+1`` and stack when both are present at the same location.
+    """
+    bonus = 0
     if location_has_active_archive(world, agent.location_id):
-        return ARCHIVE_RETRIEVAL_LIMIT_BONUS
-    return 0
+        bonus += ARCHIVE_RETRIEVAL_LIMIT_BONUS
+    if location_has_active_library(world, agent.location_id):
+        bonus += LIBRARY_RETRIEVAL_LIMIT_BONUS
+    return bonus
 
 
 def effective_rest_restore(
@@ -342,7 +361,7 @@ def effective_retrieval_limit(
     *,
     base: int = DEFAULT_RETRIEVAL_LIMIT,
 ) -> int:
-    """Return memory retrieval limit including archive bonuses at the seat."""
+    """Return memory retrieval limit including archive and library bonuses."""
     if base < 0:
         return 0
     return base + retrieval_limit_bonus(world, agent)

@@ -571,6 +571,7 @@ class CitiesObserved(DomainEvent):
     max_residents_city_id: CityId | None = None
     active_settlement_count: NonNegativeInt
     active_outpost_count: NonNegativeInt = 0
+    active_library_count: NonNegativeInt = 0
 
 
 class InfrastructuresObserved(DomainEvent):
