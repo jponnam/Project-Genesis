@@ -85,6 +85,7 @@ class InstitutionSystem:
                     active_academy_count=snap.active_academy_count,
                     active_temple_count=snap.active_temple_count,
                     active_school_count=snap.active_school_count,
+                    active_lyceum_count=snap.active_lyceum_count,
                     total_budget=snap.total_budget,
                     funded_count=snap.funded_count,
                 )
