@@ -86,6 +86,7 @@ from civitas.domain import (
     PHILOSOPHY_TEACHINGS_PER_KNOWER_BONUS,
     POTTERY_WATER_GATHER_BONUS,
     QUARANTINE_REST_RESTORE_BONUS,
+    QUARRY_STONE_GATHER_BONUS,
     RHETORIC_SOCIALIZE_RESTORE_BONUS,
     ROAD_MOVE_ENERGY_DISCOUNT,
     SANCTUARY_REST_RESTORE_BONUS,
@@ -154,6 +155,7 @@ from civitas.domain import (
     location_has_active_lyceum,
     location_has_active_mason,
     location_has_active_observatory,
+    location_has_active_quarry,
     location_has_active_road,
     location_has_active_sanctuary,
     location_has_active_scaffold,
@@ -905,6 +907,84 @@ def test_mason_stacks_with_forge_stone_gather() -> None:
     )
     agent = world.agents[0]
     expected = METALLURGY_STONE_GATHER_BONUS + MASON_STONE_GATHER_BONUS
+    assert gather_amount_bonus(world, "stone", location_id=agent.location_id) == (
+        expected
+    )
+    assert effective_gather_amount(world, "stone", agent=agent) == (
+        DEFAULT_GATHER_AMOUNT + expected
+    )
+
+
+def test_quarry_boosts_stone_gather_for_residents() -> None:
+    """Active quarry cities add a stone gather bonus at their seat."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Quarry", CityKind.QUARRY),
+        ),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_quarry(world, agent.location_id) is True
+    assert gather_amount_bonus(world, "stone", location_id=agent.location_id) == (
+        QUARRY_STONE_GATHER_BONUS
+    )
+    assert gather_amount_bonus(world, "stone") == 0
+    assert effective_gather_amount(world, "stone", agent=agent) == (
+        DEFAULT_GATHER_AMOUNT + QUARRY_STONE_GATHER_BONUS
+    )
+
+
+def test_quarry_stacks_with_forge_and_mason_stone_gather() -> None:
+    """Quarry stone bonus stacks with forge and mason."""
+    discovered_pottery = CAMP_POTTERY.model_copy(update={"discovered": True})
+    discovered_irrigation = CAMP_IRRIGATION.model_copy(update={"discovered": True})
+    discovered_metallurgy = CAMP_METALLURGY.model_copy(update={"discovered": True})
+    active_forge = CAMP_FORGE.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Quarry", CityKind.QUARRY),
+        ),
+        institutions=(
+            Institution.create(0, 0, 1, "Quarry Mason", InstitutionKind.MASON),
+        ),
+        technologies=(
+            CAMP_FIRE,
+            discovered_pottery,
+            discovered_irrigation,
+            discovered_metallurgy,
+            CAMP_WRITING,
+            CAMP_MATHEMATICS,
+            CAMP_ASTRONOMY,
+            CAMP_PHILOSOPHY,
+        ),
+        innovations=(
+            CAMP_FIRE_HEARTH,
+            CAMP_POTTERY_CRAFT,
+            CAMP_IRRIGATION_CANAL,
+            active_forge,
+            CAMP_SCRIBE,
+            CAMP_ABACUS,
+            CAMP_STAR_CHART,
+            CAMP_DIALECTIC,
+        ),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    agent = world.agents[0]
+    expected = (
+        METALLURGY_STONE_GATHER_BONUS
+        + MASON_STONE_GATHER_BONUS
+        + QUARRY_STONE_GATHER_BONUS
+    )
+    assert location_has_active_quarry(world, agent.location_id) is True
+    assert location_has_active_mason(world, agent.location_id) is True
     assert gather_amount_bonus(world, "stone", location_id=agent.location_id) == (
         expected
     )

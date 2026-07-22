@@ -80,6 +80,7 @@ class CitySystem:
                     active_infirmary_count=snap.active_infirmary_count,
                     active_lazaretto_count=snap.active_lazaretto_count,
                     active_foundry_count=snap.active_foundry_count,
+                    active_quarry_count=snap.active_quarry_count,
                 )
             )
         return world

@@ -597,6 +597,7 @@ class CitiesObserved(DomainEvent):
     active_infirmary_count: NonNegativeInt = 0
     active_lazaretto_count: NonNegativeInt = 0
     active_foundry_count: NonNegativeInt = 0
+    active_quarry_count: NonNegativeInt = 0
 
 
 class InfrastructuresObserved(DomainEvent):
