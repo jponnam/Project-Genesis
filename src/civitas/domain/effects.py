@@ -120,7 +120,10 @@ Milestone 2 adds LABOR law PRODUCE energy discounts for living subjects
 (stacking with guild, workshop, foundry, abacus, pulley, customs, and
 loom). Phase 16 Milestone 3 adds WEAVER produce-energy discounts at the
 institution seat (stacking with guild, workshop, foundry, abacus,
-pulley, customs, labor, and loom). The action executor, retrieval
+pulley, customs, labor, and loom). Phase 16 Milestone 4 adds
+FULLING_MILL produce-energy discounts at the infrastructure seat
+(stacking with guild, workshop, foundry, weaver, abacus, pulley,
+customs, labor, and loom). The action executor, retrieval
 path, market fills, knowledge
 diffusion, and research progression read these helpers; ``EffectsSystem``
 only observes coverage. Systems never call each other.
@@ -224,6 +227,7 @@ NAVIGATION_MOVE_ENERGY_DISCOUNT: float = 0.02
 GUILD_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 WORKSHOP_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 WEAVER_PRODUCE_ENERGY_DISCOUNT: float = 0.02
+FULLING_MILL_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 FOUNDRY_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 MATHEMATICS_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 ENGINEERING_PRODUCE_ENERGY_DISCOUNT: float = 0.02
@@ -365,6 +369,22 @@ def location_has_active_terrace(
     )
     return any(
         item.kind is InfrastructureKind.TERRACE and item.location_id == target
+        for item in active_infrastructure(world)
+    )
+
+
+def location_has_active_fulling_mill(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active FULLING_MILL stands at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InfrastructureKind.FULLING_MILL and item.location_id == target
         for item in active_infrastructure(world)
     )
 
@@ -1177,7 +1197,9 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
     ``GUILD_PRODUCE_ENERGY_DISCOUNT``. An active WORKSHOP at the agent's
     location contributes ``WORKSHOP_PRODUCE_ENERGY_DISCOUNT``. An active
     WEAVER at the agent's location contributes
-    ``WEAVER_PRODUCE_ENERGY_DISCOUNT``. An active FOUNDRY city at the
+    ``WEAVER_PRODUCE_ENERGY_DISCOUNT``. An active FULLING_MILL at the
+    agent's location contributes ``FULLING_MILL_PRODUCE_ENERGY_DISCOUNT``.
+    An active FOUNDRY city at the
     agent's location contributes ``FOUNDRY_PRODUCE_ENERGY_DISCOUNT``. An
     active ``CUSTOMS`` statute contributes its subject discount. An active
     ABACUS innovation contributes ``MATHEMATICS_PRODUCE_ENERGY_DISCOUNT``
@@ -1194,6 +1216,8 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
         discount += WORKSHOP_PRODUCE_ENERGY_DISCOUNT
     if location_has_active_weaver(world, agent.location_id):
         discount += WEAVER_PRODUCE_ENERGY_DISCOUNT
+    if location_has_active_fulling_mill(world, agent.location_id):
+        discount += FULLING_MILL_PRODUCE_ENERGY_DISCOUNT
     if location_has_active_foundry(world, agent.location_id):
         discount += FOUNDRY_PRODUCE_ENERGY_DISCOUNT
     discount += customs_produce_discount_for(world, agent)
@@ -1504,6 +1528,11 @@ def census_effects(world: World) -> EffectsCensus:
         for item in active_institutions(world)
         if item.kind is InstitutionKind.WEAVER
     )
+    fulling_mills = tuple(
+        item
+        for item in active_infrastructure(world)
+        if item.kind is InfrastructureKind.FULLING_MILL
+    )
     foundries = tuple(
         city for city in active_cities(world) if city.kind is CityKind.FOUNDRY
     )
@@ -1566,6 +1595,8 @@ def census_effects(world: World) -> EffectsCensus:
         produce_discount += WORKSHOP_PRODUCE_ENERGY_DISCOUNT
     if weavers:
         produce_discount += WEAVER_PRODUCE_ENERGY_DISCOUNT
+    if fulling_mills:
+        produce_discount += FULLING_MILL_PRODUCE_ENERGY_DISCOUNT
     if foundries:
         produce_discount += FOUNDRY_PRODUCE_ENERGY_DISCOUNT
     if innovation_kind_is_active(world, InnovationKind.ABACUS):
