@@ -51,6 +51,7 @@ from civitas.domain import (
     effective_move_energy_cost,
     effective_produce_energy_cost,
     effective_rest_restore,
+    effective_socialize_restore,
     get_bond,
     recipe_by_id,
     relocate,
@@ -527,13 +528,17 @@ class ActionExecutor:
         )
         previous_social = agent.needs.social
 
+        restore = effective_socialize_restore(
+            world,
+            base=float(self._config.socialize),
+        )
         updated = apply_socialize(
             world,
             agent.agent_id,
             partner_id,
             trust_delta=self._config.socialize_trust_delta,
             affinity_delta=self._config.socialize_affinity_delta,
-            restore=self._config.socialize,
+            restore=restore,
         )
         if updated is None:
             return world, False

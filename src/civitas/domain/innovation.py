@@ -25,6 +25,7 @@ from civitas.domain.technology import (
     CAMP_METALLURGY,
     CAMP_PHILOSOPHY,
     CAMP_POTTERY,
+    CAMP_RHETORIC,
     CAMP_WRITING,
     technology_by_id,
 )
@@ -47,6 +48,7 @@ class InnovationKind(StrEnum):
     STAR_CHART = "star_chart"
     DIALECTIC = "dialectic"
     SYLLOGISM = "syllogism"
+    ORATION = "oration"
 
 
 class Innovation(BaseModel):
@@ -152,6 +154,14 @@ CAMP_SYLLOGISM: Innovation = Innovation.create(
     active=False,
 )
 
+CAMP_ORATION: Innovation = Innovation.create(
+    9,
+    CAMP_RHETORIC.technology_id.value,
+    "Camp Oration",
+    InnovationKind.ORATION,
+    active=False,
+)
+
 
 def default_innovations() -> tuple[Innovation, ...]:
     """Return the canonical initial innovation set."""
@@ -165,6 +175,7 @@ def default_innovations() -> tuple[Innovation, ...]:
         CAMP_STAR_CHART,
         CAMP_DIALECTIC,
         CAMP_SYLLOGISM,
+        CAMP_ORATION,
     )
 
 
@@ -186,6 +197,7 @@ class InnovationCensus(BaseModel):
     active_star_chart_count: NonNegativeInt = 0
     active_dialectic_count: NonNegativeInt = 0
     active_syllogism_count: NonNegativeInt = 0
+    active_oration_count: NonNegativeInt = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -342,6 +354,7 @@ def census_innovations(world: World) -> InnovationCensus:
     star_chart = sum(1 for item in active if item.kind is InnovationKind.STAR_CHART)
     dialectic = sum(1 for item in active if item.kind is InnovationKind.DIALECTIC)
     syllogism = sum(1 for item in active if item.kind is InnovationKind.SYLLOGISM)
+    oration = sum(1 for item in active if item.kind is InnovationKind.ORATION)
     return InnovationCensus(
         tick=world.tick,
         innovation_count=len(innovations),
@@ -356,4 +369,5 @@ def census_innovations(world: World) -> InnovationCensus:
         active_star_chart_count=star_chart,
         active_dialectic_count=dialectic,
         active_syllogism_count=syllogism,
+        active_oration_count=oration,
     )

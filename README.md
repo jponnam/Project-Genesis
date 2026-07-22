@@ -123,14 +123,14 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 11 — Milestone 9: Stoa infrastructure**
+**Phase 11 — Milestone 10: Rhetoric technology**
 
-``InfrastructureKind.STOA`` adds a paid government-attached infrastructure
-kind. Stoas are not seeded by default, but an active stoa at a knower's seat
-adds ``+1`` to teachings per knower through
-``effective_teachings_per_knower``. The bonus stacks with scriptorium,
-academy, forum, school, scribe, dialectic, and curriculum teaching bonuses.
-Infrastructure census and observed events track active stoa counts.
+``TechnologyKind.RHETORIC`` extends the prerequisite chain after logic with
+``CAMP_RHETORIC`` and ``CAMP_RHETORIC_RESEARCH``. Discovery activates the
+inactive ``CAMP_ORATION`` innovation, adding a society-wide ``+0.05``
+SOCIALIZE restore bonus through ``effective_socialize_restore``. Technology,
+innovation, and knowledge censuses track rhetoric discovery, active oration,
+and rhetoric knowers.
 
 ### Completed
 
@@ -229,6 +229,7 @@ JSONL storage → `civitas run`
 - Milestone 7: Logic technology
 - Milestone 8: Lyceum institutions
 - Milestone 9: Stoa infrastructure
+- Milestone 10: Rhetoric technology
 
 ## License
 
