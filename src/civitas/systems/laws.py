@@ -72,6 +72,7 @@ class LawSystem:
                     active_ethics_count=snap.active_ethics_count,
                     active_assembly_count=snap.active_assembly_count,
                     active_sanitation_count=snap.active_sanitation_count,
+                    active_quarantine_count=snap.active_quarantine_count,
                 )
             )
         return world

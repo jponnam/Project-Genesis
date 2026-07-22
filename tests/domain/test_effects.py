@@ -70,6 +70,7 @@ from civitas.domain import (
     OBSERVATORY_RETRIEVAL_LIMIT_BONUS,
     PHILOSOPHY_TEACHINGS_PER_KNOWER_BONUS,
     POTTERY_WATER_GATHER_BONUS,
+    QUARANTINE_REST_RESTORE_BONUS,
     RHETORIC_SOCIALIZE_RESTORE_BONUS,
     ROAD_MOVE_ENERGY_DISCOUNT,
     SANCTUARY_REST_RESTORE_BONUS,
@@ -136,6 +137,7 @@ from civitas.domain import (
     location_has_active_temple,
     location_has_active_well,
     market_fee_for,
+    quarantine_rest_bonus_for,
     research_points_bonus,
     rest_restore_bonus,
     sanitation_drink_bonus_for,
@@ -599,6 +601,112 @@ def test_bathhouse_stacks_with_sanctuary_rest_restore_sources() -> None:
     assert rest_restore_bonus(world, agent=agent) == pytest.approx(rest_bonus)
     assert effective_rest_restore(world, agent=agent) == pytest.approx(
         DEFAULT_REST_RESTORE + rest_bonus
+    )
+
+
+def test_quarantine_boosts_rest_restore_for_living_subjects() -> None:
+    """Active QUARANTINE raises REST restore for living subjects only."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(Law.create(0, 0, "Camp Quarantine", LawKind.QUARANTINE),),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert quarantine_rest_bonus_for(world, agent) == QUARANTINE_REST_RESTORE_BONUS
+    assert rest_restore_bonus(world, agent=agent) == QUARANTINE_REST_RESTORE_BONUS
+    assert effective_rest_restore(world, agent=agent) == pytest.approx(
+        DEFAULT_REST_RESTORE + QUARANTINE_REST_RESTORE_BONUS
+    )
+    # Without an agent, subject-scoped QUARANTINE cannot apply.
+    assert rest_restore_bonus(world) == 0.0
+    assert effective_rest_restore(world) == pytest.approx(DEFAULT_REST_RESTORE)
+
+    bare = _world()
+    assert quarantine_rest_bonus_for(bare, bare.agents[0]) == 0.0
+
+
+def test_quarantine_stacks_with_rest_restore_sources() -> None:
+    """Quarantine rest bonus stacks with society, institution, city, and infra."""
+    discovered_medicine = CAMP_MEDICINE.model_copy(update={"discovered": True})
+    active_remedy = CAMP_REMEDY.model_copy(update={"active": True})
+    sanctuary_agent = Agent.create(agent_id=0, name="A", location_id=1)
+    infirmary_agent = Agent.create(agent_id=1, name="B", location_id=3)
+    world = World(
+        config=SimulationConfig(agent_count=2, seed=1),
+        locations=default_world_map()[:4],
+        governments=(
+            Government.create(0, "Camp", 0, (0, 1)),
+            Government.create(1, "Outpost", 2, (2, 3)),
+        ),
+        laws=(
+            Law.create(0, 0, "Camp Quarantine", LawKind.QUARANTINE),
+            Law.create(1, 1, "Outpost Quarantine", LawKind.QUARANTINE),
+        ),
+        cities=(
+            City.create(0, 0, 0, "Camp City", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Sanctuary", CityKind.SANCTUARY),
+            City.create(2, 1, 2, "Outpost City", CityKind.SETTLEMENT, is_capital=True),
+            City.create(3, 1, 3, "Outpost Infirmary", CityKind.INFIRMARY),
+        ),
+        institutions=(
+            Institution.create(0, 0, 1, "Sanctuary Temple", InstitutionKind.TEMPLE),
+            Institution.create(1, 0, 1, "Sanctuary Hospital", InstitutionKind.HOSPITAL),
+            Institution.create(2, 1, 3, "Infirmary Temple", InstitutionKind.TEMPLE),
+            Institution.create(3, 1, 3, "Infirmary Hospital", InstitutionKind.HOSPITAL),
+        ),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 1, 1, "Sanctuary Bathhouse", InfrastructureKind.BATHHOUSE
+            ),
+            Infrastructure.create(
+                1, 1, 3, 3, "Infirmary Bathhouse", InfrastructureKind.BATHHOUSE
+            ),
+        ),
+        technologies=tuple(
+            discovered_medicine
+            if tech.technology_id == CAMP_MEDICINE.technology_id
+            else tech
+            for tech in default_technologies()
+        ),
+        innovations=tuple(
+            active_remedy
+            if innovation.innovation_id == CAMP_REMEDY.innovation_id
+            else innovation
+            for innovation in default_innovations()
+        ),
+        agents=(sanctuary_agent, infirmary_agent),
+    )
+    sanctuary_bonus = (
+        FIRE_HEARTH_REST_BONUS
+        + MEDICINE_REST_RESTORE_BONUS
+        + QUARANTINE_REST_RESTORE_BONUS
+        + TEMPLE_REST_RESTORE_BONUS
+        + SANCTUARY_REST_RESTORE_BONUS
+        + HOSPITAL_REST_RESTORE_BONUS
+        + BATHHOUSE_REST_RESTORE_BONUS
+    )
+    infirmary_bonus = (
+        FIRE_HEARTH_REST_BONUS
+        + MEDICINE_REST_RESTORE_BONUS
+        + QUARANTINE_REST_RESTORE_BONUS
+        + TEMPLE_REST_RESTORE_BONUS
+        + HOSPITAL_REST_RESTORE_BONUS
+        + INFIRMARY_REST_RESTORE_BONUS
+        + BATHHOUSE_REST_RESTORE_BONUS
+    )
+    assert rest_restore_bonus(world, agent=world.agents[0]) == pytest.approx(
+        sanctuary_bonus
+    )
+    assert effective_rest_restore(world, agent=world.agents[0]) == pytest.approx(
+        DEFAULT_REST_RESTORE + sanctuary_bonus
+    )
+    assert rest_restore_bonus(world, agent=world.agents[1]) == pytest.approx(
+        infirmary_bonus
+    )
+    assert effective_rest_restore(world, agent=world.agents[1]) == pytest.approx(
+        DEFAULT_REST_RESTORE + infirmary_bonus
     )
 
 
