@@ -126,10 +126,10 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 14 Milestone 2: Passage laws**
+**Phase 14 Milestone 3: Caravan institutions**
 
-Active ``PASSAGE`` statutes grant living subjects ``-0.02`` MOVE energy
-cost (stacking with road, bridge, building codes, and compass).
+``InstitutionKind.CARAVAN`` grants a seat-scoped MOVE energy discount that
+stacks with road, bridge, building codes, passage, and compass.
 
 ### Completed
 
@@ -263,6 +263,7 @@ JSONL storage → `civitas run`
 **Phase 14:**
 - Milestone 1: Navigation technology
 - Milestone 2: Passage laws
+- Milestone 3: Caravan institutions
 
 ## License
 

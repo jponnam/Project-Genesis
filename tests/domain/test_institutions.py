@@ -143,6 +143,7 @@ def test_create_guild_alongside_council() -> None:
     assert snap.active_workshop_count == 0
     assert snap.active_mason_count == 0
     assert snap.active_architect_count == 0
+    assert snap.active_caravan_count == 0
     assert snap.active_count == 2
     assert (
         create_institution(
@@ -180,6 +181,7 @@ def test_create_archive_alongside_council_and_guild() -> None:
     assert snap.active_workshop_count == 0
     assert snap.active_mason_count == 0
     assert snap.active_architect_count == 0
+    assert snap.active_caravan_count == 0
     assert snap.active_count == 3
     assert (
         create_institution(
@@ -220,6 +222,7 @@ def test_create_bureaucracy_alongside_other_kinds() -> None:
     assert snap.active_workshop_count == 0
     assert snap.active_mason_count == 0
     assert snap.active_architect_count == 0
+    assert snap.active_caravan_count == 0
     assert snap.active_count == 4
     assert (
         create_institution(
@@ -266,6 +269,7 @@ def test_create_academy_alongside_other_kinds() -> None:
     assert snap.active_workshop_count == 0
     assert snap.active_mason_count == 0
     assert snap.active_architect_count == 0
+    assert snap.active_caravan_count == 0
     assert snap.active_count == 5
     assert (
         create_institution(
@@ -311,6 +315,7 @@ def test_create_temple_alongside_other_kinds() -> None:
     assert snap.active_workshop_count == 0
     assert snap.active_mason_count == 0
     assert snap.active_architect_count == 0
+    assert snap.active_caravan_count == 0
     assert snap.active_count == 6
     assert (
         create_institution(
@@ -357,6 +362,7 @@ def test_create_school_alongside_other_kinds() -> None:
     assert snap.active_workshop_count == 0
     assert snap.active_mason_count == 0
     assert snap.active_architect_count == 0
+    assert snap.active_caravan_count == 0
     assert snap.active_count == 7
     assert (
         create_institution(
@@ -404,6 +410,7 @@ def test_create_lyceum_alongside_other_kinds() -> None:
     assert snap.active_workshop_count == 0
     assert snap.active_mason_count == 0
     assert snap.active_architect_count == 0
+    assert snap.active_caravan_count == 0
     assert snap.active_count == 8
     assert (
         create_institution(
@@ -452,6 +459,7 @@ def test_create_hospital_alongside_other_kinds() -> None:
     assert snap.active_workshop_count == 0
     assert snap.active_mason_count == 0
     assert snap.active_architect_count == 0
+    assert snap.active_caravan_count == 0
     assert snap.active_count == 9
     assert (
         create_institution(
@@ -501,6 +509,7 @@ def test_create_apothecary_alongside_other_kinds() -> None:
     assert snap.active_workshop_count == 0
     assert snap.active_mason_count == 0
     assert snap.active_architect_count == 0
+    assert snap.active_caravan_count == 0
     assert snap.active_count == 10
     assert (
         create_institution(
@@ -553,6 +562,7 @@ def test_create_collegium_alongside_other_kinds() -> None:
     assert snap.active_workshop_count == 0
     assert snap.active_mason_count == 0
     assert snap.active_architect_count == 0
+    assert snap.active_caravan_count == 0
     assert snap.active_count == 11
     assert (
         create_institution(
@@ -604,6 +614,7 @@ def test_create_workshop_alongside_other_kinds() -> None:
     assert snap.active_workshop_count == 1
     assert snap.active_mason_count == 0
     assert snap.active_architect_count == 0
+    assert snap.active_caravan_count == 0
     assert snap.active_count == 12
     assert (
         create_institution(
@@ -647,6 +658,7 @@ def test_create_mason_alongside_other_kinds() -> None:
     assert snap.active_workshop_count == 1
     assert snap.active_mason_count == 1
     assert snap.active_architect_count == 0
+    assert snap.active_caravan_count == 0
     assert snap.active_count == 13
     assert (
         create_institution(
@@ -689,11 +701,55 @@ def test_create_architect_alongside_other_kinds() -> None:
     assert snap.active_council_count == 1
     assert snap.active_mason_count == 1
     assert snap.active_architect_count == 1
+    assert snap.active_caravan_count == 0
     assert snap.active_count == 14
     assert (
         create_institution(
             with_architect,
             Institution.create(14, 0, 0, "Second Architect", InstitutionKind.ARCHITECT),
+        )
+        is None
+    )
+
+
+def test_create_caravan_alongside_other_kinds() -> None:
+    """Caravans coexist with other kinds; census counts each kind."""
+    world = _world(
+        Agent.create(agent_id=0, name="A"),
+        institutions=(
+            Institution.create(0, 0, 0, "Council", InstitutionKind.COUNCIL),
+            Institution.create(1, 0, 0, "Camp Guild", InstitutionKind.GUILD),
+            Institution.create(2, 0, 0, "Camp Archive", InstitutionKind.ARCHIVE),
+            Institution.create(
+                3, 0, 0, "Camp Bureaucracy", InstitutionKind.BUREAUCRACY
+            ),
+            Institution.create(4, 0, 0, "Camp Academy", InstitutionKind.ACADEMY),
+            Institution.create(5, 0, 0, "Camp Temple", InstitutionKind.TEMPLE),
+            Institution.create(6, 0, 0, "Camp School", InstitutionKind.SCHOOL),
+            Institution.create(7, 0, 0, "Camp Lyceum", InstitutionKind.LYCEUM),
+            Institution.create(8, 0, 0, "Camp Hospital", InstitutionKind.HOSPITAL),
+            Institution.create(9, 0, 0, "Camp Apothecary", InstitutionKind.APOTHECARY),
+            Institution.create(10, 0, 0, "Camp Collegium", InstitutionKind.COLLEGIUM),
+            Institution.create(11, 0, 0, "Camp Workshop", InstitutionKind.WORKSHOP),
+            Institution.create(12, 0, 0, "Camp Mason", InstitutionKind.MASON),
+            Institution.create(13, 0, 0, "Camp Architect", InstitutionKind.ARCHITECT),
+        ),
+    )
+    with_caravan = create_institution(
+        world,
+        Institution.create(14, 0, 0, "Camp Caravan", InstitutionKind.CARAVAN),
+    )
+    assert with_caravan is not None
+    assert with_caravan.institutions[14].kind is InstitutionKind.CARAVAN
+    snap = census_institutions(with_caravan)
+    assert snap.active_council_count == 1
+    assert snap.active_architect_count == 1
+    assert snap.active_caravan_count == 1
+    assert snap.active_count == 15
+    assert (
+        create_institution(
+            with_caravan,
+            Institution.create(15, 0, 0, "Second Caravan", InstitutionKind.CARAVAN),
         )
         is None
     )
@@ -771,6 +827,7 @@ def test_census_institutions_counts() -> None:
     assert snap.active_workshop_count == 0
     assert snap.active_mason_count == 0
     assert snap.active_architect_count == 0
+    assert snap.active_caravan_count == 0
     assert snap.total_budget == 0
     assert snap.funded_count == 0
     assert census_institutions(world) == snap

@@ -8,6 +8,7 @@ from civitas.domain import (
     BRIDGE_MOVE_ENERGY_DISCOUNT,
     BUILDING_CODES_MOVE_ENERGY_DISCOUNT,
     CAMP_LOCATION,
+    CARAVAN_MOVE_ENERGY_DISCOUNT,
     DEFAULT_MOVE_ENERGY_COST,
     PASSAGE_MOVE_ENERGY_DISCOUNT,
     Agent,
@@ -19,6 +20,8 @@ from civitas.domain import (
     Health,
     Infrastructure,
     InfrastructureKind,
+    Institution,
+    InstitutionKind,
     Law,
     LawKind,
     Location,
@@ -129,6 +132,32 @@ def test_move_to_uses_bridge_discount() -> None:
         agents=(agent,),
     )
     expected_cost = DEFAULT_MOVE_ENERGY_COST - BRIDGE_MOVE_ENERGY_DISCOUNT
+    system = MovementSystem()
+    assert system.can_move(world, 0, 1) is True
+    updated = system.move_to(world, 0, 1)
+    assert updated.agents[0].location_id.value == 1
+    assert updated.agents[0].needs.energy == pytest.approx(0.04 - expected_cost)
+
+
+def test_move_to_uses_caravan_discount() -> None:
+    """MOVE spends the effective energy cost at an active caravan seat."""
+    plain = Location.create(1, "Plain", 1, 0, kind=LocationKind.PLAIN)
+    agent = Agent.create(
+        agent_id=0,
+        name="A",
+        location_id=0,
+        needs=Needs(food=1.0, water=1.0, energy=0.04, social=1.0, safety=1.0),
+    )
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION, plain),
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        institutions=(
+            Institution.create(0, 0, 0, "Camp Caravan", InstitutionKind.CARAVAN),
+        ),
+        agents=(agent,),
+    )
+    expected_cost = DEFAULT_MOVE_ENERGY_COST - CARAVAN_MOVE_ENERGY_DISCOUNT
     system = MovementSystem()
     assert system.can_move(world, 0, 1) is True
     updated = system.move_to(world, 0, 1)

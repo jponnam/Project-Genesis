@@ -69,10 +69,11 @@ bonuses at the city seat (stacking with forge and mason). Phase 14
 Milestone 1 adds a global COMPASS MOVE energy discount (stacking with
 road, bridge, and building codes). Phase 14 Milestone 2 adds PASSAGE law
 MOVE energy discounts for living subjects (stacking with road, bridge,
-building codes, and compass). The action executor, retrieval path,
-market fills, knowledge diffusion, and research progression read these
-helpers; ``EffectsSystem`` only observes coverage. Systems never call
-each other.
+building codes, and compass). Phase 14 Milestone 3 adds CARAVAN MOVE energy
+discounts at the institution seat (stacking with road, bridge, building
+codes, passage, and compass). The action executor, retrieval path, market
+fills, knowledge diffusion, and research progression read these helpers;
+``EffectsSystem`` only observes coverage. Systems never call each other.
 """
 
 from __future__ import annotations
@@ -150,6 +151,7 @@ MASON_STONE_GATHER_BONUS: int = 1
 QUARRY_STONE_GATHER_BONUS: int = 1
 ROAD_MOVE_ENERGY_DISCOUNT: float = 0.02
 BRIDGE_MOVE_ENERGY_DISCOUNT: float = 0.02
+CARAVAN_MOVE_ENERGY_DISCOUNT: float = 0.02
 NAVIGATION_MOVE_ENERGY_DISCOUNT: float = 0.02
 GUILD_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 WORKSHOP_PRODUCE_ENERGY_DISCOUNT: float = 0.02
@@ -400,6 +402,22 @@ def location_has_active_workshop(
     )
     return any(
         item.kind is InstitutionKind.WORKSHOP and item.location_id == target
+        for item in active_institutions(world)
+    )
+
+
+def location_has_active_caravan(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active CARAVAN is seated at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InstitutionKind.CARAVAN and item.location_id == target
         for item in active_institutions(world)
     )
 
@@ -823,17 +841,20 @@ def move_energy_discount(world: World, agent: Agent) -> float:
     An active ROAD at the agent's location contributes
     ``ROAD_MOVE_ENERGY_DISCOUNT``. An active BRIDGE at the agent's
     location contributes ``BRIDGE_MOVE_ENERGY_DISCOUNT``. An active
-    ``BUILDING_CODES`` statute contributes its subject discount. An
-    active ``PASSAGE`` statute contributes its subject discount. An
-    active COMPASS innovation contributes
-    ``NAVIGATION_MOVE_ENERGY_DISCOUNT`` society-wide. All stack when
-    present.
+    CARAVAN at the agent's location contributes
+    ``CARAVAN_MOVE_ENERGY_DISCOUNT``. An active ``BUILDING_CODES``
+    statute contributes its subject discount. An active ``PASSAGE``
+    statute contributes its subject discount. An active COMPASS
+    innovation contributes ``NAVIGATION_MOVE_ENERGY_DISCOUNT``
+    society-wide. All stack when present.
     """
     discount = 0.0
     if location_has_active_road(world, agent.location_id):
         discount += ROAD_MOVE_ENERGY_DISCOUNT
     if location_has_active_bridge(world, agent.location_id):
         discount += BRIDGE_MOVE_ENERGY_DISCOUNT
+    if location_has_active_caravan(world, agent.location_id):
+        discount += CARAVAN_MOVE_ENERGY_DISCOUNT
     discount += building_codes_move_discount_for(world, agent)
     discount += passage_move_discount_for(world, agent)
     if innovation_kind_is_active(world, InnovationKind.COMPASS):
@@ -1142,10 +1163,18 @@ def census_effects(world: World) -> EffectsCensus:
         for item in active_infrastructure(world)
         if item.kind is InfrastructureKind.BRIDGE
     )
-    # Move cost potential at a road/bridge seat, plus society-wide discounts.
+    caravans = tuple(
+        item
+        for item in active_institutions(world)
+        if item.kind is InstitutionKind.CARAVAN
+    )
+    # Move cost potential at road/bridge/caravan seats, plus society-wide
+    # discounts. Statute discounts (building_codes/passage) are omitted.
     move_discount = ROAD_MOVE_ENERGY_DISCOUNT if roads else 0.0
     if bridges:
         move_discount += BRIDGE_MOVE_ENERGY_DISCOUNT
+    if caravans:
+        move_discount += CARAVAN_MOVE_ENERGY_DISCOUNT
     if innovation_kind_is_active(world, InnovationKind.COMPASS):
         move_discount += NAVIGATION_MOVE_ENERGY_DISCOUNT
     move_at_road = clamp_unit(
