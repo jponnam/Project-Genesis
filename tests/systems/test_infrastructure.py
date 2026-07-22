@@ -4,11 +4,13 @@ from __future__ import annotations
 
 from civitas.domain import (
     CAMP_LOCATION,
+    DEFAULT_WELL_BUILD_COST,
     Agent,
     City,
     CityKind,
     Government,
     Infrastructure,
+    InfrastructureBuilt,
     InfrastructureKind,
     InfrastructuresObserved,
     SimulationConfig,
@@ -68,3 +70,38 @@ def test_system_wrappers_create_and_dissolve() -> None:
     assert created.infrastructure_by_id(0) is not None
     dissolved = system.dissolve(created, 0)
     assert dissolved.infrastructure[0].active is False
+
+
+def test_system_build_emits_infrastructure_built() -> None:
+    """build pays the catalog cost and emits InfrastructureBuilt."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(
+            Government.create(0, "Camp", 0, (0,), treasury=DEFAULT_WELL_BUILD_COST + 2),
+        ),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    bus = EventBus()
+    system = InfrastructureSystem()
+    built = system.build(
+        world,
+        Infrastructure.create(0, 0, 0, 0, "Paid Well", InfrastructureKind.WELL),
+        bus=bus,
+    )
+    assert built.infrastructure_by_id(0) is not None
+    assert built.governments[0].treasury == 2
+    events = [event for event in bus.history if isinstance(event, InfrastructureBuilt)]
+    assert len(events) == 1
+    assert events[0].cost == DEFAULT_WELL_BUILD_COST
+    assert events[0].treasury_after == 2
+    assert events[0].name == "Paid Well"
+
+    unchanged = system.build(
+        built,
+        Infrastructure.create(1, 0, 0, 0, "Dup", InfrastructureKind.WELL),
+        bus=bus,
+    )
+    assert unchanged == built
+    assert len([e for e in bus.history if isinstance(e, InfrastructureBuilt)]) == 1

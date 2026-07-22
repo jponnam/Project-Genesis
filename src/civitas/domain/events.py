@@ -298,6 +298,19 @@ class InfrastructureCreated(DomainEvent):
     active: bool = True
 
 
+class InfrastructureBuilt(DomainEvent):
+    """Emitted when a government pays to construct infrastructure."""
+
+    infrastructure_id: InfrastructureId
+    government_id: GovernmentId
+    city_id: CityId
+    location_id: LocationId
+    name: NonEmptyStr
+    kind: NonEmptyStr
+    cost: NonNegativeInt
+    treasury_after: NonNegativeInt
+
+
 class ListingPosted(DomainEvent):
     """Emitted when a seller escrows goods onto a market listing."""
 
@@ -763,6 +776,7 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     CityCreated,
     CitiesObserved,
     InfrastructureCreated,
+    InfrastructureBuilt,
     InfrastructuresObserved,
     TechnologyCreated,
     TechnologiesObserved,
