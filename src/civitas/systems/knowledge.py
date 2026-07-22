@@ -96,6 +96,7 @@ class KnowledgeSystem:
                     discovered_technology_count=snap.discovered_technology_count,
                     fire_knower_count=snap.fire_knower_count,
                     pottery_knower_count=snap.pottery_knower_count,
+                    irrigation_knower_count=snap.irrigation_knower_count,
                     total_fact_instances=snap.total_fact_instances,
                     coverage_bps=snap.coverage_bps,
                 )

@@ -121,12 +121,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 9 — Milestone 1: Technology prerequisite trees**
+**Phase 9 — Milestone 2: Irrigation technology**
 
-Technologies may declare `prerequisite_ids`. Discovery and research
-advance are blocked until every prerequisite is discovered. Pottery
-requires fire; the tech census reports `locked_count` /
-`researchable_count`.
+Irrigation extends the technology tree after pottery. It adds locked
+research progression, an irrigation canal innovation, knowledge diffusion,
+and a stacking water-gather bonus once the canal is active.
 
 ### Completed
 
@@ -189,6 +188,7 @@ JSONL storage → `civitas run`
 
 **Phase 9:**
 - Milestone 1: Technology prerequisite trees
+- Milestone 2: Irrigation technology
 
 ## License
 

@@ -16,7 +16,12 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict
 
 from civitas.domain.ids import InnovationId, TechnologyId
-from civitas.domain.technology import CAMP_FIRE, CAMP_POTTERY, technology_by_id
+from civitas.domain.technology import (
+    CAMP_FIRE,
+    CAMP_IRRIGATION,
+    CAMP_POTTERY,
+    technology_by_id,
+)
 from civitas.domain.time import Tick
 from civitas.domain.types import NonEmptyStr, NonNegativeInt
 
@@ -29,6 +34,7 @@ class InnovationKind(StrEnum):
 
     FIRE_HEARTH = "fire_hearth"
     POTTERY_CRAFT = "pottery_craft"
+    IRRIGATION_CANAL = "irrigation_canal"
 
 
 class Innovation(BaseModel):
@@ -78,10 +84,18 @@ CAMP_POTTERY_CRAFT: Innovation = Innovation.create(
     active=False,
 )
 
+CAMP_IRRIGATION_CANAL: Innovation = Innovation.create(
+    2,
+    CAMP_IRRIGATION.technology_id.value,
+    "Camp Irrigation Canal",
+    InnovationKind.IRRIGATION_CANAL,
+    active=False,
+)
+
 
 def default_innovations() -> tuple[Innovation, ...]:
     """Return the canonical initial innovation set."""
-    return (CAMP_FIRE_HEARTH, CAMP_POTTERY_CRAFT)
+    return (CAMP_FIRE_HEARTH, CAMP_POTTERY_CRAFT, CAMP_IRRIGATION_CANAL)
 
 
 class InnovationCensus(BaseModel):
@@ -95,6 +109,7 @@ class InnovationCensus(BaseModel):
     inactive_count: NonNegativeInt
     active_fire_hearth_count: NonNegativeInt
     active_pottery_craft_count: NonNegativeInt
+    active_irrigation_canal_count: NonNegativeInt
 
 
 @dataclass(frozen=True, slots=True)
@@ -242,6 +257,9 @@ def census_innovations(world: World) -> InnovationCensus:
     active = [item for item in innovations if item.active]
     fire = sum(1 for item in active if item.kind is InnovationKind.FIRE_HEARTH)
     pottery = sum(1 for item in active if item.kind is InnovationKind.POTTERY_CRAFT)
+    irrigation = sum(
+        1 for item in active if item.kind is InnovationKind.IRRIGATION_CANAL
+    )
     return InnovationCensus(
         tick=world.tick,
         innovation_count=len(innovations),
@@ -249,4 +267,5 @@ def census_innovations(world: World) -> InnovationCensus:
         inactive_count=len(innovations) - len(active),
         active_fire_hearth_count=fire,
         active_pottery_craft_count=pottery,
+        active_irrigation_canal_count=irrigation,
     )
