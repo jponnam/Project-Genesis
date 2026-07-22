@@ -120,11 +120,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 8 — Milestone 3: Birth knowledge inheritance**
+**Phase 8 — Milestone 4: Trust-gated teaching**
 
-Newborns inherit their parent's knowledge facts at birth. `BirthSystem`
-emits `KnowledgeLearned` with `source=birth` (teacher = parent) for each
-inherited fact, so cultural knowledge persists across generations.
+Peer knowledge diffusion now requires the learner to trust the teacher at
+least `min_teach_trust` (default 0.5; missing bonds use default trust).
+Bootstrap and birth inheritance remain ungated.
 
 ### Completed
 
@@ -183,6 +183,7 @@ JSONL storage → `civitas run`
 - Milestone 1: Effect wiring
 - Milestone 2: Infrastructure effects
 - Milestone 3: Birth knowledge inheritance
+- Milestone 4: Trust-gated teaching
 
 ## License
 

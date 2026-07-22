@@ -15,6 +15,7 @@ from civitas.domain import (
     agents_knowing,
     apply_knowledge_diffusion,
     bootstrap_discovered_knowledge,
+    can_learn_from_teacher,
     census_knowledge,
     default_innovations,
     default_research_progress,
@@ -22,6 +23,7 @@ from civitas.domain import (
     diffuse_knowledge,
     discover_technology,
     grant_knowledge,
+    set_relationship,
 )
 
 _FIRE = Knowledge(facts=frozenset({FIRE_FACT}))
@@ -81,6 +83,26 @@ def test_diffuse_knowledge_teaches_co_located_peers() -> None:
     assert gains[0].agent_id.value == 1
     assert world.agents[1].knowledge.knows(POTTERY_FACT)
     assert not world.agents[2].knowledge.knows(POTTERY_FACT)
+
+
+def test_diffuse_knowledge_requires_learner_trust() -> None:
+    """Low learner→teacher trust blocks peer teaching."""
+    world = _world(
+        Agent.create(agent_id=0, name="A", knowledge=_FIRE_AND_POTTERY),
+        Agent.create(agent_id=1, name="B", knowledge=_FIRE),
+    )
+    discovered = discover_technology(world, CAMP_POTTERY.technology_id)
+    assert discovered is not None
+    bonded = set_relationship(
+        discovered, 1, 0, affinity=0.0, trust=0.1
+    )
+    assert bonded is not None
+    teacher = bonded.agents[0]
+    learner = bonded.agents[1]
+    assert can_learn_from_teacher(learner, teacher, min_trust=0.5) is False
+    world, gains = diffuse_knowledge(bonded, teachings_per_knower=1, min_trust=0.5)
+    assert gains == ()
+    assert not world.agents[1].knowledge.knows(POTTERY_FACT)
 
 
 def test_apply_knowledge_diffusion_bootstraps_then_diffuses() -> None:

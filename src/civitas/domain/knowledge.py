@@ -3,8 +3,8 @@
 Phase 6 Milestone 4. Society discovery (technology/research/innovation)
 settles first; this module bootstraps a living knower when no one knows a
 discovered fact, then spreads facts peer-to-peer among co-located living
-agents. Effect wiring (Phase 8) and LLM cognition (Phase 7) consume
-these facts and society innovations.
+agents. Phase 8 Milestone 4 gates peer teaching on learner trust toward
+the teacher.
 """
 
 from __future__ import annotations
@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict
 
 from civitas.domain.ids import AgentId
+from civitas.domain.relationships import DEFAULT_TRUST, get_bond
 from civitas.domain.technology import (
     Technology,
     TechnologyKind,
@@ -29,6 +30,7 @@ if TYPE_CHECKING:
     from civitas.domain.world import World
 
 DEFAULT_TEACHINGS_PER_KNOWER: int = 1
+DEFAULT_MIN_TEACH_TRUST: float = 0.5
 FIRE_FACT: str = TechnologyKind.FIRE.value
 POTTERY_FACT: str = TechnologyKind.POTTERY.value
 
@@ -128,21 +130,48 @@ def bootstrap_discovered_knowledge(
     return world, tuple(gains)
 
 
+def learner_trust_in_teacher(learner: Agent, teacher: Agent) -> float:
+    """Return learner→teacher trust, defaulting when no bond exists."""
+    bond = get_bond(learner, teacher.agent_id)
+    if bond is None:
+        return DEFAULT_TRUST
+    return float(bond.trust)
+
+
+def can_learn_from_teacher(
+    learner: Agent,
+    teacher: Agent,
+    *,
+    min_trust: float = DEFAULT_MIN_TEACH_TRUST,
+) -> bool:
+    """Return True when ``learner`` trusts ``teacher`` enough to accept teaching."""
+    if min_trust < 0.0 or min_trust > 1.0:
+        msg = f"min_trust must be in [0, 1], got {min_trust}"
+        raise ValueError(msg)
+    return learner_trust_in_teacher(learner, teacher) >= min_trust
+
+
 def diffuse_knowledge(
     world: World,
     *,
     teachings_per_knower: int = DEFAULT_TEACHINGS_PER_KNOWER,
+    min_trust: float = DEFAULT_MIN_TEACH_TRUST,
 ) -> tuple[World, tuple[KnowledgeGain, ...]]:
-    """Spread discovered-tech facts among co-located living agents.
+    """Spread discovered-tech facts among co-located, trusting living agents.
 
     Candidates are ordered by ``(fact, teacher_id, learner_id)``. Each
     teacher may teach at most ``teachings_per_knower`` learners per apply.
+    Learners must trust the teacher at least ``min_trust`` (missing bonds
+    use ``DEFAULT_TRUST``).
     """
     if teachings_per_knower < 0:
         msg = f"teachings_per_knower must be >= 0, got {teachings_per_knower}"
         raise ValueError(msg)
     if teachings_per_knower == 0:
         return world, ()
+    if min_trust < 0.0 or min_trust > 1.0:
+        msg = f"min_trust must be in [0, 1], got {min_trust}"
+        raise ValueError(msg)
 
     living = world.alive_agents()
     if not living:
@@ -159,6 +188,8 @@ def diffuse_knowledge(
                 if learner.location_id != teacher.location_id:
                     continue
                 if learner.knowledge.knows(fact):
+                    continue
+                if not can_learn_from_teacher(learner, teacher, min_trust=min_trust):
                     continue
                 candidates.append(
                     (
@@ -200,11 +231,14 @@ def apply_knowledge_diffusion(
     world: World,
     *,
     teachings_per_knower: int = DEFAULT_TEACHINGS_PER_KNOWER,
+    min_trust: float = DEFAULT_MIN_TEACH_TRUST,
 ) -> tuple[World, tuple[KnowledgeGain, ...]]:
     """Bootstrap missing knowers, then run one peer-diffusion pass."""
     world, bootstrap_gains = bootstrap_discovered_knowledge(world)
     world, peer_gains = diffuse_knowledge(
-        world, teachings_per_knower=teachings_per_knower
+        world,
+        teachings_per_knower=teachings_per_knower,
+        min_trust=min_trust,
     )
     return world, bootstrap_gains + peer_gains
 

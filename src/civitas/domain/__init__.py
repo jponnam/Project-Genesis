@@ -282,6 +282,7 @@ from civitas.domain.institutions import (
     set_officer,
 )
 from civitas.domain.knowledge import (
+    DEFAULT_MIN_TEACH_TRUST,
     DEFAULT_TEACHINGS_PER_KNOWER,
     FIRE_FACT,
     POTTERY_FACT,
@@ -291,9 +292,11 @@ from civitas.domain.knowledge import (
     agents_knowing,
     apply_knowledge_diffusion,
     bootstrap_discovered_knowledge,
+    can_learn_from_teacher,
     census_knowledge,
     diffuse_knowledge,
     grant_knowledge,
+    learner_trust_in_teacher,
     technology_fact,
 )
 from civitas.domain.laws import (
@@ -575,6 +578,7 @@ __all__ = [
     "DEFAULT_MIN_ENERGY",
     "DEFAULT_MIN_FOOD",
     "DEFAULT_MIN_PARENT_AGE_TICKS",
+    "DEFAULT_MIN_TEACH_TRUST",
     "DEFAULT_MIN_WATER",
     "DEFAULT_MOVE_ENERGY_COST",
     "DEFAULT_PARENT_ENERGY_COST",
@@ -818,6 +822,7 @@ __all__ = [
     "can_eat",
     "can_enter",
     "can_fill_listing",
+    "can_learn_from_teacher",
     "can_post_listing",
     "can_produce",
     "can_rest",
@@ -927,6 +932,7 @@ __all__ = [
     "law_by_id",
     "laws_for",
     "leader_is_active",
+    "learner_trust_in_teacher",
     "levy_taxes",
     "lineages",
     "living_subjects",
