@@ -128,13 +128,12 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 16 Milestone 1: Textiles technology**
+**Phase 16 Milestone 2: Labor laws**
 
-``TechnologyKind.TEXTILES`` (id 22) is gated on forestry, with an inactive
-``LOOM`` innovation that grants a society-wide PRODUCE energy discount when
-active. The discount stacks with guild, workshop, foundry, abacus
-(mathematics), pulley (engineering), and the customs law subject discount.
-Opens Phase 16.
+``LawKind.LABOR`` grants living subjects -0.02 PRODUCE energy cost when
+active. At most one active labor statute per government. Stacks with
+guild, workshop, foundry, abacus, pulley, customs, and loom. Not seeded
+in ``default_laws``.
 
 ### Completed
 
@@ -295,6 +294,7 @@ JSONL storage → `civitas run`
 
 **Phase 16:**
 - Milestone 1: Textiles technology
+- Milestone 2: Labor laws
 
 ## License
 

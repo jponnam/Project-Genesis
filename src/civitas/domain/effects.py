@@ -115,10 +115,12 @@ scaffold seat). Phase 15 Milestone 12 adds PASTORAL city wood-gather
 bonuses at the city seat (stacking with the scaffold seat, coppice
 society-wide, and the conservation subject bonus). Phase 16 Milestone 1
 adds a global LOOM produce-energy discount (stacking with guild, workshop,
-foundry, abacus, pulley, and the customs subject discount). The action
-executor, retrieval path, market fills, knowledge diffusion, and research
-progression read these helpers; ``EffectsSystem`` only observes coverage.
-Systems never call each other.
+foundry, abacus, pulley, and the customs subject discount). Phase 16
+Milestone 2 adds LABOR law PRODUCE energy discounts for living subjects
+(stacking with guild, workshop, foundry, abacus, pulley, customs, and
+loom). The action executor, retrieval path, market fills, knowledge
+diffusion, and research progression read these helpers; ``EffectsSystem``
+only observes coverage. Systems never call each other.
 """
 
 from __future__ import annotations
@@ -142,6 +144,7 @@ from civitas.domain.laws import (
     conservation_wood_bonus_for,
     curriculum_teachings_bonus_for,
     customs_produce_discount_for,
+    labor_produce_discount_for,
     land_tenure_eat_bonus_for,
     market_fee_for,
     passage_move_discount_for,
@@ -1160,7 +1163,8 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
     active PULLEY innovation contributes
     ``ENGINEERING_PRODUCE_ENERGY_DISCOUNT`` society-wide. An active LOOM
     innovation contributes ``TEXTILES_PRODUCE_ENERGY_DISCOUNT``
-    society-wide. All stack when present.
+    society-wide. An active ``LABOR`` statute contributes its subject
+    discount. All stack when present.
     """
     discount = 0.0
     if location_has_active_guild(world, agent.location_id):
@@ -1170,6 +1174,7 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
     if location_has_active_foundry(world, agent.location_id):
         discount += FOUNDRY_PRODUCE_ENERGY_DISCOUNT
     discount += customs_produce_discount_for(world, agent)
+    discount += labor_produce_discount_for(world, agent)
     if innovation_kind_is_active(world, InnovationKind.ABACUS):
         discount += MATHEMATICS_PRODUCE_ENERGY_DISCOUNT
     if innovation_kind_is_active(world, InnovationKind.PULLEY):
@@ -1527,7 +1532,7 @@ def census_effects(world: World) -> EffectsCensus:
         )
     )
     # Produce cost potential at craft seats, plus society-wide discounts.
-    # Statute discounts (customs) are omitted.
+    # Statute discounts (customs, labor) are omitted.
     produce_discount = GUILD_PRODUCE_ENERGY_DISCOUNT if guilds else 0.0
     if workshops:
         produce_discount += WORKSHOP_PRODUCE_ENERGY_DISCOUNT

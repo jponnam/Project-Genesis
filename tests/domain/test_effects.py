@@ -104,6 +104,7 @@ from civitas.domain import (
     HYGIENE_DRINK_RESTORE_BONUS,
     INFIRMARY_REST_RESTORE_BONUS,
     IRRIGATION_WATER_GATHER_BONUS,
+    LABOR_PRODUCE_ENERGY_DISCOUNT,
     LAND_TENURE_EAT_RESTORE_BONUS,
     LAZARETTO_DRINK_RESTORE_BONUS,
     LIBRARY_RETRIEVAL_LIMIT_BONUS,
@@ -176,6 +177,7 @@ from civitas.domain import (
     effective_socialize_restore,
     effective_teachings_per_knower,
     gather_amount_bonus,
+    labor_produce_discount_for,
     land_tenure_eat_bonus_for,
     location_has_active_academy,
     location_has_active_agora,
@@ -3760,6 +3762,41 @@ def test_customs_reduces_produce_energy_and_stacks_with_guild() -> None:
     )
 
 
+def test_labor_reduces_produce_energy_and_stacks_with_guild() -> None:
+    """Labor laws discount PRODUCE energy and stack with guild seats."""
+    law = Law.create(0, 0, "Camp Labor", LawKind.LABOR)
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(law,),
+        institutions=(
+            Institution.create(0, 0, 0, "Camp Guild", InstitutionKind.GUILD),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    expected_discount = GUILD_PRODUCE_ENERGY_DISCOUNT + LABOR_PRODUCE_ENERGY_DISCOUNT
+    assert labor_produce_discount_for(world, agent) == LABOR_PRODUCE_ENERGY_DISCOUNT
+    assert produce_energy_discount(world, agent) == pytest.approx(expected_discount)
+    assert effective_produce_energy_cost(
+        world,
+        agent,
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(DEFAULT_PRODUCE_ENERGY_COST - expected_discount)
+
+    without_guild = world.model_copy(update={"institutions": ()})
+    assert effective_produce_energy_cost(
+        without_guild,
+        without_guild.agents[0],
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(DEFAULT_PRODUCE_ENERGY_COST - LABOR_PRODUCE_ENERGY_DISCOUNT)
+    # census_effects produce path omits statute discounts (labor).
+    assert census_effects(world).produce_energy_cost_bps == round(
+        (DEFAULT_PRODUCE_ENERGY_COST - GUILD_PRODUCE_ENERGY_DISCOUNT) * 10_000
+    )
+
+
 def test_workshop_reduces_produce_energy_for_colocated_agents() -> None:
     """Active workshops discount PRODUCE energy at their seat location."""
     world = World(
@@ -4303,6 +4340,67 @@ def test_customs_stacks_with_guild_workshop_foundry_abacus_and_pulley() -> None:
         base=DEFAULT_PRODUCE_ENERGY_COST,
     ) == pytest.approx(0.0)
     # census_effects produce path omits statute discounts (customs).
+    assert census_effects(world).produce_energy_cost_bps == 0
+
+
+def test_labor_stacks_with_craft_seats_customs_abacus_pulley_and_loom() -> None:
+    """Labor PRODUCE discount stacks with craft seats, customs, and tech."""
+    discovered = tuple(
+        item.model_copy(update={"discovered": True})
+        for item in default_technologies()
+    )
+    active_abacus = CAMP_ABACUS.model_copy(update={"active": True})
+    active_pulley = CAMP_PULLEY.model_copy(update={"active": True})
+    active_loom = CAMP_LOOM.model_copy(update={"active": True})
+    innovations = tuple(
+        active_abacus
+        if item.innovation_id == CAMP_ABACUS.innovation_id
+        else active_pulley
+        if item.innovation_id == CAMP_PULLEY.innovation_id
+        else active_loom
+        if item.innovation_id == CAMP_LOOM.innovation_id
+        else item
+        for item in default_innovations()
+    )
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        laws=(
+            Law.create(0, 0, "Camp Customs", LawKind.CUSTOMS),
+            Law.create(1, 0, "Camp Labor", LawKind.LABOR),
+        ),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Foundry", CityKind.FOUNDRY),
+        ),
+        institutions=(
+            Institution.create(0, 0, 1, "Camp Guild", InstitutionKind.GUILD),
+            Institution.create(1, 0, 1, "Camp Workshop", InstitutionKind.WORKSHOP),
+        ),
+        technologies=discovered,
+        innovations=innovations,
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    agent = world.agents[0]
+    expected_discount = (
+        GUILD_PRODUCE_ENERGY_DISCOUNT
+        + WORKSHOP_PRODUCE_ENERGY_DISCOUNT
+        + FOUNDRY_PRODUCE_ENERGY_DISCOUNT
+        + CUSTOMS_PRODUCE_ENERGY_DISCOUNT
+        + LABOR_PRODUCE_ENERGY_DISCOUNT
+        + MATHEMATICS_PRODUCE_ENERGY_DISCOUNT
+        + ENGINEERING_PRODUCE_ENERGY_DISCOUNT
+        + TEXTILES_PRODUCE_ENERGY_DISCOUNT
+    )
+    assert labor_produce_discount_for(world, agent) == LABOR_PRODUCE_ENERGY_DISCOUNT
+    assert produce_energy_discount(world, agent) == pytest.approx(expected_discount)
+    assert effective_produce_energy_cost(
+        world,
+        agent,
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(0.0)
+    # census_effects produce path omits statute discounts (customs, labor).
     assert census_effects(world).produce_energy_cost_bps == 0
 
 

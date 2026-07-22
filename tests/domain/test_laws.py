@@ -14,6 +14,7 @@ from civitas.domain import (
     CONSERVATION_WOOD_GATHER_BONUS,
     CUSTOMS_PRODUCE_ENERGY_DISCOUNT,
     ETHICS_MIN_TEACH_TRUST_DELTA,
+    LABOR_PRODUCE_ENERGY_DISCOUNT,
     LAND_TENURE_EAT_RESTORE_BONUS,
     PASSAGE_MOVE_ENERGY_DISCOUNT,
     QUARANTINE_REST_RESTORE_BONUS,
@@ -33,6 +34,7 @@ from civitas.domain import (
     active_curriculum_law,
     active_customs_law,
     active_ethics_law,
+    active_labor_law,
     active_land_tenure_law,
     active_market_fee_law,
     active_passage_law,
@@ -50,6 +52,7 @@ from civitas.domain import (
     default_world_map,
     enact_law,
     ethics_min_teach_trust_delta_for,
+    labor_produce_discount_for,
     land_tenure_eat_bonus_for,
     levy_taxes,
     market_fee_for,
@@ -91,6 +94,7 @@ def test_default_laws_seed_camp_poll_tax() -> None:
     assert all(law.kind is not LawKind.PASSAGE for law in default_laws())
     assert all(law.kind is not LawKind.CUSTOMS for law in default_laws())
     assert all(law.kind is not LawKind.LAND_TENURE for law in default_laws())
+    assert all(law.kind is not LawKind.LABOR for law in default_laws())
 
 
 def test_world_rejects_unknown_government_and_duplicate_active_tax() -> None:
@@ -200,6 +204,14 @@ def test_world_rejects_duplicate_active_land_tenure() -> None:
     left = Law.create(0, 0, "Land Tenure A", LawKind.LAND_TENURE)
     right = Law.create(1, 0, "Land Tenure B", LawKind.LAND_TENURE)
     with pytest.raises(ValidationError, match="LAND_TENURE"):
+        _world(Agent.create(agent_id=0, name="A"), laws=(left, right))
+
+
+def test_world_rejects_duplicate_active_labor() -> None:
+    """At most one active LABOR law per government."""
+    left = Law.create(0, 0, "Labor A", LawKind.LABOR)
+    right = Law.create(1, 0, "Labor B", LawKind.LABOR)
+    with pytest.raises(ValidationError, match="LABOR"):
         _world(Agent.create(agent_id=0, name="A"), laws=(left, right))
 
 
@@ -1037,6 +1049,59 @@ def test_conservation_bonus_requires_living_subject() -> None:
     assert conservation_wood_bonus_for(bare, bare.agents[0]) == 0
 
 
+def test_enact_labor_and_uniqueness() -> None:
+    """LABOR enacts once per government; kind alone enables discount."""
+    world = _world(Agent.create(agent_id=0, name="A"))
+    labor = Law.create(0, 0, "Camp Labor", LawKind.LABOR)
+    enacted = enact_law(world, labor)
+    assert enacted is not None
+    assert active_labor_law(enacted, 0) == labor
+    assert labor_produce_discount_for(enacted, enacted.agents[0]) == (
+        LABOR_PRODUCE_ENERGY_DISCOUNT
+    )
+    assert LABOR_PRODUCE_ENERGY_DISCOUNT == 0.02
+    duplicate = Law.create(1, 0, "Other Labor", LawKind.LABOR)
+    assert enact_law(enacted, duplicate) is None
+    # Other unique kinds may coexist with LABOR.
+    customs = Law.create(1, 0, "Camp Customs", LawKind.CUSTOMS)
+    with_customs = enact_law(enacted, customs)
+    assert with_customs is not None
+    assert active_labor_law(with_customs, 0) == labor
+    assert (
+        labor_produce_discount_for(
+            with_customs,
+            with_customs.agents[0],
+        )
+        == LABOR_PRODUCE_ENERGY_DISCOUNT
+    )
+
+
+def test_labor_discount_requires_living_subject() -> None:
+    """Only living agents under LABOR receive the produce discount."""
+    labor = Law.create(0, 0, "Camp Labor", LawKind.LABOR)
+    world = _world(Agent.create(agent_id=0, name="A"), laws=(labor,))
+    assert labor_produce_discount_for(world, world.agents[0]) == (
+        LABOR_PRODUCE_ENERGY_DISCOUNT
+    )
+    dead = world.agents[0].model_copy(
+        update={
+            "status": AgentStatus.DEAD,
+            "health": world.agents[0].health.model_copy(update={"vitality": 0.0}),
+        }
+    )
+    assert labor_produce_discount_for(world, dead) == 0.0
+    ungoverned = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(),
+        laws=(),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert labor_produce_discount_for(ungoverned, ungoverned.agents[0]) == 0.0
+    bare = _world(Agent.create(agent_id=0, name="A"))
+    assert labor_produce_discount_for(bare, bare.agents[0]) == 0.0
+
+
 def test_tax_schedule_overrides_levy_fallback() -> None:
     """Active TAX_SCHEDULE beats levy_taxes fallback parameters."""
     law = Law.create(0, 0, "Heavy", LawKind.TAX_SCHEDULE, flat_amount=2)
@@ -1080,6 +1145,7 @@ def test_census_laws_counts() -> None:
     customs = Law.create(12, 0, "Customs", LawKind.CUSTOMS, active=True)
     land_tenure = Law.create(13, 0, "Land Tenure", LawKind.LAND_TENURE, active=True)
     conservation = Law.create(14, 0, "Conservation", LawKind.CONSERVATION, active=True)
+    labor = Law.create(15, 0, "Labor", LawKind.LABOR, active=True)
     world = _world(
         Agent.create(agent_id=0, name="A"),
         laws=(
@@ -1098,11 +1164,12 @@ def test_census_laws_counts() -> None:
             customs,
             land_tenure,
             conservation,
+            labor,
         ),
     )
     snap = census_laws(world)
-    assert snap.law_count == 15
-    assert snap.active_count == 14
+    assert snap.law_count == 16
+    assert snap.active_count == 15
     assert snap.inactive_count == 1
     assert snap.governments_with_active_laws == 1
     assert snap.active_tax_schedule_count == 1
@@ -1119,6 +1186,7 @@ def test_census_laws_counts() -> None:
     assert snap.active_customs_count == 1
     assert snap.active_land_tenure_count == 1
     assert snap.active_conservation_count == 1
+    assert snap.active_labor_count == 1
     assert census_laws(world) == snap
 
 
