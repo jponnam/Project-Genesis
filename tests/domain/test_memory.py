@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from civitas.domain import (
+    AGRICULTURE_FACT,
     ANATOMY_FACT,
     ARCHITECTURE_FACT,
     ASTRONOMY_FACT,
@@ -68,6 +69,7 @@ def test_encode_agent_episode_accepts_full_technology_fact_content() -> None:
     """Episode content can fit every canonical technology fact."""
     all_facts = frozenset(
         {
+            AGRICULTURE_FACT,
             ARCHITECTURE_FACT,
             ASTRONOMY_FACT,
             ANATOMY_FACT,
@@ -93,9 +95,9 @@ def test_encode_agent_episode_accepts_full_technology_fact_content() -> None:
         Agent.create(agent_id=0, name="A", knowledge=Knowledge(facts=all_facts)),
         Tick(value=3),
     )
-    assert len(record.content) == 231
+    assert len(record.content) == 243
     assert (
-        "facts=anatomy,architecture,astronomy,cartography,engineering,fire"
+        "facts=agriculture,anatomy,architecture,astronomy,cartography,engineering,fire"
         in record.content
     )
 

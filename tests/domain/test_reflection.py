@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from civitas.domain import (
+    AGRICULTURE_FACT,
     ANATOMY_FACT,
     ARCHITECTURE_FACT,
     ASTRONOMY_FACT,
@@ -97,6 +98,7 @@ def test_reflection_prompt_accepts_full_technology_fact_content() -> None:
             ANATOMY_FACT,
             CARTOGRAPHY_FACT,
             ENGINEERING_FACT,
+            AGRICULTURE_FACT,
             FIRE_FACT,
             HYGIENE_FACT,
             IRRIGATION_FACT,
@@ -118,6 +120,6 @@ def test_reflection_prompt_accepts_full_technology_fact_content() -> None:
     ).with_tick(Tick(value=1))
     world, _ = apply_memory_encoding(world)
     prompt = build_reflection_prompt(world.agents[0])
-    assert len(prompt) == 259
-    assert "seafaring" in prompt
+    assert len(prompt) == 271
+    assert "agriculture" in prompt
     LanguageModelRequest(prompt=prompt, seed=42)

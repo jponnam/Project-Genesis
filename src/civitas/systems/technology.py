@@ -86,6 +86,7 @@ class TechSystem:
                     discovered_navigation_count=snap.discovered_navigation_count,
                     discovered_cartography_count=snap.discovered_cartography_count,
                     discovered_seafaring_count=snap.discovered_seafaring_count,
+                    discovered_agriculture_count=snap.discovered_agriculture_count,
                     locked_count=snap.locked_count,
                     researchable_count=snap.researchable_count,
                 )

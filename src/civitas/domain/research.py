@@ -16,6 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from civitas.domain.ids import TechnologyId
 from civitas.domain.technology import (
+    CAMP_AGRICULTURE,
     CAMP_ANATOMY,
     CAMP_ARCHITECTURE,
     CAMP_ASTRONOMY,
@@ -163,6 +164,11 @@ CAMP_SEAFARING_RESEARCH: ResearchProgress = ResearchProgress.create(
     points=0,
     threshold=DEFAULT_POTTERY_THRESHOLD,
 )
+CAMP_AGRICULTURE_RESEARCH: ResearchProgress = ResearchProgress.create(
+    CAMP_AGRICULTURE.technology_id.value,
+    points=0,
+    threshold=DEFAULT_POTTERY_THRESHOLD,
+)
 
 
 def default_research_progress() -> tuple[ResearchProgress, ...]:
@@ -188,6 +194,7 @@ def default_research_progress() -> tuple[ResearchProgress, ...]:
                 CAMP_NAVIGATION_RESEARCH,
                 CAMP_CARTOGRAPHY_RESEARCH,
                 CAMP_SEAFARING_RESEARCH,
+                CAMP_AGRICULTURE_RESEARCH,
             ),
             key=lambda item: item.technology_id.value,
         )

@@ -100,6 +100,7 @@ from civitas.domain.economy import (
 from civitas.domain.effects import (
     ACADEMY_TEACHINGS_PER_KNOWER_BONUS,
     AGORA_SOCIALIZE_RESTORE_BONUS,
+    AGRICULTURE_FOOD_GATHER_BONUS,
     ANATOMY_RESEARCH_POINTS_BONUS,
     APOTHECARY_DRINK_RESTORE_BONUS,
     ARCHITECT_TEACHINGS_PER_KNOWER_BONUS,
@@ -398,6 +399,7 @@ from civitas.domain.innovation import (
     CAMP_IRRIGATION_CANAL,
     CAMP_MAP,
     CAMP_ORATION,
+    CAMP_PLOW,
     CAMP_PLUMB_LINE,
     CAMP_POTTERY_CRAFT,
     CAMP_PULLEY,
@@ -444,6 +446,7 @@ from civitas.domain.institutions import (
     set_officer,
 )
 from civitas.domain.knowledge import (
+    AGRICULTURE_FACT,
     ANATOMY_FACT,
     ARCHITECTURE_FACT,
     ASTRONOMY_FACT,
@@ -656,6 +659,7 @@ from civitas.domain.reputation import (
     top_standing,
 )
 from civitas.domain.research import (
+    CAMP_AGRICULTURE_RESEARCH,
     CAMP_ANATOMY_RESEARCH,
     CAMP_ARCHITECTURE_RESEARCH,
     CAMP_ASTRONOMY_RESEARCH,
@@ -718,6 +722,7 @@ from civitas.domain.taxes import (
     tax_due,
 )
 from civitas.domain.technology import (
+    CAMP_AGRICULTURE,
     CAMP_ANATOMY,
     CAMP_ARCHITECTURE,
     CAMP_ASTRONOMY,
@@ -799,6 +804,8 @@ __all__ = [
     "ACTION_NEED_TARGET",
     "ACTION_RESOURCE",
     "AGORA_SOCIALIZE_RESTORE_BONUS",
+    "AGRICULTURE_FACT",
+    "AGRICULTURE_FOOD_GATHER_BONUS",
     "ANATOMY_FACT",
     "ANATOMY_RESEARCH_POINTS_BONUS",
     "APOTHECARY_DRINK_RESTORE_BONUS",
@@ -817,6 +824,8 @@ __all__ = [
     "BUREAUCRACY_MARKET_FEE_DISCOUNT",
     "CALENDAR_RETRIEVAL_LIMIT_BONUS",
     "CAMP_ABACUS",
+    "CAMP_AGRICULTURE",
+    "CAMP_AGRICULTURE_RESEARCH",
     "CAMP_ANATOMY",
     "CAMP_ANATOMY_RESEARCH",
     "CAMP_ARCHITECTURE",
@@ -859,6 +868,7 @@ __all__ = [
     "CAMP_ORATION",
     "CAMP_PHILOSOPHY",
     "CAMP_PHILOSOPHY_RESEARCH",
+    "CAMP_PLOW",
     "CAMP_PLUMB_LINE",
     "CAMP_POLL_TAX_LAW",
     "CAMP_POTTERY",

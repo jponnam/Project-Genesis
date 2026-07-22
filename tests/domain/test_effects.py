@@ -7,6 +7,7 @@ import pytest
 from civitas.domain import (
     ACADEMY_TEACHINGS_PER_KNOWER_BONUS,
     AGORA_SOCIALIZE_RESTORE_BONUS,
+    AGRICULTURE_FOOD_GATHER_BONUS,
     ANATOMY_RESEARCH_POINTS_BONUS,
     APOTHECARY_DRINK_RESTORE_BONUS,
     ARCHITECT_TEACHINGS_PER_KNOWER_BONUS,
@@ -21,6 +22,7 @@ from civitas.domain import (
     BUREAUCRACY_MARKET_FEE_DISCOUNT,
     CALENDAR_RETRIEVAL_LIMIT_BONUS,
     CAMP_ABACUS,
+    CAMP_AGRICULTURE,
     CAMP_ANATOMY,
     CAMP_ARCHITECTURE,
     CAMP_ASEPSIS,
@@ -46,6 +48,7 @@ from civitas.domain import (
     CAMP_NAVIGATION,
     CAMP_ORATION,
     CAMP_PHILOSOPHY,
+    CAMP_PLOW,
     CAMP_PLUMB_LINE,
     CAMP_POTTERY,
     CAMP_POTTERY_CRAFT,
@@ -2432,6 +2435,84 @@ def test_entrepot_stacks_with_storehouse_and_waystation_food_gather() -> None:
     assert location_has_active_entrepot(world, agent.location_id) is True
     assert location_has_active_storehouse(world, agent.location_id) is True
     assert location_has_active_waystation(world, agent.location_id) is True
+    assert gather_amount_bonus(world, "food", location_id=agent.location_id) == (
+        expected
+    )
+    assert effective_gather_amount(world, "food", agent=agent) == (
+        DEFAULT_GATHER_AMOUNT + expected
+    )
+
+
+def test_plow_raises_food_gather_society_wide() -> None:
+    """Active plow raises food gather amount for every agent."""
+    discovered_agriculture = CAMP_AGRICULTURE.model_copy(update={"discovered": True})
+    active_plow = CAMP_PLOW.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        technologies=tuple(
+            discovered_agriculture
+            if item.technology_id == CAMP_AGRICULTURE.technology_id
+            else item
+            for item in default_technologies()
+        ),
+        innovations=tuple(
+            active_plow if item.innovation_id == CAMP_PLOW.innovation_id else item
+            for item in default_innovations()
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert gather_amount_bonus(world, "food") == AGRICULTURE_FOOD_GATHER_BONUS
+    assert gather_amount_bonus(world, "water") == 0
+    assert gather_amount_bonus(world, "stone") == 0
+    assert effective_gather_amount(world, "food") == (
+        DEFAULT_GATHER_AMOUNT + AGRICULTURE_FOOD_GATHER_BONUS
+    )
+    bare = _world()
+    assert gather_amount_bonus(bare, "food") == 0
+    assert effective_gather_amount(bare, "food") == DEFAULT_GATHER_AMOUNT
+
+
+def test_plow_stacks_with_storehouse_waystation_and_entrepot_food_gather() -> None:
+    """Plow food gather bonus stacks with storehouse, waystation, and entrepot."""
+    discovered_agriculture = CAMP_AGRICULTURE.model_copy(update={"discovered": True})
+    active_plow = CAMP_PLOW.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Entrepot", CityKind.ENTREPOT),
+        ),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 1, 1, "Entrepot Storehouse", InfrastructureKind.STOREHOUSE
+            ),
+            Infrastructure.create(
+                1, 0, 1, 1, "Entrepot Waystation", InfrastructureKind.WAYSTATION
+            ),
+        ),
+        technologies=tuple(
+            discovered_agriculture
+            if item.technology_id == CAMP_AGRICULTURE.technology_id
+            else item
+            for item in default_technologies()
+        ),
+        innovations=tuple(
+            active_plow if item.innovation_id == CAMP_PLOW.innovation_id else item
+            for item in default_innovations()
+        ),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    agent = world.agents[0]
+    expected = (
+        AGRICULTURE_FOOD_GATHER_BONUS
+        + STOREHOUSE_FOOD_GATHER_BONUS
+        + WAYSTATION_FOOD_GATHER_BONUS
+        + ENTREPOT_FOOD_GATHER_BONUS
+    )
+    assert gather_amount_bonus(world, "food") == AGRICULTURE_FOOD_GATHER_BONUS
     assert gather_amount_bonus(world, "food", location_id=agent.location_id) == (
         expected
     )
