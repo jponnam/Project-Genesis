@@ -130,13 +130,15 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 18 Milestone 3: Woodcutter institutions**
+**Phase 18 Milestone 4: Lumber yard infrastructure**
 
-``InstitutionKind.WOODCUTTER`` seats grant +1 WOOD gather at the
-institution's seat location. The seat bonus stacks additively with the
+``InfrastructureKind.LUMBER_YARD`` seats grant +1 WOOD gather at the
+infrastructure's seat location. The seat bonus stacks additively with the
 sawmill society-wide bonus, the coppice society-wide bonus, the scaffold
-seat, the timber rights subject bonus, and the pastoral city seat.
-Woodcutter institutions are not seeded.
+seat, the woodcutter seat, the timber rights subject bonus, and the
+pastoral city seat. Governments fund construction via the treasury
+(``DEFAULT_LUMBER_YARD_BUILD_COST`` = 9) or institutions fund it from
+their budget. Lumber yards are not seeded.
 
 ### Completed
 
@@ -327,6 +329,7 @@ JSONL storage → `civitas run`
 - Milestone 1: Carpentry technology
 - Milestone 2: Timber rights laws
 - Milestone 3: Woodcutter institutions
+- Milestone 4: Lumber yard infrastructure
 
 ## License
 

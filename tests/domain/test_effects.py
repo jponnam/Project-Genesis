@@ -128,6 +128,7 @@ from civitas.domain import (
     LAZARETTO_DRINK_RESTORE_BONUS,
     LIBRARY_RETRIEVAL_LIMIT_BONUS,
     LOGIC_RESEARCH_POINTS_BONUS,
+    LUMBER_YARD_WOOD_GATHER_BONUS,
     LYCEUM_RETRIEVAL_LIMIT_BONUS,
     MASON_STONE_GATHER_BONUS,
     MATHEMATICS_PRODUCE_ENERGY_DISCOUNT,
@@ -248,6 +249,7 @@ from civitas.domain import (
     location_has_active_ironworks,
     location_has_active_lazaretto,
     location_has_active_library,
+    location_has_active_lumber_yard,
     location_has_active_lyceum,
     location_has_active_mason,
     location_has_active_merchant,
@@ -1568,6 +1570,94 @@ def test_woodcutter_stacks_with_sawmill_coppice_scaffold_timber_and_pastoral() -
         society_bonus
         + SCAFFOLD_WOOD_GATHER_BONUS
         + WOODCUTTER_WOOD_GATHER_BONUS
+        + PASTORAL_WOOD_GATHER_BONUS
+    )
+    assert gather_amount_bonus(world, "wood") == society_bonus
+    assert gather_amount_bonus(world, "wood", location_id=agent.location_id) == (
+        seat_bonus
+    )
+    assert effective_gather_amount(world, "wood", agent=agent) == (
+        DEFAULT_GATHER_AMOUNT + seat_bonus + TIMBER_RIGHTS_WOOD_GATHER_BONUS
+    )
+
+
+def test_lumber_yard_boosts_wood_gather_for_colocated_agents() -> None:
+    """Active lumber yards add a wood gather bonus at their seat location."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 0, 0, "Camp Lumber Yard", InfrastructureKind.LUMBER_YARD
+            ),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_lumber_yard(world, agent.location_id) is True
+    assert gather_amount_bonus(world, "wood", location_id=agent.location_id) == (
+        LUMBER_YARD_WOOD_GATHER_BONUS
+    )
+    assert gather_amount_bonus(world, "wood") == 0
+    assert effective_gather_amount(world, "wood", agent=agent) == (
+        DEFAULT_GATHER_AMOUNT + LUMBER_YARD_WOOD_GATHER_BONUS
+    )
+
+
+def test_lumber_yard_stacks_with_sawmill_coppice_scaffold_woodcutter_pastoral() -> None:
+    """Lumber yard seat bonus stacks with every other wood gather source."""
+    discovered_forestry = CAMP_FORESTRY.model_copy(update={"discovered": True})
+    discovered_carpentry = CAMP_CARPENTRY.model_copy(update={"discovered": True})
+    active_coppice = CAMP_COPPICE.model_copy(update={"active": True})
+    active_sawmill = CAMP_SAWMILL.model_copy(update={"active": True})
+    discovered = {
+        CAMP_FORESTRY.technology_id: discovered_forestry,
+        CAMP_CARPENTRY.technology_id: discovered_carpentry,
+    }
+    active = {
+        CAMP_COPPICE.innovation_id: active_coppice,
+        CAMP_SAWMILL.innovation_id: active_sawmill,
+    }
+    timber_rights = Law.create(0, 0, "Camp Timber Rights", LawKind.TIMBER_RIGHTS)
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Pastoral", CityKind.PASTORAL),
+        ),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 1, 1, "Pastoral Scaffold", InfrastructureKind.SCAFFOLD
+            ),
+            Infrastructure.create(
+                1, 0, 1, 1, "Pastoral Lumber Yard", InfrastructureKind.LUMBER_YARD
+            ),
+        ),
+        institutions=(
+            Institution.create(0, 0, 1, "Camp Woodcutter", InstitutionKind.WOODCUTTER),
+        ),
+        laws=(timber_rights,),
+        technologies=tuple(
+            discovered.get(item.technology_id, item)
+            for item in default_technologies()
+        ),
+        innovations=tuple(
+            active.get(item.innovation_id, item) for item in default_innovations()
+        ),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_lumber_yard(world, agent.location_id) is True
+    society_bonus = FORESTRY_WOOD_GATHER_BONUS + CARPENTRY_WOOD_GATHER_BONUS
+    seat_bonus = (
+        society_bonus
+        + SCAFFOLD_WOOD_GATHER_BONUS
+        + WOODCUTTER_WOOD_GATHER_BONUS
+        + LUMBER_YARD_WOOD_GATHER_BONUS
         + PASTORAL_WOOD_GATHER_BONUS
     )
     assert gather_amount_bonus(world, "wood") == society_bonus

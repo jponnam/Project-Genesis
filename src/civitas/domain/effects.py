@@ -181,7 +181,11 @@ the conservation subject bonus, and the pastoral city seat). Phase 18
 Milestone 3 adds a WOODCUTTER institution wood-gather bonus at the seat
 location (stacking with the sawmill society-wide bonus, the coppice
 society-wide bonus, the scaffold seat, the timber rights subject bonus,
-and the pastoral city seat).
+and the pastoral city seat). Phase 18 Milestone 4 adds a LUMBER_YARD
+infrastructure wood-gather bonus at the infrastructure seat (stacking
+with the sawmill society-wide bonus, the coppice society-wide bonus, the
+scaffold seat, the woodcutter seat, the timber rights subject bonus, and
+the pastoral city seat).
 The action
 executor,
 retrieval
@@ -288,6 +292,7 @@ CROP_ROTATION_EAT_RESTORE_BONUS: float = 0.05
 SCAFFOLD_WOOD_GATHER_BONUS: int = 1
 PASTORAL_WOOD_GATHER_BONUS: int = 1
 WOODCUTTER_WOOD_GATHER_BONUS: int = 1
+LUMBER_YARD_WOOD_GATHER_BONUS: int = 1
 MASON_STONE_GATHER_BONUS: int = 1
 MINER_STONE_GATHER_BONUS: int = 1
 QUARRY_STONE_GATHER_BONUS: int = 1
@@ -501,6 +506,22 @@ def location_has_active_forge_works(
     )
     return any(
         item.kind is InfrastructureKind.FORGE_WORKS and item.location_id == target
+        for item in active_infrastructure(world)
+    )
+
+
+def location_has_active_lumber_yard(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active LUMBER_YARD stands at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InfrastructureKind.LUMBER_YARD and item.location_id == target
         for item in active_infrastructure(world)
     )
 
@@ -1339,7 +1360,7 @@ def gather_amount_bonus(
     GRANARY, HUSBANDMAN, and/or TERRACE at ``location_id`` when provided
     (they stack). Wood bonuses come from an active COPPICE innovation
     society-wide and an active SAWMILL innovation society-wide, plus an
-    active SCAFFOLD, WOODCUTTER seat, and/or PASTORAL city at
+    active SCAFFOLD, WOODCUTTER seat, LUMBER_YARD, and/or PASTORAL city at
     ``location_id`` when provided (they stack).
     """
     bonus = 0
@@ -1399,6 +1420,8 @@ def gather_amount_bonus(
                 bonus += SCAFFOLD_WOOD_GATHER_BONUS
             if location_has_active_woodcutter(world, location_id):
                 bonus += WOODCUTTER_WOOD_GATHER_BONUS
+            if location_has_active_lumber_yard(world, location_id):
+                bonus += LUMBER_YARD_WOOD_GATHER_BONUS
             if location_has_active_pastoral(world, location_id):
                 bonus += PASTORAL_WOOD_GATHER_BONUS
     return bonus

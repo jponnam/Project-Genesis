@@ -8,13 +8,15 @@ attach to a city seat inside a government jurisdiction. This package
 seeds a single ``WELL`` kind; ``STOREHOUSE``, ``ROAD``, ``SCRIPTORIUM``,
 ``STOA``, ``OBSERVATORY``, ``SHRINE``, ``CLINIC``, ``BATHHOUSE``,
 ``BRIDGE``, ``SCAFFOLD``, ``WAYSTATION``, ``BEACON``, ``DITCH``,
-``TERRACE``, ``FULLING_MILL``, ``WAREHOUSE``, ``MINESHAFT``, and
-``FORGE_WORKS`` are
+``TERRACE``, ``FULLING_MILL``, ``WAREHOUSE``, ``MINESHAFT``,
+``FORGE_WORKS``, and ``LUMBER_YARD`` are
 available via free create or paid construction.
 Governments pay via ``build_infrastructure``; institutions pay via
 ``build_infrastructure_from_institution``. Effect wiring applies WELL
 drink restore, STOREHOUSE/WAYSTATION/TERRACE food gather (stacking),
-SCAFFOLD wood gather, DITCH water gather (stacking with
+SCAFFOLD wood gather, LUMBER_YARD wood gather (stacking with sawmill/
+coppice society-wide, scaffold/woodcutter seats, pastoral city, and the
+timber rights subject bonus), DITCH water gather (stacking with
 pottery/irrigation/sail), MINESHAFT stone gather (stacking with
 pickaxe/forge society-wide, mason/miner seats, quarry city, and the
 mineral rights subject bonus),
@@ -71,6 +73,7 @@ class InfrastructureKind(StrEnum):
     WAREHOUSE = "warehouse"
     MINESHAFT = "mineshaft"
     FORGE_WORKS = "forge_works"
+    LUMBER_YARD = "lumber_yard"
 
 
 # Canonical treasury cost to construct each infrastructure kind.
@@ -93,6 +96,7 @@ DEFAULT_FULLING_MILL_BUILD_COST: int = 10
 DEFAULT_WAREHOUSE_BUILD_COST: int = 9
 DEFAULT_MINESHAFT_BUILD_COST: int = 9
 DEFAULT_FORGE_WORKS_BUILD_COST: int = 10
+DEFAULT_LUMBER_YARD_BUILD_COST: int = 9
 INFRASTRUCTURE_BUILD_COSTS: dict[InfrastructureKind, int] = {
     InfrastructureKind.WELL: DEFAULT_WELL_BUILD_COST,
     InfrastructureKind.STOREHOUSE: DEFAULT_STOREHOUSE_BUILD_COST,
@@ -113,6 +117,7 @@ INFRASTRUCTURE_BUILD_COSTS: dict[InfrastructureKind, int] = {
     InfrastructureKind.WAREHOUSE: DEFAULT_WAREHOUSE_BUILD_COST,
     InfrastructureKind.MINESHAFT: DEFAULT_MINESHAFT_BUILD_COST,
     InfrastructureKind.FORGE_WORKS: DEFAULT_FORGE_WORKS_BUILD_COST,
+    InfrastructureKind.LUMBER_YARD: DEFAULT_LUMBER_YARD_BUILD_COST,
 }
 
 
@@ -199,6 +204,7 @@ class InfrastructureCensus(BaseModel):
     active_warehouse_count: NonNegativeInt = 0
     active_mineshaft_count: NonNegativeInt = 0
     active_forge_works_count: NonNegativeInt = 0
+    active_lumber_yard_count: NonNegativeInt = 0
 
 
 def infrastructure_by_id(
@@ -462,6 +468,9 @@ def census_infrastructure(world: World) -> InfrastructureCensus:
     active_forge_works = sum(
         1 for item in active if item.kind is InfrastructureKind.FORGE_WORKS
     )
+    active_lumber_yards = sum(
+        1 for item in active if item.kind is InfrastructureKind.LUMBER_YARD
+    )
     return InfrastructureCensus(
         tick=world.tick,
         infrastructure_count=len(items),
@@ -488,4 +497,5 @@ def census_infrastructure(world: World) -> InfrastructureCensus:
         active_warehouse_count=active_warehouses,
         active_mineshaft_count=active_mineshafts,
         active_forge_works_count=active_forge_works,
+        active_lumber_yard_count=active_lumber_yards,
     )
