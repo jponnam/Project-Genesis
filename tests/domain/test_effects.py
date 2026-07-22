@@ -30,6 +30,7 @@ from civitas.domain import (
     METALLURGY_STONE_GATHER_BONUS,
     POTTERY_WATER_GATHER_BONUS,
     ROAD_MOVE_ENERGY_DISCOUNT,
+    SCRIPTORIUM_TEACHINGS_PER_KNOWER_BONUS,
     STOREHOUSE_FOOD_GATHER_BONUS,
     WELL_DRINK_RESTORE_BONUS,
     WRITING_TEACHINGS_PER_KNOWER_BONUS,
@@ -56,6 +57,7 @@ from civitas.domain import (
     location_has_active_archive,
     location_has_active_guild,
     location_has_active_road,
+    location_has_active_scriptorium,
     location_has_active_storehouse,
     location_has_active_well,
     rest_restore_bonus,
@@ -195,6 +197,73 @@ def test_scribe_boosts_teachings_per_knower() -> None:
     assert (
         effective_teachings_per_knower(bare, base=DEFAULT_TEACHINGS_PER_KNOWER)
         == DEFAULT_TEACHINGS_PER_KNOWER
+    )
+
+
+def test_scriptorium_boosts_teachings_and_stacks_with_scribe() -> None:
+    """Active scriptorium adds a seat bonus that stacks with scribe."""
+    discovered_pottery = CAMP_POTTERY.model_copy(update={"discovered": True})
+    discovered_irrigation = CAMP_IRRIGATION.model_copy(update={"discovered": True})
+    discovered_metallurgy = CAMP_METALLURGY.model_copy(update={"discovered": True})
+    discovered_writing = CAMP_WRITING.model_copy(update={"discovered": True})
+    active_scribe = CAMP_SCRIBE.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        technologies=(
+            CAMP_FIRE,
+            discovered_pottery,
+            discovered_irrigation,
+            discovered_metallurgy,
+            discovered_writing,
+        ),
+        innovations=(
+            CAMP_FIRE_HEARTH,
+            CAMP_POTTERY_CRAFT,
+            CAMP_IRRIGATION_CANAL,
+            CAMP_FORGE,
+            active_scribe,
+        ),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 0, 0, "Camp Scriptorium", InfrastructureKind.SCRIPTORIUM
+            ),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_scriptorium(world, agent.location_id) is True
+    assert (
+        effective_teachings_per_knower(world, base=DEFAULT_TEACHINGS_PER_KNOWER)
+        == DEFAULT_TEACHINGS_PER_KNOWER + WRITING_TEACHINGS_PER_KNOWER_BONUS
+    )
+    assert (
+        effective_teachings_per_knower(
+            world, base=DEFAULT_TEACHINGS_PER_KNOWER, agent=agent
+        )
+        == DEFAULT_TEACHINGS_PER_KNOWER
+        + WRITING_TEACHINGS_PER_KNOWER_BONUS
+        + SCRIPTORIUM_TEACHINGS_PER_KNOWER_BONUS
+    )
+    bare = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 0, 0, "Camp Scriptorium", InfrastructureKind.SCRIPTORIUM
+            ),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert (
+        effective_teachings_per_knower(
+            bare, base=DEFAULT_TEACHINGS_PER_KNOWER, agent=bare.agents[0]
+        )
+        == DEFAULT_TEACHINGS_PER_KNOWER + SCRIPTORIUM_TEACHINGS_PER_KNOWER_BONUS
     )
 
 

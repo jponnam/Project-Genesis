@@ -174,15 +174,19 @@ def diffuse_knowledge(
     if teachings_per_knower < 0:
         msg = f"teachings_per_knower must be >= 0, got {teachings_per_knower}"
         raise ValueError(msg)
-    teaching_limit = effective_teachings_per_knower(world, base=teachings_per_knower)
-    if teaching_limit == 0:
-        return world, ()
     if min_trust < 0.0 or min_trust > 1.0:
         msg = f"min_trust must be in [0, 1], got {min_trust}"
         raise ValueError(msg)
 
     living = world.alive_agents()
     if not living:
+        return world, ()
+    agents_by_id = {agent.agent_id.value: agent for agent in living}
+    if not any(
+        effective_teachings_per_knower(world, base=teachings_per_knower, agent=agent)
+        > 0
+        for agent in living
+    ):
         return world, ()
 
     candidates: list[tuple[str, int, int]] = []
@@ -212,6 +216,12 @@ def diffuse_knowledge(
     learned: set[tuple[int, str]] = set()
     gains: list[KnowledgeGain] = []
     for fact, teacher_value, learner_value in candidates:
+        teacher = agents_by_id[teacher_value]
+        teaching_limit = effective_teachings_per_knower(
+            world,
+            base=teachings_per_knower,
+            agent=teacher,
+        )
         if taught_counts.get(teacher_value, 0) >= teaching_limit:
             continue
         if (learner_value, fact) in learned:

@@ -3,9 +3,11 @@
 Phase 8 wired active innovations into REST/GATHER outcomes and WELL
 drink-restore bonuses. Phase 9 adds location-scoped STOREHOUSE food-gather
 bonuses, ROAD move-energy discounts, and GUILD produce-energy discounts.
-Phase 10 adds ARCHIVE retrieval-limit bonuses. The action executor and
-retrieval path read these helpers; ``EffectsSystem`` only observes
-coverage. Systems never call each other.
+Phase 10 adds ARCHIVE retrieval-limit bonuses and SCRIPTORIUM
+teachings-per-knower bonuses (stacking with the global scribe innovation).
+The action executor, retrieval path, and knowledge diffusion read these
+helpers; ``EffectsSystem`` only observes coverage. Systems never call
+each other.
 """
 
 from __future__ import annotations
@@ -38,6 +40,7 @@ POTTERY_WATER_GATHER_BONUS: int = 1
 IRRIGATION_WATER_GATHER_BONUS: int = 1
 METALLURGY_STONE_GATHER_BONUS: int = 1
 WRITING_TEACHINGS_PER_KNOWER_BONUS: int = 1
+SCRIPTORIUM_TEACHINGS_PER_KNOWER_BONUS: int = 1
 WELL_DRINK_RESTORE_BONUS: float = 0.05
 STOREHOUSE_FOOD_GATHER_BONUS: int = 1
 ROAD_MOVE_ENERGY_DISCOUNT: float = 0.02
@@ -118,6 +121,22 @@ def location_has_active_road(
     )
     return any(
         item.kind is InfrastructureKind.ROAD and item.location_id == target
+        for item in active_infrastructure(world)
+    )
+
+
+def location_has_active_scriptorium(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active SCRIPTORIUM stands at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InfrastructureKind.SCRIPTORIUM and item.location_id == target
         for item in active_infrastructure(world)
     )
 
@@ -235,11 +254,26 @@ def effective_teachings_per_knower(
     world: World,
     *,
     base: int = 1,
+    location_id: LocationId | int | None = None,
+    agent: Agent | None = None,
 ) -> int:
-    """Return teachings-per-knower including active scribe innovation bonus."""
+    """Return teachings-per-knower including scribe and scriptorium bonuses.
+
+    The scribe innovation bonus is society-wide. The scriptorium bonus
+    applies only when ``location_id`` or ``agent`` places the knower at an
+    active SCRIPTORIUM seat.
+    """
     if base < 0:
         return 0
-    return base + teachings_per_knower_bonus(world)
+    seat = (
+        location_id
+        if location_id is not None
+        else (None if agent is None else agent.location_id)
+    )
+    bonus = teachings_per_knower_bonus(world)
+    if seat is not None and location_has_active_scriptorium(world, seat):
+        bonus += SCRIPTORIUM_TEACHINGS_PER_KNOWER_BONUS
+    return base + bonus
 
 
 def effective_gather_amount(

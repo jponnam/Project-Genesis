@@ -122,12 +122,13 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 10 — Milestone 2: Archive institutions**
+**Phase 10 — Milestone 3: Scriptorium infrastructure**
 
-``InstitutionKind.ARCHIVE`` adds a location-scoped institutional memory
-bonus. An active archive at an agent's seat raises the effective memory
-retrieval limit by +1. Archives are not seeded by default and may be
-created alongside councils and guilds (writing-gated creation is later).
+``InfrastructureKind.SCRIPTORIUM`` adds a location-scoped knowledge
+diffusion bonus. An active scriptorium at a knower's seat raises
+teachings-per-knower by +1, stacking with the society-wide writing scribe
+innovation bonus. Scriptoriums are not seeded by default (catalog build
+cost 10).
 
 ### Completed
 
@@ -205,6 +206,7 @@ JSONL storage → `civitas run`
 **Phase 10:**
 - Milestone 1: Writing technology
 - Milestone 2: Archive institutions
+- Milestone 3: Scriptorium infrastructure
 
 ## License
 
