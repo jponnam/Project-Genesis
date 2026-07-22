@@ -575,6 +575,7 @@ class InstitutionsObserved(DomainEvent):
     active_architect_count: NonNegativeInt = 0
     active_caravan_count: NonNegativeInt = 0
     active_merchant_count: NonNegativeInt = 0
+    active_cartographer_count: NonNegativeInt = 0
     total_budget: NonNegativeInt = 0
     funded_count: NonNegativeInt = 0
 
