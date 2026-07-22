@@ -68,6 +68,14 @@ class EconomySystem:
                     mean_alive=snap.mean_alive,
                     min_alive=snap.min_alive,
                     max_alive=snap.max_alive,
+                    treasury=snap.treasury,
+                    society_total=snap.society_total,
+                    treasury_share_bps=snap.treasury_share_bps,
+                    median_alive=snap.median_alive,
+                    gini_bps=snap.gini_bps,
+                    top1_share_bps=snap.top1_share_bps,
+                    top10_share_bps=snap.top10_share_bps,
+                    zero_count=snap.zero_count,
                 )
             )
         return world

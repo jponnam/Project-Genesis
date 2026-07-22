@@ -118,12 +118,12 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 3 — Milestone 6: Taxes**
+**Phase 3 — Milestone 7: Wealth**
 
-Per-tick levies (`TaxSystem`) debit living agents into `World.treasury`
-using a flat poll tax plus optional basis-point wealth tax. Collections
-emit `TaxCollected`. Taxes are disabled by default. Wealth analytics are
-a later Phase 3 milestone.
+Wealth analytics extend `WealthCensus` / `WealthObserved` with
+treasury-aware society totals and integer inequality metrics (Gini,
+median, top-share basis points). Observation stays on `EconomySystem`.
+Phase 3 is complete; Phase 4 begins relationships and social structure.
 
 ### Completed
 
@@ -149,6 +149,7 @@ JSONL storage → `civitas run`
 - Milestone 4: Prices
 - Milestone 5: Production
 - Milestone 6: Taxes
+- Milestone 7: Wealth
 
 ## License
 

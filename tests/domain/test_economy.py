@@ -12,11 +12,9 @@ from civitas.domain import (
     SimulationConfig,
     World,
     can_afford,
-    census_wealth,
     credit_money,
     debit_money,
     transfer_money,
-    wealth_alive_total,
     wealth_total,
 )
 
@@ -93,21 +91,3 @@ def test_negative_amounts_raise() -> None:
         can_afford(agent, -1)
     with pytest.raises(ValueError, match="money amount"):
         credit_money(agent, -1)
-
-
-def test_census_wealth_splits_alive_and_dead() -> None:
-    """Wealth census reports totals and living-agent stats."""
-    living = Agent.create(agent_id=0, name="A", money=10)
-    dead = Agent.create(agent_id=1, name="B", money=4).model_copy(
-        update={"status": AgentStatus.DEAD, "health": Health(vitality=0.0)}
-    )
-    world = _world(living, dead)
-    snap = census_wealth(world)
-    assert snap.total == 14
-    assert snap.alive_total == 10
-    assert snap.dead_total == 4
-    assert snap.alive_count == 1
-    assert snap.mean_alive == pytest.approx(10.0)
-    assert snap.min_alive == 10
-    assert snap.max_alive == 10
-    assert wealth_alive_total(world) == 10

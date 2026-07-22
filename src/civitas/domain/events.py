@@ -280,6 +280,14 @@ class WealthObserved(DomainEvent):
     mean_alive: float
     min_alive: NonNegativeInt | None = None
     max_alive: NonNegativeInt | None = None
+    treasury: NonNegativeInt = 0
+    society_total: NonNegativeInt = 0
+    treasury_share_bps: NonNegativeInt = 0
+    median_alive: NonNegativeInt | None = None
+    gini_bps: NonNegativeInt = 0
+    top1_share_bps: NonNegativeInt = 0
+    top10_share_bps: NonNegativeInt = 0
+    zero_count: NonNegativeInt = 0
 
 
 CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (

@@ -25,6 +25,10 @@ def test_observe_emits_wealth_observed_without_mutating_world() -> None:
     assert events[0].alive_count == 4
     assert events[0].total == sum(agent.money for agent in world.agents)
     assert events[0].dead_total == 0
+    assert events[0].treasury == 0
+    assert events[0].society_total == events[0].total
+    assert events[0].median_alive is not None
+    assert events[0].gini_bps >= 0
 
 
 def test_observe_can_suppress_events() -> None:

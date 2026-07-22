@@ -57,9 +57,7 @@ from civitas.domain.death import (
     should_die,
 )
 from civitas.domain.economy import (
-    WealthCensus,
     can_afford,
-    census_wealth,
     credit_money,
     debit_money,
     transfer_money,
@@ -214,6 +212,15 @@ from civitas.domain.water import (
     apply_drink,
     can_drink,
 )
+from civitas.domain.wealth import (
+    WealthCensus,
+    census_wealth,
+    gini_bps,
+    median_int,
+    share_bps,
+    society_money_total,
+    top_share_bps,
+)
 from civitas.domain.world import World
 
 __all__ = [
@@ -367,6 +374,7 @@ __all__ = [
     "event_from_record",
     "fill_listing",
     "gatherable_resources",
+    "gini_bps",
     "inherit_personality",
     "is_adjacent",
     "levy_taxes",
@@ -374,6 +382,7 @@ __all__ = [
     "location_stock",
     "market_at",
     "market_by_id",
+    "median_int",
     "next_agent_id",
     "next_listing_id",
     "occupancy",
@@ -386,10 +395,13 @@ __all__ = [
     "recipe_by_id",
     "relocate",
     "resources_with_prices",
+    "share_bps",
     "should_die",
+    "society_money_total",
     "spend_energy",
     "suggested_unit_price",
     "tax_due",
+    "top_share_bps",
     "transfer_money",
     "wealth_alive_total",
     "wealth_total",
