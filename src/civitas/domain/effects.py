@@ -35,6 +35,8 @@ HOSPITAL REST restore bonuses (stacking with fire hearth, remedy, temple,
 and sanctuary), CLINIC DRINK restore bonuses (stacking with well,
 shrine, and sanitation), and INFIRMARY city REST restore bonuses
 (stacking with fire hearth, remedy, temple, sanctuary, and hospital).
+Phase 12 Milestone 6 adds APOTHECARY DRINK restore bonuses (stacking with
+well, shrine, clinic, and sanitation).
 The action executor, retrieval path, market fills,
 knowledge diffusion, and research progression read these helpers;
 ``EffectsSystem`` only observes coverage. Systems never call each other.
@@ -97,6 +99,7 @@ AGORA_SOCIALIZE_RESTORE_BONUS: float = 0.05
 WELL_DRINK_RESTORE_BONUS: float = 0.05
 SHRINE_DRINK_RESTORE_BONUS: float = 0.05
 CLINIC_DRINK_RESTORE_BONUS: float = 0.05
+APOTHECARY_DRINK_RESTORE_BONUS: float = 0.05
 STOREHOUSE_FOOD_GATHER_BONUS: int = 1
 ROAD_MOVE_ENERGY_DISCOUNT: float = 0.02
 GUILD_PRODUCE_ENERGY_DISCOUNT: float = 0.02
@@ -362,6 +365,22 @@ def location_has_active_hospital(
     )
 
 
+def location_has_active_apothecary(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active APOTHECARY is seated at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InstitutionKind.APOTHECARY and item.location_id == target
+        for item in active_institutions(world)
+    )
+
+
 def location_has_active_school(
     world: World,
     location_id: LocationId | int,
@@ -547,11 +566,12 @@ def gather_amount_bonus(
 
 
 def drink_restore_bonus(world: World, agent: Agent) -> float:
-    """Return the DRINK restore bonus from WELL/SHRINE/CLINIC/SANITATION.
+    """Return the DRINK restore bonus from WELL/SHRINE/CLINIC/APOTHECARY/SANITATION.
 
     An active WELL contributes ``WELL_DRINK_RESTORE_BONUS``. An active
     SHRINE contributes ``SHRINE_DRINK_RESTORE_BONUS``. An active
     CLINIC contributes ``CLINIC_DRINK_RESTORE_BONUS``. An active
+    APOTHECARY contributes ``APOTHECARY_DRINK_RESTORE_BONUS``. An active
     ``SANITATION`` statute contributes for living subjects. All stack.
     """
     bonus = 0.0
@@ -561,6 +581,8 @@ def drink_restore_bonus(world: World, agent: Agent) -> float:
         bonus += SHRINE_DRINK_RESTORE_BONUS
     if location_has_active_clinic(world, agent.location_id):
         bonus += CLINIC_DRINK_RESTORE_BONUS
+    if location_has_active_apothecary(world, agent.location_id):
+        bonus += APOTHECARY_DRINK_RESTORE_BONUS
     bonus += sanitation_drink_bonus_for(world, agent)
     return bonus
 
@@ -735,7 +757,7 @@ def effective_drink_restore(
     *,
     base: float = DEFAULT_DRINK_RESTORE,
 ) -> float:
-    """Return DRINK restore amount including well, shrine, clinic, and sanitation.
+    """Return DRINK restore amount including drink seats and sanitation.
 
     ``effective_drink_restore = clamp_unit(base + drink_restore_bonus(...))``.
     """
