@@ -30,6 +30,7 @@ from civitas.domain import (
     SURVEYING_FACT,
     TANNING_FACT,
     TEXTILES_FACT,
+    TOOLMAKING_FACT,
     WRITING_FACT,
     Agent,
     Knowledge,
@@ -126,6 +127,7 @@ def test_reflection_prompt_accepts_full_technology_fact_content() -> None:
             SURVEYING_FACT,
             TANNING_FACT,
             TEXTILES_FACT,
+            TOOLMAKING_FACT,
             WRITING_FACT,
         }
     )
@@ -134,6 +136,6 @@ def test_reflection_prompt_accepts_full_technology_fact_content() -> None:
     ).with_tick(Tick(value=1))
     world, _ = apply_memory_encoding(world)
     prompt = build_reflection_prompt(world.agents[0])
-    assert len(prompt) == 334
-    assert "smithing" in prompt
+    assert len(prompt) == 345
+    assert "toolmaking" in prompt
     LanguageModelRequest(prompt=prompt, seed=42)

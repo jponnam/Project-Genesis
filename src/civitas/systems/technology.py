@@ -94,6 +94,7 @@ class TechSystem:
                     discovered_tanning_count=snap.discovered_tanning_count,
                     discovered_mining_count=snap.discovered_mining_count,
                     discovered_smithing_count=snap.discovered_smithing_count,
+                    discovered_toolmaking_count=snap.discovered_toolmaking_count,
                     locked_count=snap.locked_count,
                     researchable_count=snap.researchable_count,
                 )

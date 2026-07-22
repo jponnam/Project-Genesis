@@ -1131,6 +1131,7 @@ def test_technology_created_and_observed_round_trips() -> None:
         discovered_tanning_count=0,
         discovered_mining_count=0,
         discovered_smithing_count=0,
+        discovered_toolmaking_count=0,
         locked_count=12,
         researchable_count=1,
     )
@@ -1162,6 +1163,7 @@ def test_technology_created_and_observed_round_trips() -> None:
     assert restored.discovered_tanning_count == 0
     assert restored.discovered_mining_count == 0
     assert restored.discovered_smithing_count == 0
+    assert restored.discovered_toolmaking_count == 0
     assert restored.researchable_count == 1
 
 
@@ -1264,6 +1266,7 @@ def test_innovation_events_round_trip() -> None:
         active_tannery_count=0,
         active_pickaxe_count=0,
         active_bellows_count=0,
+        active_lathe_count=0,
     )
     restored_observed = event_from_record(observed.to_record())
     assert isinstance(restored_observed, InnovationsObserved)
@@ -1293,6 +1296,7 @@ def test_innovation_events_round_trip() -> None:
     assert restored_observed.active_tannery_count == 0
     assert restored_observed.active_pickaxe_count == 0
     assert restored_observed.active_bellows_count == 0
+    assert restored_observed.active_lathe_count == 0
 
 
 def test_knowledge_events_round_trip() -> None:
@@ -1355,6 +1359,7 @@ def test_knowledge_events_round_trip() -> None:
         tanning_knower_count=0,
         mining_knower_count=0,
         smithing_knower_count=0,
+        toolmaking_knower_count=0,
         total_fact_instances=3,
         coverage_bps=10_000,
     )
@@ -1385,6 +1390,7 @@ def test_knowledge_events_round_trip() -> None:
     assert restored_observed.tanning_knower_count == 0
     assert restored_observed.mining_knower_count == 0
     assert restored_observed.smithing_knower_count == 0
+    assert restored_observed.toolmaking_knower_count == 0
     assert restored_observed.coverage_bps == 10_000
 
 

@@ -61,6 +61,7 @@ DYEING_FACT: str = TechnologyKind.DYEING.value
 TANNING_FACT: str = TechnologyKind.TANNING.value
 MINING_FACT: str = TechnologyKind.MINING.value
 SMITHING_FACT: str = TechnologyKind.SMITHING.value
+TOOLMAKING_FACT: str = TechnologyKind.TOOLMAKING.value
 
 
 class KnowledgeSource(StrEnum):
@@ -106,6 +107,7 @@ class KnowledgeCensus(BaseModel):
     tanning_knower_count: NonNegativeInt = 0
     mining_knower_count: NonNegativeInt = 0
     smithing_knower_count: NonNegativeInt = 0
+    toolmaking_knower_count: NonNegativeInt = 0
     total_fact_instances: NonNegativeInt
     coverage_bps: NonNegativeInt
 
@@ -390,6 +392,9 @@ def census_knowledge(world: World) -> KnowledgeCensus:
     smithing_knowers = sum(
         1 for agent in living if agent.knowledge.knows(SMITHING_FACT)
     )
+    toolmaking_knowers = sum(
+        1 for agent in living if agent.knowledge.knows(TOOLMAKING_FACT)
+    )
     total_fact_instances = 0
     for agent in living:
         total_fact_instances += sum(
@@ -434,6 +439,7 @@ def census_knowledge(world: World) -> KnowledgeCensus:
         tanning_knower_count=tanning_knowers,
         mining_knower_count=mining_knowers,
         smithing_knower_count=smithing_knowers,
+        toolmaking_knower_count=toolmaking_knowers,
         total_fact_instances=total_fact_instances,
         coverage_bps=coverage_bps,
     )
