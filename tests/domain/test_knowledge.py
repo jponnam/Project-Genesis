@@ -93,9 +93,7 @@ def test_diffuse_knowledge_requires_learner_trust() -> None:
     )
     discovered = discover_technology(world, CAMP_POTTERY.technology_id)
     assert discovered is not None
-    bonded = set_relationship(
-        discovered, 1, 0, affinity=0.0, trust=0.1
-    )
+    bonded = set_relationship(discovered, 1, 0, affinity=0.0, trust=0.1)
     assert bonded is not None
     teacher = bonded.agents[0]
     learner = bonded.agents[1]

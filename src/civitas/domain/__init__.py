@@ -501,6 +501,7 @@ from civitas.domain.technology import (
     discover_technology,
     discovered_technologies,
     next_technology_id,
+    prerequisites_met,
     technology_by_id,
     technology_by_kind,
 )
@@ -959,6 +960,7 @@ __all__ = [
     "population_total",
     "post_listing",
     "priority_need_from_beliefs",
+    "prerequisites_met",
     "producible_recipes",
     "quote_resource",
     "recipe_by_id",

@@ -844,10 +844,13 @@ def test_technology_created_and_observed_round_trips() -> None:
         undiscovered_count=1,
         discovered_fire_count=1,
         discovered_pottery_count=0,
+        locked_count=0,
+        researchable_count=1,
     )
     restored = event_from_record(observed.to_record())
     assert isinstance(restored, TechnologiesObserved)
     assert restored.discovered_fire_count == 1
+    assert restored.researchable_count == 1
 
 
 def test_research_events_round_trip() -> None:

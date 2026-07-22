@@ -543,6 +543,8 @@ class TechnologiesObserved(DomainEvent):
     undiscovered_count: NonNegativeInt
     discovered_fire_count: NonNegativeInt
     discovered_pottery_count: NonNegativeInt
+    locked_count: NonNegativeInt = 0
+    researchable_count: NonNegativeInt = 0
 
 
 class ResearchProgressed(DomainEvent):

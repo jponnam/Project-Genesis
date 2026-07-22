@@ -20,6 +20,7 @@ from civitas.domain import (
     discover_technology,
     discovered_technologies,
     next_technology_id,
+    prerequisites_met,
     technology_by_id,
     technology_by_kind,
 )
@@ -41,6 +42,7 @@ def test_default_technologies_seed_fire_and_pottery() -> None:
     assert CAMP_FIRE.discovered is True
     assert CAMP_POTTERY.kind is TechnologyKind.POTTERY
     assert CAMP_POTTERY.discovered is False
+    assert CAMP_POTTERY.prerequisite_ids == (CAMP_FIRE.technology_id,)
 
 
 def test_create_and_discover_technology() -> None:
@@ -86,7 +88,32 @@ def test_census_technologies_counts() -> None:
     assert snap.undiscovered_count == 1
     assert snap.discovered_fire_count == 1
     assert snap.discovered_pottery_count == 0
+    assert snap.locked_count == 0
+    assert snap.researchable_count == 1
+    assert prerequisites_met(world, CAMP_POTTERY) is True
     assert census_technologies(world) == snap
+
+
+def test_discover_requires_prerequisites() -> None:
+    """Discovery fails when a prerequisite technology is still unknown."""
+    pottery_only = Technology.create(
+        1,
+        "Camp Pottery",
+        TechnologyKind.POTTERY,
+        prerequisite_ids=(0,),
+    )
+    fire = Technology.create(0, "Camp Fire", TechnologyKind.FIRE, discovered=False)
+    world = _world(
+        Agent.create(agent_id=0, name="A"),
+        technologies=(fire, pottery_only),
+    )
+    assert prerequisites_met(world, pottery_only) is False
+    assert discover_technology(world, 1) is None
+    unlocked = discover_technology(world, 0)
+    assert unlocked is not None
+    discovered = discover_technology(unlocked, 1)
+    assert discovered is not None
+    assert discovered.technologies[1].discovered is True
 
 
 def test_world_rejects_duplicate_kinds() -> None:
