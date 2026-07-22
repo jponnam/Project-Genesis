@@ -26,6 +26,7 @@ src/civitas/
 ├── domain/       # Core models, value objects, domain events
 ├── engine/       # Clock, seeded RNG, world lifecycle, tick loop
 ├── systems/      # Needs, policy, economy, governance, … (decoupled)
+├── llm/          # Optional language-model adapters (Protocol + mocks)
 ├── storage/      # Append-only JSONL event persistence & replay
 ├── analytics/    # Offline metrics over event streams
 └── cli/          # Researcher-facing Typer interface
@@ -118,13 +119,14 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 6 — Milestone 4: Knowledge diffusion**
+**Phase 7 — Milestone 1: Episodic memory encoding**
 
-Agent knowledge of discovered technologies. Founders start knowing
-`fire`. After pottery is discovered, bootstrap grants `pottery` to the
-lowest living agent id, then peer teaching spreads facts among
-co-located agents each tick. `KnowledgeSystem.observe` emits
-`KnowledgeObserved`. Effect wiring remains a later concern.
+Deterministic episode memories for living agents each tick, plus a
+Protocol-based `llm/` adapter layer (`NullLanguageModel`,
+`SeededMockLanguageModel`). Default cognition encoding never calls a
+network LLM. `CognitionSystem.observe` emits `CognitionObserved`.
+Reflection, planning, and memory retrieval remain later Phase 7
+milestones.
 
 ### Completed
 
@@ -172,6 +174,9 @@ JSONL storage → `civitas run`
 - Milestone 2: Research
 - Milestone 3: Innovation
 - Milestone 4: Knowledge diffusion
+
+**Phase 7:**
+- Milestone 1: Episodic memory encoding
 
 ## License
 

@@ -10,6 +10,7 @@ from __future__ import annotations
 from civitas.systems.actions import ActionConfig, ActionExecutor
 from civitas.systems.birth import BirthConfig, BirthSystem
 from civitas.systems.cities import CityConfig, CitySystem
+from civitas.systems.cognition import CognitionConfig, CognitionSystem
 from civitas.systems.death import DeathConfig, DeathSystem
 from civitas.systems.economy import EconomyConfig, EconomySystem
 from civitas.systems.energy import EnergyConfig, EnergySystem
@@ -50,6 +51,8 @@ __all__ = [
     "BirthSystem",
     "CityConfig",
     "CitySystem",
+    "CognitionConfig",
+    "CognitionSystem",
     "DeathConfig",
     "DeathSystem",
     "EconomyConfig",

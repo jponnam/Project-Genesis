@@ -16,6 +16,7 @@ from civitas.domain import (
     CitiesObserved,
     CityCreated,
     CityId,
+    CognitionObserved,
     DomainEvent,
     ElectionId,
     ElectionResolved,
@@ -46,6 +47,7 @@ from civitas.domain import (
     MarketCreated,
     MarketId,
     MarketObserved,
+    MemoryRecorded,
     MoneyTransferred,
     NeedDecayed,
     NetworksObserved,
@@ -963,3 +965,30 @@ def test_knowledge_events_round_trip() -> None:
     restored_observed = event_from_record(observed.to_record())
     assert isinstance(restored_observed, KnowledgeObserved)
     assert restored_observed.coverage_bps == 10_000
+
+
+def test_cognition_events_round_trip() -> None:
+    """Memory recorded / cognition observe events serialize losslessly."""
+    recorded = MemoryRecorded(
+        sequence=38,
+        tick=Tick(value=2),
+        agent_id=AgentId(value=0),
+        kind="episode",
+        content="loc=0|food=1.000|water=1.000|energy=1.000|facts=fire",
+    )
+    restored_recorded = event_from_record(recorded.to_record())
+    assert isinstance(restored_recorded, MemoryRecorded)
+    assert restored_recorded.kind == "episode"
+
+    observed = CognitionObserved(
+        sequence=39,
+        tick=Tick(value=2),
+        living_count=3,
+        total_records=6,
+        agents_with_memory=3,
+        episode_records=6,
+        mean_records_bps=20_000,
+    )
+    restored_observed = event_from_record(observed.to_record())
+    assert isinstance(restored_observed, CognitionObserved)
+    assert restored_observed.mean_records_bps == 20_000

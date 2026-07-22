@@ -621,6 +621,24 @@ class KnowledgeObserved(DomainEvent):
     coverage_bps: NonNegativeInt
 
 
+class MemoryRecorded(DomainEvent):
+    """Emitted when an agent encodes an episodic memory record."""
+
+    agent_id: AgentId
+    kind: NonEmptyStr
+    content: NonEmptyStr
+
+
+class CognitionObserved(DomainEvent):
+    """Emitted when a cognition / memory census is taken."""
+
+    living_count: NonNegativeInt
+    total_records: NonNegativeInt
+    agents_with_memory: NonNegativeInt
+    episode_records: NonNegativeInt
+    mean_records_bps: NonNegativeInt
+
+
 CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     SimulationStarted,
     SimulationCompleted,
@@ -675,6 +693,8 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     InnovationsObserved,
     KnowledgeLearned,
     KnowledgeObserved,
+    MemoryRecorded,
+    CognitionObserved,
 )
 
 EVENT_TYPE_REGISTRY: dict[str, type[DomainEvent]] = {
