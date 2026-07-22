@@ -10,7 +10,6 @@ from civitas.domain import (
     CAMP_LOCATION,
     CAMP_POTTERY,
     CAMP_POTTERY_CRAFT,
-    CAMP_WELL,
     DEFAULT_DRINK_RESTORE,
     DEFAULT_GATHER_AMOUNT,
     DEFAULT_REST_RESTORE,
@@ -21,8 +20,6 @@ from civitas.domain import (
     SimulationConfig,
     World,
     census_effects,
-    default_cities,
-    default_governments,
     drink_restore_bonus,
     effective_drink_restore,
     effective_gather_amount,
@@ -31,6 +28,7 @@ from civitas.domain import (
     location_has_active_well,
     rest_restore_bonus,
 )
+from civitas.engine import WorldFactory
 
 
 def _world(*, innovations: tuple = ()) -> World:
@@ -87,18 +85,9 @@ def test_census_effects_reports_active_bonuses() -> None:
 
 def test_well_boosts_drink_restore_for_colocated_agents() -> None:
     """Active wells add a DRINK restore bonus at their seat location."""
-    world = World(
-        config=SimulationConfig(agent_count=1, seed=1),
-        locations=(CAMP_LOCATION,),
-        governments=default_governments(),
-        cities=default_cities(),
-        technologies=(CAMP_FIRE, CAMP_POTTERY),
-        innovations=(CAMP_FIRE_HEARTH,),
-        infrastructure=(CAMP_WELL,),
-        agents=(Agent.create(agent_id=0, name="A"),),
-    )
+    world = WorldFactory().create(SimulationConfig(seed=1, agent_count=1))
     agent = world.agents[0]
-    assert location_has_active_well(world, 0) is True
+    assert location_has_active_well(world, agent.location_id) is True
     assert drink_restore_bonus(world, agent) == WELL_DRINK_RESTORE_BONUS
     assert effective_drink_restore(world, agent) == pytest.approx(
         DEFAULT_DRINK_RESTORE + WELL_DRINK_RESTORE_BONUS
