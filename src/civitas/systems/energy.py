@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
-from civitas.domain import NeedDecayed, apply_rest, can_rest
+from civitas.domain import NeedDecayed, apply_rest, can_rest, effective_rest_restore
 from civitas.domain.energy import DEFAULT_REST_RESTORE
 from civitas.domain.types import UnitInterval
 
@@ -66,7 +66,8 @@ class EnergySystem:
             raise ValueError(msg)
 
         previous_energy = agent.needs.energy
-        updated = apply_rest(agent, restore=self._config.restore)
+        restore = effective_rest_restore(world, base=float(self._config.restore))
+        updated = apply_rest(agent, restore=restore)
         if updated is None:
             return world
 

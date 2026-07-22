@@ -13,6 +13,7 @@ from civitas.systems.cities import CityConfig, CitySystem
 from civitas.systems.cognition import CognitionConfig, CognitionSystem
 from civitas.systems.death import DeathConfig, DeathSystem
 from civitas.systems.economy import EconomyConfig, EconomySystem
+from civitas.systems.effects import EffectsConfig, EffectsSystem
 from civitas.systems.energy import EnergyConfig, EnergySystem
 from civitas.systems.families import FamilyConfig, FamilySystem
 from civitas.systems.food import FoodConfig, FoodSystem
@@ -59,6 +60,8 @@ __all__ = [
     "DeathSystem",
     "EconomyConfig",
     "EconomySystem",
+    "EffectsConfig",
+    "EffectsSystem",
     "EnergyConfig",
     "EnergySystem",
     "FamilyConfig",

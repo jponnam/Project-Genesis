@@ -19,6 +19,7 @@ from civitas.domain import (
     CityId,
     CognitionObserved,
     DomainEvent,
+    EffectsObserved,
     ElectionId,
     ElectionResolved,
     ElectionsObserved,
@@ -1067,3 +1068,20 @@ def test_retrieval_events_round_trip() -> None:
     restored_observed = event_from_record(observed.to_record())
     assert isinstance(restored_observed, RetrievalObserved)
     assert restored_observed.total_retrieved == 6
+
+
+def test_effects_events_round_trip() -> None:
+    """Effects observe events serialize losslessly."""
+    observed = EffectsObserved(
+        sequence=45,
+        tick=Tick(value=5),
+        living_count=4,
+        fire_hearth_active=1,
+        pottery_craft_active=0,
+        rest_restore_bps=2500,
+        water_gather_amount=1,
+    )
+    restored = event_from_record(observed.to_record())
+    assert isinstance(restored, EffectsObserved)
+    assert restored.rest_restore_bps == 2500
+    assert restored.fire_hearth_active == 1

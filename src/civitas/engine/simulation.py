@@ -21,6 +21,7 @@ from civitas.systems import (
     CognitionSystem,
     DeathSystem,
     EconomySystem,
+    EffectsSystem,
     FamilySystem,
     GovernmentSystem,
     InfrastructureSystem,
@@ -102,51 +103,56 @@ class SimulationEngine:
     30. ``TechSystem.observe``
     31. ``ResearchSystem.observe``
     32. ``InnovationSystem.observe``
-    33. ``KnowledgeSystem.observe``
-    34. ``CognitionSystem.observe``
-    35. ``PlanningSystem.observe``
-    36. ``RetrievalSystem.observe``
+    33. ``EffectsSystem.observe``
+    34. ``KnowledgeSystem.observe``
+    35. ``CognitionSystem.observe``
+    36. ``PlanningSystem.observe``
+    37. ``RetrievalSystem.observe``
 
     Initial population, wealth, market, price, relationship, reputation,
     family, network, government, law, election, institution, city,
-    infrastructure, technology, research, innovation, knowledge, cognition,
-    planning, and retrieval censuses are also observed at tick 0 immediately
-    after world creation. Death runs after actions (recovery chance) and before
-    birth so newly dead parents cannot reproduce. Birth and death both complete
-    before taxes so the levy sees the settled roster. Taxes complete before
-    research so discovery does not affect the levy. Research completes before
-    innovation so same-tick discoveries can activate adoptions. Innovation
-    completes before knowledge so agents learn against settled society state.
-    Knowledge completes before cognition so episode memories capture post-
-    learning facts. Cognition completes before planning so goals read the
-    latest reflection beliefs. Planning completes before retrieval so working
-    memory queries use the latest goals. Retrieval completes before
+    infrastructure, technology, research, innovation, effects, knowledge,
+    cognition, planning, and retrieval censuses are also observed at tick 0
+    immediately after world creation. Death runs after actions (recovery
+    chance) and before birth so newly dead parents cannot reproduce. Birth and
+    death both complete before taxes so the levy sees the settled roster. Taxes
+    complete before research so discovery does not affect the levy. Research
+    completes before innovation so same-tick discoveries can activate adoptions.
+    Innovation completes before knowledge so agents learn against settled
+    society state. Knowledge completes before cognition so episode memories
+    capture post-learning facts. Cognition completes before planning so goals
+    read the latest reflection beliefs. Planning completes before retrieval so
+    working memory queries use the latest goals. Retrieval completes before
     ``TickCompleted`` so censuses reflect post-discovery/activation/learning/
-    encoding/planning/retrieval state. Taxes are disabled by default; when
-    enabled, active ``TAX_SCHEDULE`` laws override levy parameters.
-    Relationship observation is wired each tick; SOCIALIZE may mutate bonds
-    during action execution. Reputation observation follows relationships so
-    standings reflect the latest bonds. Family observation follows reputation
-    and reads birth ``parent_id`` lineage without mutating agents. Network
-    observation follows families and measures the living bond graph. Government
-    observation follows networks and reports polity coverage, treasuries, and
-    subjects without mutating agents. Law observation follows governments and
-    reports statute activity. Election observation follows laws and reports
-    the archived vote history; elections are not auto-conducted each tick.
-    Institution observation follows elections and reports civic organizations
-    without mutating agents. City observation follows institutions and reports
+    encoding/planning/retrieval state. Society effect bonuses from active
+    innovations are applied during action execution via domain helpers (REST /
+    GATHER). Taxes are disabled by default; when enabled, active
+    ``TAX_SCHEDULE`` laws override levy parameters. Relationship observation
+    is wired each tick; SOCIALIZE may mutate bonds during action execution.
+    Reputation observation follows relationships so standings reflect the
+    latest bonds. Family observation follows reputation and reads birth
+    ``parent_id`` lineage without mutating agents. Network observation follows
+    families and measures the living bond graph. Government observation follows
+    networks and reports polity coverage, treasuries, and subjects without
+    mutating agents. Law observation follows governments and reports statute
+    activity. Election observation follows laws and reports the archived vote
+    history; elections are not auto-conducted each tick. Institution
+    observation follows elections and reports civic organizations without
+    mutating agents. City observation follows institutions and reports
     settlement residency without mutating agents. Infrastructure observation
     follows cities and reports built capacity without mutating agents.
     Technology observation follows infrastructure and reports society-known
     techniques without mutating agents. Research observation follows
     technology and reports open progress rows without mutating agents.
     Innovation observation follows research and reports active adoptions
-    without mutating agents. Knowledge observation follows innovation and
-    reports agent fact coverage without mutating agents. Cognition
-    observation follows knowledge and reports episodic memory coverage without
-    mutating agents. Planning observation follows cognition and reports
-    satisfy-need goals without mutating agents. Retrieval observation follows
-    planning and reports working-memory coverage without mutating agents.
+    without mutating agents. Effects observation follows innovation and
+    reports REST/GATHER society bonuses without mutating agents. Knowledge
+    observation follows effects and reports agent fact coverage without
+    mutating agents. Cognition observation follows knowledge and reports
+    episodic memory coverage without mutating agents. Planning observation
+    follows cognition and reports satisfy-need goals without mutating agents.
+    Retrieval observation follows planning and reports working-memory coverage
+    without mutating agents.
     """
 
     def __init__(
@@ -180,6 +186,7 @@ class SimulationEngine:
         cognition_system: CognitionSystem | None = None,
         planning_system: PlanningSystem | None = None,
         retrieval_system: RetrievalSystem | None = None,
+        effects_system: EffectsSystem | None = None,
     ) -> None:
         self._world_factory = (
             world_factory if world_factory is not None else WorldFactory()
@@ -249,6 +256,9 @@ class SimulationEngine:
         self._retrieval_system = (
             retrieval_system if retrieval_system is not None else RetrievalSystem()
         )
+        self._effects_system = (
+            effects_system if effects_system is not None else EffectsSystem()
+        )
 
     def run(
         self,
@@ -279,6 +289,7 @@ class SimulationEngine:
         world = self._tech_system.observe(world, bus=event_bus)
         world = self._research_system.observe(world, bus=event_bus)
         world = self._innovation_system.observe(world, bus=event_bus)
+        world = self._effects_system.observe(world, bus=event_bus)
         world = self._knowledge_system.observe(world, bus=event_bus)
         world = self._cognition_system.observe(world, bus=event_bus)
         world = self._planning_system.observe(world, bus=event_bus)
@@ -317,6 +328,7 @@ class SimulationEngine:
             world = self._tech_system.observe(world, bus=event_bus)
             world = self._research_system.observe(world, bus=event_bus)
             world = self._innovation_system.observe(world, bus=event_bus)
+            world = self._effects_system.observe(world, bus=event_bus)
             world = self._knowledge_system.observe(world, bus=event_bus)
             world = self._cognition_system.observe(world, bus=event_bus)
             world = self._planning_system.observe(world, bus=event_bus)
