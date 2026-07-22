@@ -17,6 +17,7 @@ from civitas.domain import (
     NeedDecayed,
     adjacent_locations,
     can_enter,
+    effective_move_energy_cost,
     is_adjacent,
     relocate,
 )
@@ -96,7 +97,11 @@ class MovementSystem:
             world,
             agent,
             destination_id,
-            energy_cost=self._config.energy_cost,
+            energy_cost=effective_move_energy_cost(
+                world,
+                agent,
+                base=float(self._config.energy_cost),
+            ),
         )
         if updated is None:
             return world

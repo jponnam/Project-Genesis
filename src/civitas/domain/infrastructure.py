@@ -1,11 +1,11 @@
 """Infrastructure: built capacity at settlement locations.
 
-Phase 5 Milestone 6 plus Phase 9 Milestones 5-6. Infrastructure pieces
+Phase 5 Milestone 6 plus Phase 9 Milestones 5-7. Infrastructure pieces
 attach to a city seat inside a government jurisdiction. This package seeds
-a single ``WELL`` kind; ``STOREHOUSE`` is available via free create or paid
-``build_infrastructure``. Effect wiring applies WELL drink-restore and
-STOREHOUSE food-gather bonuses for colocated agents. Extra kinds (roads)
-remain later milestones.
+a single ``WELL`` kind; ``STOREHOUSE`` and ``ROAD`` are available via free
+create or paid ``build_infrastructure``. Effect wiring applies WELL drink
+restore, STOREHOUSE food gather, and ROAD move-energy discounts for
+colocated agents.
 """
 
 from __future__ import annotations
@@ -31,14 +31,17 @@ class InfrastructureKind(StrEnum):
 
     WELL = "well"
     STOREHOUSE = "storehouse"
+    ROAD = "road"
 
 
 # Canonical treasury cost to construct each infrastructure kind.
 DEFAULT_WELL_BUILD_COST: int = 5
 DEFAULT_STOREHOUSE_BUILD_COST: int = 8
+DEFAULT_ROAD_BUILD_COST: int = 6
 INFRASTRUCTURE_BUILD_COSTS: dict[InfrastructureKind, int] = {
     InfrastructureKind.WELL: DEFAULT_WELL_BUILD_COST,
     InfrastructureKind.STOREHOUSE: DEFAULT_STOREHOUSE_BUILD_COST,
+    InfrastructureKind.ROAD: DEFAULT_ROAD_BUILD_COST,
 }
 
 
@@ -108,6 +111,7 @@ class InfrastructureCensus(BaseModel):
     cities_with_infrastructure: NonNegativeInt
     active_well_count: NonNegativeInt
     active_storehouse_count: NonNegativeInt = 0
+    active_road_count: NonNegativeInt = 0
 
 
 def infrastructure_by_id(
@@ -303,6 +307,7 @@ def census_infrastructure(world: World) -> InfrastructureCensus:
     active_storehouses = sum(
         1 for item in active if item.kind is InfrastructureKind.STOREHOUSE
     )
+    active_roads = sum(1 for item in active if item.kind is InfrastructureKind.ROAD)
     return InfrastructureCensus(
         tick=world.tick,
         infrastructure_count=len(items),
@@ -312,4 +317,5 @@ def census_infrastructure(world: World) -> InfrastructureCensus:
         cities_with_infrastructure=len(cities),
         active_well_count=active_wells,
         active_storehouse_count=active_storehouses,
+        active_road_count=active_roads,
     )
