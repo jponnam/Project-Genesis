@@ -83,10 +83,11 @@ teachings-per-knower bonuses at the institution seat (stacking with
 scribe/dialectic/scriptorium/academy/forum/school/stoa/collegium/
 architect/curriculum). Phase 14 Milestone 9 adds BEACON retrieval-limit
 bonuses at the infrastructure seat (stacking with archive, library,
-observatory, lyceum, star chart, plumb line, map, and calendar). The
-action executor, retrieval path, market fills, knowledge diffusion, and
-research progression read these helpers; ``EffectsSystem`` only observes
-coverage. Systems never call each other.
+observatory, lyceum, star chart, plumb line, map, and calendar). Phase 14
+Milestone 10 adds a global SAIL water-gather bonus (stacking with pottery
+craft and irrigation canal). The action executor, retrieval path, market
+fills, knowledge diffusion, and research progression read these helpers;
+``EffectsSystem`` only observes coverage. Systems never call each other.
 """
 
 from __future__ import annotations
@@ -137,6 +138,7 @@ INFIRMARY_REST_RESTORE_BONUS: float = 0.05
 BATHHOUSE_REST_RESTORE_BONUS: float = 0.05
 POTTERY_WATER_GATHER_BONUS: int = 1
 IRRIGATION_WATER_GATHER_BONUS: int = 1
+SEAFARING_WATER_GATHER_BONUS: int = 1
 METALLURGY_STONE_GATHER_BONUS: int = 1
 WRITING_TEACHINGS_PER_KNOWER_BONUS: int = 1
 SCRIPTORIUM_TEACHINGS_PER_KNOWER_BONUS: int = 1
@@ -862,13 +864,13 @@ def gather_amount_bonus(
 ) -> int:
     """Return gather-amount bonuses for ``resource``.
 
-    Water bonuses come from society innovations. Stone bonuses come from an
-    active FORGE innovation society-wide, an active MASON seat at
-    ``location_id`` when provided, and an active QUARRY city at
-    ``location_id`` when provided. Food bonuses come from an active
-    STOREHOUSE and/or WAYSTATION at ``location_id`` when provided (they
-    stack). Wood bonuses come from an active SCAFFOLD at ``location_id``
-    when provided.
+    Water bonuses come from society innovations (pottery craft, irrigation
+    canal, and sail). Stone bonuses come from an active FORGE innovation
+    society-wide, an active MASON seat at ``location_id`` when provided,
+    and an active QUARRY city at ``location_id`` when provided. Food
+    bonuses come from an active STOREHOUSE and/or WAYSTATION at
+    ``location_id`` when provided (they stack). Wood bonuses come from an
+    active SCAFFOLD at ``location_id`` when provided.
     """
     bonus = 0
     if resource == WATER_RESOURCE:
@@ -876,6 +878,8 @@ def gather_amount_bonus(
             bonus += POTTERY_WATER_GATHER_BONUS
         if innovation_kind_is_active(world, InnovationKind.IRRIGATION_CANAL):
             bonus += IRRIGATION_WATER_GATHER_BONUS
+        if innovation_kind_is_active(world, InnovationKind.SAIL):
+            bonus += SEAFARING_WATER_GATHER_BONUS
     elif resource == ResourceKind.STONE.value:
         if innovation_kind_is_active(world, InnovationKind.FORGE):
             bonus += METALLURGY_STONE_GATHER_BONUS

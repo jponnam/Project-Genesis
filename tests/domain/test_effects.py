@@ -52,7 +52,9 @@ from civitas.domain import (
     CAMP_PULLEY,
     CAMP_REMEDY,
     CAMP_RHETORIC,
+    CAMP_SAIL,
     CAMP_SCRIBE,
+    CAMP_SEAFARING,
     CAMP_STAR_CHART,
     CAMP_SURVEYING,
     CAMP_SYLLOGISM,
@@ -106,6 +108,7 @@ from civitas.domain import (
     SCAFFOLD_WOOD_GATHER_BONUS,
     SCHOOL_TEACHINGS_PER_KNOWER_BONUS,
     SCRIPTORIUM_TEACHINGS_PER_KNOWER_BONUS,
+    SEAFARING_WATER_GATHER_BONUS,
     SHRINE_DRINK_RESTORE_BONUS,
     STOA_TEACHINGS_PER_KNOWER_BONUS,
     STOREHOUSE_FOOD_GATHER_BONUS,
@@ -825,6 +828,80 @@ def test_pottery_and_irrigation_stack_water_gather_bonus() -> None:
         effective_gather_amount(world, "water") == DEFAULT_GATHER_AMOUNT + water_bonus
     )
     assert effective_gather_amount(world, "food") == DEFAULT_GATHER_AMOUNT
+
+
+def test_sail_raises_water_gather_society_wide() -> None:
+    """Active sail raises water gather amount for every agent."""
+    discovered_seafaring = CAMP_SEAFARING.model_copy(update={"discovered": True})
+    active_sail = CAMP_SAIL.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        technologies=tuple(
+            discovered_seafaring
+            if item.technology_id == CAMP_SEAFARING.technology_id
+            else item
+            for item in default_technologies()
+        ),
+        innovations=tuple(
+            active_sail if item.innovation_id == CAMP_SAIL.innovation_id else item
+            for item in default_innovations()
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert gather_amount_bonus(world, "water") == SEAFARING_WATER_GATHER_BONUS
+    assert gather_amount_bonus(world, "food") == 0
+    assert gather_amount_bonus(world, "stone") == 0
+    assert effective_gather_amount(world, "water") == (
+        DEFAULT_GATHER_AMOUNT + SEAFARING_WATER_GATHER_BONUS
+    )
+    bare = _world()
+    assert gather_amount_bonus(bare, "water") == 0
+    assert effective_gather_amount(bare, "water") == DEFAULT_GATHER_AMOUNT
+
+
+def test_sail_stacks_with_pottery_and_irrigation_water_gather() -> None:
+    """Sail water gather bonus stacks with pottery craft and irrigation canal."""
+    discovered_pottery = CAMP_POTTERY.model_copy(update={"discovered": True})
+    discovered_irrigation = CAMP_IRRIGATION.model_copy(update={"discovered": True})
+    discovered_seafaring = CAMP_SEAFARING.model_copy(update={"discovered": True})
+    active_pottery = CAMP_POTTERY_CRAFT.model_copy(update={"active": True})
+    active_irrigation = CAMP_IRRIGATION_CANAL.model_copy(update={"active": True})
+    active_sail = CAMP_SAIL.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        technologies=tuple(
+            discovered_pottery
+            if item.technology_id == CAMP_POTTERY.technology_id
+            else discovered_irrigation
+            if item.technology_id == CAMP_IRRIGATION.technology_id
+            else discovered_seafaring
+            if item.technology_id == CAMP_SEAFARING.technology_id
+            else item
+            for item in default_technologies()
+        ),
+        innovations=tuple(
+            active_pottery
+            if item.innovation_id == CAMP_POTTERY_CRAFT.innovation_id
+            else active_irrigation
+            if item.innovation_id == CAMP_IRRIGATION_CANAL.innovation_id
+            else active_sail
+            if item.innovation_id == CAMP_SAIL.innovation_id
+            else item
+            for item in default_innovations()
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    water_bonus = (
+        POTTERY_WATER_GATHER_BONUS
+        + IRRIGATION_WATER_GATHER_BONUS
+        + SEAFARING_WATER_GATHER_BONUS
+    )
+    assert gather_amount_bonus(world, "water") == water_bonus
+    assert effective_gather_amount(world, "water") == (
+        DEFAULT_GATHER_AMOUNT + water_bonus
+    )
 
 
 def test_forge_boosts_stone_gather_bonus() -> None:

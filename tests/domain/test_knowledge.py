@@ -24,6 +24,7 @@ from civitas.domain import (
     CAMP_POTTERY,
     CAMP_RHETORIC,
     CAMP_SCRIBE,
+    CAMP_SEAFARING,
     CAMP_SURVEYING,
     CAMP_WRITING,
     CARTOGRAPHY_FACT,
@@ -40,6 +41,7 @@ from civitas.domain import (
     PHILOSOPHY_FACT,
     POTTERY_FACT,
     RHETORIC_FACT,
+    SEAFARING_FACT,
     SURVEYING_FACT,
     WRITING_FACT,
     Agent,
@@ -892,6 +894,67 @@ def test_bootstrap_uses_cartography_technology_fact() -> None:
     assert world.agents[0].knowledge.knows(CARTOGRAPHY_FACT)
 
 
+def test_bootstrap_uses_seafaring_technology_fact() -> None:
+    """Discovered seafaring bootstraps through the generic tech fact mapping."""
+    prior = Knowledge(
+        facts=frozenset(
+            {
+                FIRE_FACT,
+                POTTERY_FACT,
+                IRRIGATION_FACT,
+                METALLURGY_FACT,
+                WRITING_FACT,
+                MATHEMATICS_FACT,
+                ASTRONOMY_FACT,
+                PHILOSOPHY_FACT,
+                LOGIC_FACT,
+                RHETORIC_FACT,
+                MEDICINE_FACT,
+                ANATOMY_FACT,
+                HYGIENE_FACT,
+                ENGINEERING_FACT,
+                ARCHITECTURE_FACT,
+                SURVEYING_FACT,
+                NAVIGATION_FACT,
+                CARTOGRAPHY_FACT,
+            }
+        )
+    )
+    world = _world(
+        Agent.create(agent_id=0, name="A", knowledge=prior),
+        Agent.create(agent_id=1, name="B", knowledge=prior),
+    )
+    current = world
+    for technology in (
+        CAMP_POTTERY,
+        CAMP_IRRIGATION,
+        CAMP_METALLURGY,
+        CAMP_WRITING,
+        CAMP_MATHEMATICS,
+        CAMP_ASTRONOMY,
+        CAMP_PHILOSOPHY,
+        CAMP_LOGIC,
+        CAMP_RHETORIC,
+        CAMP_MEDICINE,
+        CAMP_ANATOMY,
+        CAMP_HYGIENE,
+        CAMP_ENGINEERING,
+        CAMP_ARCHITECTURE,
+        CAMP_SURVEYING,
+        CAMP_NAVIGATION,
+        CAMP_CARTOGRAPHY,
+    ):
+        updated = discover_technology(current, technology.technology_id)
+        assert updated is not None
+        current = updated
+    with_seafaring = discover_technology(current, CAMP_SEAFARING.technology_id)
+    assert with_seafaring is not None
+    world, gains = bootstrap_discovered_knowledge(with_seafaring)
+    assert len(gains) == 1
+    assert gains[0].fact == SEAFARING_FACT
+    assert world.agents[0].knowledge.knows(SEAFARING_FACT)
+
+
 def test_active_scribe_raises_teachings_per_knower() -> None:
     """Active scribe lets each knower teach one extra peer per diffusion pass."""
     world = _world(
@@ -1480,6 +1543,7 @@ def test_census_knowledge_counts_coverage() -> None:
     assert snap.surveying_knower_count == 0
     assert snap.navigation_knower_count == 0
     assert snap.cartography_knower_count == 0
+    assert snap.seafaring_knower_count == 0
     assert snap.total_fact_instances == 2
     assert snap.coverage_bps == 10_000
     assert agents_knowing(world, FIRE_FACT)[0].agent_id.value == 0

@@ -37,7 +37,9 @@ from civitas.domain import (
     CAMP_PULLEY,
     CAMP_REMEDY,
     CAMP_RHETORIC,
+    CAMP_SAIL,
     CAMP_SCRIBE,
+    CAMP_SEAFARING,
     CAMP_STAR_CHART,
     CAMP_SURVEYING,
     CAMP_SYLLOGISM,
@@ -75,7 +77,7 @@ def _world(
     )
 
 
-def test_default_innovations_seed_hearth_through_map() -> None:
+def test_default_innovations_seed_hearth_through_sail() -> None:
     """Canonical set has active hearth and inactive later adoptions."""
     assert default_innovations() == (
         CAMP_FIRE_HEARTH,
@@ -96,6 +98,7 @@ def test_default_innovations_seed_hearth_through_map() -> None:
         CAMP_PLUMB_LINE,
         CAMP_COMPASS,
         CAMP_MAP,
+        CAMP_SAIL,
     )
     assert CAMP_FIRE_HEARTH.kind is InnovationKind.FIRE_HEARTH
     assert CAMP_FIRE_HEARTH.active is True
@@ -134,6 +137,9 @@ def test_default_innovations_seed_hearth_through_map() -> None:
     assert CAMP_MAP.kind is InnovationKind.MAP
     assert CAMP_MAP.active is False
     assert CAMP_MAP.technology_id == CAMP_CARTOGRAPHY.technology_id
+    assert CAMP_SAIL.kind is InnovationKind.SAIL
+    assert CAMP_SAIL.active is False
+    assert CAMP_SAIL.technology_id == CAMP_SEAFARING.technology_id
 
 
 def test_activate_due_innovations_after_discovery() -> None:
@@ -300,6 +306,15 @@ def test_activate_due_innovations_after_discovery() -> None:
     assert innovation_by_id(world, 17).active is True
     assert innovation_for_technology(world, 17) is not None
 
+    discovered = discover_technology(world, CAMP_SEAFARING.technology_id)
+    assert discovered is not None
+    world, activations = activate_due_innovations(discovered)
+    assert len(activations) == 1
+    assert activations[0].kind is InnovationKind.SAIL
+    assert innovation_by_id(world, 18) is not None
+    assert innovation_by_id(world, 18).active is True
+    assert innovation_for_technology(world, 18) is not None
+
 
 def test_activate_innovation_requires_discovered_technology() -> None:
     """Manual activate fails while the linked technology is unknown."""
@@ -337,9 +352,9 @@ def test_census_innovations_counts() -> None:
         innovations=default_innovations(),
     )
     snap = census_innovations(world)
-    assert snap.innovation_count == 18
+    assert snap.innovation_count == 19
     assert snap.active_count == 1
-    assert snap.inactive_count == 17
+    assert snap.inactive_count == 18
     assert snap.active_fire_hearth_count == 1
     assert snap.active_pottery_craft_count == 0
     assert snap.active_irrigation_canal_count == 0
@@ -358,6 +373,7 @@ def test_census_innovations_counts() -> None:
     assert snap.active_plumb_line_count == 0
     assert snap.active_compass_count == 0
     assert snap.active_map_count == 0
+    assert snap.active_sail_count == 0
     assert census_innovations(world) == snap
 
 
