@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from civitas.domain import (
     ANATOMY_FACT,
+    ARCHITECTURE_FACT,
     ASTRONOMY_FACT,
     CAMP_LOCATION,
     ENGINEERING_FACT,
@@ -63,6 +64,7 @@ def test_encode_agent_episode_accepts_full_technology_fact_content() -> None:
     """Episode content can fit every canonical technology fact."""
     all_facts = frozenset(
         {
+            ARCHITECTURE_FACT,
             ASTRONOMY_FACT,
             ANATOMY_FACT,
             ENGINEERING_FACT,
@@ -83,8 +85,8 @@ def test_encode_agent_episode_accepts_full_technology_fact_content() -> None:
         Agent.create(agent_id=0, name="A", knowledge=Knowledge(facts=all_facts)),
         Tick(value=3),
     )
-    assert len(record.content) == 175
-    assert "facts=anatomy,astronomy,engineering,fire,hygiene" in record.content
+    assert len(record.content) == 188
+    assert "facts=anatomy,architecture,astronomy,engineering,fire" in record.content
 
 
 def test_apply_memory_encoding_writes_one_record_per_living_agent() -> None:

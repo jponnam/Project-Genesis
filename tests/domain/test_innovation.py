@@ -8,8 +8,10 @@ from pydantic import ValidationError
 from civitas.domain import (
     CAMP_ABACUS,
     CAMP_ANATOMY,
+    CAMP_ARCHITECTURE,
     CAMP_ASEPSIS,
     CAMP_ASTRONOMY,
+    CAMP_BLUEPRINT,
     CAMP_DIALECTIC,
     CAMP_DISSECTION,
     CAMP_ENGINEERING,
@@ -67,7 +69,7 @@ def _world(
     )
 
 
-def test_default_innovations_seed_hearth_through_pulley() -> None:
+def test_default_innovations_seed_hearth_through_blueprint() -> None:
     """Canonical set has active hearth and inactive later adoptions."""
     assert default_innovations() == (
         CAMP_FIRE_HEARTH,
@@ -84,6 +86,7 @@ def test_default_innovations_seed_hearth_through_pulley() -> None:
         CAMP_DISSECTION,
         CAMP_ASEPSIS,
         CAMP_PULLEY,
+        CAMP_BLUEPRINT,
     )
     assert CAMP_FIRE_HEARTH.kind is InnovationKind.FIRE_HEARTH
     assert CAMP_FIRE_HEARTH.active is True
@@ -113,6 +116,8 @@ def test_default_innovations_seed_hearth_through_pulley() -> None:
     assert CAMP_ASEPSIS.active is False
     assert CAMP_PULLEY.kind is InnovationKind.PULLEY
     assert CAMP_PULLEY.active is False
+    assert CAMP_BLUEPRINT.kind is InnovationKind.BLUEPRINT
+    assert CAMP_BLUEPRINT.active is False
 
 
 def test_activate_due_innovations_after_discovery() -> None:
@@ -243,6 +248,15 @@ def test_activate_due_innovations_after_discovery() -> None:
     assert innovation_by_id(world, 13).active is True
     assert innovation_for_technology(world, 13) is not None
 
+    discovered = discover_technology(world, CAMP_ARCHITECTURE.technology_id)
+    assert discovered is not None
+    world, activations = activate_due_innovations(discovered)
+    assert len(activations) == 1
+    assert activations[0].kind is InnovationKind.BLUEPRINT
+    assert innovation_by_id(world, 14) is not None
+    assert innovation_by_id(world, 14).active is True
+    assert innovation_for_technology(world, 14) is not None
+
 
 def test_activate_innovation_requires_discovered_technology() -> None:
     """Manual activate fails while the linked technology is unknown."""
@@ -280,9 +294,9 @@ def test_census_innovations_counts() -> None:
         innovations=default_innovations(),
     )
     snap = census_innovations(world)
-    assert snap.innovation_count == 14
+    assert snap.innovation_count == 15
     assert snap.active_count == 1
-    assert snap.inactive_count == 13
+    assert snap.inactive_count == 14
     assert snap.active_fire_hearth_count == 1
     assert snap.active_pottery_craft_count == 0
     assert snap.active_irrigation_canal_count == 0
@@ -297,6 +311,7 @@ def test_census_innovations_counts() -> None:
     assert snap.active_dissection_count == 0
     assert snap.active_asepsis_count == 0
     assert snap.active_pulley_count == 0
+    assert snap.active_blueprint_count == 0
     assert census_innovations(world) == snap
 
 

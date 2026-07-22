@@ -81,6 +81,7 @@ class TechSystem:
                     discovered_anatomy_count=snap.discovered_anatomy_count,
                     discovered_hygiene_count=snap.discovered_hygiene_count,
                     discovered_engineering_count=snap.discovered_engineering_count,
+                    discovered_architecture_count=snap.discovered_architecture_count,
                     locked_count=snap.locked_count,
                     researchable_count=snap.researchable_count,
                 )

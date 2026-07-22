@@ -18,6 +18,7 @@ from pydantic import BaseModel, ConfigDict
 from civitas.domain.ids import InnovationId, TechnologyId
 from civitas.domain.technology import (
     CAMP_ANATOMY,
+    CAMP_ARCHITECTURE,
     CAMP_ASTRONOMY,
     CAMP_ENGINEERING,
     CAMP_FIRE,
@@ -57,6 +58,7 @@ class InnovationKind(StrEnum):
     DISSECTION = "dissection"
     ASEPSIS = "asepsis"
     PULLEY = "pulley"
+    BLUEPRINT = "blueprint"
 
 
 class Innovation(BaseModel):
@@ -202,6 +204,14 @@ CAMP_PULLEY: Innovation = Innovation.create(
     active=False,
 )
 
+CAMP_BLUEPRINT: Innovation = Innovation.create(
+    14,
+    CAMP_ARCHITECTURE.technology_id.value,
+    "Camp Blueprint",
+    InnovationKind.BLUEPRINT,
+    active=False,
+)
+
 
 def default_innovations() -> tuple[Innovation, ...]:
     """Return the canonical initial innovation set."""
@@ -220,6 +230,7 @@ def default_innovations() -> tuple[Innovation, ...]:
         CAMP_DISSECTION,
         CAMP_ASEPSIS,
         CAMP_PULLEY,
+        CAMP_BLUEPRINT,
     )
 
 
@@ -246,6 +257,7 @@ class InnovationCensus(BaseModel):
     active_dissection_count: NonNegativeInt = 0
     active_asepsis_count: NonNegativeInt = 0
     active_pulley_count: NonNegativeInt = 0
+    active_blueprint_count: NonNegativeInt = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -407,6 +419,7 @@ def census_innovations(world: World) -> InnovationCensus:
     dissection = sum(1 for item in active if item.kind is InnovationKind.DISSECTION)
     asepsis = sum(1 for item in active if item.kind is InnovationKind.ASEPSIS)
     pulley = sum(1 for item in active if item.kind is InnovationKind.PULLEY)
+    blueprint = sum(1 for item in active if item.kind is InnovationKind.BLUEPRINT)
     return InnovationCensus(
         tick=world.tick,
         innovation_count=len(innovations),
@@ -426,4 +439,5 @@ def census_innovations(world: World) -> InnovationCensus:
         active_dissection_count=dissection,
         active_asepsis_count=asepsis,
         active_pulley_count=pulley,
+        active_blueprint_count=blueprint,
     )

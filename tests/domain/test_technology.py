@@ -7,6 +7,7 @@ from pydantic import ValidationError
 
 from civitas.domain import (
     CAMP_ANATOMY,
+    CAMP_ARCHITECTURE,
     CAMP_ASTRONOMY,
     CAMP_ENGINEERING,
     CAMP_FIRE,
@@ -47,8 +48,8 @@ def _world(*agents: Agent, technologies: tuple[Technology, ...] = ()) -> World:
     )
 
 
-def test_default_technologies_seed_fire_through_engineering() -> None:
-    """Canonical catalog has fire through engineering progression."""
+def test_default_technologies_seed_fire_through_architecture() -> None:
+    """Canonical catalog has fire through architecture progression."""
     assert default_technologies() == (
         CAMP_FIRE,
         CAMP_POTTERY,
@@ -64,6 +65,7 @@ def test_default_technologies_seed_fire_through_engineering() -> None:
         CAMP_ANATOMY,
         CAMP_HYGIENE,
         CAMP_ENGINEERING,
+        CAMP_ARCHITECTURE,
     )
     assert CAMP_FIRE.kind is TechnologyKind.FIRE
     assert CAMP_FIRE.discovered is True
@@ -146,9 +148,9 @@ def test_census_technologies_counts() -> None:
         technologies=default_technologies(),
     )
     snap = census_technologies(world)
-    assert snap.technology_count == 14
+    assert snap.technology_count == 15
     assert snap.discovered_count == 1
-    assert snap.undiscovered_count == 13
+    assert snap.undiscovered_count == 14
     assert snap.discovered_fire_count == 1
     assert snap.discovered_pottery_count == 0
     assert snap.discovered_irrigation_count == 0
@@ -163,7 +165,8 @@ def test_census_technologies_counts() -> None:
     assert snap.discovered_anatomy_count == 0
     assert snap.discovered_hygiene_count == 0
     assert snap.discovered_engineering_count == 0
-    assert snap.locked_count == 12
+    assert snap.discovered_architecture_count == 0
+    assert snap.locked_count == 13
     assert snap.researchable_count == 1
     assert prerequisites_met(world, CAMP_POTTERY) is True
     assert prerequisites_met(world, CAMP_IRRIGATION) is False
@@ -588,6 +591,47 @@ def test_engineering_locked_until_hygiene_discovered() -> None:
     )
     assert with_engineering is not None
     assert with_engineering.technologies[13].discovered is True
+
+
+def test_architecture_locked_until_engineering_discovered() -> None:
+    """Architecture cannot be discovered until engineering is already known."""
+    world = _world(
+        Agent.create(agent_id=0, name="A"),
+        technologies=default_technologies(),
+    )
+    assert prerequisites_met(world, CAMP_ARCHITECTURE) is False
+    assert discover_technology(world, CAMP_ARCHITECTURE.technology_id) is None
+
+    current = world
+    for technology in (
+        CAMP_POTTERY,
+        CAMP_IRRIGATION,
+        CAMP_METALLURGY,
+        CAMP_WRITING,
+        CAMP_MATHEMATICS,
+        CAMP_ASTRONOMY,
+        CAMP_PHILOSOPHY,
+        CAMP_LOGIC,
+        CAMP_RHETORIC,
+        CAMP_MEDICINE,
+        CAMP_ANATOMY,
+        CAMP_HYGIENE,
+    ):
+        updated = discover_technology(current, technology.technology_id)
+        assert updated is not None
+        current = updated
+
+    assert prerequisites_met(current, CAMP_ARCHITECTURE) is False
+    assert discover_technology(current, CAMP_ARCHITECTURE.technology_id) is None
+
+    with_engineering = discover_technology(current, CAMP_ENGINEERING.technology_id)
+    assert with_engineering is not None
+    assert prerequisites_met(with_engineering, CAMP_ARCHITECTURE) is True
+    with_architecture = discover_technology(
+        with_engineering, CAMP_ARCHITECTURE.technology_id
+    )
+    assert with_architecture is not None
+    assert with_architecture.technologies[14].discovered is True
 
 
 def test_world_rejects_duplicate_kinds() -> None:

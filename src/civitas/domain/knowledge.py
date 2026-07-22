@@ -48,6 +48,7 @@ MEDICINE_FACT: str = TechnologyKind.MEDICINE.value
 ANATOMY_FACT: str = TechnologyKind.ANATOMY.value
 HYGIENE_FACT: str = TechnologyKind.HYGIENE.value
 ENGINEERING_FACT: str = TechnologyKind.ENGINEERING.value
+ARCHITECTURE_FACT: str = TechnologyKind.ARCHITECTURE.value
 
 
 class KnowledgeSource(StrEnum):
@@ -80,6 +81,7 @@ class KnowledgeCensus(BaseModel):
     anatomy_knower_count: NonNegativeInt = 0
     hygiene_knower_count: NonNegativeInt = 0
     engineering_knower_count: NonNegativeInt = 0
+    architecture_knower_count: NonNegativeInt = 0
     total_fact_instances: NonNegativeInt
     coverage_bps: NonNegativeInt
 
@@ -325,6 +327,9 @@ def census_knowledge(world: World) -> KnowledgeCensus:
     engineering_knowers = sum(
         1 for agent in living if agent.knowledge.knows(ENGINEERING_FACT)
     )
+    architecture_knowers = sum(
+        1 for agent in living if agent.knowledge.knows(ARCHITECTURE_FACT)
+    )
     total_fact_instances = 0
     for agent in living:
         total_fact_instances += sum(
@@ -356,6 +361,7 @@ def census_knowledge(world: World) -> KnowledgeCensus:
         anatomy_knower_count=anatomy_knowers,
         hygiene_knower_count=hygiene_knowers,
         engineering_knower_count=engineering_knowers,
+        architecture_knower_count=architecture_knowers,
         total_fact_instances=total_fact_instances,
         coverage_bps=coverage_bps,
     )
