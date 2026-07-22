@@ -120,6 +120,7 @@ class InnovationSystem:
                     active_mordant_count=snap.active_mordant_count,
                     active_tannery_count=snap.active_tannery_count,
                     active_pickaxe_count=snap.active_pickaxe_count,
+                    active_bellows_count=snap.active_bellows_count,
                 )
             )
         return world

@@ -129,16 +129,14 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 17 Milestone 6: Smelter institutions**
+**Phase 17 Milestone 7: Smithing technology**
 
-``InstitutionKind.SMELTER`` seats a durable civic organization inside a
-government's jurisdiction. An active smelter grants a seat-scoped PRODUCE
-energy discount at its location (``SMELTER_PRODUCE_ENERGY_DISCOUNT``,
-resolved via ``location_has_active_smelter``). The discount stacks
-additively with guild, workshop, weaver, foundry, fulling mill, mill
-town, tannery, abacus, pulley, customs, labor, and loom. Smelters are
-observed in the institution census (``active_smelter_count``) and are not
-seeded.
+``TechnologyKind.SMITHING`` is a society-level technology requiring
+mining, adopted through the ``BELLOWS`` innovation. An active bellows
+grants a society-wide PRODUCE energy discount that stacks with guild,
+workshop, weaver, smelter, foundry, fulling mill, mill town, tannery,
+abacus, pulley, customs, labor, and loom. Discovery flows through the
+standard research, innovation, and knowledge-diffusion pipeline.
 
 ### Completed
 
@@ -318,6 +316,7 @@ JSONL storage → `civitas run`
 - Milestone 4: Mineshaft infrastructure
 - Milestone 5: Mining camp cities
 - Milestone 6: Smelter institutions
+- Milestone 7: Smithing technology
 
 ## License
 
