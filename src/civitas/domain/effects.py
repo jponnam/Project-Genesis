@@ -8,11 +8,13 @@ teachings-per-knower bonuses, CURRICULUM law teachings bonuses
 (stacking with the global scribe innovation), LIBRARY city
 retrieval-limit bonuses (stacking with archive), BUREAUCRACY
 market-fee discounts, a global ABACUS produce-energy discount
-(stacking with guild seat discounts), and ACADEMY
+(stacking with guild seat discounts), ACADEMY
 teachings-per-knower bonuses (stacking with scribe/scriptorium/
-curriculum). The action executor, retrieval path, market fills, and
-knowledge diffusion read these helpers; ``EffectsSystem`` only observes
-coverage. Systems never call each other.
+curriculum), and OBSERVATORY retrieval-limit bonuses (stacking
+with archive and library). The action executor, retrieval path,
+market fills, and knowledge diffusion read these helpers;
+``EffectsSystem`` only observes coverage. Systems never call each
+other.
 """
 
 from __future__ import annotations
@@ -56,6 +58,7 @@ GUILD_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 MATHEMATICS_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 ARCHIVE_RETRIEVAL_LIMIT_BONUS: int = 1
 LIBRARY_RETRIEVAL_LIMIT_BONUS: int = 1
+OBSERVATORY_RETRIEVAL_LIMIT_BONUS: int = 1
 BUREAUCRACY_MARKET_FEE_DISCOUNT: int = 1
 
 
@@ -148,6 +151,22 @@ def location_has_active_scriptorium(
     )
     return any(
         item.kind is InfrastructureKind.SCRIPTORIUM and item.location_id == target
+        for item in active_infrastructure(world)
+    )
+
+
+def location_has_active_observatory(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active OBSERVATORY stands at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InfrastructureKind.OBSERVATORY and item.location_id == target
         for item in active_infrastructure(world)
     )
 
@@ -298,14 +317,17 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
 def retrieval_limit_bonus(world: World, agent: Agent) -> int:
     """Return retrieval-limit bonuses at the agent's seat.
 
-    Active ARCHIVE institutions and LIBRARY city seats each contribute
-    ``+1`` and stack when both are present at the same location.
+    Active ARCHIVE institutions, LIBRARY city seats, and OBSERVATORY
+    infrastructure each contribute ``+1`` and stack when present at the
+    same location.
     """
     bonus = 0
     if location_has_active_archive(world, agent.location_id):
         bonus += ARCHIVE_RETRIEVAL_LIMIT_BONUS
     if location_has_active_library(world, agent.location_id):
         bonus += LIBRARY_RETRIEVAL_LIMIT_BONUS
+    if location_has_active_observatory(world, agent.location_id):
+        bonus += OBSERVATORY_RETRIEVAL_LIMIT_BONUS
     return bonus
 
 
@@ -429,7 +451,7 @@ def effective_retrieval_limit(
     *,
     base: int = DEFAULT_RETRIEVAL_LIMIT,
 ) -> int:
-    """Return memory retrieval limit including archive and library bonuses."""
+    """Return memory retrieval limit including archive, library, observatory."""
     if base < 0:
         return 0
     return base + retrieval_limit_bonus(world, agent)

@@ -10,6 +10,7 @@ from civitas.domain import (
     CAMP_GOVERNMENT,
     CAMP_LOCATION,
     CAMP_WELL,
+    DEFAULT_OBSERVATORY_BUILD_COST,
     DEFAULT_ROAD_BUILD_COST,
     DEFAULT_SCRIPTORIUM_BUILD_COST,
     DEFAULT_STOREHOUSE_BUILD_COST,
@@ -184,6 +185,7 @@ def test_census_infrastructure_counts() -> None:
     assert snap.active_storehouse_count == 0
     assert snap.active_road_count == 0
     assert snap.active_scriptorium_count == 0
+    assert snap.active_observatory_count == 0
     assert census_infrastructure(world) == snap
 
 
@@ -342,6 +344,45 @@ def test_create_and_build_scriptorium() -> None:
     )
     assert built is not None
     assert built.governments[0].treasury == 20 - DEFAULT_SCRIPTORIUM_BUILD_COST
+
+
+def test_create_and_build_observatory() -> None:
+    """OBSERVATORY is a distinct kind with its own catalog build cost."""
+    assert (
+        build_cost_for(InfrastructureKind.OBSERVATORY) == DEFAULT_OBSERVATORY_BUILD_COST
+    )
+    world = _world(
+        Agent.create(agent_id=0, name="A"),
+        governments=(Government.create(0, "Camp", 0, (0,), treasury=20),),
+        infrastructure=(
+            Infrastructure.create(0, 0, 0, 0, "Well", InfrastructureKind.WELL),
+        ),
+    )
+    # Observatory may coexist with a well at the same seat.
+    created = create_infrastructure(
+        world,
+        Infrastructure.create(
+            1, 0, 0, 0, "Observatory", InfrastructureKind.OBSERVATORY
+        ),
+    )
+    assert created is not None
+    assert created.infrastructure[1].kind is InfrastructureKind.OBSERVATORY
+    snap = census_infrastructure(created)
+    assert snap.active_well_count == 1
+    assert snap.active_observatory_count == 1
+
+    empty = _world(
+        Agent.create(agent_id=0, name="A"),
+        governments=(Government.create(0, "Camp", 0, (0,), treasury=20),),
+    )
+    built = build_infrastructure(
+        empty,
+        Infrastructure.create(
+            0, 0, 0, 0, "Paid Observatory", InfrastructureKind.OBSERVATORY
+        ),
+    )
+    assert built is not None
+    assert built.governments[0].treasury == 20 - DEFAULT_OBSERVATORY_BUILD_COST
 
 
 def test_world_rejects_city_location_mismatch() -> None:

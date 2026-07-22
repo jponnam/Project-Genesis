@@ -122,15 +122,15 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 10 — Milestone 8: Academy institutions**
+**Phase 10 — Milestone 9: Observatory infrastructure**
 
-``InstitutionKind.ACADEMY`` is a durable government-attached organization
-with seat, officer, and budget like guilds and archives. An active
-academy at a knower's location grants ``+1`` teachings per knower
-(``ACADEMY_TEACHINGS_PER_KNOWER_BONUS``), stacking with scribe,
-scriptorium, and curriculum via ``effective_teachings_per_knower``.
-Census tracks ``active_academy_count`` on ``InstitutionsObserved``. No
-academy is seeded by default.
+``InfrastructureKind.OBSERVATORY`` is paid infrastructure
+(``DEFAULT_OBSERVATORY_BUILD_COST`` = 12) like roads and scriptoria. An
+active observatory at an agent's location grants ``+1`` retrieval limit
+(``OBSERVATORY_RETRIEVAL_LIMIT_BONUS``), stacking with archive and
+library via ``effective_retrieval_limit``. Census tracks
+``active_observatory_count`` on ``InfrastructuresObserved``. No
+observatory is seeded by default.
 
 ### Completed
 
@@ -214,6 +214,7 @@ JSONL storage → `civitas run`
 - Milestone 6: Bureaucracy institutions
 - Milestone 7: Mathematics technology
 - Milestone 8: Academy institutions
+- Milestone 9: Observatory infrastructure
 
 ## License
 
