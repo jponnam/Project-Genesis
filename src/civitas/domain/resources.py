@@ -20,12 +20,14 @@ if TYPE_CHECKING:
 
 
 class ResourceKind(StrEnum):
-    """Canonical gatherable resource types for Phase 2."""
+    """Canonical resource types for gathering and crafting."""
 
     FOOD = "food"
     WATER = "water"
     WOOD = "wood"
     STONE = "stone"
+    TOOLS = "tools"
+    RATIONS = "rations"
 
 
 # Which homeostatic need each resource primarily supports (materials: none).
@@ -34,6 +36,8 @@ RESOURCE_NEED: dict[str, str | None] = {
     ResourceKind.WATER.value: "water",
     ResourceKind.WOOD.value: None,
     ResourceKind.STONE.value: None,
+    ResourceKind.TOOLS.value: None,
+    ResourceKind.RATIONS.value: "food",
 }
 
 # Deterministic initial stock by resource kind (no RNG).

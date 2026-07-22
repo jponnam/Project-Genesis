@@ -27,6 +27,7 @@ from civitas.domain import (
     PriceObserved,
     ResourceConsumed,
     ResourceGathered,
+    ResourceProduced,
     ResourceTraded,
     SimulationCompleted,
     SimulationStarted,
@@ -294,6 +295,22 @@ def test_resource_traded_round_trips() -> None:
     assert restored.resource == "food"
     assert restored.price == 3
     assert restored.seller_id == AgentId(value=2)
+
+
+def test_resource_produced_round_trips() -> None:
+    """ResourceProduced serializes recipe outputs losslessly."""
+    event = ResourceProduced(
+        sequence=8,
+        tick=Tick(value=5),
+        agent_id=AgentId(value=1),
+        recipe_id="tools",
+        outputs=(("tools", 1),),
+    )
+    restored = event_from_record(event.to_record())
+    assert isinstance(restored, ResourceProduced)
+    assert restored.recipe_id == "tools"
+    assert restored.outputs == (("tools", 1),)
+    assert restored.agent_id == AgentId(value=1)
 
 
 def test_market_created_and_listing_events_round_trip() -> None:

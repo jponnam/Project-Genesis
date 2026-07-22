@@ -25,6 +25,7 @@ class ActionKind(StrEnum):
     SEEK_SAFETY = "seek_safety"
     GATHER = "gather"
     TRADE = "trade"
+    PRODUCE = "produce"
     MOVE = "move"
     IDLE = "idle"
 
@@ -38,6 +39,7 @@ ACTION_CATALOG: tuple[ActionKind, ...] = (
     ActionKind.SEEK_SAFETY,
     ActionKind.GATHER,
     ActionKind.TRADE,
+    ActionKind.PRODUCE,
     ActionKind.MOVE,
     ActionKind.IDLE,
 )
@@ -51,6 +53,7 @@ ACTION_NEED_TARGET: dict[ActionKind, str | None] = {
     ActionKind.SEEK_SAFETY: "safety",
     ActionKind.GATHER: None,
     ActionKind.TRADE: None,
+    ActionKind.PRODUCE: None,
     ActionKind.MOVE: None,
     ActionKind.IDLE: None,
 }
@@ -64,6 +67,7 @@ ACTION_RESOURCE: dict[ActionKind, str | None] = {
     ActionKind.SEEK_SAFETY: None,
     ActionKind.GATHER: None,
     ActionKind.TRADE: None,
+    ActionKind.PRODUCE: None,
     ActionKind.MOVE: None,
     ActionKind.IDLE: None,
 }
@@ -114,12 +118,22 @@ class ActionChoice(BaseModel):
             if self.target_location_id is not None:
                 msg = "TRADE forbids target_location_id"
                 raise ValueError(msg)
+        elif self.action is ActionKind.PRODUCE:
+            if self.target_resource is None:
+                msg = "PRODUCE requires target_resource (recipe_id)"
+                raise ValueError(msg)
+            if self.target_location_id is not None:
+                msg = "PRODUCE forbids target_location_id"
+                raise ValueError(msg)
+            if self.target_agent_id is not None:
+                msg = "PRODUCE forbids target_agent_id"
+                raise ValueError(msg)
         else:
             if self.target_location_id is not None:
                 msg = "target_location_id is only valid for MOVE"
                 raise ValueError(msg)
             if self.target_resource is not None:
-                msg = "target_resource is only valid for GATHER or TRADE"
+                msg = "target_resource is only valid for GATHER, TRADE, or PRODUCE"
                 raise ValueError(msg)
             if self.target_agent_id is not None:
                 msg = "target_agent_id is only valid for TRADE"

@@ -185,6 +185,15 @@ class ResourceTraded(DomainEvent):
     price: NonNegativeInt
 
 
+class ResourceProduced(DomainEvent):
+    """Emitted when an agent crafts outputs from a production recipe."""
+
+    agent_id: AgentId
+    recipe_id: NonEmptyStr
+    # (resource, quantity) pairs in ascending resource name order.
+    outputs: tuple[tuple[str, int], ...] = ()
+
+
 class MarketCreated(DomainEvent):
     """Emitted when a market venue is added to the world."""
 
@@ -281,6 +290,7 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     ResourceConsumed,
     ResourceGathered,
     ResourceTraded,
+    ResourceProduced,
     ListingPosted,
     ListingFilled,
     ListingCancelled,
