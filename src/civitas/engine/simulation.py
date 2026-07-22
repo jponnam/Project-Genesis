@@ -23,6 +23,7 @@ from civitas.systems import (
     FamilySystem,
     GovernmentSystem,
     InfrastructureSystem,
+    InnovationSystem,
     InstitutionSystem,
     LawSystem,
     MarketSystem,
@@ -74,51 +75,56 @@ class SimulationEngine:
     7. ``BirthSystem.apply_births``
     8. ``TaxSystem.apply_taxes``
     9. ``ResearchSystem.apply_research``
-    10. Publish ``TickCompleted``
-    11. ``PopulationSystem.observe``
-    12. ``EconomySystem.observe``
-    13. ``MarketSystem.observe``
-    14. ``PriceSystem.observe``
-    15. ``RelationshipSystem.observe``
-    16. ``ReputationSystem.observe``
-    17. ``FamilySystem.observe``
-    18. ``NetworkSystem.observe``
-    19. ``GovernmentSystem.observe``
-    20. ``LawSystem.observe``
-    21. ``VoteSystem.observe``
-    22. ``InstitutionSystem.observe``
-    23. ``CitySystem.observe``
-    24. ``InfrastructureSystem.observe``
-    25. ``TechSystem.observe``
-    26. ``ResearchSystem.observe``
+    10. ``InnovationSystem.apply_innovations``
+    11. Publish ``TickCompleted``
+    12. ``PopulationSystem.observe``
+    13. ``EconomySystem.observe``
+    14. ``MarketSystem.observe``
+    15. ``PriceSystem.observe``
+    16. ``RelationshipSystem.observe``
+    17. ``ReputationSystem.observe``
+    18. ``FamilySystem.observe``
+    19. ``NetworkSystem.observe``
+    20. ``GovernmentSystem.observe``
+    21. ``LawSystem.observe``
+    22. ``VoteSystem.observe``
+    23. ``InstitutionSystem.observe``
+    24. ``CitySystem.observe``
+    25. ``InfrastructureSystem.observe``
+    26. ``TechSystem.observe``
+    27. ``ResearchSystem.observe``
+    28. ``InnovationSystem.observe``
 
     Initial population, wealth, market, price, relationship, reputation,
     family, network, government, law, election, institution, city,
-    infrastructure, technology, and research censuses are also observed at
-    tick 0 immediately after world creation. Death runs after actions
-    (recovery chance) and before birth so newly dead parents cannot
+    infrastructure, technology, research, and innovation censuses are also
+    observed at tick 0 immediately after world creation. Death runs after
+    actions (recovery chance) and before birth so newly dead parents cannot
     reproduce. Birth and death both complete before taxes so the levy sees
     the settled roster. Taxes complete before research so discovery does not
-    affect the levy. Research completes before ``TickCompleted`` so
-    technology and research censuses reflect post-discovery state. Taxes are
-    disabled by default; when enabled, active ``TAX_SCHEDULE`` laws override
-    levy parameters. Relationship observation is wired each tick; SOCIALIZE
-    may mutate bonds during action execution. Reputation observation follows
-    relationships so standings reflect the latest bonds. Family observation
-    follows reputation and reads birth ``parent_id`` lineage without mutating
-    agents. Network observation follows families and measures the living bond
-    graph. Government observation follows networks and reports polity
-    coverage, treasuries, and subjects without mutating agents. Law
-    observation follows governments and reports statute activity. Election
-    observation follows laws and reports the archived vote history; elections
-    are not auto-conducted each tick. Institution observation follows
-    elections and reports civic organizations without mutating agents. City
-    observation follows institutions and reports settlement residency without
-    mutating agents. Infrastructure observation follows cities and reports
-    built capacity without mutating agents. Technology observation follows
+    affect the levy. Research completes before innovation so same-tick
+    discoveries can activate adoptions. Innovation completes before
+    ``TickCompleted`` so technology/research/innovation censuses reflect
+    post-discovery/activation state. Taxes are disabled by default; when
+    enabled, active ``TAX_SCHEDULE`` laws override levy parameters.
+    Relationship observation is wired each tick; SOCIALIZE may mutate bonds
+    during action execution. Reputation observation follows relationships so
+    standings reflect the latest bonds. Family observation follows reputation
+    and reads birth ``parent_id`` lineage without mutating agents. Network
+    observation follows families and measures the living bond graph.
+    Government observation follows networks and reports polity coverage,
+    treasuries, and subjects without mutating agents. Law observation follows
+    governments and reports statute activity. Election observation follows
+    laws and reports the archived vote history; elections are not
+    auto-conducted each tick. Institution observation follows elections and
+    reports civic organizations without mutating agents. City observation
+    follows institutions and reports settlement residency without mutating
+    agents. Infrastructure observation follows cities and reports built
+    capacity without mutating agents. Technology observation follows
     infrastructure and reports society-known techniques without mutating
     agents. Research observation follows technology and reports open progress
-    rows without mutating agents.
+    rows without mutating agents. Innovation observation follows research and
+    reports active adoptions without mutating agents.
     """
 
     def __init__(
@@ -147,6 +153,7 @@ class SimulationEngine:
         infrastructure_system: InfrastructureSystem | None = None,
         tech_system: TechSystem | None = None,
         research_system: ResearchSystem | None = None,
+        innovation_system: InnovationSystem | None = None,
     ) -> None:
         self._world_factory = (
             world_factory if world_factory is not None else WorldFactory()
@@ -201,6 +208,9 @@ class SimulationEngine:
         self._research_system = (
             research_system if research_system is not None else ResearchSystem()
         )
+        self._innovation_system = (
+            innovation_system if innovation_system is not None else InnovationSystem()
+        )
 
     def run(
         self,
@@ -230,6 +240,7 @@ class SimulationEngine:
         world = self._infrastructure_system.observe(world, bus=event_bus)
         world = self._tech_system.observe(world, bus=event_bus)
         world = self._research_system.observe(world, bus=event_bus)
+        world = self._innovation_system.observe(world, bus=event_bus)
 
         for tick in clock.run():
             world = world.with_tick(tick)
@@ -241,6 +252,7 @@ class SimulationEngine:
             world = self._birth_system.apply_births(world, bus=event_bus)
             world = self._tax_system.apply_taxes(world, bus=event_bus)
             world = self._research_system.apply_research(world, bus=event_bus)
+            world = self._innovation_system.apply_innovations(world, bus=event_bus)
             event_bus.publish(TickCompleted(tick=tick))
             world = self._population_system.observe(world, bus=event_bus)
             world = self._economy_system.observe(world, bus=event_bus)
@@ -258,6 +270,7 @@ class SimulationEngine:
             world = self._infrastructure_system.observe(world, bus=event_bus)
             world = self._tech_system.observe(world, bus=event_bus)
             world = self._research_system.observe(world, bus=event_bus)
+            world = self._innovation_system.observe(world, bus=event_bus)
 
         event_bus.publish(
             SimulationCompleted(

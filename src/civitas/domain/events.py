@@ -17,6 +17,7 @@ from civitas.domain.ids import (
     ElectionId,
     GovernmentId,
     InfrastructureId,
+    InnovationId,
     InstitutionId,
     LawId,
     ListingId,
@@ -571,6 +572,35 @@ class ResearchObserved(DomainEvent):
     completion_bps: NonNegativeInt
 
 
+class InnovationCreated(DomainEvent):
+    """Emitted when an innovation catalog entry is added to the world."""
+
+    innovation_id: InnovationId
+    technology_id: TechnologyId
+    name: NonEmptyStr
+    kind: NonEmptyStr
+    active: bool = False
+
+
+class InnovationActivated(DomainEvent):
+    """Emitted when an innovation becomes active after tech discovery."""
+
+    innovation_id: InnovationId
+    technology_id: TechnologyId
+    name: NonEmptyStr
+    kind: NonEmptyStr
+
+
+class InnovationsObserved(DomainEvent):
+    """Emitted when an innovation census is taken."""
+
+    innovation_count: NonNegativeInt
+    active_count: NonNegativeInt
+    inactive_count: NonNegativeInt
+    active_fire_hearth_count: NonNegativeInt
+    active_pottery_craft_count: NonNegativeInt
+
+
 CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     SimulationStarted,
     SimulationCompleted,
@@ -620,6 +650,9 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     ResearchProgressed,
     TechnologyDiscovered,
     ResearchObserved,
+    InnovationCreated,
+    InnovationActivated,
+    InnovationsObserved,
 )
 
 EVENT_TYPE_REGISTRY: dict[str, type[DomainEvent]] = {

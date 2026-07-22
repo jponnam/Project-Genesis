@@ -24,6 +24,7 @@ from civitas.domain.ids import (
     ElectionId,
     GovernmentId,
     InfrastructureId,
+    InnovationId,
     InstitutionId,
     LawId,
     LocationId,
@@ -31,6 +32,7 @@ from civitas.domain.ids import (
     TechnologyId,
 )
 from civitas.domain.infrastructure import Infrastructure
+from civitas.domain.innovation import Innovation
 from civitas.domain.institutions import Institution
 from civitas.domain.laws import Law, LawKind
 from civitas.domain.location import Location
@@ -58,6 +60,7 @@ class World(BaseModel):
         infrastructure: Built capacity, ordered by ascending ``infrastructure_id``.
         technologies: Society tech catalog, ordered by ascending ``technology_id``.
         research_progress: Open research rows, ordered by ascending technology_id.
+        innovations: Society adoptions, ordered by ascending ``innovation_id``.
         agents: Agents ordered by ascending ``agent_id``.
         treasury: Public money balance collected from taxes.
     """
@@ -76,6 +79,7 @@ class World(BaseModel):
     infrastructure: tuple[Infrastructure, ...] = ()
     technologies: tuple[Technology, ...] = ()
     research_progress: tuple[ResearchProgress, ...] = ()
+    innovations: tuple[Innovation, ...] = ()
     agents: tuple[Agent, ...] = ()
     treasury: NonNegativeInt = 0
 
@@ -414,6 +418,41 @@ class World(BaseModel):
                 msg = "research points must be <= threshold"
                 raise ValueError(msg)
 
+        innovation_ids = [
+            innovation.innovation_id.value for innovation in self.innovations
+        ]
+        if len(innovation_ids) != len(set(innovation_ids)):
+            msg = "innovation ids must be unique"
+            raise ValueError(msg)
+        if innovation_ids != sorted(innovation_ids):
+            msg = "innovations must be ordered by ascending innovation_id"
+            raise ValueError(msg)
+        innovation_kinds = [innovation.kind.value for innovation in self.innovations]
+        if len(innovation_kinds) != len(set(innovation_kinds)):
+            msg = "innovation kinds must be unique"
+            raise ValueError(msg)
+        innovation_tech_ids = [
+            innovation.technology_id.value for innovation in self.innovations
+        ]
+        if len(innovation_tech_ids) != len(set(innovation_tech_ids)):
+            msg = "innovation technology ids must be unique"
+            raise ValueError(msg)
+        for innovation in self.innovations:
+            tech_value = innovation.technology_id.value
+            if tech_value not in tech_by_value:
+                msg = (
+                    f"innovation {innovation.innovation_id.value} references "
+                    f"unknown technology {tech_value}"
+                )
+                raise ValueError(msg)
+            tech = tech_by_value[tech_value]
+            if innovation.active and not tech.discovered:
+                msg = (
+                    f"active innovation {innovation.innovation_id.value} requires "
+                    f"discovered technology {tech_value}"
+                )
+                raise ValueError(msg)
+
         return self
 
     @property
@@ -593,6 +632,7 @@ class World(BaseModel):
             infrastructure=self.infrastructure,
             technologies=self.technologies,
             research_progress=self.research_progress,
+            innovations=self.innovations,
             agents=agents,
             treasury=self.treasury,
         )
@@ -794,3 +834,37 @@ class World(BaseModel):
             updated.append(progress)
             updated.sort(key=lambda item: item.technology_id.value)
         return self.model_copy(update={"research_progress": tuple(updated)})
+
+    def innovation_by_id(
+        self,
+        innovation_id: InnovationId | int,
+    ) -> Innovation | None:
+        """Return the innovation with ``innovation_id``, or ``None`` if absent."""
+        target = (
+            innovation_id
+            if isinstance(innovation_id, InnovationId)
+            else InnovationId(value=innovation_id)
+        )
+        for innovation in self.innovations:
+            if innovation.innovation_id == target:
+                return innovation
+        return None
+
+    def with_innovation(self, innovation: Innovation) -> World:
+        """Return a copy replacing the innovation that shares ``innovation_id``.
+
+        Raises:
+            ValueError: If no innovation with that id exists.
+        """
+        updated: list[Innovation] = []
+        found = False
+        for existing in self.innovations:
+            if existing.innovation_id == innovation.innovation_id:
+                updated.append(innovation)
+                found = True
+            else:
+                updated.append(existing)
+        if not found:
+            msg = f"innovation id {innovation.innovation_id.value} not found in world"
+            raise ValueError(msg)
+        return self.model_copy(update={"innovations": tuple(updated)})

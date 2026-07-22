@@ -3,7 +3,8 @@
 Phase 6 Milestone 2. Each undiscovered technology may have a progress
 row. Each apply tick adds fixed integer points; when points reach the
 threshold, ``discover_technology`` is called and the row is removed.
-Innovation and knowledge diffusion remain later milestones.
+Innovation (Milestone 3) activates society adoptions after discovery.
+Knowledge diffusion remains a later milestone.
 """
 
 from __future__ import annotations

@@ -21,6 +21,7 @@ from civitas.systems.infrastructure import (
     InfrastructureConfig,
     InfrastructureSystem,
 )
+from civitas.systems.innovation import InnovationConfig, InnovationSystem
 from civitas.systems.institutions import InstitutionConfig, InstitutionSystem
 from civitas.systems.laws import LawConfig, LawSystem
 from civitas.systems.market import MarketConfig, MarketSystem
@@ -64,6 +65,8 @@ __all__ = [
     "GovernmentSystem",
     "InfrastructureConfig",
     "InfrastructureSystem",
+    "InnovationConfig",
+    "InnovationSystem",
     "InstitutionConfig",
     "InstitutionSystem",
     "LawConfig",

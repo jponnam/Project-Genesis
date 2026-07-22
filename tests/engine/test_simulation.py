@@ -17,6 +17,9 @@ from civitas.domain import (
     GovernmentsObserved,
     InfrastructureCreated,
     InfrastructuresObserved,
+    InnovationActivated,
+    InnovationCreated,
+    InnovationsObserved,
     InstitutionCreated,
     InstitutionsObserved,
     LawCreated,
@@ -103,6 +106,7 @@ def test_run_emits_lifecycle_and_tick_events() -> None:
     assert types.count(CityCreated.__name__) == 1
     assert types.count(InfrastructureCreated.__name__) == 1
     assert types.count(TechnologyCreated.__name__) == 2
+    assert types.count(InnovationCreated.__name__) == 2
     assert types.count(AgentSpawned.__name__) == 2
     assert types[1] == LocationCreated.__name__
     assert types[10] == MarketCreated.__name__
@@ -112,7 +116,8 @@ def test_run_emits_lifecycle_and_tick_events() -> None:
     assert types[14] == CityCreated.__name__
     assert types[15] == InfrastructureCreated.__name__
     assert types[16] == TechnologyCreated.__name__
-    assert types[18] == AgentSpawned.__name__
+    assert types[18] == InnovationCreated.__name__
+    assert types[20] == AgentSpawned.__name__
     assert types.count(TickStarted.__name__) == 2
     assert types.count(TickCompleted.__name__) == 2
     assert types[-1] == SimulationCompleted.__name__
@@ -129,6 +134,7 @@ def test_run_emits_lifecycle_and_tick_events() -> None:
     assert len(result.world.infrastructure) == 1
     assert len(result.world.technologies) == 2
     assert len(result.world.research_progress) == 1
+    assert len(result.world.innovations) == 2
 
 
 def test_each_tick_selects_and_executes_actions() -> None:
@@ -640,3 +646,34 @@ def test_research_observed_each_tick_including_start() -> None:
     ]
     assert len(progressed) == 3
     assert not any(isinstance(event, TechnologyDiscovered) for event in result.events)
+
+
+def test_innovations_observed_each_tick_including_start() -> None:
+    """Engine emits an initial innovation census plus one per executed tick."""
+    result = SimulationEngine().run(SimulationConfig(seed=42, ticks=3, agent_count=4))
+    observed = [
+        event for event in result.events if isinstance(event, InnovationsObserved)
+    ]
+    assert len(observed) == 4
+    assert observed[0].tick.value == 0
+    assert observed[-1].tick.value == 3
+    assert all(event.innovation_count == 2 for event in observed)
+    assert all(event.active_fire_hearth_count == 1 for event in observed)
+    assert all(event.active_pottery_craft_count == 0 for event in observed)
+    research_indexes = [
+        i
+        for i, event in enumerate(result.events)
+        if isinstance(event, ResearchObserved)
+    ]
+    innovation_indexes = [
+        i
+        for i, event in enumerate(result.events)
+        if isinstance(event, InnovationsObserved)
+    ]
+    assert all(
+        innovation > research
+        for research, innovation in zip(
+            research_indexes, innovation_indexes, strict=True
+        )
+    )
+    assert not any(isinstance(event, InnovationActivated) for event in result.events)
