@@ -12,6 +12,7 @@ from civitas.domain import (
     CitiesObserved,
     CityCreated,
     CognitionObserved,
+    EffectsObserved,
     ElectionsObserved,
     FamiliesObserved,
     GovernmentCreated,
@@ -789,4 +790,27 @@ def test_retrieval_observed_each_tick_including_start() -> None:
     assert all(
         retrieval > plan
         for plan, retrieval in zip(plan_indexes, retrieval_indexes, strict=True)
+    )
+
+
+def test_effects_observed_each_tick_including_start() -> None:
+    """Engine emits an initial effects census plus one per executed tick."""
+    result = SimulationEngine().run(SimulationConfig(seed=42, ticks=3, agent_count=4))
+    observed = [event for event in result.events if isinstance(event, EffectsObserved)]
+    assert len(observed) == 4
+    assert observed[0].tick.value == 0
+    assert observed[0].fire_hearth_active == 1
+    assert observed[0].rest_restore_bps == 2500
+    assert observed[-1].tick.value == 3
+    innovation_indexes = [
+        i
+        for i, event in enumerate(result.events)
+        if isinstance(event, InnovationsObserved)
+    ]
+    effects_indexes = [
+        i for i, event in enumerate(result.events) if isinstance(event, EffectsObserved)
+    ]
+    assert all(
+        effects > innovation
+        for innovation, effects in zip(innovation_indexes, effects_indexes, strict=True)
     )

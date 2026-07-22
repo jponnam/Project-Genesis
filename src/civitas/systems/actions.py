@@ -46,6 +46,8 @@ from civitas.domain import (
     apply_rest,
     apply_socialize,
     apply_trade,
+    effective_gather_amount,
+    effective_rest_restore,
     get_bond,
     recipe_by_id,
     relocate,
@@ -316,7 +318,8 @@ class ActionExecutor:
     ) -> tuple[Agent, bool]:
         """Apply REST energy recovery; emit NeedDecayed on success."""
         previous_energy = agent.needs.energy
-        updated = apply_rest(agent, restore=self._config.rest)
+        restore = effective_rest_restore(world, base=float(self._config.rest))
+        updated = apply_rest(agent, restore=restore)
         if updated is None:
             return agent, False
 
@@ -426,11 +429,16 @@ class ActionExecutor:
         if choice.target_resource is None:
             return world, False
 
+        amount = effective_gather_amount(
+            world,
+            choice.target_resource,
+            base=int(self._config.gather_amount),
+        )
         updated = apply_gather(
             world,
             agent,
             choice.target_resource,
-            amount=self._config.gather_amount,
+            amount=amount,
         )
         if updated is None:
             return world, False
@@ -442,7 +450,7 @@ class ActionExecutor:
                     agent_id=agent.agent_id,
                     location_id=agent.location_id,
                     resource=choice.target_resource,
-                    amount=self._config.gather_amount,
+                    amount=amount,
                 )
             )
         return updated, True

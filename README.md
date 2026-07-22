@@ -116,15 +116,15 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 | **5** | Governments, laws, institutions, voting, cities, infrastructure |
 | **6** | Technology, research, innovation, knowledge diffusion |
 | **7** | LLM integration, agent cognition, reflection, planning, memory retrieval |
+| **8** | Effect wiring from innovations into action outcomes |
 
 ## Current Milestone
 
-**Phase 7 — Milestone 4: Memory retrieval**
+**Phase 8 — Milestone 1: Effect wiring**
 
-After planning, `RetrievalSystem.apply_retrieval` loads the top relevant
-episodic/reflection memories into each living agent's `working_memory`,
-keyed by the current satisfy-need query. The utility policy can boost
-matching actions from that context on the next tick.
+Active innovations modify action outcomes through domain helpers:
+`FIRE_HEARTH` boosts REST energy restore; `POTTERY_CRAFT` boosts water
+gather amount. `EffectsSystem` observes the resulting society bonuses.
 
 ### Completed
 
@@ -178,6 +178,9 @@ JSONL storage → `civitas run`
 - Milestone 2: Reflection
 - Milestone 3: Planning
 - Milestone 4: Memory retrieval
+
+**Phase 8:**
+- Milestone 1: Effect wiring
 
 ## License
 

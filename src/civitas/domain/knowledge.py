@@ -3,7 +3,8 @@
 Phase 6 Milestone 4. Society discovery (technology/research/innovation)
 settles first; this module bootstraps a living knower when no one knows a
 discovered fact, then spreads facts peer-to-peer among co-located living
-agents. Effect wiring and LLM cognition remain later milestones.
+agents. Effect wiring (Phase 8) and LLM cognition (Phase 7) consume
+these facts and society innovations.
 """
 
 from __future__ import annotations

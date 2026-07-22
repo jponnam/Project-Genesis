@@ -14,6 +14,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from civitas.domain import (
     ResourceGathered,
     apply_gather,
+    effective_gather_amount,
     gatherable_resources,
     location_stock,
 )
@@ -68,7 +69,8 @@ class GatheringSystem:
         location = world.location_by_id(agent.location_id)
         if location is None:
             return False
-        return location_stock(location, resource) >= self._config.amount
+        amount = effective_gather_amount(world, resource, base=int(self._config.amount))
+        return location_stock(location, resource) >= amount
 
     def gather(
         self,
@@ -90,11 +92,12 @@ class GatheringSystem:
             msg = f"agent id {agent_id} not found in world"
             raise ValueError(msg)
 
+        amount = effective_gather_amount(world, resource, base=int(self._config.amount))
         updated = apply_gather(
             world,
             agent,
             resource,
-            amount=self._config.amount,
+            amount=amount,
         )
         if updated is None:
             return world
@@ -106,7 +109,7 @@ class GatheringSystem:
                     agent_id=agent.agent_id,
                     location_id=agent.location_id,
                     resource=resource,
-                    amount=self._config.amount,
+                    amount=amount,
                 )
             )
         return updated

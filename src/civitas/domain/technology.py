@@ -4,8 +4,8 @@ Phase 6 Milestone 1. Technologies are world-level catalog rows with a
 ``discovered`` flag. This milestone seeds FIRE (known) and POTTERY
 (unknown). Research (Milestone 2) advances progress toward undiscovered
 entries. Innovation activates society adoptions of discovered techs.
-Knowledge diffusion syncs facts onto agents. Prereq trees and effect
-wiring remain later milestones.
+Knowledge diffusion syncs facts onto agents. Effect wiring (Phase 8)
+applies active-innovation bonuses. Prereq trees remain later.
 """
 
 from __future__ import annotations

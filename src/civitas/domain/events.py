@@ -687,6 +687,16 @@ class RetrievalObserved(DomainEvent):
     mean_retrieved_bps: NonNegativeInt
 
 
+class EffectsObserved(DomainEvent):
+    """Emitted when a society-effects census is taken."""
+
+    living_count: NonNegativeInt
+    fire_hearth_active: NonNegativeInt
+    pottery_craft_active: NonNegativeInt
+    rest_restore_bps: NonNegativeInt
+    water_gather_amount: NonNegativeInt
+
+
 CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     SimulationStarted,
     SimulationCompleted,
@@ -748,6 +758,7 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     PlansObserved,
     MemoryRetrieved,
     RetrievalObserved,
+    EffectsObserved,
 )
 
 EVENT_TYPE_REGISTRY: dict[str, type[DomainEvent]] = {

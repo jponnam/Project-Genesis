@@ -3,7 +3,8 @@
 Phase 6 Milestone 3. Each innovation links to one technology and becomes
 ``active`` when that technology is discovered. This milestone seeds an
 active fire hearth and an inactive pottery craft. Knowledge diffusion
-(Milestone 4) syncs facts onto agents. Effect wiring remains later.
+(Milestone 4) syncs facts onto agents. Effect wiring (Phase 8) applies
+active-innovation bonuses to REST/GATHER outcomes.
 """
 
 from __future__ import annotations
