@@ -95,6 +95,7 @@ class InfrastructureSystem:
                     active_waystation_count=snap.active_waystation_count,
                     active_beacon_count=snap.active_beacon_count,
                     active_ditch_count=snap.active_ditch_count,
+                    active_terrace_count=snap.active_terrace_count,
                 )
             )
         return world

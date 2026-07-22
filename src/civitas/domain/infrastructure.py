@@ -3,16 +3,17 @@
 Phase 5 Milestone 6 plus Phase 9 Milestones 5-8, Phase 10
 Milestones 3 and 9, Phase 11 Milestones 4 and 9, Phase 12
 Milestones 4 and 9, Phase 13 Milestones 4 and 9, Phase 14
-Milestones 4 and 9, and Phase 15 Milestone 4. Infrastructure pieces
+Milestones 4 and 9, and Phase 15 Milestones 4 and 9. Infrastructure pieces
 attach to a city seat inside a government jurisdiction. This package
 seeds a single ``WELL`` kind; ``STOREHOUSE``, ``ROAD``, ``SCRIPTORIUM``,
 ``STOA``, ``OBSERVATORY``, ``SHRINE``, ``CLINIC``, ``BATHHOUSE``,
-``BRIDGE``, ``SCAFFOLD``, ``WAYSTATION``, ``BEACON``, and ``DITCH`` are
-available via free create or paid construction. Governments pay via
-``build_infrastructure``; institutions pay via
+``BRIDGE``, ``SCAFFOLD``, ``WAYSTATION``, ``BEACON``, ``DITCH``, and
+``TERRACE`` are available via free create or paid construction.
+Governments pay via ``build_infrastructure``; institutions pay via
 ``build_infrastructure_from_institution``. Effect wiring applies WELL
-drink restore, STOREHOUSE/WAYSTATION food gather (stacking), SCAFFOLD
-wood gather, DITCH water gather (stacking with pottery/irrigation/sail),
+drink restore, STOREHOUSE/WAYSTATION/TERRACE food gather (stacking),
+SCAFFOLD wood gather, DITCH water gather (stacking with
+pottery/irrigation/sail),
 ROAD/BRIDGE move-energy discounts, SCRIPTORIUM/STOA teachings-per-knower
 bonuses, OBSERVATORY/BEACON retrieval-limit bonuses, SHRINE/CLINIC drink
 restore (stacking with WELL), and BATHHOUSE rest restore for colocated
@@ -61,6 +62,7 @@ class InfrastructureKind(StrEnum):
     WAYSTATION = "waystation"
     BEACON = "beacon"
     DITCH = "ditch"
+    TERRACE = "terrace"
 
 
 # Canonical treasury cost to construct each infrastructure kind.
@@ -78,6 +80,7 @@ DEFAULT_SCAFFOLD_BUILD_COST: int = 10
 DEFAULT_WAYSTATION_BUILD_COST: int = 8
 DEFAULT_BEACON_BUILD_COST: int = 9
 DEFAULT_DITCH_BUILD_COST: int = 7
+DEFAULT_TERRACE_BUILD_COST: int = 8
 INFRASTRUCTURE_BUILD_COSTS: dict[InfrastructureKind, int] = {
     InfrastructureKind.WELL: DEFAULT_WELL_BUILD_COST,
     InfrastructureKind.STOREHOUSE: DEFAULT_STOREHOUSE_BUILD_COST,
@@ -93,6 +96,7 @@ INFRASTRUCTURE_BUILD_COSTS: dict[InfrastructureKind, int] = {
     InfrastructureKind.WAYSTATION: DEFAULT_WAYSTATION_BUILD_COST,
     InfrastructureKind.BEACON: DEFAULT_BEACON_BUILD_COST,
     InfrastructureKind.DITCH: DEFAULT_DITCH_BUILD_COST,
+    InfrastructureKind.TERRACE: DEFAULT_TERRACE_BUILD_COST,
 }
 
 
@@ -174,6 +178,7 @@ class InfrastructureCensus(BaseModel):
     active_waystation_count: NonNegativeInt = 0
     active_beacon_count: NonNegativeInt = 0
     active_ditch_count: NonNegativeInt = 0
+    active_terrace_count: NonNegativeInt = 0
 
 
 def infrastructure_by_id(
@@ -422,6 +427,9 @@ def census_infrastructure(world: World) -> InfrastructureCensus:
     )
     active_beacons = sum(1 for item in active if item.kind is InfrastructureKind.BEACON)
     active_ditches = sum(1 for item in active if item.kind is InfrastructureKind.DITCH)
+    active_terraces = sum(
+        1 for item in active if item.kind is InfrastructureKind.TERRACE
+    )
     return InfrastructureCensus(
         tick=world.tick,
         infrastructure_count=len(items),
@@ -443,4 +451,5 @@ def census_infrastructure(world: World) -> InfrastructureCensus:
         active_waystation_count=active_waystations,
         active_beacon_count=active_beacons,
         active_ditch_count=active_ditches,
+        active_terrace_count=active_terraces,
     )
