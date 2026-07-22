@@ -18,6 +18,8 @@ def test_observe_emits_without_mutating_world() -> None:
     assert events[0].living_count == 3
     assert events[0].fire_hearth_active == 1
     assert events[0].rest_restore_bps == 2500
+    assert events[0].active_well_count == 1
+    assert events[0].drink_restore_bps == 3500
 
 
 def test_observe_can_disable_events() -> None:

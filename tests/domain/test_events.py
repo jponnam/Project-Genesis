@@ -1080,8 +1080,12 @@ def test_effects_events_round_trip() -> None:
         pottery_craft_active=0,
         rest_restore_bps=2500,
         water_gather_amount=1,
+        active_well_count=1,
+        drink_restore_bps=3500,
     )
     restored = event_from_record(observed.to_record())
     assert isinstance(restored, EffectsObserved)
     assert restored.rest_restore_bps == 2500
     assert restored.fire_hearth_active == 1
+    assert restored.active_well_count == 1
+    assert restored.drink_restore_bps == 3500

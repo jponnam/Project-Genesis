@@ -46,6 +46,7 @@ from civitas.domain import (
     apply_rest,
     apply_socialize,
     apply_trade,
+    effective_drink_restore,
     effective_gather_amount,
     effective_rest_restore,
     get_bond,
@@ -281,9 +282,10 @@ class ActionExecutor:
     ) -> tuple[Agent, bool]:
         """Apply inventory-backed DRINK; emit consume/need events on success."""
         previous_water = agent.needs.water
+        restore = effective_drink_restore(world, agent, base=float(self._config.drink))
         updated = apply_drink(
             agent,
-            restore=self._config.drink,
+            restore=restore,
             amount=self._config.drink_consume_amount,
         )
         if updated is None:

@@ -120,11 +120,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 8 — Milestone 1: Effect wiring**
+**Phase 8 — Milestone 2: Infrastructure effects**
 
-Active innovations modify action outcomes through domain helpers:
-`FIRE_HEARTH` boosts REST energy restore; `POTTERY_CRAFT` boosts water
-gather amount. `EffectsSystem` observes the resulting society bonuses.
+Active `WELL` infrastructure boosts DRINK restore for agents at the well
+seat. Innovation bonuses from Milestone 1 remain in place; `EffectsSystem`
+now also reports well coverage and drink-restore potential.
 
 ### Completed
 
@@ -181,6 +181,7 @@ JSONL storage → `civitas run`
 
 **Phase 8:**
 - Milestone 1: Effect wiring
+- Milestone 2: Infrastructure effects
 
 ## License
 

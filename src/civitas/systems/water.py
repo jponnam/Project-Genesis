@@ -17,6 +17,7 @@ from civitas.domain import (
     ResourceConsumed,
     apply_drink,
     can_drink,
+    effective_drink_restore,
 )
 from civitas.domain.types import PositiveInt, UnitInterval
 from civitas.domain.water import DEFAULT_DRINK_CONSUME_AMOUNT, DEFAULT_DRINK_RESTORE
@@ -73,9 +74,12 @@ class WaterSystem:
             raise ValueError(msg)
 
         previous_water = agent.needs.water
+        restore = effective_drink_restore(
+            world, agent, base=float(self._config.restore)
+        )
         updated = apply_drink(
             agent,
-            restore=self._config.restore,
+            restore=restore,
             amount=self._config.consume_amount,
         )
         if updated is None:

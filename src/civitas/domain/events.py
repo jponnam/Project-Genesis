@@ -695,6 +695,8 @@ class EffectsObserved(DomainEvent):
     pottery_craft_active: NonNegativeInt
     rest_restore_bps: NonNegativeInt
     water_gather_amount: NonNegativeInt
+    active_well_count: NonNegativeInt = 0
+    drink_restore_bps: NonNegativeInt = 3000
 
 
 CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (

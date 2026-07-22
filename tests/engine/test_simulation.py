@@ -801,6 +801,8 @@ def test_effects_observed_each_tick_including_start() -> None:
     assert observed[0].tick.value == 0
     assert observed[0].fire_hearth_active == 1
     assert observed[0].rest_restore_bps == 2500
+    assert observed[0].active_well_count == 1
+    assert observed[0].drink_restore_bps == 3500
     assert observed[-1].tick.value == 3
     innovation_indexes = [
         i
