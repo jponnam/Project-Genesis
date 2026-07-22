@@ -19,6 +19,7 @@ from civitas.systems import (
     BirthSystem,
     DeathSystem,
     EconomySystem,
+    MarketSystem,
     NeedsSystem,
     PopulationSystem,
     UtilityPolicy,
@@ -60,12 +61,13 @@ class SimulationEngine:
     8. Publish ``TickCompleted``
     9. ``PopulationSystem.observe``
     10. ``EconomySystem.observe``
+    11. ``MarketSystem.observe``
 
-    Initial population and wealth censuses are also observed at tick 0
-    immediately after world creation. Death runs after actions (recovery
-    chance) and before birth so newly dead parents cannot reproduce.
-    Birth and death both complete before ``TickCompleted`` so censuses
-    reflect the final roster.
+    Initial population, wealth, and market censuses are also observed at
+    tick 0 immediately after world creation. Death runs after actions
+    (recovery chance) and before birth so newly dead parents cannot
+    reproduce. Birth and death both complete before ``TickCompleted`` so
+    censuses reflect the final roster.
     """
 
     def __init__(
@@ -79,6 +81,7 @@ class SimulationEngine:
         birth_system: BirthSystem | None = None,
         population_system: PopulationSystem | None = None,
         economy_system: EconomySystem | None = None,
+        market_system: MarketSystem | None = None,
     ) -> None:
         self._world_factory = (
             world_factory if world_factory is not None else WorldFactory()
@@ -93,6 +96,9 @@ class SimulationEngine:
         )
         self._economy_system = (
             economy_system if economy_system is not None else EconomySystem()
+        )
+        self._market_system = (
+            market_system if market_system is not None else MarketSystem()
         )
 
     def run(
@@ -109,6 +115,7 @@ class SimulationEngine:
         world = self._world_factory.create(config, bus=event_bus)
         world = self._population_system.observe(world, bus=event_bus)
         world = self._economy_system.observe(world, bus=event_bus)
+        world = self._market_system.observe(world, bus=event_bus)
 
         for tick in clock.run():
             world = world.with_tick(tick)
@@ -121,6 +128,7 @@ class SimulationEngine:
             event_bus.publish(TickCompleted(tick=tick))
             world = self._population_system.observe(world, bus=event_bus)
             world = self._economy_system.observe(world, bus=event_bus)
+            world = self._market_system.observe(world, bus=event_bus)
 
         event_bus.publish(
             SimulationCompleted(

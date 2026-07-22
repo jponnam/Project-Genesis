@@ -14,6 +14,7 @@ from civitas.systems.economy import EconomyConfig, EconomySystem
 from civitas.systems.energy import EnergyConfig, EnergySystem
 from civitas.systems.food import FoodConfig, FoodSystem
 from civitas.systems.gathering import GatheringConfig, GatheringSystem
+from civitas.systems.market import MarketConfig, MarketSystem
 from civitas.systems.movement import MovementConfig, MovementSystem
 from civitas.systems.needs import NEED_NAMES, NeedsConfig, NeedsSystem
 from civitas.systems.policy import PolicyConfig, UtilityPolicy
@@ -37,6 +38,8 @@ __all__ = [
     "FoodSystem",
     "GatheringConfig",
     "GatheringSystem",
+    "MarketConfig",
+    "MarketSystem",
     "MovementConfig",
     "MovementSystem",
     "NeedsConfig",

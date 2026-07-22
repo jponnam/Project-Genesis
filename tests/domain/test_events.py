@@ -14,7 +14,13 @@ from civitas.domain import (
     AgentMoved,
     AgentSpawned,
     DomainEvent,
+    ListingFilled,
+    ListingId,
+    ListingPosted,
     LocationId,
+    MarketCreated,
+    MarketId,
+    MarketObserved,
     MoneyTransferred,
     NeedDecayed,
     PopulationObserved,
@@ -287,6 +293,64 @@ def test_resource_traded_round_trips() -> None:
     assert restored.resource == "food"
     assert restored.price == 3
     assert restored.seller_id == AgentId(value=2)
+
+
+def test_market_created_and_listing_events_round_trip() -> None:
+    """Market venue and listing events serialize losslessly."""
+    created = MarketCreated(
+        sequence=1,
+        tick=Tick(value=0),
+        market_id=MarketId(value=0),
+        location_id=LocationId(value=0),
+        name="Camp Market",
+    )
+    assert isinstance(event_from_record(created.to_record()), MarketCreated)
+
+    posted = ListingPosted(
+        sequence=2,
+        tick=Tick(value=1),
+        market_id=MarketId(value=0),
+        listing_id=ListingId(value=0),
+        seller_id=AgentId(value=1),
+        resource="food",
+        quantity=2,
+        unit_price=1,
+    )
+    restored_posted = event_from_record(posted.to_record())
+    assert isinstance(restored_posted, ListingPosted)
+    assert restored_posted.quantity == 2
+
+    filled = ListingFilled(
+        sequence=3,
+        tick=Tick(value=2),
+        market_id=MarketId(value=0),
+        listing_id=ListingId(value=0),
+        buyer_id=AgentId(value=2),
+        seller_id=AgentId(value=1),
+        resource="food",
+        quantity=1,
+        unit_price=1,
+        total_price=1,
+    )
+    restored_filled = event_from_record(filled.to_record())
+    assert isinstance(restored_filled, ListingFilled)
+    assert restored_filled.total_price == 1
+
+
+def test_market_observed_round_trips() -> None:
+    """MarketObserved serializes open-book census fields losslessly."""
+    event = MarketObserved(
+        sequence=9,
+        tick=Tick(value=3),
+        market_count=1,
+        listing_count=2,
+        total_units=5,
+        market_listings=((0, 2),),
+    )
+    restored = event_from_record(event.to_record())
+    assert isinstance(restored, MarketObserved)
+    assert restored.total_units == 5
+    assert restored.market_listings == ((0, 2),)
 
 
 def test_wealth_observed_round_trips() -> None:

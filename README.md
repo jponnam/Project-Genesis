@@ -118,12 +118,12 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 3 — Milestone 2: Trading**
+**Phase 3 — Milestone 3: Markets**
 
-Buyer-initiated `TRADE` lets a living agent purchase inventory from a
-co-located seller for integer money (`TradeTerms` / `apply_trade`). The
-utility policy selects trades; the action executor emits `ResourceTraded`.
-Markets and dynamic prices are later Phase 3 milestones.
+Location-anchored markets hold escrowed sell listings (`Market` /
+`SellListing`). Sellers post goods onto the book; buyers fill listings
+for integer money. The world factory seeds the camp market; each tick
+emits `MarketObserved`. Dynamic prices are a later Phase 3 milestone.
 
 ### Completed
 
@@ -145,6 +145,7 @@ JSONL storage → `civitas run`
 **Phase 3:**
 - Milestone 1: Economy
 - Milestone 2: Trading
+- Milestone 3: Markets
 
 ## License
 

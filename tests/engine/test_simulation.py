@@ -10,6 +10,8 @@ from civitas.domain import (
     AgentMoved,
     AgentSpawned,
     LocationCreated,
+    MarketCreated,
+    MarketObserved,
     NeedDecayed,
     PopulationObserved,
     ResourceConsumed,
@@ -64,9 +66,11 @@ def test_run_emits_lifecycle_and_tick_events() -> None:
 
     assert types[0] == SimulationStarted.__name__
     assert types.count(LocationCreated.__name__) == 9
+    assert types.count(MarketCreated.__name__) == 1
     assert types.count(AgentSpawned.__name__) == 2
     assert types[1] == LocationCreated.__name__
-    assert types[10] == AgentSpawned.__name__
+    assert types[10] == MarketCreated.__name__
+    assert types[11] == AgentSpawned.__name__
     assert types.count(TickStarted.__name__) == 2
     assert types.count(TickCompleted.__name__) == 2
     assert types[-1] == SimulationCompleted.__name__
@@ -74,6 +78,7 @@ def test_run_emits_lifecycle_and_tick_events() -> None:
     assert result.events[-1].ticks_executed == 2
     assert result.world.tick.value == 2
     assert len(result.world.locations) == 9
+    assert len(result.world.markets) == 1
 
 
 def test_each_tick_selects_and_executes_actions() -> None:
@@ -247,3 +252,14 @@ def test_wealth_observed_each_tick_including_start() -> None:
     assert observed[-1].tick.value == 3
     assert all(event.alive_count == 5 for event in observed)
     assert observed[0].total == sum(agent.money for agent in result.world.agents)
+
+
+def test_market_observed_each_tick_including_start() -> None:
+    """Engine emits an initial market census plus one per executed tick."""
+    result = SimulationEngine().run(SimulationConfig(seed=42, ticks=2, agent_count=3))
+    observed = [event for event in result.events if isinstance(event, MarketObserved)]
+    assert len(observed) == 3  # tick 0 + ticks 1..2
+    assert observed[0].tick.value == 0
+    assert observed[-1].tick.value == 2
+    assert all(event.market_count == 1 for event in observed)
+    assert result.world.markets[0].name == "Camp Market"

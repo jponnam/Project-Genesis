@@ -17,10 +17,12 @@ from civitas.domain import (
     AgentSpawned,
     LocationCreated,
     LocationId,
+    MarketCreated,
     Personality,
     SimulationStarted,
     Tick,
     World,
+    default_markets,
 )
 from civitas.domain.ids import AgentId
 from civitas.domain.location import CAMP_LOCATION, default_world_map
@@ -53,12 +55,14 @@ class WorldFactory:
         1. Optionally publish ``SimulationStarted`` at tick 0.
         2. Build the canonical location map; optionally publish
            ``LocationCreated`` for each location in id order.
-        3. For each ``agent_id`` in ``0 .. agent_count-1``, spawn a child
+        3. Build canonical markets; optionally publish ``MarketCreated``.
+        4. For each ``agent_id`` in ``0 .. agent_count-1``, spawn a child
            RNG stream and sample personality + starting money at camp.
-        4. Optionally publish ``AgentSpawned`` for each agent in id order.
+        5. Optionally publish ``AgentSpawned`` for each agent in id order.
         """
         root_rng = SeededRNG.from_config(config)
         locations = default_world_map()
+        markets = default_markets()
         agents: list[Agent] = []
 
         if bus is not None:
@@ -82,6 +86,15 @@ class WorldFactory:
                         kind=location.kind.value,
                     )
                 )
+            for market in markets:
+                bus.publish(
+                    MarketCreated(
+                        tick=Tick(value=0),
+                        market_id=market.market_id,
+                        location_id=market.location_id,
+                        name=market.name,
+                    )
+                )
 
         for agent_id in range(config.agent_count):
             agent = self._build_agent(root_rng=root_rng, agent_id=agent_id)
@@ -100,6 +113,7 @@ class WorldFactory:
             config=config,
             tick=Tick(value=0),
             locations=locations,
+            markets=markets,
             agents=tuple(agents),
         )
 

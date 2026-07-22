@@ -49,3 +49,41 @@ class LocationId(BaseModel):
         if isinstance(other, LocationId):
             return self.value < other.value
         return NotImplemented
+
+
+class MarketId(BaseModel):
+    """Unique market identifier within a simulation run."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid", validate_default=True)
+
+    value: NonNegativeInt = Field(description="Stable market id for the run.")
+
+    def __int__(self) -> int:
+        return self.value
+
+    def __str__(self) -> str:
+        return str(self.value)
+
+    def __lt__(self, other: object) -> Any:
+        if isinstance(other, MarketId):
+            return self.value < other.value
+        return NotImplemented
+
+
+class ListingId(BaseModel):
+    """Unique sell-listing identifier within a market."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid", validate_default=True)
+
+    value: NonNegativeInt = Field(description="Stable listing id within a market.")
+
+    def __int__(self) -> int:
+        return self.value
+
+    def __str__(self) -> str:
+        return str(self.value)
+
+    def __lt__(self, other: object) -> Any:
+        if isinstance(other, ListingId):
+            return self.value < other.value
+        return NotImplemented

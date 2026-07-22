@@ -11,7 +11,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from civitas.domain.ids import AgentId, LocationId
+from civitas.domain.ids import AgentId, ListingId, LocationId, MarketId
 from civitas.domain.time import Tick
 from civitas.domain.types import NonEmptyStr, NonNegativeInt, UnitInterval
 
@@ -185,6 +185,58 @@ class ResourceTraded(DomainEvent):
     price: NonNegativeInt
 
 
+class MarketCreated(DomainEvent):
+    """Emitted when a market venue is added to the world."""
+
+    market_id: MarketId
+    location_id: LocationId
+    name: NonEmptyStr
+
+
+class ListingPosted(DomainEvent):
+    """Emitted when a seller escrows goods onto a market listing."""
+
+    market_id: MarketId
+    listing_id: ListingId
+    seller_id: AgentId
+    resource: NonEmptyStr
+    quantity: NonNegativeInt
+    unit_price: NonNegativeInt
+
+
+class ListingFilled(DomainEvent):
+    """Emitted when a buyer purchases units from a market listing."""
+
+    market_id: MarketId
+    listing_id: ListingId
+    buyer_id: AgentId
+    seller_id: AgentId
+    resource: NonEmptyStr
+    quantity: NonNegativeInt
+    unit_price: NonNegativeInt
+    total_price: NonNegativeInt
+
+
+class ListingCancelled(DomainEvent):
+    """Emitted when a seller cancels an open listing and recovers escrow."""
+
+    market_id: MarketId
+    listing_id: ListingId
+    seller_id: AgentId
+    resource: NonEmptyStr
+    quantity: NonNegativeInt
+
+
+class MarketObserved(DomainEvent):
+    """Emitted when an open-book market census is taken."""
+
+    market_count: NonNegativeInt
+    listing_count: NonNegativeInt
+    total_units: NonNegativeInt
+    # (market_id, listing_count) pairs in ascending market_id order.
+    market_listings: tuple[tuple[int, int], ...] = ()
+
+
 class WealthObserved(DomainEvent):
     """Emitted when a wealth census is taken."""
 
@@ -203,6 +255,7 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     TickStarted,
     TickCompleted,
     LocationCreated,
+    MarketCreated,
     AgentSpawned,
     AgentMoved,
     AgentBorn,
@@ -212,9 +265,13 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     ResourceConsumed,
     ResourceGathered,
     ResourceTraded,
+    ListingPosted,
+    ListingFilled,
+    ListingCancelled,
     NeedDecayed,
     PopulationObserved,
     MoneyTransferred,
+    MarketObserved,
     WealthObserved,
 )
 
