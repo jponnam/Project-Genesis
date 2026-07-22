@@ -29,6 +29,7 @@ if TYPE_CHECKING:
 
 FIRE_HEARTH_REST_BONUS: float = 0.05
 POTTERY_WATER_GATHER_BONUS: int = 1
+IRRIGATION_WATER_GATHER_BONUS: int = 1
 WELL_DRINK_RESTORE_BONUS: float = 0.05
 
 
@@ -78,11 +79,14 @@ def rest_restore_bonus(world: World) -> float:
 
 def gather_amount_bonus(world: World, resource: str) -> int:
     """Return the gather-amount bonus for ``resource`` from innovations."""
-    if resource == WATER_RESOURCE and innovation_kind_is_active(
-        world, InnovationKind.POTTERY_CRAFT
-    ):
-        return POTTERY_WATER_GATHER_BONUS
-    return 0
+    if resource != WATER_RESOURCE:
+        return 0
+    bonus = 0
+    if innovation_kind_is_active(world, InnovationKind.POTTERY_CRAFT):
+        bonus += POTTERY_WATER_GATHER_BONUS
+    if innovation_kind_is_active(world, InnovationKind.IRRIGATION_CANAL):
+        bonus += IRRIGATION_WATER_GATHER_BONUS
+    return bonus
 
 
 def drink_restore_bonus(world: World, agent: Agent) -> float:

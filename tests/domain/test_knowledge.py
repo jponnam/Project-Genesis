@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from civitas.domain import (
+    CAMP_IRRIGATION,
     CAMP_LOCATION,
     CAMP_POTTERY,
     FIRE_FACT,
+    IRRIGATION_FACT,
     POTTERY_FACT,
     Agent,
     Knowledge,
@@ -119,6 +121,22 @@ def test_apply_knowledge_diffusion_bootstraps_then_diffuses() -> None:
     assert all(agent.knowledge.knows(POTTERY_FACT) for agent in world.agents)
 
 
+def test_bootstrap_uses_irrigation_technology_fact() -> None:
+    """Discovered irrigation bootstraps through the generic tech fact mapping."""
+    world = _world(
+        Agent.create(agent_id=0, name="A", knowledge=_FIRE_AND_POTTERY),
+        Agent.create(agent_id=1, name="B", knowledge=_FIRE_AND_POTTERY),
+    )
+    with_pottery = discover_technology(world, CAMP_POTTERY.technology_id)
+    assert with_pottery is not None
+    with_irrigation = discover_technology(with_pottery, CAMP_IRRIGATION.technology_id)
+    assert with_irrigation is not None
+    world, gains = bootstrap_discovered_knowledge(with_irrigation)
+    assert len(gains) == 1
+    assert gains[0].fact == IRRIGATION_FACT
+    assert world.agents[0].knowledge.knows(IRRIGATION_FACT)
+
+
 def test_census_knowledge_counts_coverage() -> None:
     """Census reports fire coverage and zero pottery before discovery."""
     world = _world(
@@ -130,6 +148,7 @@ def test_census_knowledge_counts_coverage() -> None:
     assert snap.discovered_technology_count == 1
     assert snap.fire_knower_count == 2
     assert snap.pottery_knower_count == 0
+    assert snap.irrigation_knower_count == 0
     assert snap.total_fact_instances == 2
     assert snap.coverage_bps == 10_000
     assert agents_knowing(world, FIRE_FACT)[0].agent_id.value == 0

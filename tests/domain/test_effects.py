@@ -7,6 +7,8 @@ import pytest
 from civitas.domain import (
     CAMP_FIRE,
     CAMP_FIRE_HEARTH,
+    CAMP_IRRIGATION,
+    CAMP_IRRIGATION_CANAL,
     CAMP_LOCATION,
     CAMP_POTTERY,
     CAMP_POTTERY_CRAFT,
@@ -14,6 +16,7 @@ from civitas.domain import (
     DEFAULT_GATHER_AMOUNT,
     DEFAULT_REST_RESTORE,
     FIRE_HEARTH_REST_BONUS,
+    IRRIGATION_WATER_GATHER_BONUS,
     POTTERY_WATER_GATHER_BONUS,
     WELL_DRINK_RESTORE_BONUS,
     Agent,
@@ -35,7 +38,7 @@ def _world(*, innovations: tuple = ()) -> World:
     return World(
         config=SimulationConfig(agent_count=1, seed=1),
         locations=(CAMP_LOCATION,),
-        technologies=(CAMP_FIRE, CAMP_POTTERY),
+        technologies=(CAMP_FIRE, CAMP_POTTERY, CAMP_IRRIGATION),
         innovations=innovations,
         agents=(Agent.create(agent_id=0, name="A"),),
     )
@@ -52,21 +55,24 @@ def test_fire_hearth_boosts_rest_restore() -> None:
     )
 
 
-def test_pottery_craft_boosts_water_gather() -> None:
-    """Active pottery craft increases water gather amount only."""
+def test_pottery_and_irrigation_stack_water_gather_bonus() -> None:
+    """Active pottery craft and irrigation canal stack for water gather."""
     discovered_pottery = CAMP_POTTERY.model_copy(update={"discovered": True})
+    discovered_irrigation = CAMP_IRRIGATION.model_copy(update={"discovered": True})
     active_pottery = CAMP_POTTERY_CRAFT.model_copy(update={"active": True})
+    active_irrigation = CAMP_IRRIGATION_CANAL.model_copy(update={"active": True})
     world = World(
         config=SimulationConfig(agent_count=1, seed=1),
         locations=(CAMP_LOCATION,),
-        technologies=(CAMP_FIRE, discovered_pottery),
-        innovations=(CAMP_FIRE_HEARTH, active_pottery),
+        technologies=(CAMP_FIRE, discovered_pottery, discovered_irrigation),
+        innovations=(CAMP_FIRE_HEARTH, active_pottery, active_irrigation),
         agents=(Agent.create(agent_id=0, name="A"),),
     )
-    assert gather_amount_bonus(world, "water") == POTTERY_WATER_GATHER_BONUS
+    water_bonus = POTTERY_WATER_GATHER_BONUS + IRRIGATION_WATER_GATHER_BONUS
+    assert gather_amount_bonus(world, "water") == water_bonus
     assert gather_amount_bonus(world, "food") == 0
-    assert effective_gather_amount(world, "water") == (
-        DEFAULT_GATHER_AMOUNT + POTTERY_WATER_GATHER_BONUS
+    assert (
+        effective_gather_amount(world, "water") == DEFAULT_GATHER_AMOUNT + water_bonus
     )
     assert effective_gather_amount(world, "food") == DEFAULT_GATHER_AMOUNT
 

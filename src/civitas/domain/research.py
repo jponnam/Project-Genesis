@@ -16,6 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from civitas.domain.ids import TechnologyId
 from civitas.domain.technology import (
+    CAMP_IRRIGATION,
     CAMP_POTTERY,
     discover_technology,
     prerequisites_met,
@@ -61,11 +62,21 @@ CAMP_POTTERY_RESEARCH: ResearchProgress = ResearchProgress.create(
     points=0,
     threshold=DEFAULT_POTTERY_THRESHOLD,
 )
+CAMP_IRRIGATION_RESEARCH: ResearchProgress = ResearchProgress.create(
+    CAMP_IRRIGATION.technology_id.value,
+    points=0,
+    threshold=DEFAULT_POTTERY_THRESHOLD,
+)
 
 
 def default_research_progress() -> tuple[ResearchProgress, ...]:
     """Return the canonical initial research progress set."""
-    return (CAMP_POTTERY_RESEARCH,)
+    return tuple(
+        sorted(
+            (CAMP_POTTERY_RESEARCH, CAMP_IRRIGATION_RESEARCH),
+            key=lambda item: item.technology_id.value,
+        )
+    )
 
 
 class ResearchCensus(BaseModel):

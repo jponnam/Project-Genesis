@@ -88,6 +88,7 @@ from civitas.domain.economy import (
 )
 from civitas.domain.effects import (
     FIRE_HEARTH_REST_BONUS,
+    IRRIGATION_WATER_GATHER_BONUS,
     POTTERY_WATER_GATHER_BONUS,
     WELL_DRINK_RESTORE_BONUS,
     EffectsCensus,
@@ -247,6 +248,7 @@ from civitas.domain.infrastructure import (
 )
 from civitas.domain.innovation import (
     CAMP_FIRE_HEARTH,
+    CAMP_IRRIGATION_CANAL,
     CAMP_POTTERY_CRAFT,
     Innovation,
     InnovationActivation,
@@ -285,6 +287,7 @@ from civitas.domain.knowledge import (
     DEFAULT_MIN_TEACH_TRUST,
     DEFAULT_TEACHINGS_PER_KNOWER,
     FIRE_FACT,
+    IRRIGATION_FACT,
     POTTERY_FACT,
     KnowledgeCensus,
     KnowledgeGain,
@@ -445,6 +448,7 @@ from civitas.domain.reputation import (
     top_standing,
 )
 from civitas.domain.research import (
+    CAMP_IRRIGATION_RESEARCH,
     CAMP_POTTERY_RESEARCH,
     DEFAULT_POINTS_PER_TICK,
     DEFAULT_POTTERY_THRESHOLD,
@@ -491,6 +495,7 @@ from civitas.domain.taxes import (
 )
 from civitas.domain.technology import (
     CAMP_FIRE,
+    CAMP_IRRIGATION,
     CAMP_POTTERY,
     Technology,
     TechnologyCensus,
@@ -557,6 +562,9 @@ __all__ = [
     "CAMP_FIRE",
     "CAMP_FIRE_HEARTH",
     "CAMP_GOVERNMENT",
+    "CAMP_IRRIGATION",
+    "CAMP_IRRIGATION_CANAL",
+    "CAMP_IRRIGATION_RESEARCH",
     "CAMP_LOCATION",
     "CAMP_MARKET",
     "CAMP_POLL_TAX_LAW",
@@ -602,6 +610,8 @@ __all__ = [
     "FIRE_FACT",
     "FIRE_HEARTH_REST_BONUS",
     "FOOD_RESOURCE",
+    "IRRIGATION_FACT",
+    "IRRIGATION_WATER_GATHER_BONUS",
     "LOCATION_RESOURCE_KINDS",
     "POTTERY_FACT",
     "POTTERY_WATER_GATHER_BONUS",
@@ -959,8 +969,8 @@ __all__ = [
     "population_dead",
     "population_total",
     "post_listing",
-    "priority_need_from_beliefs",
     "prerequisites_met",
+    "priority_need_from_beliefs",
     "producible_recipes",
     "quote_resource",
     "recipe_by_id",

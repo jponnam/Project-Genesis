@@ -7,6 +7,8 @@ from pydantic import ValidationError
 
 from civitas.domain import (
     CAMP_FIRE,
+    CAMP_IRRIGATION,
+    CAMP_IRRIGATION_RESEARCH,
     CAMP_LOCATION,
     CAMP_POTTERY,
     CAMP_POTTERY_RESEARCH,
@@ -20,6 +22,7 @@ from civitas.domain import (
     census_research,
     default_research_progress,
     default_technologies,
+    discover_technology,
     research_by_technology_id,
 )
 
@@ -38,12 +41,18 @@ def _world(
     )
 
 
-def test_default_research_progress_seeds_pottery() -> None:
-    """Canonical research tracks undiscovered pottery at zero points."""
-    assert default_research_progress() == (CAMP_POTTERY_RESEARCH,)
+def test_default_research_progress_seeds_pottery_and_irrigation() -> None:
+    """Canonical research tracks undiscovered technologies at zero points."""
+    assert default_research_progress() == (
+        CAMP_POTTERY_RESEARCH,
+        CAMP_IRRIGATION_RESEARCH,
+    )
     assert CAMP_POTTERY_RESEARCH.technology_id == CAMP_POTTERY.technology_id
     assert CAMP_POTTERY_RESEARCH.points == 0
     assert CAMP_POTTERY_RESEARCH.threshold == 10
+    assert CAMP_IRRIGATION_RESEARCH.technology_id == CAMP_IRRIGATION.technology_id
+    assert CAMP_IRRIGATION_RESEARCH.points == 0
+    assert CAMP_IRRIGATION_RESEARCH.threshold == 10
 
 
 def test_advance_research_increments_and_discovers() -> None:
@@ -62,7 +71,7 @@ def test_advance_research_increments_and_discovers() -> None:
     for _ in range(9):
         world, outcomes = advance_research(world, points_per_tick=1)
     assert outcomes[0].discovered is True
-    assert world.research_progress == ()
+    assert world.research_progress == (CAMP_IRRIGATION_RESEARCH,)
     assert world.technologies[1].discovered is True
     assert world.technologies[1].kind is TechnologyKind.POTTERY
 
@@ -76,8 +85,30 @@ def test_advance_research_large_step_discovers_immediately() -> None:
     world, outcomes = advance_research(world, points_per_tick=10)
     assert outcomes[0].discovered is True
     assert outcomes[0].points_after == 10
-    assert world.research_progress == ()
+    assert world.research_progress == (CAMP_IRRIGATION_RESEARCH,)
     assert world.technologies[1].discovered is True
+
+
+def test_irrigation_research_locked_until_pottery_discovered() -> None:
+    """Irrigation progress is preserved but blocked until pottery is discovered."""
+    world = _world(
+        Agent.create(agent_id=0, name="A"),
+        research_progress=default_research_progress(),
+    )
+    world, outcomes = advance_research(world, points_per_tick=1)
+    assert [outcome.technology_id for outcome in outcomes] == [
+        CAMP_POTTERY.technology_id
+    ]
+    irrigation = research_by_technology_id(world, CAMP_IRRIGATION.technology_id)
+    assert irrigation == CAMP_IRRIGATION_RESEARCH
+
+    discovered = discover_technology(world, CAMP_POTTERY.technology_id)
+    assert discovered is not None
+    world, outcomes = advance_research(discovered, points_per_tick=1)
+    assert [outcome.technology_id for outcome in outcomes] == [
+        CAMP_IRRIGATION.technology_id
+    ]
+    assert outcomes[0].points_after == 1
 
 
 def test_census_research_counts() -> None:
