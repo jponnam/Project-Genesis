@@ -92,6 +92,7 @@ class InfrastructureSystem:
                     active_bathhouse_count=snap.active_bathhouse_count,
                     active_bridge_count=snap.active_bridge_count,
                     active_scaffold_count=snap.active_scaffold_count,
+                    active_waystation_count=snap.active_waystation_count,
                 )
             )
         return world

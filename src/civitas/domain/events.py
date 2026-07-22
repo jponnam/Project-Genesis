@@ -621,6 +621,7 @@ class InfrastructuresObserved(DomainEvent):
     active_bathhouse_count: NonNegativeInt = 0
     active_bridge_count: NonNegativeInt = 0
     active_scaffold_count: NonNegativeInt = 0
+    active_waystation_count: NonNegativeInt = 0
 
 
 class TechnologyCreated(DomainEvent):

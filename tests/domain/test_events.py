@@ -961,6 +961,7 @@ def test_infrastructure_created_and_observed_round_trips() -> None:
         active_bathhouse_count=1,
         active_bridge_count=1,
         active_scaffold_count=1,
+        active_waystation_count=1,
     )
     restored = event_from_record(observed.to_record())
     assert isinstance(restored, InfrastructuresObserved)
@@ -975,6 +976,7 @@ def test_infrastructure_created_and_observed_round_trips() -> None:
     assert restored.active_bathhouse_count == 1
     assert restored.active_bridge_count == 1
     assert restored.active_scaffold_count == 1
+    assert restored.active_waystation_count == 1
 
     funded = InfrastructureBuilt(
         sequence=27,

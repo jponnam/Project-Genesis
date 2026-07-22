@@ -104,6 +104,7 @@ from civitas.domain import (
     STOREHOUSE_FOOD_GATHER_BONUS,
     SURVEYING_RETRIEVAL_LIMIT_BONUS,
     TEMPLE_REST_RESTORE_BONUS,
+    WAYSTATION_FOOD_GATHER_BONUS,
     WELL_DRINK_RESTORE_BONUS,
     WORKSHOP_PRODUCE_ENERGY_DISCOUNT,
     WRITING_TEACHINGS_PER_KNOWER_BONUS,
@@ -171,6 +172,7 @@ from civitas.domain import (
     location_has_active_stoa,
     location_has_active_storehouse,
     location_has_active_temple,
+    location_has_active_waystation,
     location_has_active_well,
     location_has_active_workshop,
     market_fee_for,
@@ -748,8 +750,6 @@ def test_quarantine_stacks_with_rest_restore_sources() -> None:
     assert effective_rest_restore(world, agent=world.agents[1]) == pytest.approx(
         DEFAULT_REST_RESTORE + infirmary_bonus
     )
-
-
 
 
 def test_zoning_boosts_eat_restore_for_living_subjects() -> None:
@@ -2116,6 +2116,74 @@ def test_storehouse_boosts_food_gather_for_colocated_agents() -> None:
     assert snap.move_energy_cost_bps == round(DEFAULT_MOVE_ENERGY_COST * 10_000)
 
 
+def test_waystation_boosts_food_gather_for_colocated_agents() -> None:
+    """Active waystations add a food gather bonus at their seat location."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 0, 0, "Camp Waystation", InfrastructureKind.WAYSTATION
+            ),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_waystation(world, agent.location_id) is True
+    assert (
+        gather_amount_bonus(world, "food", location_id=agent.location_id)
+        == WAYSTATION_FOOD_GATHER_BONUS
+    )
+    assert gather_amount_bonus(world, "food") == 0
+    assert (
+        effective_gather_amount(world, "food", agent=agent)
+        == DEFAULT_GATHER_AMOUNT + WAYSTATION_FOOD_GATHER_BONUS
+    )
+    snap = census_effects(world)
+    assert snap.active_storehouse_count == 0
+    assert snap.food_gather_amount == (
+        DEFAULT_GATHER_AMOUNT + WAYSTATION_FOOD_GATHER_BONUS
+    )
+
+
+def test_waystation_stacks_with_storehouse_food_gather() -> None:
+    """Waystation and storehouse food gather bonuses stack at the same seat."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 0, 0, "Camp Storehouse", InfrastructureKind.STOREHOUSE
+            ),
+            Infrastructure.create(
+                1, 0, 0, 0, "Camp Waystation", InfrastructureKind.WAYSTATION
+            ),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_storehouse(world, agent.location_id) is True
+    assert location_has_active_waystation(world, agent.location_id) is True
+    assert gather_amount_bonus(world, "food", location_id=agent.location_id) == (
+        STOREHOUSE_FOOD_GATHER_BONUS + WAYSTATION_FOOD_GATHER_BONUS
+    )
+    assert (
+        effective_gather_amount(world, "food", agent=agent)
+        == DEFAULT_GATHER_AMOUNT
+        + STOREHOUSE_FOOD_GATHER_BONUS
+        + WAYSTATION_FOOD_GATHER_BONUS
+    )
+    snap = census_effects(world)
+    assert snap.active_storehouse_count == 1
+    assert snap.food_gather_amount == (
+        DEFAULT_GATHER_AMOUNT
+        + STOREHOUSE_FOOD_GATHER_BONUS
+        + WAYSTATION_FOOD_GATHER_BONUS
+    )
 
 
 def test_scaffold_boosts_wood_gather_for_colocated_agents() -> None:
@@ -2307,9 +2375,7 @@ def test_compass_reduces_move_energy_society_wide() -> None:
             for item in default_technologies()
         ),
         innovations=tuple(
-            active_compass
-            if item.innovation_id == CAMP_COMPASS.innovation_id
-            else item
+            active_compass if item.innovation_id == CAMP_COMPASS.innovation_id else item
             for item in default_innovations()
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
@@ -2353,9 +2419,7 @@ def test_compass_stacks_with_road_bridge_and_building_codes() -> None:
             for item in default_technologies()
         ),
         innovations=tuple(
-            active_compass
-            if item.innovation_id == CAMP_COMPASS.innovation_id
-            else item
+            active_compass if item.innovation_id == CAMP_COMPASS.innovation_id else item
             for item in default_innovations()
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
@@ -2405,9 +2469,7 @@ def test_passage_stacks_with_road_bridge_building_codes_and_compass() -> None:
             for item in default_technologies()
         ),
         innovations=tuple(
-            active_compass
-            if item.innovation_id == CAMP_COMPASS.innovation_id
-            else item
+            active_compass if item.innovation_id == CAMP_COMPASS.innovation_id else item
             for item in default_innovations()
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
@@ -2491,9 +2553,7 @@ def test_caravan_stacks_with_road_bridge_building_codes_passage_and_compass() ->
             for item in default_technologies()
         ),
         innovations=tuple(
-            active_compass
-            if item.innovation_id == CAMP_COMPASS.innovation_id
-            else item
+            active_compass if item.innovation_id == CAMP_COMPASS.innovation_id else item
             for item in default_innovations()
         ),
         agents=(Agent.create(agent_id=0, name="A"),),

@@ -2,15 +2,16 @@
 
 Phase 5 Milestone 6 plus Phase 9 Milestones 5-8, Phase 10
 Milestones 3 and 9, Phase 11 Milestones 4 and 9, Phase 12
-Milestones 4 and 9, and Phase 13 Milestones 4 and 9. Infrastructure
-pieces attach to a city seat inside a government jurisdiction. This
-package seeds a single ``WELL`` kind; ``STOREHOUSE``, ``ROAD``,
-``SCRIPTORIUM``, ``STOA``, ``OBSERVATORY``, ``SHRINE``, ``CLINIC``,
-``BATHHOUSE``, ``BRIDGE``, and ``SCAFFOLD`` are available via free create
-or paid construction. Governments pay via ``build_infrastructure``;
-institutions pay via ``build_infrastructure_from_institution``. Effect
-wiring applies WELL drink restore, STOREHOUSE food gather, SCAFFOLD wood
-gather, ROAD/BRIDGE move-energy discounts, SCRIPTORIUM/STOA
+Milestones 4 and 9, Phase 13 Milestones 4 and 9, and Phase 14
+Milestone 4. Infrastructure pieces attach to a city seat inside a
+government jurisdiction. This package seeds a single ``WELL`` kind;
+``STOREHOUSE``, ``ROAD``, ``SCRIPTORIUM``, ``STOA``, ``OBSERVATORY``,
+``SHRINE``, ``CLINIC``, ``BATHHOUSE``, ``BRIDGE``, ``SCAFFOLD``, and
+``WAYSTATION`` are available via free create or paid construction.
+Governments pay via ``build_infrastructure``; institutions pay via
+``build_infrastructure_from_institution``. Effect wiring applies WELL
+drink restore, STOREHOUSE/WAYSTATION food gather (stacking), SCAFFOLD
+wood gather, ROAD/BRIDGE move-energy discounts, SCRIPTORIUM/STOA
 teachings-per-knower bonuses, OBSERVATORY retrieval-limit bonuses,
 SHRINE/CLINIC drink restore (stacking with WELL), and BATHHOUSE rest
 restore for colocated agents.
@@ -55,6 +56,7 @@ class InfrastructureKind(StrEnum):
     BATHHOUSE = "bathhouse"
     BRIDGE = "bridge"
     SCAFFOLD = "scaffold"
+    WAYSTATION = "waystation"
 
 
 # Canonical treasury cost to construct each infrastructure kind.
@@ -69,6 +71,7 @@ DEFAULT_CLINIC_BUILD_COST: int = 8
 DEFAULT_BATHHOUSE_BUILD_COST: int = 12
 DEFAULT_BRIDGE_BUILD_COST: int = 9
 DEFAULT_SCAFFOLD_BUILD_COST: int = 10
+DEFAULT_WAYSTATION_BUILD_COST: int = 8
 INFRASTRUCTURE_BUILD_COSTS: dict[InfrastructureKind, int] = {
     InfrastructureKind.WELL: DEFAULT_WELL_BUILD_COST,
     InfrastructureKind.STOREHOUSE: DEFAULT_STOREHOUSE_BUILD_COST,
@@ -81,6 +84,7 @@ INFRASTRUCTURE_BUILD_COSTS: dict[InfrastructureKind, int] = {
     InfrastructureKind.BATHHOUSE: DEFAULT_BATHHOUSE_BUILD_COST,
     InfrastructureKind.BRIDGE: DEFAULT_BRIDGE_BUILD_COST,
     InfrastructureKind.SCAFFOLD: DEFAULT_SCAFFOLD_BUILD_COST,
+    InfrastructureKind.WAYSTATION: DEFAULT_WAYSTATION_BUILD_COST,
 }
 
 
@@ -159,6 +163,7 @@ class InfrastructureCensus(BaseModel):
     active_bathhouse_count: NonNegativeInt = 0
     active_bridge_count: NonNegativeInt = 0
     active_scaffold_count: NonNegativeInt = 0
+    active_waystation_count: NonNegativeInt = 0
 
 
 def infrastructure_by_id(
@@ -402,6 +407,9 @@ def census_infrastructure(world: World) -> InfrastructureCensus:
     active_scaffolds = sum(
         1 for item in active if item.kind is InfrastructureKind.SCAFFOLD
     )
+    active_waystations = sum(
+        1 for item in active if item.kind is InfrastructureKind.WAYSTATION
+    )
     return InfrastructureCensus(
         tick=world.tick,
         infrastructure_count=len(items),
@@ -420,4 +428,5 @@ def census_infrastructure(world: World) -> InfrastructureCensus:
         active_bathhouse_count=active_bathhouses,
         active_bridge_count=active_bridges,
         active_scaffold_count=active_scaffolds,
+        active_waystation_count=active_waystations,
     )
