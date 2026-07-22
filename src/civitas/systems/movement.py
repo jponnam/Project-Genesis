@@ -65,7 +65,12 @@ class MovementSystem:
         agent = world.agent_by_id(agent_id)
         if agent is None or not agent.is_alive():
             return False
-        if agent.needs.energy < self._config.energy_cost:
+        cost = effective_move_energy_cost(
+            world,
+            agent,
+            base=float(self._config.energy_cost),
+        )
+        if agent.needs.energy < cost:
             return False
         if not is_adjacent(world, agent.location_id, destination_id):
             return False

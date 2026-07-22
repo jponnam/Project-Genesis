@@ -9,12 +9,14 @@ from civitas.domain import (
     APOTHECARY_DRINK_RESTORE_BONUS,
     ASSEMBLY_SOCIALIZE_RESTORE_BONUS,
     BATHHOUSE_REST_RESTORE_BONUS,
+    BUILDING_CODES_MOVE_ENERGY_DISCOUNT,
     CAMP_ASEPSIS,
     CAMP_HYGIENE,
     CAMP_LOCATION,
     CAMP_ORATION,
     CAMP_RHETORIC,
     DEFAULT_DRINK_RESTORE,
+    DEFAULT_MOVE_ENERGY_COST,
     DEFAULT_REST_RESTORE,
     DEFAULT_SOCIALIZE_RESTORE,
     HOSPITAL_REST_RESTORE_BONUS,
@@ -561,6 +563,35 @@ def test_move_relocates_agent_and_emits_agent_moved() -> None:
     assert any(isinstance(event, AgentMoved) for event in bus.history)
     completed = [event for event in bus.history if isinstance(event, ActionCompleted)]
     assert completed[0].success is True
+
+
+def test_move_uses_building_codes_effective_energy_cost() -> None:
+    """MOVE through ActionExecutor passes the agent into effective cost lookup."""
+    plain = Location.create(1, "Plain", 1, 0, kind=LocationKind.PLAIN)
+    agent = Agent.create(
+        agent_id=0,
+        name="A",
+        location_id=0,
+        needs=Needs(food=1.0, water=1.0, energy=0.04, social=1.0, safety=1.0),
+    )
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION, plain),
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        laws=(Law.create(0, 0, "Camp Building Codes", LawKind.BUILDING_CODES),),
+        agents=(agent,),
+    )
+    choice = ActionChoice(
+        agent_id=AgentId(value=0),
+        action=ActionKind.MOVE,
+        utility=1.0,
+        target_location_id=LocationId(value=1),
+    )
+    updated = ActionExecutor().execute(world, choice)
+    assert updated.agents[0].location_id.value == 1
+    assert updated.agents[0].needs.energy == pytest.approx(
+        0.04 - (DEFAULT_MOVE_ENERGY_COST - BUILDING_CODES_MOVE_ENERGY_DISCOUNT)
+    )
 
 
 def test_move_fails_when_destination_full() -> None:
