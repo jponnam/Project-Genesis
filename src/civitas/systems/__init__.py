@@ -21,6 +21,7 @@ from civitas.systems.policy import PolicyConfig, UtilityPolicy
 from civitas.systems.population import PopulationConfig, PopulationSystem
 from civitas.systems.prices import PriceConfig, PriceSystem
 from civitas.systems.production import ProductionConfig, ProductionSystem
+from civitas.systems.taxes import TaxConfig, TaxSystem
 from civitas.systems.trading import TradingConfig, TradingSystem
 from civitas.systems.water import WaterConfig, WaterSystem
 
@@ -53,6 +54,8 @@ __all__ = [
     "PriceSystem",
     "ProductionConfig",
     "ProductionSystem",
+    "TaxConfig",
+    "TaxSystem",
     "TradingConfig",
     "TradingSystem",
     "UtilityPolicy",

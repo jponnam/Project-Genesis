@@ -60,6 +60,7 @@ def test_agents_have_stable_ids_names_and_origin_location() -> None:
     assert world.locations[0] == CAMP_LOCATION
     assert world.markets == default_markets()
     assert world.markets[0] == CAMP_MARKET
+    assert world.treasury == 0
     assert world.agents_at(0) == world.agents
 
 

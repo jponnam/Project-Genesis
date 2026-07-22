@@ -20,6 +20,7 @@ from civitas.domain.ids import AgentId, LocationId, MarketId
 from civitas.domain.location import Location
 from civitas.domain.market import Market
 from civitas.domain.time import Tick
+from civitas.domain.types import NonNegativeInt
 
 
 class World(BaseModel):
@@ -31,6 +32,7 @@ class World(BaseModel):
         locations: Places on the map, ordered by ascending ``location_id``.
         markets: Market venues, ordered by ascending ``market_id``.
         agents: Agents ordered by ascending ``agent_id``.
+        treasury: Public money balance collected from taxes.
     """
 
     model_config = ConfigDict(frozen=True, extra="forbid", validate_default=True)
@@ -40,6 +42,7 @@ class World(BaseModel):
     locations: tuple[Location, ...] = ()
     markets: tuple[Market, ...] = ()
     agents: tuple[Agent, ...] = ()
+    treasury: NonNegativeInt = 0
 
     @model_validator(mode="after")
     def world_must_be_consistent(self) -> Self:
@@ -182,7 +185,19 @@ class World(BaseModel):
             locations=self.locations,
             markets=self.markets,
             agents=agents,
+            treasury=self.treasury,
         )
+
+    def with_treasury(self, balance: int) -> World:
+        """Return a copy with ``treasury`` set to ``balance``.
+
+        Raises:
+            ValueError: If ``balance`` is negative.
+        """
+        if balance < 0:
+            msg = f"treasury balance must be >= 0, got {balance}"
+            raise ValueError(msg)
+        return self.model_copy(update={"treasury": balance})
 
     def with_location(self, location: Location) -> World:
         """Return a copy replacing the location that shares ``location_id``.

@@ -118,12 +118,12 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 3 — Milestone 5: Production**
+**Phase 3 — Milestone 6: Taxes**
 
-Deterministic crafting recipes (`Recipe` / `ProductionSystem`) convert
-inventory inputs into crafted outputs (`rations`, `tools`) via the
-`PRODUCE` action. Legal crafts spend energy and emit `ResourceProduced`.
-Taxes are a later Phase 3 milestone.
+Per-tick levies (`TaxSystem`) debit living agents into `World.treasury`
+using a flat poll tax plus optional basis-point wealth tax. Collections
+emit `TaxCollected`. Taxes are disabled by default. Wealth analytics are
+a later Phase 3 milestone.
 
 ### Completed
 
@@ -148,6 +148,7 @@ JSONL storage → `civitas run`
 - Milestone 3: Markets
 - Milestone 4: Prices
 - Milestone 5: Production
+- Milestone 6: Taxes
 
 ## License
 

@@ -20,12 +20,21 @@ from civitas.domain import (
     SimulationCompleted,
     SimulationConfig,
     SimulationStarted,
+    TaxCollected,
     TickCompleted,
     TickStarted,
     WealthObserved,
+    wealth_total,
 )
-from civitas.engine import EventBus, SimulationEngine
-from civitas.systems import BirthConfig, BirthSystem, DeathConfig, DeathSystem
+from civitas.engine import EventBus, SimulationEngine, WorldFactory
+from civitas.systems import (
+    BirthConfig,
+    BirthSystem,
+    DeathConfig,
+    DeathSystem,
+    TaxConfig,
+    TaxSystem,
+)
 
 
 def test_seed_forty_two_runs_are_identical() -> None:
@@ -274,3 +283,27 @@ def test_price_observed_each_tick_including_start() -> None:
     assert observed[0].tick.value == 0
     assert observed[-1].tick.value == 2
     assert all(event.quote_count == 0 for event in observed)
+
+
+def test_default_engine_does_not_collect_taxes() -> None:
+    """Taxes stay disabled unless an enabled TaxSystem is injected."""
+    result = SimulationEngine().run(SimulationConfig(seed=42, ticks=3, agent_count=4))
+    assert result.world.treasury == 0
+    assert not any(isinstance(event, TaxCollected) for event in result.events)
+
+
+def test_enabled_taxes_collect_after_births_each_tick() -> None:
+    """Injected TaxSystem levies once per tick after the roster settles."""
+    config = SimulationConfig(seed=7, ticks=2, agent_count=3)
+    initial_money = wealth_total(WorldFactory().create(config))
+    engine = SimulationEngine(
+        tax_system=TaxSystem(TaxConfig(enabled=True, flat_amount=1, rate_bps=0)),
+        birth_system=BirthSystem(BirthConfig(enabled=False)),
+    )
+    result = engine.run(config)
+    taxes = [event for event in result.events if isinstance(event, TaxCollected)]
+    assert len(taxes) >= 1
+    assert result.world.treasury == len(taxes)
+    assert wealth_total(result.world) + result.world.treasury == initial_money
+    # No taxes at tick 0 observe; first levy is on tick 1.
+    assert taxes[0].tick.value == 1

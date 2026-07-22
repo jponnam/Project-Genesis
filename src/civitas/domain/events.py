@@ -175,6 +175,14 @@ class MoneyTransferred(DomainEvent):
     amount: NonNegativeInt
 
 
+class TaxCollected(DomainEvent):
+    """Emitted when an agent pays tax into the world treasury."""
+
+    agent_id: AgentId
+    amount: NonNegativeInt
+    treasury_after: NonNegativeInt
+
+
 class ResourceTraded(DomainEvent):
     """Emitted when a buyer purchases inventory from a seller."""
 
@@ -297,6 +305,7 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     NeedDecayed,
     PopulationObserved,
     MoneyTransferred,
+    TaxCollected,
     MarketObserved,
     PriceObserved,
     WealthObserved,

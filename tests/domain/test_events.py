@@ -31,6 +31,7 @@ from civitas.domain import (
     ResourceTraded,
     SimulationCompleted,
     SimulationStarted,
+    TaxCollected,
     Tick,
     TickCompleted,
     TickStarted,
@@ -311,6 +312,22 @@ def test_resource_produced_round_trips() -> None:
     assert restored.recipe_id == "tools"
     assert restored.outputs == (("tools", 1),)
     assert restored.agent_id == AgentId(value=1)
+
+
+def test_tax_collected_round_trips() -> None:
+    """TaxCollected serializes levy amounts losslessly."""
+    event = TaxCollected(
+        sequence=9,
+        tick=Tick(value=6),
+        agent_id=AgentId(value=2),
+        amount=3,
+        treasury_after=11,
+    )
+    restored = event_from_record(event.to_record())
+    assert isinstance(restored, TaxCollected)
+    assert restored.amount == 3
+    assert restored.treasury_after == 11
+    assert restored.agent_id == AgentId(value=2)
 
 
 def test_market_created_and_listing_events_round_trip() -> None:
