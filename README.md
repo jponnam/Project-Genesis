@@ -128,11 +128,12 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 16 Milestone 6: Dyer institutions**
+**Phase 16 Milestone 7: Dyeing technology**
 
-``InstitutionKind.DYER`` is a gov-attached institution whose active seat
-grants a market-fee discount that stacks with bureaucracy, harbor, and
-merchant. Not seeded.
+``TechnologyKind.DYEING`` is an undiscovered technology gated behind
+textiles. Its ``MORDANT`` innovation, once active, grants a society-wide
+market-fee discount that stacks with bureaucracy, harbor, merchant, and
+dyer.
 
 ### Completed
 
@@ -298,6 +299,7 @@ JSONL storage → `civitas run`
 - Milestone 4: Fulling mill infrastructure
 - Milestone 5: Mill town cities
 - Milestone 6: Dyer institutions
+- Milestone 7: Dyeing technology
 
 ## License
 
