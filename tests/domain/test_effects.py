@@ -35,6 +35,7 @@ from civitas.domain import (
     LIBRARY_RETRIEVAL_LIMIT_BONUS,
     MATHEMATICS_PRODUCE_ENERGY_DISCOUNT,
     METALLURGY_STONE_GATHER_BONUS,
+    OBSERVATORY_RETRIEVAL_LIMIT_BONUS,
     POTTERY_WATER_GATHER_BONUS,
     ROAD_MOVE_ENERGY_DISCOUNT,
     SCRIPTORIUM_TEACHINGS_PER_KNOWER_BONUS,
@@ -70,6 +71,7 @@ from civitas.domain import (
     location_has_active_bureaucracy,
     location_has_active_guild,
     location_has_active_library,
+    location_has_active_observatory,
     location_has_active_road,
     location_has_active_scriptorium,
     location_has_active_storehouse,
@@ -724,6 +726,67 @@ def test_archive_and_library_retrieval_bonuses_stack() -> None:
         DEFAULT_RETRIEVAL_LIMIT
         + ARCHIVE_RETRIEVAL_LIMIT_BONUS
         + LIBRARY_RETRIEVAL_LIMIT_BONUS
+    )
+
+
+def test_observatory_raises_retrieval_limit_for_colocated_agents() -> None:
+    """Active observatories raise the memory retrieval limit at their seat."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 0, 0, "Camp Observatory", InfrastructureKind.OBSERVATORY
+            ),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_observatory(world, agent.location_id) is True
+    assert effective_retrieval_limit(world, agent) == (
+        DEFAULT_RETRIEVAL_LIMIT + OBSERVATORY_RETRIEVAL_LIMIT_BONUS
+    )
+    bare = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_observatory(bare, bare.agents[0].location_id) is False
+    assert effective_retrieval_limit(bare, bare.agents[0]) == DEFAULT_RETRIEVAL_LIMIT
+
+
+def test_archive_library_and_observatory_retrieval_bonuses_stack() -> None:
+    """Archive, library, and observatory retrieval bonuses stack at one seat."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Library", CityKind.LIBRARY),
+        ),
+        institutions=(
+            Institution.create(0, 0, 1, "Library Archive", InstitutionKind.ARCHIVE),
+        ),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 1, 1, "Library Observatory", InfrastructureKind.OBSERVATORY
+            ),
+        ),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_archive(world, agent.location_id) is True
+    assert location_has_active_library(world, agent.location_id) is True
+    assert location_has_active_observatory(world, agent.location_id) is True
+    assert effective_retrieval_limit(world, agent) == (
+        DEFAULT_RETRIEVAL_LIMIT
+        + ARCHIVE_RETRIEVAL_LIMIT_BONUS
+        + LIBRARY_RETRIEVAL_LIMIT_BONUS
+        + OBSERVATORY_RETRIEVAL_LIMIT_BONUS
     )
 
 

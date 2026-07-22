@@ -85,6 +85,7 @@ class InfrastructureSystem:
                     active_storehouse_count=snap.active_storehouse_count,
                     active_road_count=snap.active_road_count,
                     active_scriptorium_count=snap.active_scriptorium_count,
+                    active_observatory_count=snap.active_observatory_count,
                 )
             )
         return world
