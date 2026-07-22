@@ -583,6 +583,7 @@ class InstitutionsObserved(DomainEvent):
     active_granary_count: NonNegativeInt = 0
     active_husbandman_count: NonNegativeInt = 0
     active_agronomist_count: NonNegativeInt = 0
+    active_weaver_count: NonNegativeInt = 0
     total_budget: NonNegativeInt = 0
     funded_count: NonNegativeInt = 0
 

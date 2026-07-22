@@ -98,6 +98,7 @@ class InstitutionSystem:
                     active_granary_count=snap.active_granary_count,
                     active_husbandman_count=snap.active_husbandman_count,
                     active_agronomist_count=snap.active_agronomist_count,
+                    active_weaver_count=snap.active_weaver_count,
                     total_budget=snap.total_budget,
                     funded_count=snap.funded_count,
                 )
