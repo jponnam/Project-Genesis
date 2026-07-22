@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from civitas.domain import (
+    CAMP_CITY,
     CAMP_COUNCIL,
     CAMP_GOVERNMENT,
     CAMP_LOCATION,
@@ -10,6 +11,7 @@ from civitas.domain import (
     CAMP_POLL_TAX_LAW,
     CANONICAL_SEED,
     AgentSpawned,
+    CityCreated,
     GovernmentCreated,
     InstitutionCreated,
     LawCreated,
@@ -17,6 +19,7 @@ from civitas.domain import (
     MarketCreated,
     SimulationConfig,
     SimulationStarted,
+    default_cities,
     default_governments,
     default_institutions,
     default_laws,
@@ -76,6 +79,8 @@ def test_agents_have_stable_ids_names_and_origin_location() -> None:
     assert world.elections == ()
     assert world.institutions == default_institutions()
     assert world.institutions[0] == CAMP_COUNCIL
+    assert world.cities == default_cities()
+    assert world.cities[0] == CAMP_CITY
     assert world.treasury == 0
     assert world.agents_at(0) == world.agents
 
@@ -97,8 +102,8 @@ def test_starting_money_within_configured_bounds() -> None:
     assert len(set(monies)) > 1
 
 
-def test_create_publishes_started_locations_markets_govs_laws_insts_spawned() -> None:
-    """Bus receives Started, locations, markets, govs, laws, institutions, spawns."""
+def test_create_publishes_started_through_cities_then_spawned() -> None:
+    """Bus receives Started, locations, markets, govs, laws, insts, cities, spawns."""
     bus = EventBus()
     config = SimulationConfig(seed=42, agent_count=2, ticks=5, run_name="w")
     world = WorldFactory().create(config, bus=bus)
@@ -127,11 +132,16 @@ def test_create_publishes_started_locations_markets_govs_laws_insts_spawned() ->
     assert len(institutions) == 1
     assert institutions[0].name == "Camp Council"
     assert institutions[0].kind == "council"
+    cities = [event for event in bus.history if isinstance(event, CityCreated)]
+    assert len(cities) == 1
+    assert cities[0].name == "Camp City"
+    assert cities[0].kind == "settlement"
+    assert cities[0].is_capital is True
     spawned = [event for event in bus.history if isinstance(event, AgentSpawned)]
     assert len(spawned) == 2
     assert spawned[0].name == world.agents[0].name
     assert spawned[1].agent_id.value == 1
-    # Markets → governments → laws → institutions after locations, before spawns.
+    # Markets → governments → laws → institutions → cities before spawns.
     first_market = next(
         index
         for index, event in enumerate(bus.history)
@@ -152,6 +162,11 @@ def test_create_publishes_started_locations_markets_govs_laws_insts_spawned() ->
         for index, event in enumerate(bus.history)
         if isinstance(event, InstitutionCreated)
     )
+    first_city = next(
+        index
+        for index, event in enumerate(bus.history)
+        if isinstance(event, CityCreated)
+    )
     first_spawn = next(
         index
         for index, event in enumerate(bus.history)
@@ -159,8 +174,15 @@ def test_create_publishes_started_locations_markets_govs_laws_insts_spawned() ->
     )
     assert created[-1].sequence < markets[0].sequence < governments[0].sequence
     assert governments[0].sequence < laws[0].sequence < institutions[0].sequence
-    assert institutions[0].sequence < spawned[0].sequence
-    assert first_market < first_government < first_law < first_institution < first_spawn
+    assert institutions[0].sequence < cities[0].sequence < spawned[0].sequence
+    assert (
+        first_market
+        < first_government
+        < first_law
+        < first_institution
+        < first_city
+        < first_spawn
+    )
 
 
 def test_map_is_independent_of_seed() -> None:
@@ -173,4 +195,5 @@ def test_map_is_independent_of_seed() -> None:
     assert left.governments == right.governments
     assert left.laws == right.laws
     assert left.institutions == right.institutions
+    assert left.cities == right.cities
     assert left.agents[0].personality != right.agents[0].personality

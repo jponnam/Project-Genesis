@@ -15,10 +15,12 @@ from typing import Self
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from civitas.domain.agent import Agent
+from civitas.domain.cities import City
 from civitas.domain.config import SimulationConfig
 from civitas.domain.governments import Government
 from civitas.domain.ids import (
     AgentId,
+    CityId,
     ElectionId,
     GovernmentId,
     InstitutionId,
@@ -47,6 +49,7 @@ class World(BaseModel):
         laws: Statutes, ordered by ascending ``law_id``.
         elections: Archived elections, ordered by ascending ``election_id``.
         institutions: Civic organizations, ordered by ascending ``institution_id``.
+        cities: Settlements, ordered by ascending ``city_id``.
         agents: Agents ordered by ascending ``agent_id``.
         treasury: Public money balance collected from taxes.
     """
@@ -61,6 +64,7 @@ class World(BaseModel):
     laws: tuple[Law, ...] = ()
     elections: tuple[Election, ...] = ()
     institutions: tuple[Institution, ...] = ()
+    cities: tuple[City, ...] = ()
     agents: tuple[Agent, ...] = ()
     treasury: NonNegativeInt = 0
 
@@ -262,6 +266,48 @@ class World(BaseModel):
                     raise ValueError(msg)
                 active_kind_govs.add(key)
 
+        city_ids = [city.city_id.value for city in self.cities]
+        if len(city_ids) != len(set(city_ids)):
+            msg = "city ids must be unique"
+            raise ValueError(msg)
+        if city_ids != sorted(city_ids):
+            msg = "cities must be ordered by ascending city_id"
+            raise ValueError(msg)
+
+        city_locations: set[int] = set()
+        active_capitals: set[int] = set()
+        for city in self.cities:
+            gov_value = city.government_id.value
+            if gov_value not in gov_by_id:
+                msg = (
+                    f"city {city.city_id.value} references unknown "
+                    f"government {gov_value}"
+                )
+                raise ValueError(msg)
+            government = gov_by_id[gov_value]
+            if city.location_id.value not in known:
+                msg = (
+                    f"city {city.city_id.value} references unknown "
+                    f"location {city.location_id.value}"
+                )
+                raise ValueError(msg)
+            if city.location_id.value in city_locations:
+                msg = "at most one city is allowed per location"
+                raise ValueError(msg)
+            city_locations.add(city.location_id.value)
+            jurisdiction = {location.value for location in government.jurisdiction}
+            if city.location_id.value not in jurisdiction:
+                msg = (
+                    f"city {city.city_id.value} seat must lie "
+                    f"inside government jurisdiction"
+                )
+                raise ValueError(msg)
+            if city.active and city.is_capital:
+                if gov_value in active_capitals:
+                    msg = "at most one active capital city per government"
+                    raise ValueError(msg)
+                active_capitals.add(gov_value)
+
         return self
 
     @property
@@ -349,6 +395,14 @@ class World(BaseModel):
                 return institution
         return None
 
+    def city_by_id(self, city_id: CityId | int) -> City | None:
+        """Return the city with ``city_id``, or ``None`` if absent."""
+        target = city_id if isinstance(city_id, CityId) else CityId(value=city_id)
+        for city in self.cities:
+            if city.city_id == target:
+                return city
+        return None
+
     def agents_at(self, location_id: LocationId | int) -> tuple[Agent, ...]:
         """Return agents occupying ``location_id`` in stable id order."""
         target = (
@@ -399,6 +453,7 @@ class World(BaseModel):
             laws=self.laws,
             elections=self.elections,
             institutions=self.institutions,
+            cities=self.cities,
             agents=agents,
             treasury=self.treasury,
         )
@@ -528,3 +583,22 @@ class World(BaseModel):
             )
             raise ValueError(msg)
         return self.model_copy(update={"institutions": tuple(updated)})
+
+    def with_city(self, city: City) -> World:
+        """Return a copy replacing the city that shares ``city_id``.
+
+        Raises:
+            ValueError: If no city with that id exists.
+        """
+        updated: list[City] = []
+        found = False
+        for existing in self.cities:
+            if existing.city_id == city.city_id:
+                updated.append(city)
+                found = True
+            else:
+                updated.append(existing)
+        if not found:
+            msg = f"city id {city.city_id.value} not found in world"
+            raise ValueError(msg)
+        return self.model_copy(update={"cities": tuple(updated)})

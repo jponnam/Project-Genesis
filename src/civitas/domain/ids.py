@@ -163,3 +163,22 @@ class InstitutionId(BaseModel):
         if isinstance(other, InstitutionId):
             return self.value < other.value
         return NotImplemented
+
+
+class CityId(BaseModel):
+    """Unique city / settlement identifier within a simulation run."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid", validate_default=True)
+
+    value: NonNegativeInt = Field(description="Stable city id for the run.")
+
+    def __int__(self) -> int:
+        return self.value
+
+    def __str__(self) -> str:
+        return str(self.value)
+
+    def __lt__(self, other: object) -> Any:
+        if isinstance(other, CityId):
+            return self.value < other.value
+        return NotImplemented

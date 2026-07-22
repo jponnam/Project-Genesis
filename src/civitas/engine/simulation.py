@@ -17,6 +17,7 @@ from civitas.engine.world_factory import WorldFactory
 from civitas.systems import (
     ActionExecutor,
     BirthSystem,
+    CitySystem,
     DeathSystem,
     EconomySystem,
     FamilySystem,
@@ -82,13 +83,14 @@ class SimulationEngine:
     19. ``LawSystem.observe``
     20. ``VoteSystem.observe``
     21. ``InstitutionSystem.observe``
+    22. ``CitySystem.observe``
 
     Initial population, wealth, market, price, relationship, reputation,
-    family, network, government, law, election, and institution censuses
-    are also observed at tick 0 immediately after world creation. Death
-    runs after actions (recovery chance) and before birth so newly dead
-    parents cannot reproduce. Birth and death both complete before taxes
-    so the levy sees the settled roster. Taxes complete before
+    family, network, government, law, election, institution, and city
+    censuses are also observed at tick 0 immediately after world creation.
+    Death runs after actions (recovery chance) and before birth so newly
+    dead parents cannot reproduce. Birth and death both complete before
+    taxes so the levy sees the settled roster. Taxes complete before
     ``TickCompleted`` so wealth censuses reflect post-levy balances. Taxes
     are disabled by default; when enabled, active ``TAX_SCHEDULE`` laws
     override levy parameters. Relationship observation is wired each tick;
@@ -102,7 +104,9 @@ class SimulationEngine:
     governments and reports statute activity. Election observation follows
     laws and reports the archived vote history; elections are not
     auto-conducted each tick. Institution observation follows elections
-    and reports civic organizations without mutating agents.
+    and reports civic organizations without mutating agents. City
+    observation follows institutions and reports settlement residency
+    without mutating agents.
     """
 
     def __init__(
@@ -127,6 +131,7 @@ class SimulationEngine:
         law_system: LawSystem | None = None,
         vote_system: VoteSystem | None = None,
         institution_system: InstitutionSystem | None = None,
+        city_system: CitySystem | None = None,
     ) -> None:
         self._world_factory = (
             world_factory if world_factory is not None else WorldFactory()
@@ -171,6 +176,7 @@ class SimulationEngine:
             if institution_system is not None
             else InstitutionSystem()
         )
+        self._city_system = city_system if city_system is not None else CitySystem()
 
     def run(
         self,
@@ -196,6 +202,7 @@ class SimulationEngine:
         world = self._law_system.observe(world, bus=event_bus)
         world = self._vote_system.observe(world, bus=event_bus)
         world = self._institution_system.observe(world, bus=event_bus)
+        world = self._city_system.observe(world, bus=event_bus)
 
         for tick in clock.run():
             world = world.with_tick(tick)
@@ -219,6 +226,7 @@ class SimulationEngine:
             world = self._law_system.observe(world, bus=event_bus)
             world = self._vote_system.observe(world, bus=event_bus)
             world = self._institution_system.observe(world, bus=event_bus)
+            world = self._city_system.observe(world, bus=event_bus)
 
         event_bus.publish(
             SimulationCompleted(
