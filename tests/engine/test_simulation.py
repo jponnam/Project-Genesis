@@ -9,6 +9,7 @@ from civitas.domain import (
     AgentDied,
     AgentMoved,
     AgentSpawned,
+    FamiliesObserved,
     LocationCreated,
     MarketCreated,
     MarketObserved,
@@ -359,3 +360,25 @@ def test_reputation_observed_each_tick_including_start() -> None:
         if isinstance(event, ReputationObserved)
     ]
     assert all(rep > rel for rel, rep in zip(rel_indexes, rep_indexes, strict=True))
+
+
+def test_families_observed_each_tick_including_start() -> None:
+    """Engine emits an initial family census plus one per executed tick."""
+    result = SimulationEngine().run(SimulationConfig(seed=42, ticks=3, agent_count=4))
+    observed = [event for event in result.events if isinstance(event, FamiliesObserved)]
+    assert len(observed) == 4  # tick 0 + ticks 1..3
+    assert observed[0].tick.value == 0
+    assert observed[-1].tick.value == 3
+    assert all(event.founder_count == event.living_agent_count for event in observed)
+    # Families follow reputation in the observe chain.
+    rep_indexes = [
+        i
+        for i, event in enumerate(result.events)
+        if isinstance(event, ReputationObserved)
+    ]
+    fam_indexes = [
+        i
+        for i, event in enumerate(result.events)
+        if isinstance(event, FamiliesObserved)
+    ]
+    assert all(fam > rep for rep, fam in zip(rep_indexes, fam_indexes, strict=True))

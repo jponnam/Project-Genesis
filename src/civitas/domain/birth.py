@@ -3,7 +3,8 @@
 Birth is system-driven (not a scored action). Domain helpers decide
 eligibility and produce the updated world so the birth system and tests
 share one legality contract. Systems must not call each other; they call
-these helpers and emit ``AgentBorn``.
+these helpers and emit ``AgentBorn``. Children persist
+``identity.parent_id`` for kinship analytics.
 """
 
 from __future__ import annotations
@@ -148,6 +149,7 @@ def apply_birth(
         name=f"Agent-{child_id}",
         location_id=current_parent.location_id.value,
         birth_tick=world.tick.value,
+        parent_id=current_parent.agent_id.value,
         personality=inherit_personality(
             current_parent.personality,
             regression=personality_regression,

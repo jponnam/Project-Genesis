@@ -27,10 +27,18 @@ def test_agent_create_defaults() -> None:
     assert agent.money == 10
     assert agent.status == AgentStatus.ALIVE
     assert agent.is_alive()
+    assert agent.parent_id is None
     assert agent.needs.food == 1.0
     assert agent.personality.openness == 0.5
     assert agent.inventory.stacks == ()
     assert agent.memory.records == ()
+
+
+def test_agent_create_accepts_parent_id() -> None:
+    """Born agents may record a parent id on identity."""
+    agent = Agent.create(agent_id=2, name="Bea", parent_id=1)
+    assert agent.parent_id == AgentId(value=1)
+    assert agent.identity.parent_id == AgentId(value=1)
 
 
 def test_agent_is_frozen() -> None:

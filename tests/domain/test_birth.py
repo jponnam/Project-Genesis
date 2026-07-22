@@ -112,6 +112,8 @@ def test_apply_birth_spawns_child_and_costs_parent_energy() -> None:
     assert child.agent_id.value == 1
     assert child.name == "Agent-1"
     assert child.identity.birth_tick.value == 12
+    assert child.parent_id is not None
+    assert child.parent_id.value == 0
     assert child.location_id == parent.location_id
     assert child.personality.openness == pytest.approx(0.75)
     updated_parent = updated.agent_by_id(0)

@@ -12,6 +12,7 @@ from civitas.systems.birth import BirthConfig, BirthSystem
 from civitas.systems.death import DeathConfig, DeathSystem
 from civitas.systems.economy import EconomyConfig, EconomySystem
 from civitas.systems.energy import EnergyConfig, EnergySystem
+from civitas.systems.families import FamilyConfig, FamilySystem
 from civitas.systems.food import FoodConfig, FoodSystem
 from civitas.systems.gathering import GatheringConfig, GatheringSystem
 from civitas.systems.market import MarketConfig, MarketSystem
@@ -39,6 +40,8 @@ __all__ = [
     "EconomySystem",
     "EnergyConfig",
     "EnergySystem",
+    "FamilyConfig",
+    "FamilySystem",
     "FoodConfig",
     "FoodSystem",
     "GatheringConfig",

@@ -55,9 +55,7 @@ def test_observe_reports_top_agent_from_inbound_bonds() -> None:
     assert world is not None
     bus = EventBus()
     ReputationSystem().observe(world, bus=bus)
-    events = [
-        event for event in bus.history if isinstance(event, ReputationObserved)
-    ]
+    events = [event for event in bus.history if isinstance(event, ReputationObserved)]
     event = events[0]
     assert event.top_agent_id is not None
     assert event.top_agent_id.value == 0

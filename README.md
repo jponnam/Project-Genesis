@@ -118,13 +118,13 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 4 — Milestone 3: Reputation**
+**Phase 4 — Milestone 4: Families**
 
-Public standing is an observe-only analytic over inbound living-peer bonds
-(`census_reputation` / `ReputationSystem.observe`). Reciprocity weights a
-small bonus; inequality metrics and `ReputationObserved` mirror the wealth
-census pattern. Families and social-network analytics remain later Phase 4
-milestones.
+Birth persists `identity.parent_id`. Kinship helpers
+(`parent_of` / `children_of` / `siblings_of` / `root_of`) and
+`census_families` / `FamilySystem.observe` emit `FamiliesObserved` lineage
+metrics without mutating agents. Social-network analytics remain a later
+Phase 4 milestone.
 
 ### Completed
 
@@ -156,6 +156,7 @@ JSONL storage → `civitas run`
 - Milestone 1: Relationships
 - Milestone 2: Trust
 - Milestone 3: Reputation
+- Milestone 4: Families
 
 ## License
 

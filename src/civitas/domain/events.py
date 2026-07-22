@@ -332,6 +332,23 @@ class ReputationObserved(DomainEvent):
     top_standing: UnitInterval | None = None
 
 
+class FamiliesObserved(DomainEvent):
+    """Emitted when a kinship / family-lineage census is taken."""
+
+    living_agent_count: NonNegativeInt
+    founder_count: NonNegativeInt
+    parented_count: NonNegativeInt
+    orphan_count: NonNegativeInt
+    living_with_living_parent: NonNegativeInt
+    lineage_count: NonNegativeInt
+    mean_lineage_size: float
+    max_lineage_size: NonNegativeInt
+    max_generation_depth: NonNegativeInt
+    parents_with_living_children: NonNegativeInt
+    mean_living_children: float
+    max_living_children: NonNegativeInt
+
+
 CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     SimulationStarted,
     SimulationCompleted,
@@ -362,6 +379,7 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     RelationshipUpdated,
     RelationshipsObserved,
     ReputationObserved,
+    FamiliesObserved,
 )
 
 EVENT_TYPE_REGISTRY: dict[str, type[DomainEvent]] = {
