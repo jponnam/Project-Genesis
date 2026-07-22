@@ -51,6 +51,7 @@ def test_observe_emits_without_mutating_world() -> None:
     assert events[0].smithing_knower_count == 0
     assert events[0].toolmaking_knower_count == 0
     assert events[0].carpentry_knower_count == 0
+    assert events[0].joinery_knower_count == 0
     assert events[0].coverage_bps == 10_000
 
 

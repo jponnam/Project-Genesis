@@ -96,6 +96,7 @@ class TechSystem:
                     discovered_smithing_count=snap.discovered_smithing_count,
                     discovered_toolmaking_count=snap.discovered_toolmaking_count,
                     discovered_carpentry_count=snap.discovered_carpentry_count,
+                    discovered_joinery_count=snap.discovered_joinery_count,
                     locked_count=snap.locked_count,
                     researchable_count=snap.researchable_count,
                 )

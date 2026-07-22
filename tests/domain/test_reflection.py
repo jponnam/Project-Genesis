@@ -17,6 +17,7 @@ from civitas.domain import (
     FORESTRY_FACT,
     HYGIENE_FACT,
     IRRIGATION_FACT,
+    JOINERY_FACT,
     LOGIC_FACT,
     MATHEMATICS_FACT,
     MEDICINE_FACT,
@@ -130,6 +131,7 @@ def test_reflection_prompt_accepts_full_technology_fact_content() -> None:
             TEXTILES_FACT,
             TOOLMAKING_FACT,
             CARPENTRY_FACT,
+            JOINERY_FACT,
             WRITING_FACT,
         }
     )
@@ -138,6 +140,6 @@ def test_reflection_prompt_accepts_full_technology_fact_content() -> None:
     ).with_tick(Tick(value=1))
     world, _ = apply_memory_encoding(world)
     prompt = build_reflection_prompt(world.agents[0])
-    assert len(prompt) == 355
-    assert "carpentry" in prompt
+    assert len(prompt) == 363
+    assert "joinery" in prompt
     LanguageModelRequest(prompt=prompt, seed=42)
