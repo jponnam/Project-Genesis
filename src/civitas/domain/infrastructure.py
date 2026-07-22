@@ -1,15 +1,15 @@
 """Infrastructure: built capacity at settlement locations.
 
 Phase 5 Milestone 6 plus Phase 9 Milestones 5-8, Phase 10
-Milestones 3 and 9, Phase 11 Milestones 4 and 9, and Phase 12
-Milestones 4 and 9. Infrastructure pieces attach to a city seat inside
-a government jurisdiction. This package seeds a single ``WELL`` kind;
-``STOREHOUSE``, ``ROAD``, ``SCRIPTORIUM``, ``STOA``, ``OBSERVATORY``,
-``SHRINE``, ``CLINIC``, and ``BATHHOUSE`` are available via free create
-or paid construction. Governments pay via
-``build_infrastructure``; institutions pay via
+Milestones 3 and 9, Phase 11 Milestones 4 and 9, Phase 12
+Milestones 4 and 9, and Phase 13 Milestone 4. Infrastructure pieces
+attach to a city seat inside a government jurisdiction. This package
+seeds a single ``WELL`` kind; ``STOREHOUSE``, ``ROAD``, ``SCRIPTORIUM``,
+``STOA``, ``OBSERVATORY``, ``SHRINE``, ``CLINIC``, ``BATHHOUSE``, and
+``BRIDGE`` are available via free create or paid construction.
+Governments pay via ``build_infrastructure``; institutions pay via
 ``build_infrastructure_from_institution``. Effect wiring applies WELL
-drink restore, STOREHOUSE food gather, ROAD move-energy discounts,
+drink restore, STOREHOUSE food gather, ROAD/BRIDGE move-energy discounts,
 SCRIPTORIUM/STOA teachings-per-knower bonuses, OBSERVATORY retrieval-limit
 bonuses, SHRINE/CLINIC drink restore (stacking with WELL), and BATHHOUSE
 rest restore for colocated agents.
@@ -52,6 +52,7 @@ class InfrastructureKind(StrEnum):
     SHRINE = "shrine"
     CLINIC = "clinic"
     BATHHOUSE = "bathhouse"
+    BRIDGE = "bridge"
 
 
 # Canonical treasury cost to construct each infrastructure kind.
@@ -64,6 +65,7 @@ DEFAULT_OBSERVATORY_BUILD_COST: int = 12
 DEFAULT_SHRINE_BUILD_COST: int = 7
 DEFAULT_CLINIC_BUILD_COST: int = 8
 DEFAULT_BATHHOUSE_BUILD_COST: int = 12
+DEFAULT_BRIDGE_BUILD_COST: int = 9
 INFRASTRUCTURE_BUILD_COSTS: dict[InfrastructureKind, int] = {
     InfrastructureKind.WELL: DEFAULT_WELL_BUILD_COST,
     InfrastructureKind.STOREHOUSE: DEFAULT_STOREHOUSE_BUILD_COST,
@@ -74,6 +76,7 @@ INFRASTRUCTURE_BUILD_COSTS: dict[InfrastructureKind, int] = {
     InfrastructureKind.SHRINE: DEFAULT_SHRINE_BUILD_COST,
     InfrastructureKind.CLINIC: DEFAULT_CLINIC_BUILD_COST,
     InfrastructureKind.BATHHOUSE: DEFAULT_BATHHOUSE_BUILD_COST,
+    InfrastructureKind.BRIDGE: DEFAULT_BRIDGE_BUILD_COST,
 }
 
 
@@ -150,6 +153,7 @@ class InfrastructureCensus(BaseModel):
     active_shrine_count: NonNegativeInt = 0
     active_clinic_count: NonNegativeInt = 0
     active_bathhouse_count: NonNegativeInt = 0
+    active_bridge_count: NonNegativeInt = 0
 
 
 def infrastructure_by_id(
@@ -389,6 +393,7 @@ def census_infrastructure(world: World) -> InfrastructureCensus:
     active_bathhouses = sum(
         1 for item in active if item.kind is InfrastructureKind.BATHHOUSE
     )
+    active_bridges = sum(1 for item in active if item.kind is InfrastructureKind.BRIDGE)
     return InfrastructureCensus(
         tick=world.tick,
         infrastructure_count=len(items),
@@ -405,4 +410,5 @@ def census_infrastructure(world: World) -> InfrastructureCensus:
         active_shrine_count=active_shrines,
         active_clinic_count=active_clinics,
         active_bathhouse_count=active_bathhouses,
+        active_bridge_count=active_bridges,
     )

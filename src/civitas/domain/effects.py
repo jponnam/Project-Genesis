@@ -50,10 +50,12 @@ Milestone 1 adds a global PULLEY produce-energy discount (stacking with
 guild seat and abacus discounts). Phase 13 Milestone 2 adds BUILDING_CODES
 law MOVE energy discounts for living subjects (stacking with ROAD seats).
 Phase 13 Milestone 3 adds WORKSHOP produce-energy discounts at the
-institution seat (stacking with guild, abacus, and pulley). The action
-executor, retrieval path, market fills, knowledge diffusion, and research
-progression read these helpers; ``EffectsSystem`` only observes coverage.
-Systems never call each other.
+institution seat (stacking with guild, abacus, and pulley). Phase 13
+Milestone 4 adds BRIDGE MOVE energy discounts at the infrastructure seat
+(stacking with ROAD and BUILDING_CODES). The action executor, retrieval
+path, market fills, knowledge diffusion, and research progression read
+these helpers; ``EffectsSystem`` only observes coverage. Systems never
+call each other.
 """
 
 from __future__ import annotations
@@ -123,6 +125,7 @@ HYGIENE_DRINK_RESTORE_BONUS: float = 0.05
 LAZARETTO_DRINK_RESTORE_BONUS: float = 0.05
 STOREHOUSE_FOOD_GATHER_BONUS: int = 1
 ROAD_MOVE_ENERGY_DISCOUNT: float = 0.02
+BRIDGE_MOVE_ENERGY_DISCOUNT: float = 0.02
 GUILD_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 WORKSHOP_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 MATHEMATICS_PRODUCE_ENERGY_DISCOUNT: float = 0.02
@@ -208,6 +211,22 @@ def location_has_active_road(
     )
     return any(
         item.kind is InfrastructureKind.ROAD and item.location_id == target
+        for item in active_infrastructure(world)
+    )
+
+
+def location_has_active_bridge(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active BRIDGE stands at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InfrastructureKind.BRIDGE and item.location_id == target
         for item in active_infrastructure(world)
     )
 
@@ -683,10 +702,19 @@ def drink_restore_bonus(world: World, agent: Agent) -> float:
 
 
 def move_energy_discount(world: World, agent: Agent) -> float:
-    """Return MOVE energy discount from road seats and building-code laws."""
+    """Return MOVE energy discount from road/bridge seats and building codes.
+
+    An active ROAD at the agent's location contributes
+    ``ROAD_MOVE_ENERGY_DISCOUNT``. An active BRIDGE at the agent's
+    location contributes ``BRIDGE_MOVE_ENERGY_DISCOUNT``. An active
+    ``BUILDING_CODES`` statute contributes its subject discount. All
+    stack when present.
+    """
     discount = 0.0
     if location_has_active_road(world, agent.location_id):
         discount += ROAD_MOVE_ENERGY_DISCOUNT
+    if location_has_active_bridge(world, agent.location_id):
+        discount += BRIDGE_MOVE_ENERGY_DISCOUNT
     discount += building_codes_move_discount_for(world, agent)
     return discount
 
@@ -878,7 +906,7 @@ def effective_move_energy_cost(
     *,
     base: float = DEFAULT_MOVE_ENERGY_COST,
 ) -> float:
-    """Return MOVE cost including road and building-code law discounts."""
+    """Return MOVE cost including road, bridge, and building-code discounts."""
     if base < 0:
         return 0.0
     discounted = base - move_energy_discount(world, agent)
@@ -950,11 +978,19 @@ def census_effects(world: World) -> EffectsCensus:
         FOOD_RESOURCE,
         location_id=storehouses[0].location_id if storehouses else None,
     )
-    # Move cost potential at a road seat.
+    bridges = tuple(
+        item
+        for item in active_infrastructure(world)
+        if item.kind is InfrastructureKind.BRIDGE
+    )
+    # Move cost potential at a road/bridge seat.
+    move_discount = ROAD_MOVE_ENERGY_DISCOUNT if roads else 0.0
+    if bridges:
+        move_discount += BRIDGE_MOVE_ENERGY_DISCOUNT
     move_at_road = clamp_unit(
         max(
             0.0,
-            DEFAULT_MOVE_ENERGY_COST - (ROAD_MOVE_ENERGY_DISCOUNT if roads else 0.0),
+            DEFAULT_MOVE_ENERGY_COST - move_discount,
         )
     )
     # Produce cost potential at guild/workshop seats, plus society-wide discounts.

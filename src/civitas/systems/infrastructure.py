@@ -90,6 +90,7 @@ class InfrastructureSystem:
                     active_shrine_count=snap.active_shrine_count,
                     active_clinic_count=snap.active_clinic_count,
                     active_bathhouse_count=snap.active_bathhouse_count,
+                    active_bridge_count=snap.active_bridge_count,
                 )
             )
         return world
