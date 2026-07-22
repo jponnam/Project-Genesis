@@ -32,8 +32,9 @@ oration and assembly). Phase 12 adds a global REMEDY REST restore bonus
 (stacking with fire hearth, temple, and sanctuary), SANITATION law
 DRINK restore bonuses for living subjects (stacking with well and shrine),
 HOSPITAL REST restore bonuses (stacking with fire hearth, remedy, temple,
-and sanctuary), and CLINIC DRINK restore bonuses (stacking with well,
-shrine, and sanitation).
+and sanctuary), CLINIC DRINK restore bonuses (stacking with well,
+shrine, and sanitation), and INFIRMARY city REST restore bonuses
+(stacking with fire hearth, remedy, temple, sanctuary, and hospital).
 The action executor, retrieval path, market fills,
 knowledge diffusion, and research progression read these helpers;
 ``EffectsSystem`` only observes coverage. Systems never call each other.
@@ -79,6 +80,7 @@ MEDICINE_REST_RESTORE_BONUS: float = 0.05
 TEMPLE_REST_RESTORE_BONUS: float = 0.05
 SANCTUARY_REST_RESTORE_BONUS: float = 0.05
 HOSPITAL_REST_RESTORE_BONUS: float = 0.05
+INFIRMARY_REST_RESTORE_BONUS: float = 0.05
 POTTERY_WATER_GATHER_BONUS: int = 1
 IRRIGATION_WATER_GATHER_BONUS: int = 1
 METALLURGY_STONE_GATHER_BONUS: int = 1
@@ -428,6 +430,15 @@ def location_has_active_agora(
     return city is not None and city.active and city.kind is CityKind.AGORA
 
 
+def location_has_active_infirmary(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active INFIRMARY city is seated at ``location_id``."""
+    city = city_at(world, location_id)
+    return city is not None and city.active and city.kind is CityKind.INFIRMARY
+
+
 def rest_restore_bonus(
     world: World,
     *,
@@ -442,7 +453,8 @@ def rest_restore_bonus(
     ``location_id`` or the agent's location contributes
     ``TEMPLE_REST_RESTORE_BONUS``. An active SANCTUARY city seat contributes
     ``SANCTUARY_REST_RESTORE_BONUS``. An active HOSPITAL seat contributes
-    ``HOSPITAL_REST_RESTORE_BONUS``. All stack.
+    ``HOSPITAL_REST_RESTORE_BONUS``. An active INFIRMARY city seat contributes
+    ``INFIRMARY_REST_RESTORE_BONUS``. All stack.
     """
     bonus = 0.0
     if innovation_kind_is_active(world, InnovationKind.FIRE_HEARTH):
@@ -460,6 +472,8 @@ def rest_restore_bonus(
         bonus += SANCTUARY_REST_RESTORE_BONUS
     if seat is not None and location_has_active_hospital(world, seat):
         bonus += HOSPITAL_REST_RESTORE_BONUS
+    if seat is not None and location_has_active_infirmary(world, seat):
+        bonus += INFIRMARY_REST_RESTORE_BONUS
     return bonus
 
 
@@ -626,10 +640,10 @@ def effective_rest_restore(
 ) -> float:
     """Return REST restore amount including hearth, remedy, and rest seats.
 
-    Fire-hearth and remedy are society-wide. Temple, sanctuary, and hospital
-    bonuses apply only when ``location_id`` or ``agent`` places the resting
-    agent at an active TEMPLE, SANCTUARY, or HOSPITAL seat. All stack via
-    ``rest_restore_bonus``.
+    Fire-hearth and remedy are society-wide. Temple, sanctuary, hospital,
+    and infirmary bonuses apply only when ``location_id`` or ``agent`` places
+    the resting agent at an active TEMPLE, SANCTUARY, HOSPITAL, or INFIRMARY
+    seat. All stack via ``rest_restore_bonus``.
     """
     return clamp_unit(
         base + rest_restore_bonus(world, location_id=location_id, agent=agent)
