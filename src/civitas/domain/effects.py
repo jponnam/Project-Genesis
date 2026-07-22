@@ -161,7 +161,10 @@ fulling mill, mill town, tannery, abacus, pulley, customs, labor, and
 loom). Phase 17 Milestone 7 adds a global BELLOWS produce-energy discount
 society-wide (stacking with guild, workshop, weaver, smelter, foundry,
 fulling mill, mill town, tannery, abacus, pulley, customs, labor, and
-loom).
+loom). Phase 17 Milestone 8 adds SMITH teachings-per-knower bonuses at
+the institution seat (stacking with
+scribe/dialectic/scriptorium/academy/forum/school/stoa/collegium/
+architect/cartographer/agronomist/tailor/curriculum).
 The action
 executor,
 retrieval
@@ -240,6 +243,7 @@ ARCHITECT_TEACHINGS_PER_KNOWER_BONUS: int = 1
 CARTOGRAPHER_TEACHINGS_PER_KNOWER_BONUS: int = 1
 AGRONOMIST_TEACHINGS_PER_KNOWER_BONUS: int = 1
 TAILOR_TEACHINGS_PER_KNOWER_BONUS: int = 1
+SMITH_TEACHINGS_PER_KNOWER_BONUS: int = 1
 PHILOSOPHY_TEACHINGS_PER_KNOWER_BONUS: int = 1
 LOGIC_RESEARCH_POINTS_BONUS: int = 1
 ANATOMY_RESEARCH_POINTS_BONUS: int = 1
@@ -793,6 +797,22 @@ def location_has_active_tailor(
     )
     return any(
         item.kind is InstitutionKind.TAILOR and item.location_id == target
+        for item in active_institutions(world)
+    )
+
+
+def location_has_active_smith(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active SMITH is seated at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InstitutionKind.SMITH and item.location_id == target
         for item in active_institutions(world)
     )
 
@@ -1560,10 +1580,10 @@ def effective_teachings_per_knower(
 
     The scribe and dialectic innovation bonuses are society-wide. The
     scriptorium, stoa, academy, forum, school, collegium, architect,
-    cartographer, agronomist, and tailor bonuses apply only when
+    cartographer, agronomist, tailor, and smith bonuses apply only when
     ``location_id`` or ``agent`` places the knower at an active SCRIPTORIUM,
     STOA, ACADEMY, FORUM, SCHOOL, COLLEGIUM, ARCHITECT, CARTOGRAPHER,
-    AGRONOMIST, or TAILOR seat.
+    AGRONOMIST, TAILOR, or SMITH seat.
     The curriculum law bonus applies when ``agent`` is a living subject of
     a government with an active ``CURRICULUM`` statute. All bonuses stack.
     """
@@ -1595,6 +1615,8 @@ def effective_teachings_per_knower(
         bonus += AGRONOMIST_TEACHINGS_PER_KNOWER_BONUS
     if seat is not None and location_has_active_tailor(world, seat):
         bonus += TAILOR_TEACHINGS_PER_KNOWER_BONUS
+    if seat is not None and location_has_active_smith(world, seat):
+        bonus += SMITH_TEACHINGS_PER_KNOWER_BONUS
     if agent is not None:
         bonus += curriculum_teachings_bonus_for(world, agent)
     return base + bonus

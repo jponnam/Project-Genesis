@@ -129,14 +129,15 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 17 Milestone 7: Smithing technology**
+**Phase 17 Milestone 8: Smith institutions**
 
-``TechnologyKind.SMITHING`` is a society-level technology requiring
-mining, adopted through the ``BELLOWS`` innovation. An active bellows
-grants a society-wide PRODUCE energy discount that stacks with guild,
-workshop, weaver, smelter, foundry, fulling mill, mill town, tannery,
-abacus, pulley, customs, labor, and loom. Discovery flows through the
-standard research, innovation, and knowledge-diffusion pipeline.
+``InstitutionKind.SMITH`` is a government-attached teaching institution
+seated inside its jurisdiction. An active smith grants a
+teachings-per-knower bonus at its seat that stacks with the
+scribe/dialectic innovations and the scriptorium, stoa, academy, forum,
+school, collegium, architect, cartographer, agronomist, tailor, and
+curriculum bonuses. Smiths are not seeded and are surfaced through the
+institution census and ``InstitutionsObserved`` events.
 
 ### Completed
 
@@ -317,6 +318,7 @@ JSONL storage → `civitas run`
 - Milestone 5: Mining camp cities
 - Milestone 6: Smelter institutions
 - Milestone 7: Smithing technology
+- Milestone 8: Smith institutions
 
 ## License
 
