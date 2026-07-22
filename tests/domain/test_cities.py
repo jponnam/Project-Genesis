@@ -26,6 +26,7 @@ from civitas.domain import (
     dissolve_city,
     forums_for,
     infirmaries_for,
+    lazarettos_for,
     libraries_for,
     next_city_id,
     outposts_for,
@@ -141,6 +142,7 @@ def test_census_cities_counts_residents() -> None:
     assert snap.active_sanctuary_count == 0
     assert snap.active_agora_count == 0
     assert snap.active_infirmary_count == 0
+    assert snap.active_lazaretto_count == 0
     assert census_cities(world) == snap
 
 
@@ -255,6 +257,7 @@ def test_factory_still_seeds_one_settlement_capital() -> None:
     assert snap.active_sanctuary_count == 0
     assert snap.active_agora_count == 0
     assert snap.active_infirmary_count == 0
+    assert snap.active_lazaretto_count == 0
 
 
 def test_create_library_under_camp_government() -> None:
@@ -739,6 +742,105 @@ def test_world_rejects_capital_infirmary() -> None:
                     0,
                     "Bad",
                     CityKind.INFIRMARY,
+                    is_capital=True,
+                ),
+            ),
+            agents=(Agent.create(agent_id=0, name="A"),),
+        )
+
+
+def test_create_lazaretto_under_camp_government() -> None:
+    """Lazarettos may share a government with the capital on a distinct seat."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map(),
+        governments=(CAMP_GOVERNMENT,),
+        cities=(CAMP_CITY,),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    lazaretto = City.create(
+        1,
+        CAMP_GOVERNMENT.government_id.value,
+        1,
+        "Plain Lazaretto",
+        CityKind.LAZARETTO,
+    )
+    created = create_city(world, lazaretto)
+    assert created is not None
+    assert city_by_id(created, 1) is not None
+    assert city_by_id(created, 1).kind is CityKind.LAZARETTO  # type: ignore[union-attr]
+    assert city_by_id(created, 1).is_capital is False  # type: ignore[union-attr]
+    assert lazarettos_for(created, CAMP_GOVERNMENT.government_id.value) == (
+        lazaretto,
+    )
+    snap = census_cities(created)
+    assert snap.active_settlement_count == 1
+    assert snap.active_lazaretto_count == 1
+    assert snap.capital_count == 1
+    assert snap.city_count == 2
+
+
+def test_create_rejects_capital_lazaretto() -> None:
+    """Lazarettos cannot be capitals."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map(),
+        governments=(CAMP_GOVERNMENT,),
+        cities=(CAMP_CITY,),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert (
+        create_city(
+            world,
+            City.create(
+                1,
+                CAMP_GOVERNMENT.government_id.value,
+                1,
+                "Bad Lazaretto",
+                CityKind.LAZARETTO,
+                is_capital=True,
+            ),
+        )
+        is None
+    )
+
+
+def test_set_capital_rejects_lazaretto() -> None:
+    """set_capital cannot promote a lazaretto to capital."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map(),
+        governments=(CAMP_GOVERNMENT,),
+        cities=(
+            CAMP_CITY,
+            City.create(
+                1,
+                CAMP_GOVERNMENT.government_id.value,
+                1,
+                "Plain Lazaretto",
+                CityKind.LAZARETTO,
+            ),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert set_capital(world, 1, True) is None
+    assert capital_for(world, 0) == CAMP_CITY
+
+
+def test_world_rejects_capital_lazaretto() -> None:
+    """World validation rejects lazarettos flagged as capital."""
+    with pytest.raises(ValidationError):
+        World(
+            config=SimulationConfig(agent_count=1, seed=1),
+            locations=default_world_map()[:2],
+            governments=(Government.create(0, "Camp", 0, (0, 1)),),
+            cities=(
+                City.create(
+                    0,
+                    0,
+                    0,
+                    "Bad",
+                    CityKind.LAZARETTO,
                     is_capital=True,
                 ),
             ),

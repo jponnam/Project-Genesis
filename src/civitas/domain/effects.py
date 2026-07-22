@@ -44,7 +44,8 @@ scribe/dialectic/scriptorium/academy/forum/school/stoa/curriculum).
 Phase 12 Milestone 10 adds a global ASEPSIS DRINK restore bonus (stacking
 with well, shrine, clinic, apothecary, and sanitation). Phase 12 Milestone
 11 adds QUARANTINE law REST restore bonuses for living subjects (stacking
-with every prior REST source).
+with every prior REST source). Phase 12 Milestone 12 adds LAZARETTO city
+DRINK restore bonuses (stacking with every prior DRINK source).
 The action executor, retrieval path, market fills,
 knowledge diffusion, and research progression read these helpers;
 ``EffectsSystem`` only observes coverage. Systems never call each other.
@@ -113,6 +114,7 @@ SHRINE_DRINK_RESTORE_BONUS: float = 0.05
 CLINIC_DRINK_RESTORE_BONUS: float = 0.05
 APOTHECARY_DRINK_RESTORE_BONUS: float = 0.05
 HYGIENE_DRINK_RESTORE_BONUS: float = 0.05
+LAZARETTO_DRINK_RESTORE_BONUS: float = 0.05
 STOREHOUSE_FOOD_GATHER_BONUS: int = 1
 ROAD_MOVE_ENERGY_DISCOUNT: float = 0.02
 GUILD_PRODUCE_ENERGY_DISCOUNT: float = 0.02
@@ -503,6 +505,15 @@ def location_has_active_infirmary(
     return city is not None and city.active and city.kind is CityKind.INFIRMARY
 
 
+def location_has_active_lazaretto(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active LAZARETTO city is seated at ``location_id``."""
+    city = city_at(world, location_id)
+    return city is not None and city.active and city.kind is CityKind.LAZARETTO
+
+
 def rest_restore_bonus(
     world: World,
     *,
@@ -626,8 +637,9 @@ def drink_restore_bonus(world: World, agent: Agent) -> float:
     SHRINE contributes ``SHRINE_DRINK_RESTORE_BONUS``. An active
     CLINIC contributes ``CLINIC_DRINK_RESTORE_BONUS``. An active
     APOTHECARY contributes ``APOTHECARY_DRINK_RESTORE_BONUS``. An active
-    ``SANITATION`` statute contributes for living subjects. An active
-    ASEPSIS innovation contributes society-wide. All stack.
+    LAZARETTO city contributes ``LAZARETTO_DRINK_RESTORE_BONUS``. An active
+    ``SANITATION`` statute contributes for living subjects. An active ASEPSIS
+    innovation contributes society-wide. All stack.
     """
     bonus = 0.0
     if innovation_kind_is_active(world, InnovationKind.ASEPSIS):
@@ -640,6 +652,8 @@ def drink_restore_bonus(world: World, agent: Agent) -> float:
         bonus += CLINIC_DRINK_RESTORE_BONUS
     if location_has_active_apothecary(world, agent.location_id):
         bonus += APOTHECARY_DRINK_RESTORE_BONUS
+    if location_has_active_lazaretto(world, agent.location_id):
+        bonus += LAZARETTO_DRINK_RESTORE_BONUS
     bonus += sanitation_drink_bonus_for(world, agent)
     return bonus
 
@@ -818,7 +832,7 @@ def effective_drink_restore(
     *,
     base: float = DEFAULT_DRINK_RESTORE,
 ) -> float:
-    """Return DRINK restore amount including drink seats and sanitation.
+    """Return DRINK restore amount including drink seats, sanitation, and asepsis.
 
     ``effective_drink_restore = clamp_unit(base + drink_restore_bonus(...))``.
     """

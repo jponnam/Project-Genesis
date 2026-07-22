@@ -13,10 +13,13 @@ restore bonus). Phase 11 Milestone 12 adds ``CityKind.AGORA`` as a
 non-capital specialized seat for civic social life (living residents gain
 a SOCIALIZE restore bonus). Phase 12 Milestone 5 adds
 ``CityKind.INFIRMARY`` as a non-capital specialized seat for public
-health recovery (living residents gain a REST restore bonus). Resident
-counts are derived from living agents at the seat. Infrastructure remains
-a separate aggregate. Camp City stays the only seeded settlement capital;
-libraries, forums, sanctuaries, agoras, and infirmaries are not seeded.
+health recovery (living residents gain a REST restore bonus). Phase 12
+Milestone 12 adds ``CityKind.LAZARETTO`` as a non-capital specialized
+seat for quarantine care (living residents gain a DRINK restore bonus).
+Resident counts are derived from living agents at the seat. Infrastructure
+remains a separate aggregate. Camp City stays the only seeded settlement
+capital; libraries, forums, sanctuaries, agoras, infirmaries, and
+lazarettos are not seeded.
 """
 
 from __future__ import annotations
@@ -48,6 +51,7 @@ class CityKind(StrEnum):
     SANCTUARY = "sanctuary"
     AGORA = "agora"
     INFIRMARY = "infirmary"
+    LAZARETTO = "lazaretto"
 
 
 # City kinds that may never be flagged as capital.
@@ -59,6 +63,7 @@ _NON_CAPITAL_KINDS: frozenset[CityKind] = frozenset(
         CityKind.SANCTUARY,
         CityKind.AGORA,
         CityKind.INFIRMARY,
+        CityKind.LAZARETTO,
     }
 )
 
@@ -138,6 +143,7 @@ class CityCensus(BaseModel):
     active_sanctuary_count: NonNegativeInt = 0
     active_agora_count: NonNegativeInt = 0
     active_infirmary_count: NonNegativeInt = 0
+    active_lazaretto_count: NonNegativeInt = 0
 
 
 def city_by_id(world: World, city_id: CityId | int) -> City | None:
@@ -230,6 +236,18 @@ def infirmaries_for(
     )
 
 
+def lazarettos_for(
+    world: World,
+    government_id: GovernmentId | int,
+) -> tuple[City, ...]:
+    """Return lazaretto cities for ``government_id`` in ascending id order."""
+    return tuple(
+        city
+        for city in cities_for(world, government_id)
+        if city.kind is CityKind.LAZARETTO
+    )
+
+
 def city_at(world: World, location_id: LocationId | int) -> City | None:
     """Return the city seated at ``location_id``, or ``None``."""
     target = (
@@ -306,10 +324,10 @@ def _has_active_capital(
 def create_city(world: World, city: City) -> World | None:
     """Add ``city`` to the world when legal.
 
-    Outposts, libraries, forums, sanctuaries, agoras, and infirmaries cannot
-    be capitals. Settlement capital uniqueness is unchanged: at most one
-    active capital per government. Every city still needs a unique seat
-    location inside its government jurisdiction.
+    Outposts, libraries, forums, sanctuaries, agoras, infirmaries, and
+    lazarettos cannot be capitals. Settlement capital uniqueness is unchanged:
+    at most one active capital per government. Every city still needs a unique
+    seat location inside its government jurisdiction.
     """
     if city.kind in _NON_CAPITAL_KINDS and city.is_capital:
         return None
@@ -423,6 +441,7 @@ def census_cities(world: World) -> CityCensus:
     active_sanctuaries = sum(1 for city in active if city.kind is CityKind.SANCTUARY)
     active_agoras = sum(1 for city in active if city.kind is CityKind.AGORA)
     active_infirmaries = sum(1 for city in active if city.kind is CityKind.INFIRMARY)
+    active_lazarettos = sum(1 for city in active if city.kind is CityKind.LAZARETTO)
     return CityCensus(
         tick=world.tick,
         city_count=len(cities),
@@ -441,4 +460,5 @@ def census_cities(world: World) -> CityCensus:
         active_sanctuary_count=active_sanctuaries,
         active_agora_count=active_agoras,
         active_infirmary_count=active_infirmaries,
+        active_lazaretto_count=active_lazarettos,
     )

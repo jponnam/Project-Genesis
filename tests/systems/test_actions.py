@@ -20,6 +20,7 @@ from civitas.domain import (
     HOSPITAL_REST_RESTORE_BONUS,
     HYGIENE_DRINK_RESTORE_BONUS,
     INFIRMARY_REST_RESTORE_BONUS,
+    LAZARETTO_DRINK_RESTORE_BONUS,
     QUARANTINE_REST_RESTORE_BONUS,
     RHETORIC_SOCIALIZE_RESTORE_BONUS,
     ActionChoice,
@@ -431,6 +432,36 @@ def test_drink_action_uses_apothecary_bonus() -> None:
     updated = ActionExecutor().execute(world, _choice(0, ActionKind.DRINK))
     assert updated.agents[0].needs.water == pytest.approx(
         0.4 + DEFAULT_DRINK_RESTORE + APOTHECARY_DRINK_RESTORE_BONUS
+    )
+
+
+def test_drink_action_uses_lazaretto_bonus() -> None:
+    """DRINK restore includes active lazaretto city seat bonuses."""
+    agent = Agent.create(
+        agent_id=0,
+        name="A",
+        location_id=1,
+        needs=Needs(food=1.0, water=0.4, energy=1.0, social=1.0, safety=1.0),
+    ).model_copy(
+        update={
+            "inventory": Inventory(
+                stacks=(ResourceStack(resource="water", quantity=1),)
+            )
+        }
+    )
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Lazaretto", CityKind.LAZARETTO),
+        ),
+        agents=(agent,),
+    )
+    updated = ActionExecutor().execute(world, _choice(0, ActionKind.DRINK))
+    assert updated.agents[0].needs.water == pytest.approx(
+        0.4 + DEFAULT_DRINK_RESTORE + LAZARETTO_DRINK_RESTORE_BONUS
     )
 
 
