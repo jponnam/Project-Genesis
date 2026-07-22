@@ -6,9 +6,11 @@ import pytest
 
 from civitas.domain import (
     CAMP_LOCATION,
+    FIRE_FACT,
     Agent,
     AgentStatus,
     Health,
+    Knowledge,
     Location,
     Needs,
     Personality,
@@ -18,6 +20,7 @@ from civitas.domain import (
     agent_age_ticks,
     apply_birth,
     can_birth,
+    inherit_knowledge,
     inherit_personality,
 )
 
@@ -95,6 +98,14 @@ def test_can_birth_respects_max_population() -> None:
     assert can_birth(world, parent, max_population=2) is True
 
 
+def test_inherit_knowledge_copies_parent_facts() -> None:
+    """Newborns receive a deterministic copy of parental facts."""
+    parent_knowledge = Knowledge(facts=frozenset({FIRE_FACT, "pottery"}))
+    inherited = inherit_knowledge(parent_knowledge)
+    assert inherited.facts == parent_knowledge.facts
+    assert inherited is not parent_knowledge
+
+
 def test_apply_birth_spawns_child_and_costs_parent_energy() -> None:
     """Successful birth appends a child and deducts parent energy."""
     parent = Agent.create(
@@ -103,6 +114,7 @@ def test_apply_birth_spawns_child_and_costs_parent_energy() -> None:
         birth_tick=0,
         personality=Personality(openness=1.0),
         needs=Needs(food=0.9, water=0.9, energy=0.9),
+        knowledge=Knowledge(facts=frozenset({FIRE_FACT})),
     )
     world = _world(parent, tick=12)
     result = apply_birth(world, parent, parent_energy_cost=0.1)
@@ -116,6 +128,7 @@ def test_apply_birth_spawns_child_and_costs_parent_energy() -> None:
     assert child.parent_id.value == 0
     assert child.location_id == parent.location_id
     assert child.personality.openness == pytest.approx(0.75)
+    assert child.knowledge.knows(FIRE_FACT)
     updated_parent = updated.agent_by_id(0)
     assert updated_parent is not None
     assert updated_parent.needs.energy == pytest.approx(0.8)

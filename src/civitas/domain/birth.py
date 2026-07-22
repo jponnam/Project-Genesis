@@ -4,7 +4,8 @@ Birth is system-driven (not a scored action). Domain helpers decide
 eligibility and produce the updated world so the birth system and tests
 share one legality contract. Systems must not call each other; they call
 these helpers and emit ``AgentBorn``. Children persist
-``identity.parent_id`` for kinship analytics.
+``identity.parent_id`` for kinship analytics and inherit parental
+knowledge facts (Phase 8 Milestone 3).
 """
 
 from __future__ import annotations
@@ -12,7 +13,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from civitas.domain.agent import Agent
-from civitas.domain.attributes import Personality
+from civitas.domain.attributes import Knowledge, Personality
 from civitas.domain.energy import spend_energy
 from civitas.domain.geography import can_enter
 from civitas.domain.numeric import clamp_unit
@@ -32,6 +33,11 @@ DEFAULT_PERSONALITY_REGRESSION: float = 0.50
 def agent_age_ticks(agent: Agent, current_tick: int) -> int:
     """Return how many ticks have elapsed since ``agent`` was born."""
     return current_tick - agent.identity.birth_tick.value
+
+
+def inherit_knowledge(parent: Knowledge) -> Knowledge:
+    """Return a deterministic copy of ``parent`` facts for a newborn."""
+    return Knowledge(facts=parent.facts)
 
 
 def inherit_personality(
@@ -118,9 +124,10 @@ def apply_birth(
 ) -> tuple[World, Agent] | None:
     """Spawn a child from ``parent`` when birth is legal.
 
-    The child receives the next agent id, inherits a regressed personality,
-    shares the parent's location, and is born at ``world.tick``. The parent
-    pays ``parent_energy_cost``. Returns ``(world, child)`` or ``None``.
+    The child receives the next agent id, inherits a regressed personality
+    and the parent's knowledge facts, shares the parent's location, and is
+    born at ``world.tick``. The parent pays ``parent_energy_cost``. Returns
+    ``(world, child)`` or ``None``.
     """
     if not can_birth(
         world,
@@ -154,6 +161,7 @@ def apply_birth(
             current_parent.personality,
             regression=personality_regression,
         ),
+        knowledge=inherit_knowledge(current_parent.knowledge),
     )
     # next_agent_id is max+1, so appending preserves ascending id order.
     agents = (

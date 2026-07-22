@@ -4,8 +4,11 @@ from __future__ import annotations
 
 from civitas.domain import (
     CAMP_LOCATION,
+    FIRE_FACT,
     Agent,
     AgentBorn,
+    Knowledge,
+    KnowledgeLearned,
     Needs,
     SimulationConfig,
     Tick,
@@ -21,6 +24,7 @@ def _eligible_parent(agent_id: int = 0, *, birth_tick: int = 0) -> Agent:
         name=f"P-{agent_id}",
         birth_tick=birth_tick,
         needs=Needs(food=0.9, water=0.9, energy=0.9),
+        knowledge=Knowledge(facts=frozenset({FIRE_FACT})),
     )
 
 
@@ -46,6 +50,13 @@ def test_apply_births_emits_agent_born_and_grows_roster() -> None:
     assert events[0].agent_id.value == 1
     assert events[0].name == "Agent-1"
     assert events[0].location_id.value == 0
+    assert updated.agents[1].knowledge.knows(FIRE_FACT)
+    learned = [event for event in bus.history if isinstance(event, KnowledgeLearned)]
+    assert len(learned) == 1
+    assert learned[0].fact == FIRE_FACT
+    assert learned[0].source == "birth"
+    assert learned[0].teacher_id is not None
+    assert learned[0].teacher_id.value == 0
 
 
 def test_apply_births_respects_max_births_and_parent_order() -> None:

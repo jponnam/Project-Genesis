@@ -38,6 +38,7 @@ class KnowledgeSource(StrEnum):
 
     BOOTSTRAP = "bootstrap"
     PEER = "peer"
+    BIRTH = "birth"
 
 
 class KnowledgeCensus(BaseModel):
