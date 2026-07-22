@@ -87,3 +87,22 @@ class ListingId(BaseModel):
         if isinstance(other, ListingId):
             return self.value < other.value
         return NotImplemented
+
+
+class GovernmentId(BaseModel):
+    """Unique government / polity identifier within a simulation run."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid", validate_default=True)
+
+    value: NonNegativeInt = Field(description="Stable government id for the run.")
+
+    def __int__(self) -> int:
+        return self.value
+
+    def __str__(self) -> str:
+        return str(self.value)
+
+    def __lt__(self, other: object) -> Any:
+        if isinstance(other, GovernmentId):
+            return self.value < other.value
+        return NotImplemented

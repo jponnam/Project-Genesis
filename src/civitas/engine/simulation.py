@@ -20,6 +20,7 @@ from civitas.systems import (
     DeathSystem,
     EconomySystem,
     FamilySystem,
+    GovernmentSystem,
     MarketSystem,
     NeedsSystem,
     NetworkSystem,
@@ -74,19 +75,22 @@ class SimulationEngine:
     15. ``ReputationSystem.observe``
     16. ``FamilySystem.observe``
     17. ``NetworkSystem.observe``
+    18. ``GovernmentSystem.observe``
 
     Initial population, wealth, market, price, relationship, reputation,
-    family, and network censuses are also observed at tick 0 immediately
-    after world creation. Death runs after actions (recovery chance) and
-    before birth so newly dead parents cannot reproduce. Birth and death
-    both complete before taxes so the levy sees the settled roster. Taxes
-    complete before ``TickCompleted`` so wealth censuses reflect post-levy
-    balances. Taxes are disabled by default. Relationship observation is
-    wired each tick; SOCIALIZE may mutate bonds during action execution.
-    Reputation observation follows relationships so standings reflect the
-    latest bonds. Family observation follows reputation and reads birth
-    ``parent_id`` lineage without mutating agents. Network observation
-    follows families and measures the living bond graph.
+    family, network, and government censuses are also observed at tick 0
+    immediately after world creation. Death runs after actions (recovery
+    chance) and before birth so newly dead parents cannot reproduce. Birth
+    and death both complete before taxes so the levy sees the settled
+    roster. Taxes complete before ``TickCompleted`` so wealth censuses
+    reflect post-levy balances. Taxes are disabled by default. Relationship
+    observation is wired each tick; SOCIALIZE may mutate bonds during
+    action execution. Reputation observation follows relationships so
+    standings reflect the latest bonds. Family observation follows
+    reputation and reads birth ``parent_id`` lineage without mutating
+    agents. Network observation follows families and measures the living
+    bond graph. Government observation follows networks and reports polity
+    coverage, treasuries, and subjects without mutating agents.
     """
 
     def __init__(
@@ -107,6 +111,7 @@ class SimulationEngine:
         reputation_system: ReputationSystem | None = None,
         family_system: FamilySystem | None = None,
         network_system: NetworkSystem | None = None,
+        government_system: GovernmentSystem | None = None,
     ) -> None:
         self._world_factory = (
             world_factory if world_factory is not None else WorldFactory()
@@ -141,6 +146,9 @@ class SimulationEngine:
         self._network_system = (
             network_system if network_system is not None else NetworkSystem()
         )
+        self._government_system = (
+            government_system if government_system is not None else GovernmentSystem()
+        )
 
     def run(
         self,
@@ -162,6 +170,7 @@ class SimulationEngine:
         world = self._reputation_system.observe(world, bus=event_bus)
         world = self._family_system.observe(world, bus=event_bus)
         world = self._network_system.observe(world, bus=event_bus)
+        world = self._government_system.observe(world, bus=event_bus)
 
         for tick in clock.run():
             world = world.with_tick(tick)
@@ -181,6 +190,7 @@ class SimulationEngine:
             world = self._reputation_system.observe(world, bus=event_bus)
             world = self._family_system.observe(world, bus=event_bus)
             world = self._network_system.observe(world, bus=event_bus)
+            world = self._government_system.observe(world, bus=event_bus)
 
         event_bus.publish(
             SimulationCompleted(
