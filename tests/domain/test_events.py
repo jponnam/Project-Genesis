@@ -824,6 +824,7 @@ def test_institution_created_and_observed_round_trips() -> None:
         active_weaver_count=1,
         active_dyer_count=1,
         active_tailor_count=1,
+        active_miner_count=1,
         total_budget=3,
         funded_count=1,
     )
@@ -853,6 +854,7 @@ def test_institution_created_and_observed_round_trips() -> None:
     assert restored.active_weaver_count == 1
     assert restored.active_dyer_count == 1
     assert restored.active_tailor_count == 1
+    assert restored.active_miner_count == 1
     assert restored.total_budget == 3
     assert restored.funded_count == 1
 

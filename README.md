@@ -129,14 +129,16 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 17 Milestone 2: Mineral rights laws**
+**Phase 17 Milestone 3: Miner institutions**
 
-``LawKind.MINERAL_RIGHTS`` statutes attach to a government and grant its
-living subjects a ``+1`` STONE gather bonus. The bonus is subject-scoped
-(resolved via ``government_at`` on the gathering agent's location) and
-stacks additively with the pickaxe and forge bonuses (society-wide), the
-mason seat bonus, and the quarry city bonus. At most one active mineral
-rights law is allowed per government. The statute is not seeded.
+``InstitutionKind.MINER`` seats a durable civic organization inside a
+government's jurisdiction. An active miner grants a ``+1`` STONE gather
+bonus at its seat location (``MINER_STONE_GATHER_BONUS``, resolved via
+``location_has_active_miner``). The bonus stacks additively with the
+pickaxe and forge bonuses (society-wide), the mason seat bonus, the
+quarry city bonus, and the mineral rights subject bonus. Miners are
+observed in the institution census (``active_miner_count``) and are not
+seeded.
 
 ### Completed
 
@@ -312,6 +314,7 @@ JSONL storage → `civitas run`
 **Phase 17:**
 - Milestone 1: Mining technology
 - Milestone 2: Mineral rights laws
+- Milestone 3: Miner institutions
 
 ## License
 

@@ -101,6 +101,7 @@ class InstitutionSystem:
                     active_weaver_count=snap.active_weaver_count,
                     active_dyer_count=snap.active_dyer_count,
                     active_tailor_count=snap.active_tailor_count,
+                    active_miner_count=snap.active_miner_count,
                     total_budget=snap.total_budget,
                     funded_count=snap.funded_count,
                 )

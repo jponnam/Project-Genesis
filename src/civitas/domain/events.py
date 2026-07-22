@@ -588,6 +588,7 @@ class InstitutionsObserved(DomainEvent):
     active_weaver_count: NonNegativeInt = 0
     active_dyer_count: NonNegativeInt = 0
     active_tailor_count: NonNegativeInt = 0
+    active_miner_count: NonNegativeInt = 0
     total_budget: NonNegativeInt = 0
     funded_count: NonNegativeInt = 0
 
