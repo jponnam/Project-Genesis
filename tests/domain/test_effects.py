@@ -55,6 +55,7 @@ from civitas.domain import (
     SCHOOL_TEACHINGS_PER_KNOWER_BONUS,
     SCRIPTORIUM_TEACHINGS_PER_KNOWER_BONUS,
     SHRINE_DRINK_RESTORE_BONUS,
+    STOA_TEACHINGS_PER_KNOWER_BONUS,
     STOREHOUSE_FOOD_GATHER_BONUS,
     TEMPLE_REST_RESTORE_BONUS,
     WELL_DRINK_RESTORE_BONUS,
@@ -97,6 +98,7 @@ from civitas.domain import (
     location_has_active_school,
     location_has_active_scriptorium,
     location_has_active_shrine,
+    location_has_active_stoa,
     location_has_active_storehouse,
     location_has_active_temple,
     location_has_active_well,
@@ -439,6 +441,131 @@ def test_scriptorium_boosts_teachings_and_stacks_with_scribe() -> None:
             bare, base=DEFAULT_TEACHINGS_PER_KNOWER, agent=bare.agents[0]
         )
         == DEFAULT_TEACHINGS_PER_KNOWER + SCRIPTORIUM_TEACHINGS_PER_KNOWER_BONUS
+    )
+
+
+def test_stoa_boosts_teachings_and_stacks_with_scriptorium() -> None:
+    """Active stoa adds a seat bonus that stacks with scriptorium."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 0, 0, "Camp Scriptorium", InfrastructureKind.SCRIPTORIUM
+            ),
+            Infrastructure.create(1, 0, 0, 0, "Camp Stoa", InfrastructureKind.STOA),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_scriptorium(world, agent.location_id) is True
+    assert location_has_active_stoa(world, agent.location_id) is True
+    assert (
+        effective_teachings_per_knower(world, base=DEFAULT_TEACHINGS_PER_KNOWER)
+        == DEFAULT_TEACHINGS_PER_KNOWER
+    )
+    assert (
+        effective_teachings_per_knower(
+            world, base=DEFAULT_TEACHINGS_PER_KNOWER, agent=agent
+        )
+        == DEFAULT_TEACHINGS_PER_KNOWER
+        + SCRIPTORIUM_TEACHINGS_PER_KNOWER_BONUS
+        + STOA_TEACHINGS_PER_KNOWER_BONUS
+    )
+    stoa_only = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        infrastructure=(
+            Infrastructure.create(0, 0, 0, 0, "Camp Stoa", InfrastructureKind.STOA),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert (
+        effective_teachings_per_knower(
+            stoa_only, base=DEFAULT_TEACHINGS_PER_KNOWER, agent=stoa_only.agents[0]
+        )
+        == DEFAULT_TEACHINGS_PER_KNOWER + STOA_TEACHINGS_PER_KNOWER_BONUS
+    )
+    bare = _world()
+    assert location_has_active_stoa(bare, bare.agents[0].location_id) is False
+
+
+def test_stoa_stacks_with_all_teaching_bonuses() -> None:
+    """Stoa teaching bonus stacks with every prior teaching capacity source."""
+    discovered_pottery = CAMP_POTTERY.model_copy(update={"discovered": True})
+    discovered_irrigation = CAMP_IRRIGATION.model_copy(update={"discovered": True})
+    discovered_metallurgy = CAMP_METALLURGY.model_copy(update={"discovered": True})
+    discovered_writing = CAMP_WRITING.model_copy(update={"discovered": True})
+    discovered_math = CAMP_MATHEMATICS.model_copy(update={"discovered": True})
+    discovered_astronomy = CAMP_ASTRONOMY.model_copy(update={"discovered": True})
+    discovered_philosophy = CAMP_PHILOSOPHY.model_copy(update={"discovered": True})
+    active_scribe = CAMP_SCRIBE.model_copy(update={"active": True})
+    active_dialectic = CAMP_DIALECTIC.model_copy(update={"active": True})
+    curriculum = Law.create(0, 0, "Camp Schools", LawKind.CURRICULUM)
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        laws=(curriculum,),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Forum", CityKind.FORUM),
+        ),
+        technologies=(
+            CAMP_FIRE,
+            discovered_pottery,
+            discovered_irrigation,
+            discovered_metallurgy,
+            discovered_writing,
+            discovered_math,
+            discovered_astronomy,
+            discovered_philosophy,
+        ),
+        innovations=(
+            CAMP_FIRE_HEARTH,
+            CAMP_POTTERY_CRAFT,
+            CAMP_IRRIGATION_CANAL,
+            CAMP_FORGE,
+            active_scribe,
+            CAMP_ABACUS,
+            CAMP_STAR_CHART,
+            active_dialectic,
+        ),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 1, 1, "Forum Scriptorium", InfrastructureKind.SCRIPTORIUM
+            ),
+            Infrastructure.create(1, 0, 1, 1, "Forum Stoa", InfrastructureKind.STOA),
+        ),
+        institutions=(
+            Institution.create(0, 0, 1, "Forum Academy", InstitutionKind.ACADEMY),
+            Institution.create(1, 0, 1, "Forum School", InstitutionKind.SCHOOL),
+        ),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_scriptorium(world, agent.location_id) is True
+    assert location_has_active_stoa(world, agent.location_id) is True
+    assert location_has_active_academy(world, agent.location_id) is True
+    assert location_has_active_forum(world, agent.location_id) is True
+    assert location_has_active_school(world, agent.location_id) is True
+    assert (
+        effective_teachings_per_knower(
+            world, base=DEFAULT_TEACHINGS_PER_KNOWER, agent=agent
+        )
+        == DEFAULT_TEACHINGS_PER_KNOWER
+        + WRITING_TEACHINGS_PER_KNOWER_BONUS
+        + PHILOSOPHY_TEACHINGS_PER_KNOWER_BONUS
+        + SCRIPTORIUM_TEACHINGS_PER_KNOWER_BONUS
+        + STOA_TEACHINGS_PER_KNOWER_BONUS
+        + ACADEMY_TEACHINGS_PER_KNOWER_BONUS
+        + FORUM_TEACHINGS_PER_KNOWER_BONUS
+        + SCHOOL_TEACHINGS_PER_KNOWER_BONUS
+        + CURRICULUM_TEACHINGS_PER_KNOWER_BONUS
     )
 
 

@@ -22,7 +22,7 @@ TEMPLE REST restore bonuses (stacking with the global fire-hearth
 innovation), SHRINE DRINK restore bonuses (stacking with WELL),
 SANCTUARY city REST restore bonuses (stacking with fire hearth and
 temple), SCHOOL teachings-per-knower bonuses (stacking with
-scribe/scriptorium/curriculum/academy/forum/dialectic), a global
+scribe/scriptorium/stoa/curriculum/academy/forum/dialectic), a global
 SYLLOGISM research-points bonus, and LYCEUM retrieval-limit bonuses
 (stacking with archive/library/observatory/star-chart/calendar). The
 action executor, retrieval path, market fills, knowledge diffusion, and
@@ -70,6 +70,7 @@ IRRIGATION_WATER_GATHER_BONUS: int = 1
 METALLURGY_STONE_GATHER_BONUS: int = 1
 WRITING_TEACHINGS_PER_KNOWER_BONUS: int = 1
 SCRIPTORIUM_TEACHINGS_PER_KNOWER_BONUS: int = 1
+STOA_TEACHINGS_PER_KNOWER_BONUS: int = 1
 ACADEMY_TEACHINGS_PER_KNOWER_BONUS: int = 1
 FORUM_TEACHINGS_PER_KNOWER_BONUS: int = 1
 SCHOOL_TEACHINGS_PER_KNOWER_BONUS: int = 1
@@ -178,6 +179,22 @@ def location_has_active_scriptorium(
     )
     return any(
         item.kind is InfrastructureKind.SCRIPTORIUM and item.location_id == target
+        for item in active_infrastructure(world)
+    )
+
+
+def location_has_active_stoa(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active STOA stands at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InfrastructureKind.STOA and item.location_id == target
         for item in active_infrastructure(world)
     )
 
@@ -539,11 +556,11 @@ def effective_teachings_per_knower(
     """Return teachings-per-knower including scribe, dialectic, seats, laws.
 
     The scribe and dialectic innovation bonuses are society-wide. The
-    scriptorium, academy, forum, and school bonuses apply only when
+    scriptorium, stoa, academy, forum, and school bonuses apply only when
     ``location_id`` or ``agent`` places the knower at an active
-    SCRIPTORIUM, ACADEMY, FORUM, or SCHOOL seat. The curriculum law bonus
-    applies when ``agent`` is a living subject of a government with an
-    active ``CURRICULUM`` statute. All bonuses stack.
+    SCRIPTORIUM, STOA, ACADEMY, FORUM, or SCHOOL seat. The curriculum law
+    bonus applies when ``agent`` is a living subject of a government with
+    an active ``CURRICULUM`` statute. All bonuses stack.
     """
     if base < 0:
         return 0
@@ -555,6 +572,8 @@ def effective_teachings_per_knower(
     bonus = teachings_per_knower_bonus(world)
     if seat is not None and location_has_active_scriptorium(world, seat):
         bonus += SCRIPTORIUM_TEACHINGS_PER_KNOWER_BONUS
+    if seat is not None and location_has_active_stoa(world, seat):
+        bonus += STOA_TEACHINGS_PER_KNOWER_BONUS
     if seat is not None and location_has_active_academy(world, seat):
         bonus += ACADEMY_TEACHINGS_PER_KNOWER_BONUS
     if seat is not None and location_has_active_forum(world, seat):
