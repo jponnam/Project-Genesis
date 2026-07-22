@@ -123,14 +123,14 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 11 — Milestone 10: Rhetoric technology**
+**Phase 11 — Milestone 11: Assembly laws**
 
-``TechnologyKind.RHETORIC`` extends the prerequisite chain after logic with
-``CAMP_RHETORIC`` and ``CAMP_RHETORIC_RESEARCH``. Discovery activates the
-inactive ``CAMP_ORATION`` innovation, adding a society-wide ``+0.05``
-SOCIALIZE restore bonus through ``effective_socialize_restore``. Technology,
-innovation, and knowledge censuses track rhetoric discovery, active oration,
-and rhetoric knowers.
+``LawKind.ASSEMBLY`` adds a unique-active statute kind for governments.
+Living subjects under an active assembly law gain a ``+0.05`` SOCIALIZE
+restore bonus through ``effective_socialize_restore``; the subject bonus
+stacks with the society-wide ORATION innovation bonus. Law censuses and
+``LawsObserved`` events track active assembly counts without seeding an
+assembly law by default.
 
 ### Completed
 
@@ -230,6 +230,7 @@ JSONL storage → `civitas run`
 - Milestone 8: Lyceum institutions
 - Milestone 9: Stoa infrastructure
 - Milestone 10: Rhetoric technology
+- Milestone 11: Assembly laws
 
 ## License
 

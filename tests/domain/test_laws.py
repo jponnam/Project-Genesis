@@ -6,6 +6,7 @@ import pytest
 from pydantic import ValidationError
 
 from civitas.domain import (
+    ASSEMBLY_SOCIALIZE_RESTORE_BONUS,
     CAMP_GOVERNMENT,
     CAMP_LOCATION,
     CAMP_POLL_TAX_LAW,
@@ -17,10 +18,12 @@ from civitas.domain import (
     LawKind,
     SimulationConfig,
     World,
+    active_assembly_law,
     active_calendar_law,
     active_curriculum_law,
     active_ethics_law,
     active_market_fee_law,
+    assembly_socialize_bonus_for,
     calendar_retrieval_bonus_for,
     census_laws,
     curriculum_teachings_bonus_for,
@@ -102,6 +105,14 @@ def test_world_rejects_duplicate_active_ethics() -> None:
     left = Law.create(0, 0, "Ethics A", LawKind.ETHICS)
     right = Law.create(1, 0, "Ethics B", LawKind.ETHICS)
     with pytest.raises(ValidationError, match="ETHICS"):
+        _world(Agent.create(agent_id=0, name="A"), laws=(left, right))
+
+
+def test_world_rejects_duplicate_active_assembly() -> None:
+    """At most one active ASSEMBLY law per government."""
+    left = Law.create(0, 0, "Assembly A", LawKind.ASSEMBLY)
+    right = Law.create(1, 0, "Assembly B", LawKind.ASSEMBLY)
+    with pytest.raises(ValidationError, match="ASSEMBLY"):
         _world(Agent.create(agent_id=0, name="A"), laws=(left, right))
 
 
@@ -291,6 +302,67 @@ def test_ethics_delta_requires_living_subject() -> None:
     assert ethics_min_teach_trust_delta_for(bare, bare.agents[0]) == 0.0
 
 
+def test_enact_assembly_and_uniqueness() -> None:
+    """ASSEMBLY enacts once per government; kind alone enables the bonus."""
+    world = _world(Agent.create(agent_id=0, name="A"))
+    assembly = Law.create(0, 0, "Camp Assembly", LawKind.ASSEMBLY, flat_amount=9)
+    enacted = enact_law(world, assembly)
+    assert enacted is not None
+    assert active_assembly_law(enacted, 0) == assembly
+    assert assembly_socialize_bonus_for(enacted, enacted.agents[0]) == (
+        ASSEMBLY_SOCIALIZE_RESTORE_BONUS
+    )
+    assert ASSEMBLY_SOCIALIZE_RESTORE_BONUS == 0.05
+    duplicate = Law.create(1, 0, "Other Assembly", LawKind.ASSEMBLY)
+    assert enact_law(enacted, duplicate) is None
+    # Other unique kinds may coexist with ASSEMBLY.
+    tax = Law.create(1, 0, "Poll", LawKind.TAX_SCHEDULE, flat_amount=1)
+    with_tax = enact_law(enacted, tax)
+    assert with_tax is not None
+    fee = Law.create(2, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=1)
+    with_fee = enact_law(with_tax, fee)
+    assert with_fee is not None
+    curriculum = Law.create(3, 0, "Camp Schools", LawKind.CURRICULUM)
+    with_curriculum = enact_law(with_fee, curriculum)
+    assert with_curriculum is not None
+    calendar = Law.create(4, 0, "Camp Calendar", LawKind.CALENDAR)
+    with_calendar = enact_law(with_curriculum, calendar)
+    assert with_calendar is not None
+    ethics = Law.create(5, 0, "Camp Ethics", LawKind.ETHICS)
+    with_ethics = enact_law(with_calendar, ethics)
+    assert with_ethics is not None
+    assert active_assembly_law(with_ethics, 0) == assembly
+    assert assembly_socialize_bonus_for(with_ethics, with_ethics.agents[0]) == (
+        ASSEMBLY_SOCIALIZE_RESTORE_BONUS
+    )
+
+
+def test_assembly_bonus_requires_living_subject() -> None:
+    """Only living agents under an ASSEMBLY polity receive the socialize bonus."""
+    assembly = Law.create(0, 0, "Camp Assembly", LawKind.ASSEMBLY)
+    world = _world(Agent.create(agent_id=0, name="A"), laws=(assembly,))
+    assert assembly_socialize_bonus_for(world, world.agents[0]) == (
+        ASSEMBLY_SOCIALIZE_RESTORE_BONUS
+    )
+    dead = world.agents[0].model_copy(
+        update={
+            "status": AgentStatus.DEAD,
+            "health": world.agents[0].health.model_copy(update={"vitality": 0.0}),
+        }
+    )
+    assert assembly_socialize_bonus_for(world, dead) == 0.0
+    ungoverned = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(),
+        laws=(),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert assembly_socialize_bonus_for(ungoverned, ungoverned.agents[0]) == 0.0
+    bare = _world(Agent.create(agent_id=0, name="A"))
+    assert assembly_socialize_bonus_for(bare, bare.agents[0]) == 0.0
+
+
 def test_tax_schedule_overrides_levy_fallback() -> None:
     """Active TAX_SCHEDULE beats levy_taxes fallback parameters."""
     law = Law.create(0, 0, "Heavy", LawKind.TAX_SCHEDULE, flat_amount=2)
@@ -312,20 +384,21 @@ def test_tax_schedule_overrides_levy_fallback() -> None:
 
 
 def test_census_laws_counts() -> None:
-    """Census reports active/inactive and tax-schedule tallies."""
+    """Census reports active/inactive and per-kind tallies."""
     active = Law.create(0, 0, "A", LawKind.TAX_SCHEDULE, flat_amount=1, active=True)
     inactive = Law.create(1, 0, "B", LawKind.TAX_SCHEDULE, flat_amount=1, active=False)
     fee = Law.create(2, 0, "Fee", LawKind.MARKET_FEE, flat_amount=1, active=True)
     curriculum = Law.create(3, 0, "Schools", LawKind.CURRICULUM, active=True)
     calendar = Law.create(4, 0, "Calendar", LawKind.CALENDAR, active=True)
     ethics = Law.create(5, 0, "Ethics", LawKind.ETHICS, active=True)
+    assembly = Law.create(6, 0, "Assembly", LawKind.ASSEMBLY, active=True)
     world = _world(
         Agent.create(agent_id=0, name="A"),
-        laws=(active, inactive, fee, curriculum, calendar, ethics),
+        laws=(active, inactive, fee, curriculum, calendar, ethics, assembly),
     )
     snap = census_laws(world)
-    assert snap.law_count == 6
-    assert snap.active_count == 5
+    assert snap.law_count == 7
+    assert snap.active_count == 6
     assert snap.inactive_count == 1
     assert snap.governments_with_active_laws == 1
     assert snap.active_tax_schedule_count == 1
@@ -333,6 +406,7 @@ def test_census_laws_counts() -> None:
     assert snap.active_curriculum_count == 1
     assert snap.active_calendar_count == 1
     assert snap.active_ethics_count == 1
+    assert snap.active_assembly_count == 1
     assert census_laws(world) == snap
 
 

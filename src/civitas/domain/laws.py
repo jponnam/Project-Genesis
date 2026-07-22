@@ -2,7 +2,8 @@
 
 Laws are first-class world aggregates. Domain helpers own enactment,
 repeal, tax-schedule lookup, market-fee lookup, curriculum teaching
-bonuses, calendar retrieval bonuses, and ethics teach-trust deltas.
+bonuses, calendar retrieval bonuses, ethics teach-trust deltas, and
+assembly socialize bonuses.
 Active ``TAX_SCHEDULE`` statutes override fallback levy parameters
 when collecting taxes. Active ``MARKET_FEE`` statutes charge a flat
 buyer fee on market listing fills (Phase 9 M10). Active ``CURRICULUM``
@@ -10,6 +11,8 @@ statutes grant living subjects +1 teachings-per-knower (Phase 10 M4).
 Active ``CALENDAR`` statutes grant living subjects +1 retrieval limit
 (Phase 10 M11). Active ``ETHICS`` statutes lower the peer teach-trust
 threshold for living subject learners by 0.05 (Phase 11 M2).
+Active ``ASSEMBLY`` statutes grant living subjects +0.05 SOCIALIZE
+restore (Phase 11 M11).
 Elections (voting) are a separate Phase 5 aggregate, as are
 institutions.
 """
@@ -39,6 +42,7 @@ class LawKind(StrEnum):
     CURRICULUM = "curriculum"
     CALENDAR = "calendar"
     ETHICS = "ethics"
+    ASSEMBLY = "assembly"
 
 
 # Statute kinds that allow at most one active law per government.
@@ -49,6 +53,7 @@ _UNIQUE_ACTIVE_KINDS: frozenset[LawKind] = frozenset(
         LawKind.CURRICULUM,
         LawKind.CALENDAR,
         LawKind.ETHICS,
+        LawKind.ASSEMBLY,
     }
 )
 
@@ -60,6 +65,9 @@ CALENDAR_RETRIEVAL_LIMIT_BONUS: int = 1
 
 # Kind-only teach-trust delta for living subject learners under active ETHICS.
 ETHICS_MIN_TEACH_TRUST_DELTA: float = -0.05
+
+# Kind-only SOCIALIZE restore bonus for living subjects under active ASSEMBLY.
+ASSEMBLY_SOCIALIZE_RESTORE_BONUS: float = 0.05
 
 
 class Law(BaseModel):
@@ -76,7 +84,7 @@ class Law(BaseModel):
         default=0,
         description=(
             "TAX_SCHEDULE flat poll amount, or MARKET_FEE flat fill fee; "
-            "ignored by CURRICULUM, CALENDAR, ETHICS, and other kinds."
+            "ignored by CURRICULUM, CALENDAR, ETHICS, ASSEMBLY, and other kinds."
         ),
     )
     rate_bps: NonNegativeInt = Field(
@@ -140,6 +148,7 @@ class LawCensus(BaseModel):
     active_curriculum_count: NonNegativeInt
     active_calendar_count: NonNegativeInt
     active_ethics_count: NonNegativeInt
+    active_assembly_count: NonNegativeInt
 
 
 def law_by_id(world: World, law_id: LawId | int) -> Law | None:
@@ -318,6 +327,36 @@ def ethics_min_teach_trust_delta_for(world: World, learner: Agent) -> float:
     return ETHICS_MIN_TEACH_TRUST_DELTA
 
 
+def active_assembly_law(
+    world: World,
+    government_id: GovernmentId | int,
+) -> Law | None:
+    """Return the active assembly statute for ``government_id``, if any.
+
+    When multiple active ``ASSEMBLY`` laws exist (should not under
+    uniqueness rules), the lowest ``law_id`` wins.
+    """
+    for law in active_laws(world, government_id):
+        if law.kind == LawKind.ASSEMBLY:
+            return law
+    return None
+
+
+def assembly_socialize_bonus_for(world: World, agent: Agent) -> float:
+    """Return +0.05 when ``agent`` is a living subject under active ASSEMBLY.
+
+    The statute kind alone enables the bonus; ``flat_amount`` is ignored.
+    """
+    if not agent.is_alive():
+        return 0.0
+    government = government_at(world, agent.location_id)
+    if government is None:
+        return 0.0
+    if active_assembly_law(world, government.government_id) is None:
+        return 0.0
+    return ASSEMBLY_SOCIALIZE_RESTORE_BONUS
+
+
 def _has_active_kind(
     world: World,
     government_id: GovernmentId,
@@ -390,6 +429,7 @@ def census_laws(world: World) -> LawCensus:
     active_curriculum = sum(1 for law in active if law.kind == LawKind.CURRICULUM)
     active_calendar = sum(1 for law in active if law.kind == LawKind.CALENDAR)
     active_ethics = sum(1 for law in active if law.kind == LawKind.ETHICS)
+    active_assembly = sum(1 for law in active if law.kind == LawKind.ASSEMBLY)
     return LawCensus(
         tick=world.tick,
         law_count=len(laws),
@@ -401,10 +441,12 @@ def census_laws(world: World) -> LawCensus:
         active_curriculum_count=active_curriculum,
         active_calendar_count=active_calendar,
         active_ethics_count=active_ethics,
+        active_assembly_count=active_assembly,
     )
 
 
 __all__ = [
+    "ASSEMBLY_SOCIALIZE_RESTORE_BONUS",
     "CALENDAR_RETRIEVAL_LIMIT_BONUS",
     "CAMP_POLL_TAX_LAW",
     "CURRICULUM_TEACHINGS_PER_KNOWER_BONUS",
@@ -412,12 +454,14 @@ __all__ = [
     "Law",
     "LawCensus",
     "LawKind",
+    "active_assembly_law",
     "active_calendar_law",
     "active_curriculum_law",
     "active_ethics_law",
     "active_laws",
     "active_market_fee_law",
     "active_tax_schedule",
+    "assembly_socialize_bonus_for",
     "calendar_retrieval_bonus_for",
     "census_laws",
     "curriculum_teachings_bonus_for",

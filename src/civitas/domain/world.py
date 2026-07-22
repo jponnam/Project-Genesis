@@ -186,6 +186,7 @@ class World(BaseModel):
         active_curriculum_govs: set[int] = set()
         active_calendar_govs: set[int] = set()
         active_ethics_govs: set[int] = set()
+        active_assembly_govs: set[int] = set()
         for law in self.laws:
             if law.government_id.value not in known_governments:
                 msg = (
@@ -223,6 +224,12 @@ class World(BaseModel):
                     msg = "at most one active ETHICS law per government"
                     raise ValueError(msg)
                 active_ethics_govs.add(gov_value)
+            if law.active and law.kind == LawKind.ASSEMBLY:
+                gov_value = law.government_id.value
+                if gov_value in active_assembly_govs:
+                    msg = "at most one active ASSEMBLY law per government"
+                    raise ValueError(msg)
+                active_assembly_govs.add(gov_value)
 
         election_ids = [election.election_id.value for election in self.elections]
         if len(election_ids) != len(set(election_ids)):

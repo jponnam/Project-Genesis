@@ -523,6 +523,7 @@ class LawsObserved(DomainEvent):
     active_curriculum_count: NonNegativeInt
     active_calendar_count: NonNegativeInt
     active_ethics_count: NonNegativeInt
+    active_assembly_count: NonNegativeInt
 
 
 class ElectionResolved(DomainEvent):

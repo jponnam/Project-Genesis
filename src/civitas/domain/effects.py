@@ -24,8 +24,9 @@ SANCTUARY city REST restore bonuses (stacking with fire hearth and
 temple), SCHOOL teachings-per-knower bonuses (stacking with
 scribe/scriptorium/stoa/curriculum/academy/forum/dialectic), a global
 SYLLOGISM research-points bonus, LYCEUM retrieval-limit bonuses
-(stacking with archive/library/observatory/star-chart/calendar), and a
-global ORATION SOCIALIZE restore bonus. The
+(stacking with archive/library/observatory/star-chart/calendar), a
+global ORATION SOCIALIZE restore bonus, and ASSEMBLY law SOCIALIZE
+restore bonuses for living subjects (stacking with oration). The
 action executor, retrieval path, market fills, knowledge diffusion, and
 research progression read these helpers; ``EffectsSystem`` only observes
 coverage. Systems never call each other.
@@ -46,6 +47,7 @@ from civitas.domain.infrastructure import InfrastructureKind, active_infrastruct
 from civitas.domain.innovation import InnovationKind, active_innovations
 from civitas.domain.institutions import InstitutionKind, active_institutions
 from civitas.domain.laws import (
+    assembly_socialize_bonus_for,
     calendar_retrieval_bonus_for,
     curriculum_teachings_bonus_for,
     market_fee_for,
@@ -424,11 +426,23 @@ def research_points_bonus(world: World) -> int:
     return 0
 
 
-def socialize_restore_bonus(world: World) -> float:
-    """Return society-wide SOCIALIZE restore bonus from active oration."""
+def socialize_restore_bonus(
+    world: World,
+    *,
+    agent: Agent | None = None,
+) -> float:
+    """Return SOCIALIZE restore bonuses from active oration and assembly.
+
+    An active ORATION innovation contributes society-wide. An active
+    ``ASSEMBLY`` statute contributes for living subjects when ``agent`` is
+    provided. Both stack.
+    """
+    bonus = 0.0
     if innovation_kind_is_active(world, InnovationKind.ORATION):
-        return RHETORIC_SOCIALIZE_RESTORE_BONUS
-    return 0.0
+        bonus += RHETORIC_SOCIALIZE_RESTORE_BONUS
+    if agent is not None:
+        bonus += assembly_socialize_bonus_for(world, agent)
+    return bonus
 
 
 def gather_amount_bonus(
@@ -610,9 +624,10 @@ def effective_socialize_restore(
     world: World,
     *,
     base: float = DEFAULT_SOCIALIZE_RESTORE,
+    agent: Agent | None = None,
 ) -> float:
-    """Return SOCIALIZE restore amount including active oration bonus."""
-    return clamp_unit(base + socialize_restore_bonus(world))
+    """Return SOCIALIZE restore amount including active oration/assembly bonuses."""
+    return clamp_unit(base + socialize_restore_bonus(world, agent=agent))
 
 
 def effective_gather_amount(
