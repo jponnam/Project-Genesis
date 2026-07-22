@@ -87,6 +87,7 @@ from civitas.domain import (
     ROAD_MOVE_ENERGY_DISCOUNT,
     SANCTUARY_REST_RESTORE_BONUS,
     SANITATION_DRINK_RESTORE_BONUS,
+    SCAFFOLD_WOOD_GATHER_BONUS,
     SCHOOL_TEACHINGS_PER_KNOWER_BONUS,
     SCRIPTORIUM_TEACHINGS_PER_KNOWER_BONUS,
     SHRINE_DRINK_RESTORE_BONUS,
@@ -148,6 +149,7 @@ from civitas.domain import (
     location_has_active_observatory,
     location_has_active_road,
     location_has_active_sanctuary,
+    location_has_active_scaffold,
     location_has_active_school,
     location_has_active_scriptorium,
     location_has_active_shrine,
@@ -1992,6 +1994,42 @@ def test_storehouse_boosts_food_gather_for_colocated_agents() -> None:
     )
     assert snap.active_road_count == 0
     assert snap.move_energy_cost_bps == round(DEFAULT_MOVE_ENERGY_COST * 10_000)
+
+
+
+
+def test_scaffold_boosts_wood_gather_for_colocated_agents() -> None:
+    """Active scaffolds add a wood gather bonus at their seat location."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 0, 0, "Camp Scaffold", InfrastructureKind.SCAFFOLD
+            ),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_scaffold(world, agent.location_id) is True
+    assert (
+        gather_amount_bonus(world, "wood", location_id=agent.location_id)
+        == SCAFFOLD_WOOD_GATHER_BONUS
+    )
+    assert gather_amount_bonus(world, "wood") == 0
+    assert (
+        effective_gather_amount(world, "wood", agent=agent)
+        == DEFAULT_GATHER_AMOUNT + SCAFFOLD_WOOD_GATHER_BONUS
+    )
+    snap = census_effects(world)
+    assert snap.active_scaffold_count == 1
+    assert snap.wood_gather_amount == (
+        DEFAULT_GATHER_AMOUNT + SCAFFOLD_WOOD_GATHER_BONUS
+    )
+    assert snap.active_storehouse_count == 0
+    assert snap.food_gather_amount == DEFAULT_GATHER_AMOUNT
 
 
 def test_road_reduces_move_energy_for_colocated_agents() -> None:

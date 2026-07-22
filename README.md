@@ -125,11 +125,10 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 13 Milestone 8: Architect institutions**
+**Phase 13 Milestone 9: Scaffold infrastructure**
 
-``InstitutionKind.ARCHITECT`` sits beside workshops and masons. Active
-architects add ``+1`` teachings-per-knower at their seat, stacking with prior
-teaching bonuses.
+``InfrastructureKind.SCAFFOLD`` (build cost 10) grants a seat-scoped wood
+gather bonus.
 
 ### Completed
 
@@ -255,6 +254,7 @@ JSONL storage → `civitas run`
 - Milestone 6: Mason institutions
 - Milestone 7: Architecture technology
 - Milestone 8: Architect institutions
+- Milestone 9: Scaffold infrastructure
 
 ## License
 
