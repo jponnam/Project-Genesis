@@ -23,11 +23,13 @@ from civitas.domain.ids import (
     CityId,
     ElectionId,
     GovernmentId,
+    InfrastructureId,
     InstitutionId,
     LawId,
     LocationId,
     MarketId,
 )
+from civitas.domain.infrastructure import Infrastructure
 from civitas.domain.institutions import Institution
 from civitas.domain.laws import Law, LawKind
 from civitas.domain.location import Location
@@ -50,6 +52,7 @@ class World(BaseModel):
         elections: Archived elections, ordered by ascending ``election_id``.
         institutions: Civic organizations, ordered by ascending ``institution_id``.
         cities: Settlements, ordered by ascending ``city_id``.
+        infrastructure: Built capacity, ordered by ascending ``infrastructure_id``.
         agents: Agents ordered by ascending ``agent_id``.
         treasury: Public money balance collected from taxes.
     """
@@ -65,6 +68,7 @@ class World(BaseModel):
     elections: tuple[Election, ...] = ()
     institutions: tuple[Institution, ...] = ()
     cities: tuple[City, ...] = ()
+    infrastructure: tuple[Infrastructure, ...] = ()
     agents: tuple[Agent, ...] = ()
     treasury: NonNegativeInt = 0
 
@@ -308,6 +312,65 @@ class World(BaseModel):
                     raise ValueError(msg)
                 active_capitals.add(gov_value)
 
+        infra_ids = [item.infrastructure_id.value for item in self.infrastructure]
+        if len(infra_ids) != len(set(infra_ids)):
+            msg = "infrastructure ids must be unique"
+            raise ValueError(msg)
+        if infra_ids != sorted(infra_ids):
+            msg = "infrastructure must be ordered by ascending infrastructure_id"
+            raise ValueError(msg)
+
+        city_by_value = {city.city_id.value: city for city in self.cities}
+        active_kind_locations: set[tuple[int, str]] = set()
+        for item in self.infrastructure:
+            gov_value = item.government_id.value
+            if gov_value not in gov_by_id:
+                msg = (
+                    f"infrastructure {item.infrastructure_id.value} references "
+                    f"unknown government {gov_value}"
+                )
+                raise ValueError(msg)
+            government = gov_by_id[gov_value]
+            if item.location_id.value not in known:
+                msg = (
+                    f"infrastructure {item.infrastructure_id.value} references "
+                    f"unknown location {item.location_id.value}"
+                )
+                raise ValueError(msg)
+            city_value = item.city_id.value
+            if city_value not in city_by_value:
+                msg = (
+                    f"infrastructure {item.infrastructure_id.value} references "
+                    f"unknown city {city_value}"
+                )
+                raise ValueError(msg)
+            city = city_by_value[city_value]
+            if city.government_id != item.government_id:
+                msg = (
+                    f"infrastructure {item.infrastructure_id.value} government "
+                    f"must match city government"
+                )
+                raise ValueError(msg)
+            if city.location_id != item.location_id:
+                msg = (
+                    f"infrastructure {item.infrastructure_id.value} location "
+                    f"must match city seat"
+                )
+                raise ValueError(msg)
+            jurisdiction = {location.value for location in government.jurisdiction}
+            if item.location_id.value not in jurisdiction:
+                msg = (
+                    f"infrastructure {item.infrastructure_id.value} seat must lie "
+                    f"inside government jurisdiction"
+                )
+                raise ValueError(msg)
+            if item.active:
+                key = (item.location_id.value, item.kind.value)
+                if key in active_kind_locations:
+                    msg = "at most one active infrastructure of each kind per location"
+                    raise ValueError(msg)
+                active_kind_locations.add(key)
+
         return self
 
     @property
@@ -403,6 +466,21 @@ class World(BaseModel):
                 return city
         return None
 
+    def infrastructure_by_id(
+        self,
+        infrastructure_id: InfrastructureId | int,
+    ) -> Infrastructure | None:
+        """Return the infrastructure with ``infrastructure_id``, or ``None``."""
+        target = (
+            infrastructure_id
+            if isinstance(infrastructure_id, InfrastructureId)
+            else InfrastructureId(value=infrastructure_id)
+        )
+        for item in self.infrastructure:
+            if item.infrastructure_id == target:
+                return item
+        return None
+
     def agents_at(self, location_id: LocationId | int) -> tuple[Agent, ...]:
         """Return agents occupying ``location_id`` in stable id order."""
         target = (
@@ -454,6 +532,7 @@ class World(BaseModel):
             elections=self.elections,
             institutions=self.institutions,
             cities=self.cities,
+            infrastructure=self.infrastructure,
             agents=agents,
             treasury=self.treasury,
         )
@@ -602,3 +681,22 @@ class World(BaseModel):
             msg = f"city id {city.city_id.value} not found in world"
             raise ValueError(msg)
         return self.model_copy(update={"cities": tuple(updated)})
+
+    def with_infrastructure(self, item: Infrastructure) -> World:
+        """Return a copy replacing the infrastructure that shares its id.
+
+        Raises:
+            ValueError: If no infrastructure with that id exists.
+        """
+        updated: list[Infrastructure] = []
+        found = False
+        for existing in self.infrastructure:
+            if existing.infrastructure_id == item.infrastructure_id:
+                updated.append(item)
+                found = True
+            else:
+                updated.append(existing)
+        if not found:
+            msg = f"infrastructure id {item.infrastructure_id.value} not found in world"
+            raise ValueError(msg)
+        return self.model_copy(update={"infrastructure": tuple(updated)})

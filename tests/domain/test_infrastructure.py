@@ -1,0 +1,153 @@
+"""Unit tests for infrastructure models, helpers, and world rules."""
+
+from __future__ import annotations
+
+import pytest
+from pydantic import ValidationError
+
+from civitas.domain import (
+    CAMP_CITY,
+    CAMP_GOVERNMENT,
+    CAMP_LOCATION,
+    CAMP_WELL,
+    Agent,
+    City,
+    CityKind,
+    Government,
+    Infrastructure,
+    InfrastructureKind,
+    SimulationConfig,
+    World,
+    census_infrastructure,
+    create_infrastructure,
+    default_cities,
+    default_infrastructure,
+    default_world_map,
+    dissolve_infrastructure,
+    infrastructure_by_id,
+    next_infrastructure_id,
+)
+
+
+def _world(
+    *agents: Agent,
+    governments: tuple[Government, ...] = (Government.create(0, "Camp", 0, (0,)),),
+    cities: tuple[City, ...] = (
+        City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+    ),
+    infrastructure: tuple[Infrastructure, ...] = (),
+) -> World:
+    return World(
+        config=SimulationConfig(agent_count=max(len(agents), 1), seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=governments,
+        cities=cities,
+        infrastructure=infrastructure,
+        agents=agents,
+    )
+
+
+def test_default_infrastructure_seeds_camp_well() -> None:
+    """Canonical infrastructure is an active well at Camp City."""
+    assert default_infrastructure() == (CAMP_WELL,)
+    assert CAMP_WELL.kind is InfrastructureKind.WELL
+    assert CAMP_WELL.active is True
+    assert CAMP_WELL.city_id.value == CAMP_CITY.city_id.value
+    assert CAMP_WELL.government_id.value == CAMP_GOVERNMENT.government_id.value
+    assert CAMP_WELL.location_id.value == CAMP_LOCATION.location_id.value
+
+
+def test_create_and_lookup_infrastructure() -> None:
+    """create_infrastructure inserts sorted ids and supports lookups."""
+    world = _world(Agent.create(agent_id=0, name="A"))
+    created = create_infrastructure(
+        world,
+        Infrastructure.create(0, 0, 0, 0, "Well", InfrastructureKind.WELL),
+    )
+    assert created is not None
+    assert infrastructure_by_id(created, 0) is not None
+    assert next_infrastructure_id(created).value == 1
+
+
+def test_create_rejects_second_active_well_at_location() -> None:
+    """At most one active well per location."""
+    world = _world(
+        Agent.create(agent_id=0, name="A"),
+        infrastructure=(
+            Infrastructure.create(0, 0, 0, 0, "A", InfrastructureKind.WELL),
+        ),
+    )
+    assert (
+        create_infrastructure(
+            world,
+            Infrastructure.create(1, 0, 0, 0, "B", InfrastructureKind.WELL),
+        )
+        is None
+    )
+
+
+def test_dissolve_frees_active_kind_slot() -> None:
+    """Soft dissolve frees the active-kind-at-location slot."""
+    world = _world(
+        Agent.create(agent_id=0, name="A"),
+        infrastructure=(
+            Infrastructure.create(0, 0, 0, 0, "A", InfrastructureKind.WELL),
+        ),
+    )
+    dissolved = dissolve_infrastructure(world, 0)
+    assert dissolved is not None
+    assert dissolved.infrastructure[0].active is False
+    recreated = create_infrastructure(
+        dissolved,
+        Infrastructure.create(1, 0, 0, 0, "B", InfrastructureKind.WELL),
+    )
+    assert recreated is not None
+
+
+def test_census_infrastructure_counts() -> None:
+    """Census aggregates active well stats without mutation."""
+    world = _world(
+        Agent.create(agent_id=0, name="A"),
+        infrastructure=(
+            Infrastructure.create(0, 0, 0, 0, "Active", InfrastructureKind.WELL),
+            Infrastructure.create(
+                1, 0, 0, 0, "Inactive", InfrastructureKind.WELL, active=False
+            ),
+        ),
+    )
+    snap = census_infrastructure(world)
+    assert snap.infrastructure_count == 2
+    assert snap.active_count == 1
+    assert snap.inactive_count == 1
+    assert snap.governments_with_infrastructure == 1
+    assert snap.cities_with_infrastructure == 1
+    assert snap.active_well_count == 1
+    assert census_infrastructure(world) == snap
+
+
+def test_world_rejects_city_location_mismatch() -> None:
+    """Infrastructure location must match its city seat."""
+    with pytest.raises(ValidationError):
+        World(
+            config=SimulationConfig(agent_count=1, seed=1),
+            locations=default_world_map()[:2],
+            governments=(Government.create(0, "Camp", 0, (0, 1)),),
+            cities=(City.create(0, 0, 0, "A", CityKind.SETTLEMENT, is_capital=True),),
+            infrastructure=(
+                Infrastructure.create(0, 0, 0, 1, "Bad", InfrastructureKind.WELL),
+            ),
+            agents=(Agent.create(agent_id=0, name="A"),),
+        )
+
+
+def test_factory_shaped_defaults_validate() -> None:
+    """Factory-shaped cities and infrastructure validate together."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map(),
+        governments=(CAMP_GOVERNMENT,),
+        cities=default_cities(),
+        infrastructure=default_infrastructure(),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert world.infrastructure[0].name == "Camp Well"

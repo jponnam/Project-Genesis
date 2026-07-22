@@ -16,6 +16,7 @@ from civitas.domain.ids import (
     CityId,
     ElectionId,
     GovernmentId,
+    InfrastructureId,
     InstitutionId,
     LawId,
     ListingId,
@@ -272,6 +273,18 @@ class CityCreated(DomainEvent):
     is_capital: bool = False
 
 
+class InfrastructureCreated(DomainEvent):
+    """Emitted when an infrastructure piece is added to the world."""
+
+    infrastructure_id: InfrastructureId
+    government_id: GovernmentId
+    city_id: CityId
+    location_id: LocationId
+    name: NonEmptyStr
+    kind: NonEmptyStr
+    active: bool = True
+
+
 class ListingPosted(DomainEvent):
     """Emitted when a seller escrows goods onto a market listing."""
 
@@ -500,6 +513,17 @@ class CitiesObserved(DomainEvent):
     active_settlement_count: NonNegativeInt
 
 
+class InfrastructuresObserved(DomainEvent):
+    """Emitted when an infrastructure census is taken."""
+
+    infrastructure_count: NonNegativeInt
+    active_count: NonNegativeInt
+    inactive_count: NonNegativeInt
+    governments_with_infrastructure: NonNegativeInt
+    cities_with_infrastructure: NonNegativeInt
+    active_well_count: NonNegativeInt
+
+
 CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     SimulationStarted,
     SimulationCompleted,
@@ -542,6 +566,8 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     InstitutionsObserved,
     CityCreated,
     CitiesObserved,
+    InfrastructureCreated,
+    InfrastructuresObserved,
 )
 
 EVENT_TYPE_REGISTRY: dict[str, type[DomainEvent]] = {
