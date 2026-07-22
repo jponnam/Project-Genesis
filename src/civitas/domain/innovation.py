@@ -28,6 +28,7 @@ from civitas.domain.technology import (
     CAMP_MATHEMATICS,
     CAMP_MEDICINE,
     CAMP_METALLURGY,
+    CAMP_NAVIGATION,
     CAMP_PHILOSOPHY,
     CAMP_POTTERY,
     CAMP_RHETORIC,
@@ -61,6 +62,7 @@ class InnovationKind(StrEnum):
     PULLEY = "pulley"
     BLUEPRINT = "blueprint"
     PLUMB_LINE = "plumb_line"
+    COMPASS = "compass"
 
 
 class Innovation(BaseModel):
@@ -222,6 +224,14 @@ CAMP_PLUMB_LINE: Innovation = Innovation.create(
     active=False,
 )
 
+CAMP_COMPASS: Innovation = Innovation.create(
+    16,
+    CAMP_NAVIGATION.technology_id.value,
+    "Camp Compass",
+    InnovationKind.COMPASS,
+    active=False,
+)
+
 
 def default_innovations() -> tuple[Innovation, ...]:
     """Return the canonical initial innovation set."""
@@ -242,6 +252,7 @@ def default_innovations() -> tuple[Innovation, ...]:
         CAMP_PULLEY,
         CAMP_BLUEPRINT,
         CAMP_PLUMB_LINE,
+        CAMP_COMPASS,
     )
 
 
@@ -270,6 +281,7 @@ class InnovationCensus(BaseModel):
     active_pulley_count: NonNegativeInt = 0
     active_blueprint_count: NonNegativeInt = 0
     active_plumb_line_count: NonNegativeInt = 0
+    active_compass_count: NonNegativeInt = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -433,6 +445,7 @@ def census_innovations(world: World) -> InnovationCensus:
     pulley = sum(1 for item in active if item.kind is InnovationKind.PULLEY)
     blueprint = sum(1 for item in active if item.kind is InnovationKind.BLUEPRINT)
     plumb_line = sum(1 for item in active if item.kind is InnovationKind.PLUMB_LINE)
+    compass = sum(1 for item in active if item.kind is InnovationKind.COMPASS)
     return InnovationCensus(
         tick=world.tick,
         innovation_count=len(innovations),
@@ -454,4 +467,5 @@ def census_innovations(world: World) -> InnovationCensus:
         active_pulley_count=pulley,
         active_blueprint_count=blueprint,
         active_plumb_line_count=plumb_line,
+        active_compass_count=compass,
     )

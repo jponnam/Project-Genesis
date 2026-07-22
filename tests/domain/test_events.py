@@ -1045,6 +1045,7 @@ def test_technology_created_and_observed_round_trips() -> None:
         discovered_engineering_count=0,
         discovered_architecture_count=0,
         discovered_surveying_count=0,
+        discovered_navigation_count=0,
         locked_count=12,
         researchable_count=1,
     )
@@ -1065,6 +1066,7 @@ def test_technology_created_and_observed_round_trips() -> None:
     assert restored.discovered_engineering_count == 0
     assert restored.discovered_architecture_count == 0
     assert restored.discovered_surveying_count == 0
+    assert restored.discovered_navigation_count == 0
     assert restored.researchable_count == 1
 
 
@@ -1156,6 +1158,7 @@ def test_innovation_events_round_trip() -> None:
         active_pulley_count=0,
         active_blueprint_count=0,
         active_plumb_line_count=0,
+        active_compass_count=0,
     )
     restored_observed = event_from_record(observed.to_record())
     assert isinstance(restored_observed, InnovationsObserved)
@@ -1174,6 +1177,7 @@ def test_innovation_events_round_trip() -> None:
     assert restored_observed.active_pulley_count == 0
     assert restored_observed.active_blueprint_count == 0
     assert restored_observed.active_plumb_line_count == 0
+    assert restored_observed.active_compass_count == 0
 
 
 def test_knowledge_events_round_trip() -> None:
@@ -1225,6 +1229,7 @@ def test_knowledge_events_round_trip() -> None:
         engineering_knower_count=0,
         architecture_knower_count=0,
         surveying_knower_count=0,
+        navigation_knower_count=0,
         total_fact_instances=3,
         coverage_bps=10_000,
     )
@@ -1244,6 +1249,7 @@ def test_knowledge_events_round_trip() -> None:
     assert restored_observed.engineering_knower_count == 0
     assert restored_observed.architecture_knower_count == 0
     assert restored_observed.surveying_knower_count == 0
+    assert restored_observed.navigation_knower_count == 0
     assert restored_observed.coverage_bps == 10_000
 
 

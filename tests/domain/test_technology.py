@@ -18,6 +18,7 @@ from civitas.domain import (
     CAMP_MATHEMATICS,
     CAMP_MEDICINE,
     CAMP_METALLURGY,
+    CAMP_NAVIGATION,
     CAMP_PHILOSOPHY,
     CAMP_POTTERY,
     CAMP_RHETORIC,
@@ -49,8 +50,8 @@ def _world(*agents: Agent, technologies: tuple[Technology, ...] = ()) -> World:
     )
 
 
-def test_default_technologies_seed_fire_through_surveying() -> None:
-    """Canonical catalog has fire through surveying progression."""
+def test_default_technologies_seed_fire_through_navigation() -> None:
+    """Canonical catalog has fire through navigation progression."""
     assert default_technologies() == (
         CAMP_FIRE,
         CAMP_POTTERY,
@@ -68,6 +69,7 @@ def test_default_technologies_seed_fire_through_surveying() -> None:
         CAMP_ENGINEERING,
         CAMP_ARCHITECTURE,
         CAMP_SURVEYING,
+        CAMP_NAVIGATION,
     )
     assert CAMP_FIRE.kind is TechnologyKind.FIRE
     assert CAMP_FIRE.discovered is True
@@ -116,6 +118,9 @@ def test_default_technologies_seed_fire_through_surveying() -> None:
     assert CAMP_SURVEYING.kind is TechnologyKind.SURVEYING
     assert CAMP_SURVEYING.discovered is False
     assert CAMP_SURVEYING.prerequisite_ids == (CAMP_ARCHITECTURE.technology_id,)
+    assert CAMP_NAVIGATION.kind is TechnologyKind.NAVIGATION
+    assert CAMP_NAVIGATION.discovered is False
+    assert CAMP_NAVIGATION.prerequisite_ids == (CAMP_SURVEYING.technology_id,)
 
 
 def test_create_and_discover_technology() -> None:
@@ -156,9 +161,9 @@ def test_census_technologies_counts() -> None:
         technologies=default_technologies(),
     )
     snap = census_technologies(world)
-    assert snap.technology_count == 16
+    assert snap.technology_count == 17
     assert snap.discovered_count == 1
-    assert snap.undiscovered_count == 15
+    assert snap.undiscovered_count == 16
     assert snap.discovered_fire_count == 1
     assert snap.discovered_pottery_count == 0
     assert snap.discovered_irrigation_count == 0
@@ -175,7 +180,8 @@ def test_census_technologies_counts() -> None:
     assert snap.discovered_engineering_count == 0
     assert snap.discovered_architecture_count == 0
     assert snap.discovered_surveying_count == 0
-    assert snap.locked_count == 14
+    assert snap.discovered_navigation_count == 0
+    assert snap.locked_count == 15
     assert snap.researchable_count == 1
     assert prerequisites_met(world, CAMP_POTTERY) is True
     assert prerequisites_met(world, CAMP_IRRIGATION) is False
@@ -684,6 +690,47 @@ def test_surveying_locked_until_architecture_discovered() -> None:
     assert with_surveying is not None
     assert with_surveying.technologies[15].discovered is True
 
+
+def test_navigation_locked_until_surveying_discovered() -> None:
+    """Navigation cannot be discovered until surveying is already known."""
+    world = _world(
+        Agent.create(agent_id=0, name="A"),
+        technologies=default_technologies(),
+    )
+    assert prerequisites_met(world, CAMP_NAVIGATION) is False
+    assert discover_technology(world, CAMP_NAVIGATION.technology_id) is None
+
+    current = world
+    for technology in (
+        CAMP_POTTERY,
+        CAMP_IRRIGATION,
+        CAMP_METALLURGY,
+        CAMP_WRITING,
+        CAMP_MATHEMATICS,
+        CAMP_ASTRONOMY,
+        CAMP_PHILOSOPHY,
+        CAMP_LOGIC,
+        CAMP_RHETORIC,
+        CAMP_MEDICINE,
+        CAMP_ANATOMY,
+        CAMP_HYGIENE,
+        CAMP_ENGINEERING,
+        CAMP_ARCHITECTURE,
+    ):
+        updated = discover_technology(current, technology.technology_id)
+        assert updated is not None
+        current = updated
+    assert prerequisites_met(current, CAMP_NAVIGATION) is False
+    assert discover_technology(current, CAMP_NAVIGATION.technology_id) is None
+
+    with_surveying = discover_technology(current, CAMP_SURVEYING.technology_id)
+    assert with_surveying is not None
+    assert prerequisites_met(with_surveying, CAMP_NAVIGATION) is True
+    with_navigation = discover_technology(
+        with_surveying, CAMP_NAVIGATION.technology_id
+    )
+    assert with_navigation is not None
+    assert with_navigation.technologies[16].discovered is True
 
 
 def test_world_rejects_duplicate_kinds() -> None:

@@ -25,6 +25,7 @@ from civitas.domain import (
     CAMP_ASEPSIS,
     CAMP_ASTRONOMY,
     CAMP_BLUEPRINT,
+    CAMP_COMPASS,
     CAMP_DIALECTIC,
     CAMP_DISSECTION,
     CAMP_ENGINEERING,
@@ -39,6 +40,7 @@ from civitas.domain import (
     CAMP_MATHEMATICS,
     CAMP_MEDICINE,
     CAMP_METALLURGY,
+    CAMP_NAVIGATION,
     CAMP_ORATION,
     CAMP_PHILOSOPHY,
     CAMP_PLUMB_LINE,
@@ -82,6 +84,7 @@ from civitas.domain import (
     MATHEMATICS_PRODUCE_ENERGY_DISCOUNT,
     MEDICINE_REST_RESTORE_BONUS,
     METALLURGY_STONE_GATHER_BONUS,
+    NAVIGATION_MOVE_ENERGY_DISCOUNT,
     OBSERVATORY_RETRIEVAL_LIMIT_BONUS,
     PHILOSOPHY_TEACHINGS_PER_KNOWER_BONUS,
     POTTERY_WATER_GATHER_BONUS,
@@ -2259,6 +2262,94 @@ def test_bridge_stacks_with_road_and_building_codes() -> None:
     )
 
 
+def test_compass_reduces_move_energy_society_wide() -> None:
+    """Active compass discounts MOVE energy for every agent."""
+    discovered_navigation = CAMP_NAVIGATION.model_copy(update={"discovered": True})
+    active_compass = CAMP_COMPASS.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        technologies=tuple(
+            discovered_navigation
+            if item.technology_id == CAMP_NAVIGATION.technology_id
+            else item
+            for item in default_technologies()
+        ),
+        innovations=tuple(
+            active_compass
+            if item.innovation_id == CAMP_COMPASS.innovation_id
+            else item
+            for item in default_innovations()
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert move_energy_discount(world, agent) == pytest.approx(
+        NAVIGATION_MOVE_ENERGY_DISCOUNT
+    )
+    assert effective_move_energy_cost(world, agent) == pytest.approx(
+        DEFAULT_MOVE_ENERGY_COST - NAVIGATION_MOVE_ENERGY_DISCOUNT
+    )
+    snap = census_effects(world)
+    assert snap.move_energy_cost_bps == round(
+        (DEFAULT_MOVE_ENERGY_COST - NAVIGATION_MOVE_ENERGY_DISCOUNT) * 10_000
+    )
+    bare = _world()
+    assert effective_move_energy_cost(bare, bare.agents[0]) == pytest.approx(
+        DEFAULT_MOVE_ENERGY_COST
+    )
+
+
+def test_compass_stacks_with_road_bridge_and_building_codes() -> None:
+    """Compass MOVE discount stacks with road, bridge, and building codes."""
+    discovered_navigation = CAMP_NAVIGATION.model_copy(update={"discovered": True})
+    active_compass = CAMP_COMPASS.model_copy(update={"active": True})
+    law = Law.create(0, 0, "Camp Building Codes", LawKind.BUILDING_CODES)
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(law,),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        infrastructure=(
+            Infrastructure.create(0, 0, 0, 0, "Camp Road", InfrastructureKind.ROAD),
+            Infrastructure.create(1, 0, 0, 0, "Camp Bridge", InfrastructureKind.BRIDGE),
+        ),
+        technologies=tuple(
+            discovered_navigation
+            if item.technology_id == CAMP_NAVIGATION.technology_id
+            else item
+            for item in default_technologies()
+        ),
+        innovations=tuple(
+            active_compass
+            if item.innovation_id == CAMP_COMPASS.innovation_id
+            else item
+            for item in default_innovations()
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    expected_discount = (
+        ROAD_MOVE_ENERGY_DISCOUNT
+        + BRIDGE_MOVE_ENERGY_DISCOUNT
+        + BUILDING_CODES_MOVE_ENERGY_DISCOUNT
+        + NAVIGATION_MOVE_ENERGY_DISCOUNT
+    )
+    assert move_energy_discount(world, agent) == pytest.approx(expected_discount)
+    assert effective_move_energy_cost(world, agent) == pytest.approx(0.0)
+    assert census_effects(world).move_energy_cost_bps == round(
+        max(
+            0.0,
+            DEFAULT_MOVE_ENERGY_COST
+            - ROAD_MOVE_ENERGY_DISCOUNT
+            - BRIDGE_MOVE_ENERGY_DISCOUNT
+            - NAVIGATION_MOVE_ENERGY_DISCOUNT,
+        )
+        * 10_000
+    )
+
+
 def test_guild_reduces_produce_energy_for_colocated_agents() -> None:
     """Active guilds discount PRODUCE energy at their seat location."""
     world = World(
@@ -2952,6 +3043,7 @@ def test_plumb_line_stacks_with_star_chart_and_retrieval_seats() -> None:
             CAMP_ENGINEERING,
             CAMP_ARCHITECTURE,
             discovered_surveying,
+            CAMP_NAVIGATION,
         ),
         innovations=(
             CAMP_FIRE_HEARTH,
@@ -2970,6 +3062,7 @@ def test_plumb_line_stacks_with_star_chart_and_retrieval_seats() -> None:
             CAMP_PULLEY,
             CAMP_BLUEPRINT,
             active_plumb_line,
+            CAMP_COMPASS,
         ),
         agents=(Agent.create(agent_id=0, name="A", location_id=1),),
     )

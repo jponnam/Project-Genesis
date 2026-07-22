@@ -43,6 +43,7 @@ class TechnologyKind(StrEnum):
     ENGINEERING = "engineering"
     ARCHITECTURE = "architecture"
     SURVEYING = "surveying"
+    NAVIGATION = "navigation"
 
 
 class Technology(BaseModel):
@@ -203,6 +204,13 @@ CAMP_SURVEYING: Technology = Technology.create(
     discovered=False,
     prerequisite_ids=(14,),
 )
+CAMP_NAVIGATION: Technology = Technology.create(
+    16,
+    "Camp Navigation",
+    TechnologyKind.NAVIGATION,
+    discovered=False,
+    prerequisite_ids=(15,),
+)
 
 
 def default_technologies() -> tuple[Technology, ...]:
@@ -224,6 +232,7 @@ def default_technologies() -> tuple[Technology, ...]:
         CAMP_ENGINEERING,
         CAMP_ARCHITECTURE,
         CAMP_SURVEYING,
+        CAMP_NAVIGATION,
     )
 
 
@@ -252,6 +261,7 @@ class TechnologyCensus(BaseModel):
     discovered_engineering_count: NonNegativeInt = 0
     discovered_architecture_count: NonNegativeInt = 0
     discovered_surveying_count: NonNegativeInt = 0
+    discovered_navigation_count: NonNegativeInt = 0
     locked_count: NonNegativeInt
     researchable_count: NonNegativeInt
 
@@ -377,6 +387,9 @@ def census_technologies(world: World) -> TechnologyCensus:
     surveying = sum(
         1 for tech in discovered if tech.kind is TechnologyKind.SURVEYING
     )
+    navigation = sum(
+        1 for tech in discovered if tech.kind is TechnologyKind.NAVIGATION
+    )
     return TechnologyCensus(
         tick=world.tick,
         technology_count=len(technologies),
@@ -398,6 +411,7 @@ def census_technologies(world: World) -> TechnologyCensus:
         discovered_engineering_count=engineering,
         discovered_architecture_count=architecture,
         discovered_surveying_count=surveying,
+        discovered_navigation_count=navigation,
         locked_count=len(locked),
         researchable_count=len(researchable),
     )
