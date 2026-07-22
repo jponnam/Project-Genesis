@@ -6,10 +6,12 @@ import pytest
 
 from civitas.domain import (
     AGORA_SOCIALIZE_RESTORE_BONUS,
+    APOTHECARY_DRINK_RESTORE_BONUS,
     ASSEMBLY_SOCIALIZE_RESTORE_BONUS,
     CAMP_LOCATION,
     CAMP_ORATION,
     CAMP_RHETORIC,
+    DEFAULT_DRINK_RESTORE,
     DEFAULT_REST_RESTORE,
     DEFAULT_SOCIALIZE_RESTORE,
     HOSPITAL_REST_RESTORE_BONUS,
@@ -348,6 +350,36 @@ def test_drink_action_uses_sanitation_bonus() -> None:
     )
     updated = ActionExecutor().execute(world, _choice(0, ActionKind.DRINK))
     assert updated.agents[0].needs.water == pytest.approx(0.75)
+
+
+def test_drink_action_uses_apothecary_bonus() -> None:
+    """DRINK restore includes active apothecary seat bonuses."""
+    agent = Agent.create(
+        agent_id=0,
+        name="A",
+        needs=Needs(food=1.0, water=0.4, energy=1.0, social=1.0, safety=1.0),
+    ).model_copy(
+        update={
+            "inventory": Inventory(
+                stacks=(ResourceStack(resource="water", quantity=1),)
+            )
+        }
+    )
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        institutions=(
+            Institution.create(
+                0, 0, 0, "Camp Apothecary", InstitutionKind.APOTHECARY
+            ),
+        ),
+        agents=(agent,),
+    )
+    updated = ActionExecutor().execute(world, _choice(0, ActionKind.DRINK))
+    assert updated.agents[0].needs.water == pytest.approx(
+        0.4 + DEFAULT_DRINK_RESTORE + APOTHECARY_DRINK_RESTORE_BONUS
+    )
 
 
 def test_restore_clamps_at_one() -> None:

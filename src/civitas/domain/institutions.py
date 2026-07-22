@@ -4,12 +4,13 @@ Phase 5 Milestone 4 plus Phase 9 Milestone 4 budgets and Milestone 9
 guilds, plus Phase 10 Milestone 2 archives, Milestone 6 bureaucracies,
 and Milestone 8 academies, plus Phase 11 Milestone 3 temples,
 Milestone 6 schools, and Milestone 8 lyceums, plus Phase 12 Milestone 3
-hospitals. Institutions are
+hospitals and Milestone 6 apothecaries. Institutions are
 gov-attached civic organizations with a seat location inside the
 government's jurisdiction, an optional officer, and an integer budget
 funded from the parent government
 treasury. Councils, guilds, archives, bureaucracies, academies, temples,
-schools, lyceums, and hospitals coexist; this package seeds a single ``COUNCIL``.
+schools, lyceums, hospitals, and apothecaries coexist; this package seeds a
+single ``COUNCIL``.
 Writing-gated archive creation is a later milestone.
 """
 
@@ -42,6 +43,7 @@ class InstitutionKind(StrEnum):
     SCHOOL = "school"
     LYCEUM = "lyceum"
     HOSPITAL = "hospital"
+    APOTHECARY = "apothecary"
 
 
 class Institution(BaseModel):
@@ -120,6 +122,7 @@ class InstitutionCensus(BaseModel):
     active_school_count: NonNegativeInt = 0
     active_lyceum_count: NonNegativeInt = 0
     active_hospital_count: NonNegativeInt = 0
+    active_apothecary_count: NonNegativeInt = 0
     total_budget: NonNegativeInt = 0
     funded_count: NonNegativeInt = 0
 
@@ -421,6 +424,9 @@ def census_institutions(world: World) -> InstitutionCensus:
     active_hospitals = sum(
         1 for institution in active if institution.kind is InstitutionKind.HOSPITAL
     )
+    active_apothecaries = sum(
+        1 for institution in active if institution.kind is InstitutionKind.APOTHECARY
+    )
     total_budget = institution_budget_total(world)
     funded_count = sum(1 for institution in institutions if institution.budget > 0)
     return InstitutionCensus(
@@ -440,6 +446,7 @@ def census_institutions(world: World) -> InstitutionCensus:
         active_school_count=active_schools,
         active_lyceum_count=active_lyceums,
         active_hospital_count=active_hospitals,
+        active_apothecary_count=active_apothecaries,
         total_budget=total_budget,
         funded_count=funded_count,
     )

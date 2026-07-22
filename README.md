@@ -124,11 +124,12 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 12 — Milestone 5: Infirmary cities**
+**Phase 12 Milestone 6: Apothecary institutions**
 
-``CityKind.INFIRMARY`` adds non-capital public-health city seats. An
-active infirmary at the agent's location grants ``+0.05`` REST restore,
-stacking with fire hearth, remedy, temple, sanctuary, and hospital bonuses.
+``InstitutionKind.APOTHECARY`` adds government-attached public-health
+institution seats. An active apothecary at the agent's location grants
+``+0.05`` DRINK restore, stacking with well, shrine, clinic, and sanitation
+bonuses.
 
 ### Completed
 
@@ -237,6 +238,7 @@ JSONL storage → `civitas run`
 - Milestone 3: Hospital institutions
 - Milestone 4: Clinic infrastructure
 - Milestone 5: Infirmary cities
+- Milestone 6: Apothecary institutions
 
 ## License
 

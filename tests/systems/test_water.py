@@ -5,9 +5,13 @@ from __future__ import annotations
 import pytest
 
 from civitas.domain import (
+    APOTHECARY_DRINK_RESTORE_BONUS,
     CAMP_LOCATION,
+    DEFAULT_DRINK_RESTORE,
     Agent,
     Government,
+    Institution,
+    InstitutionKind,
     Inventory,
     Law,
     LawKind,
@@ -68,6 +72,24 @@ def test_drink_uses_sanitation_bonus() -> None:
     )
     updated = WaterSystem().drink(world, 0)
     assert updated.agents[0].needs.water == pytest.approx(0.85)
+
+
+def test_drink_uses_apothecary_bonus() -> None:
+    """WaterSystem drink restore includes active apothecary seat bonuses."""
+    world = _world_with_water(quantity=1).model_copy(
+        update={
+            "governments": (Government.create(0, "Camp", 0, (0,)),),
+            "institutions": (
+                Institution.create(
+                    0, 0, 0, "Camp Apothecary", InstitutionKind.APOTHECARY
+                ),
+            ),
+        }
+    )
+    updated = WaterSystem().drink(world, 0)
+    assert updated.agents[0].needs.water == pytest.approx(
+        0.5 + DEFAULT_DRINK_RESTORE + APOTHECARY_DRINK_RESTORE_BONUS
+    )
 
 
 def test_drink_without_water_is_noop() -> None:
