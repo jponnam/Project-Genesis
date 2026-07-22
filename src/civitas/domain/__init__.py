@@ -95,6 +95,7 @@ from civitas.domain.economy import (
 from civitas.domain.effects import (
     ACADEMY_TEACHINGS_PER_KNOWER_BONUS,
     AGORA_SOCIALIZE_RESTORE_BONUS,
+    ANATOMY_RESEARCH_POINTS_BONUS,
     APOTHECARY_DRINK_RESTORE_BONUS,
     ARCHIVE_RETRIEVAL_LIMIT_BONUS,
     ASTRONOMY_RETRIEVAL_LIMIT_BONUS,
@@ -335,6 +336,7 @@ from civitas.domain.infrastructure import (
 from civitas.domain.innovation import (
     CAMP_ABACUS,
     CAMP_DIALECTIC,
+    CAMP_DISSECTION,
     CAMP_FIRE_HEARTH,
     CAMP_FORGE,
     CAMP_IRRIGATION_CANAL,
@@ -382,6 +384,7 @@ from civitas.domain.institutions import (
     set_officer,
 )
 from civitas.domain.knowledge import (
+    ANATOMY_FACT,
     ASTRONOMY_FACT,
     DEFAULT_MIN_TEACH_TRUST,
     DEFAULT_TEACHINGS_PER_KNOWER,
@@ -571,6 +574,7 @@ from civitas.domain.reputation import (
     top_standing,
 )
 from civitas.domain.research import (
+    CAMP_ANATOMY_RESEARCH,
     CAMP_ASTRONOMY_RESEARCH,
     CAMP_IRRIGATION_RESEARCH,
     CAMP_LOGIC_RESEARCH,
@@ -625,6 +629,7 @@ from civitas.domain.taxes import (
     tax_due,
 )
 from civitas.domain.technology import (
+    CAMP_ANATOMY,
     CAMP_ASTRONOMY,
     CAMP_FIRE,
     CAMP_IRRIGATION,
@@ -698,6 +703,8 @@ __all__ = [
     "ACTION_NEED_TARGET",
     "ACTION_RESOURCE",
     "AGORA_SOCIALIZE_RESTORE_BONUS",
+    "ANATOMY_FACT",
+    "ANATOMY_RESEARCH_POINTS_BONUS",
     "APOTHECARY_DRINK_RESTORE_BONUS",
     "ARCHIVE_RETRIEVAL_LIMIT_BONUS",
     "ASSEMBLY_SOCIALIZE_RESTORE_BONUS",
@@ -707,11 +714,14 @@ __all__ = [
     "BUREAUCRACY_MARKET_FEE_DISCOUNT",
     "CALENDAR_RETRIEVAL_LIMIT_BONUS",
     "CAMP_ABACUS",
+    "CAMP_ANATOMY",
+    "CAMP_ANATOMY_RESEARCH",
     "CAMP_ASTRONOMY",
     "CAMP_ASTRONOMY_RESEARCH",
     "CAMP_CITY",
     "CAMP_COUNCIL",
     "CAMP_DIALECTIC",
+    "CAMP_DISSECTION",
     "CAMP_FIRE",
     "CAMP_FIRE_HEARTH",
     "CAMP_FORGE",

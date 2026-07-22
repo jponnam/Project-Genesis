@@ -36,7 +36,8 @@ and sanctuary), CLINIC DRINK restore bonuses (stacking with well,
 shrine, and sanitation), and INFIRMARY city REST restore bonuses
 (stacking with fire hearth, remedy, temple, sanctuary, and hospital).
 Phase 12 Milestone 6 adds APOTHECARY DRINK restore bonuses (stacking with
-well, shrine, clinic, and sanitation).
+well, shrine, clinic, and sanitation). Phase 12 Milestone 7 adds a global
+DISSECTION research-points bonus (stacking with syllogism).
 The action executor, retrieval path, market fills,
 knowledge diffusion, and research progression read these helpers;
 ``EffectsSystem`` only observes coverage. Systems never call each other.
@@ -94,6 +95,7 @@ FORUM_TEACHINGS_PER_KNOWER_BONUS: int = 1
 SCHOOL_TEACHINGS_PER_KNOWER_BONUS: int = 1
 PHILOSOPHY_TEACHINGS_PER_KNOWER_BONUS: int = 1
 LOGIC_RESEARCH_POINTS_BONUS: int = 1
+ANATOMY_RESEARCH_POINTS_BONUS: int = 1
 RHETORIC_SOCIALIZE_RESTORE_BONUS: float = 0.05
 AGORA_SOCIALIZE_RESTORE_BONUS: float = 0.05
 WELL_DRINK_RESTORE_BONUS: float = 0.05
@@ -512,10 +514,13 @@ def teachings_per_knower_bonus(world: World) -> int:
 
 
 def research_points_bonus(world: World) -> int:
-    """Return per-tick research point bonus from active logic innovations."""
+    """Return per-tick research point bonus from active research innovations."""
+    bonus = 0
     if innovation_kind_is_active(world, InnovationKind.SYLLOGISM):
-        return LOGIC_RESEARCH_POINTS_BONUS
-    return 0
+        bonus += LOGIC_RESEARCH_POINTS_BONUS
+    if innovation_kind_is_active(world, InnovationKind.DISSECTION):
+        bonus += ANATOMY_RESEARCH_POINTS_BONUS
+    return bonus
 
 
 def socialize_restore_bonus(
@@ -716,7 +721,7 @@ def effective_research_points_per_tick(
     *,
     base: int = DEFAULT_POINTS_PER_TICK,
 ) -> int:
-    """Return research points per tick including active syllogism bonus."""
+    """Return research points per tick including active research bonuses."""
     if base < 0:
         return 0
     return base + research_points_bonus(world)

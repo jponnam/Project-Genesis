@@ -124,12 +124,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 12 Milestone 6: Apothecary institutions**
+**Phase 12 Milestone 7: Anatomy technology**
 
-``InstitutionKind.APOTHECARY`` adds government-attached public-health
-institution seats. An active apothecary at the agent's location grants
-``+0.05`` DRINK restore, stacking with well, shrine, clinic, and sanitation
-bonuses.
+``TechnologyKind.ANATOMY`` extends the medicine branch with ``CAMP_ANATOMY``.
+Discovering anatomy activates ``InnovationKind.DISSECTION``; active dissection
+adds ``+1`` research point per tick, stacking with syllogism.
 
 ### Completed
 
@@ -239,6 +238,7 @@ JSONL storage → `civitas run`
 - Milestone 4: Clinic infrastructure
 - Milestone 5: Infirmary cities
 - Milestone 6: Apothecary institutions
+- Milestone 7: Anatomy technology
 
 ## License
 
