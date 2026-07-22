@@ -17,6 +17,7 @@ from civitas.domain import (
     AgentSpawned,
     CityCreated,
     GovernmentCreated,
+    InfrastructureCreated,
     InstitutionCreated,
     LawCreated,
     LocationCreated,
@@ -29,6 +30,7 @@ from civitas.domain import (
     default_cities,
     default_elections,
     default_governments,
+    default_infrastructure,
     default_institutions,
     default_laws,
     default_markets,
@@ -71,9 +73,11 @@ class WorldFactory:
         6. Build canonical institutions; optionally publish
            ``InstitutionCreated``.
         7. Build canonical cities; optionally publish ``CityCreated``.
-        8. For each ``agent_id`` in ``0 .. agent_count-1``, spawn a child
+        8. Build canonical infrastructure; optionally publish
+           ``InfrastructureCreated``.
+        9. For each ``agent_id`` in ``0 .. agent_count-1``, spawn a child
            RNG stream and sample personality + starting money at camp.
-        9. Optionally publish ``AgentSpawned`` for each agent in id order.
+        10. Optionally publish ``AgentSpawned`` for each agent in id order.
         """
         root_rng = SeededRNG.from_config(config)
         locations = default_world_map()
@@ -83,6 +87,7 @@ class WorldFactory:
         elections = default_elections()
         institutions = default_institutions()
         cities = default_cities()
+        infrastructure = default_infrastructure()
         agents: list[Agent] = []
 
         if bus is not None:
@@ -167,6 +172,19 @@ class WorldFactory:
                         is_capital=city.is_capital,
                     )
                 )
+            for item in infrastructure:
+                bus.publish(
+                    InfrastructureCreated(
+                        tick=Tick(value=0),
+                        infrastructure_id=item.infrastructure_id,
+                        government_id=item.government_id,
+                        city_id=item.city_id,
+                        location_id=item.location_id,
+                        name=item.name,
+                        kind=item.kind.value,
+                        active=item.active,
+                    )
+                )
 
         for agent_id in range(config.agent_count):
             agent = self._build_agent(root_rng=root_rng, agent_id=agent_id)
@@ -191,6 +209,7 @@ class WorldFactory:
             elections=elections,
             institutions=institutions,
             cities=cities,
+            infrastructure=infrastructure,
             agents=tuple(agents),
         )
 

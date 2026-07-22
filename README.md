@@ -118,12 +118,12 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 5 — Milestone 5: Cities**
+**Phase 5 — Milestone 6: Infrastructure**
 
-Settlements designate locations under governments. The factory seeds
-active capital `Camp City` (`SETTLEMENT`). Resident counts are derived
-from living agents at the seat; `CitySystem.observe` emits `CitiesObserved`.
-Infrastructure remains a later Phase 5 milestone.
+Built capacity attaches to city seats. The factory seeds active
+`Camp Well` (`WELL`). `InfrastructureSystem.observe` emits
+`InfrastructuresObserved`. Phase 5 complete; Phase 6 begins with
+technology / research.
 
 ### Completed
 
@@ -164,6 +164,7 @@ JSONL storage → `civitas run`
 - Milestone 3: Voting
 - Milestone 4: Institutions
 - Milestone 5: Cities
+- Milestone 6: Infrastructure
 
 ## License
 

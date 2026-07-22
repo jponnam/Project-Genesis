@@ -2,8 +2,8 @@
 
 Phase 5 Milestone 5. A city designates a location inside a government's
 jurisdiction as a settlement, with an optional capital flag. Resident
-counts are derived from living agents at the seat. Infrastructure,
-buildings, and extra city kinds remain later milestones.
+counts are derived from living agents at the seat. Infrastructure is a
+separate Phase 5 aggregate; extra city kinds remain later milestones.
 """
 
 from __future__ import annotations

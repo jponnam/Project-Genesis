@@ -15,6 +15,8 @@ from civitas.domain import (
     FamiliesObserved,
     GovernmentCreated,
     GovernmentsObserved,
+    InfrastructureCreated,
+    InfrastructuresObserved,
     InstitutionCreated,
     InstitutionsObserved,
     LawCreated,
@@ -94,6 +96,7 @@ def test_run_emits_lifecycle_and_tick_events() -> None:
     assert types.count(LawCreated.__name__) == 1
     assert types.count(InstitutionCreated.__name__) == 1
     assert types.count(CityCreated.__name__) == 1
+    assert types.count(InfrastructureCreated.__name__) == 1
     assert types.count(AgentSpawned.__name__) == 2
     assert types[1] == LocationCreated.__name__
     assert types[10] == MarketCreated.__name__
@@ -101,7 +104,8 @@ def test_run_emits_lifecycle_and_tick_events() -> None:
     assert types[12] == LawCreated.__name__
     assert types[13] == InstitutionCreated.__name__
     assert types[14] == CityCreated.__name__
-    assert types[15] == AgentSpawned.__name__
+    assert types[15] == InfrastructureCreated.__name__
+    assert types[16] == AgentSpawned.__name__
     assert types.count(TickStarted.__name__) == 2
     assert types.count(TickCompleted.__name__) == 2
     assert types[-1] == SimulationCompleted.__name__
@@ -115,6 +119,7 @@ def test_run_emits_lifecycle_and_tick_events() -> None:
     assert result.world.elections == ()
     assert len(result.world.institutions) == 1
     assert len(result.world.cities) == 1
+    assert len(result.world.infrastructure) == 1
 
 
 def test_each_tick_selects_and_executes_actions() -> None:
@@ -544,4 +549,28 @@ def test_cities_observed_each_tick_including_start() -> None:
     ]
     assert all(
         city > inst for inst, city in zip(inst_indexes, city_indexes, strict=True)
+    )
+
+
+def test_infrastructure_observed_each_tick_including_start() -> None:
+    """Engine emits an initial infrastructure census plus one per executed tick."""
+    result = SimulationEngine().run(SimulationConfig(seed=42, ticks=3, agent_count=4))
+    observed = [
+        event for event in result.events if isinstance(event, InfrastructuresObserved)
+    ]
+    assert len(observed) == 4  # tick 0 + ticks 1..3
+    assert observed[0].tick.value == 0
+    assert observed[-1].tick.value == 3
+    assert all(event.infrastructure_count == 1 for event in observed)
+    assert all(event.active_well_count == 1 for event in observed)
+    city_indexes = [
+        i for i, event in enumerate(result.events) if isinstance(event, CitiesObserved)
+    ]
+    infra_indexes = [
+        i
+        for i, event in enumerate(result.events)
+        if isinstance(event, InfrastructuresObserved)
+    ]
+    assert all(
+        infra > city for city, infra in zip(city_indexes, infra_indexes, strict=True)
     )

@@ -24,6 +24,9 @@ from civitas.domain import (
     GovernmentCreated,
     GovernmentId,
     GovernmentsObserved,
+    InfrastructureCreated,
+    InfrastructureId,
+    InfrastructuresObserved,
     InstitutionCreated,
     InstitutionId,
     InstitutionsObserved,
@@ -764,3 +767,36 @@ def test_city_created_and_observed_round_trips() -> None:
     assert isinstance(restored, CitiesObserved)
     assert restored.city_count == 1
     assert restored.total_residents == 4
+
+
+def test_infrastructure_created_and_observed_round_trips() -> None:
+    """Infrastructure create/observe events serialize losslessly."""
+    created = InfrastructureCreated(
+        sequence=25,
+        tick=Tick(value=0),
+        infrastructure_id=InfrastructureId(value=0),
+        government_id=GovernmentId(value=0),
+        city_id=CityId(value=0),
+        location_id=LocationId(value=0),
+        name="Camp Well",
+        kind="well",
+        active=True,
+    )
+    restored_created = event_from_record(created.to_record())
+    assert isinstance(restored_created, InfrastructureCreated)
+    assert restored_created.name == "Camp Well"
+    assert restored_created.kind == "well"
+
+    observed = InfrastructuresObserved(
+        sequence=26,
+        tick=Tick(value=7),
+        infrastructure_count=1,
+        active_count=1,
+        inactive_count=0,
+        governments_with_infrastructure=1,
+        cities_with_infrastructure=1,
+        active_well_count=1,
+    )
+    restored = event_from_record(observed.to_record())
+    assert isinstance(restored, InfrastructuresObserved)
+    assert restored.active_well_count == 1
