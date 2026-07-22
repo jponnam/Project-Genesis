@@ -8,7 +8,10 @@ from civitas.domain import (
     APOTHECARY_DRINK_RESTORE_BONUS,
     CAMP_LOCATION,
     DEFAULT_DRINK_RESTORE,
+    LAZARETTO_DRINK_RESTORE_BONUS,
     Agent,
+    City,
+    CityKind,
     Government,
     Institution,
     InstitutionKind,
@@ -21,6 +24,7 @@ from civitas.domain import (
     ResourceStack,
     SimulationConfig,
     World,
+    default_world_map,
 )
 from civitas.engine import EventBus
 from civitas.systems import WaterConfig, WaterSystem
@@ -89,6 +93,27 @@ def test_drink_uses_apothecary_bonus() -> None:
     updated = WaterSystem().drink(world, 0)
     assert updated.agents[0].needs.water == pytest.approx(
         0.5 + DEFAULT_DRINK_RESTORE + APOTHECARY_DRINK_RESTORE_BONUS
+    )
+
+
+def test_drink_uses_lazaretto_bonus() -> None:
+    """WaterSystem drink restore includes active lazaretto city seat bonuses."""
+    agent = _world_with_water(quantity=1).agents[0].model_copy(
+        update={"location_id": default_world_map()[1].location_id}
+    )
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Lazaretto", CityKind.LAZARETTO),
+        ),
+        agents=(agent,),
+    )
+    updated = WaterSystem().drink(world, 0)
+    assert updated.agents[0].needs.water == pytest.approx(
+        0.5 + DEFAULT_DRINK_RESTORE + LAZARETTO_DRINK_RESTORE_BONUS
     )
 
 

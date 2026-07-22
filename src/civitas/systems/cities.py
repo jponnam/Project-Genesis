@@ -78,6 +78,7 @@ class CitySystem:
                     active_sanctuary_count=snap.active_sanctuary_count,
                     active_agora_count=snap.active_agora_count,
                     active_infirmary_count=snap.active_infirmary_count,
+                    active_lazaretto_count=snap.active_lazaretto_count,
                 )
             )
         return world

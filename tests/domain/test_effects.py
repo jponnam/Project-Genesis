@@ -61,6 +61,7 @@ from civitas.domain import (
     HYGIENE_DRINK_RESTORE_BONUS,
     INFIRMARY_REST_RESTORE_BONUS,
     IRRIGATION_WATER_GATHER_BONUS,
+    LAZARETTO_DRINK_RESTORE_BONUS,
     LIBRARY_RETRIEVAL_LIMIT_BONUS,
     LOGIC_RESEARCH_POINTS_BONUS,
     LYCEUM_RETRIEVAL_LIMIT_BONUS,
@@ -124,6 +125,7 @@ from civitas.domain import (
     location_has_active_guild,
     location_has_active_hospital,
     location_has_active_infirmary,
+    location_has_active_lazaretto,
     location_has_active_library,
     location_has_active_lyceum,
     location_has_active_observatory,
@@ -1596,6 +1598,43 @@ def test_apothecary_boosts_drink_restore_for_colocated_agents() -> None:
     )
 
 
+def test_lazaretto_boosts_drink_restore_for_residents() -> None:
+    """Active lazaretto cities raise DRINK restore for residents."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp City", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Lazaretto", CityKind.LAZARETTO),
+        ),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_lazaretto(world, agent.location_id) is True
+    assert drink_restore_bonus(world, agent) == LAZARETTO_DRINK_RESTORE_BONUS
+    assert effective_drink_restore(world, agent) == pytest.approx(
+        DEFAULT_DRINK_RESTORE + LAZARETTO_DRINK_RESTORE_BONUS
+    )
+
+    at_capital = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp City", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Lazaretto", CityKind.LAZARETTO),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_lazaretto(at_capital, 0) is False
+    assert effective_drink_restore(at_capital, at_capital.agents[0]) == pytest.approx(
+        DEFAULT_DRINK_RESTORE
+    )
+    bare = _world()
+    assert location_has_active_lazaretto(bare, bare.agents[0].location_id) is False
+
+
 def test_asepsis_boosts_drink_restore_society_wide() -> None:
     """Active asepsis adds a DRINK restore bonus for every agent."""
     discovered_hygiene = CAMP_HYGIENE.model_copy(update={"discovered": True})
@@ -1628,35 +1667,40 @@ def test_asepsis_boosts_drink_restore_society_wide() -> None:
     )
 
 
-def test_well_shrine_clinic_and_apothecary_drink_restore_bonuses_stack() -> None:
-    """WELL, SHRINE, CLINIC, and APOTHECARY bonuses stack at the same seat."""
+def test_well_shrine_clinic_apothecary_and_lazaretto_bonuses_stack() -> None:
+    """Drink seat bonuses stack when colocated at a lazaretto."""
     world = World(
         config=SimulationConfig(agent_count=1, seed=1),
-        locations=(CAMP_LOCATION,),
-        governments=(Government.create(0, "Camp", 0, (0,)),),
-        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Lazaretto", CityKind.LAZARETTO),
+        ),
         infrastructure=(
-            Infrastructure.create(0, 0, 0, 0, "Camp Well", InfrastructureKind.WELL),
-            Infrastructure.create(1, 0, 0, 0, "Camp Shrine", InfrastructureKind.SHRINE),
-            Infrastructure.create(2, 0, 0, 0, "Camp Clinic", InfrastructureKind.CLINIC),
+            Infrastructure.create(0, 0, 1, 1, "Camp Well", InfrastructureKind.WELL),
+            Infrastructure.create(1, 0, 1, 1, "Camp Shrine", InfrastructureKind.SHRINE),
+            Infrastructure.create(2, 0, 1, 1, "Camp Clinic", InfrastructureKind.CLINIC),
         ),
         institutions=(
             Institution.create(
-                0, 0, 0, "Camp Apothecary", InstitutionKind.APOTHECARY
+                0, 0, 1, "Camp Apothecary", InstitutionKind.APOTHECARY
             ),
         ),
-        agents=(Agent.create(agent_id=0, name="A"),),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
     )
     agent = world.agents[0]
     assert location_has_active_well(world, agent.location_id) is True
     assert location_has_active_shrine(world, agent.location_id) is True
     assert location_has_active_clinic(world, agent.location_id) is True
     assert location_has_active_apothecary(world, agent.location_id) is True
+    assert location_has_active_lazaretto(world, agent.location_id) is True
     assert drink_restore_bonus(world, agent) == pytest.approx(
         WELL_DRINK_RESTORE_BONUS
         + SHRINE_DRINK_RESTORE_BONUS
         + CLINIC_DRINK_RESTORE_BONUS
         + APOTHECARY_DRINK_RESTORE_BONUS
+        + LAZARETTO_DRINK_RESTORE_BONUS
     )
     assert effective_drink_restore(world, agent) == pytest.approx(
         DEFAULT_DRINK_RESTORE
@@ -1664,6 +1708,7 @@ def test_well_shrine_clinic_and_apothecary_drink_restore_bonuses_stack() -> None
         + SHRINE_DRINK_RESTORE_BONUS
         + CLINIC_DRINK_RESTORE_BONUS
         + APOTHECARY_DRINK_RESTORE_BONUS
+        + LAZARETTO_DRINK_RESTORE_BONUS
     )
 
 
@@ -1693,9 +1738,12 @@ def test_sanitation_and_asepsis_stack_with_all_drink_restore_seats() -> None:
     active_asepsis = CAMP_ASEPSIS.model_copy(update={"active": True})
     world = World(
         config=SimulationConfig(agent_count=1, seed=1),
-        locations=(CAMP_LOCATION,),
-        governments=(Government.create(0, "Camp", 0, (0,)),),
-        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Lazaretto", CityKind.LAZARETTO),
+        ),
         technologies=tuple(
             discovered_hygiene
             if tech.technology_id == CAMP_HYGIENE.technology_id
@@ -1704,24 +1752,26 @@ def test_sanitation_and_asepsis_stack_with_all_drink_restore_seats() -> None:
         ),
         innovations=(active_asepsis,),
         infrastructure=(
-            Infrastructure.create(0, 0, 0, 0, "Camp Well", InfrastructureKind.WELL),
-            Infrastructure.create(1, 0, 0, 0, "Camp Shrine", InfrastructureKind.SHRINE),
-            Infrastructure.create(2, 0, 0, 0, "Camp Clinic", InfrastructureKind.CLINIC),
+            Infrastructure.create(0, 0, 1, 1, "Camp Well", InfrastructureKind.WELL),
+            Infrastructure.create(1, 0, 1, 1, "Camp Shrine", InfrastructureKind.SHRINE),
+            Infrastructure.create(2, 0, 1, 1, "Camp Clinic", InfrastructureKind.CLINIC),
         ),
         institutions=(
             Institution.create(
-                0, 0, 0, "Camp Apothecary", InstitutionKind.APOTHECARY
+                0, 0, 1, "Camp Apothecary", InstitutionKind.APOTHECARY
             ),
         ),
         laws=(Law.create(0, 0, "Camp Sanitation", LawKind.SANITATION),),
-        agents=(Agent.create(agent_id=0, name="A"),),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
     )
     agent = world.agents[0]
+    assert location_has_active_lazaretto(world, agent.location_id) is True
     assert drink_restore_bonus(world, agent) == pytest.approx(
         WELL_DRINK_RESTORE_BONUS
         + SHRINE_DRINK_RESTORE_BONUS
         + CLINIC_DRINK_RESTORE_BONUS
         + APOTHECARY_DRINK_RESTORE_BONUS
+        + LAZARETTO_DRINK_RESTORE_BONUS
         + SANITATION_DRINK_RESTORE_BONUS
         + HYGIENE_DRINK_RESTORE_BONUS
     )
@@ -1731,6 +1781,7 @@ def test_sanitation_and_asepsis_stack_with_all_drink_restore_seats() -> None:
         + SHRINE_DRINK_RESTORE_BONUS
         + CLINIC_DRINK_RESTORE_BONUS
         + APOTHECARY_DRINK_RESTORE_BONUS
+        + LAZARETTO_DRINK_RESTORE_BONUS
         + SANITATION_DRINK_RESTORE_BONUS
         + HYGIENE_DRINK_RESTORE_BONUS
     )
