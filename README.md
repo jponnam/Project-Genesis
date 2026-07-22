@@ -126,12 +126,12 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 14 Milestone 11: Customs laws**
+**Phase 14 Milestone 12: Entrepot cities**
 
-``LawKind.CUSTOMS`` grants living subjects -0.02 PRODUCE energy cost
-when active. At most one active customs statute per government. Stacks
-with guild, workshop, foundry, abacus, and pulley. Not seeded in
-``default_laws``.
+``CityKind.ENTREPOT`` is a non-capital specialized seat for food staging.
+Active entrepots grant +1 food gather at their seat, stacking with
+storehouse and waystation. Not seeded; Camp City remains the only seeded
+settlement capital.
 
 ### Completed
 
@@ -274,6 +274,7 @@ JSONL storage → `civitas run`
 - Milestone 9: Beacon infrastructure
 - Milestone 10: Seafaring technology
 - Milestone 11: Customs laws
+- Milestone 12: Entrepot cities
 
 ## License
 
