@@ -26,6 +26,7 @@ from civitas.domain import (
     RHETORIC_FACT,
     SEAFARING_FACT,
     SURVEYING_FACT,
+    TANNING_FACT,
     TEXTILES_FACT,
     WRITING_FACT,
     Agent,
@@ -119,6 +120,7 @@ def test_reflection_prompt_accepts_full_technology_fact_content() -> None:
             RHETORIC_FACT,
             SEAFARING_FACT,
             SURVEYING_FACT,
+            TANNING_FACT,
             TEXTILES_FACT,
             WRITING_FACT,
         }
@@ -128,6 +130,6 @@ def test_reflection_prompt_accepts_full_technology_fact_content() -> None:
     ).with_tick(Tick(value=1))
     world, _ = apply_memory_encoding(world)
     prompt = build_reflection_prompt(world.agents[0])
-    assert len(prompt) == 310
-    assert "dyeing" in prompt
+    assert len(prompt) == 318
+    assert "tanning" in prompt
     LanguageModelRequest(prompt=prompt, seed=42)

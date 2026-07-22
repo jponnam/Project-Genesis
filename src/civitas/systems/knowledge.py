@@ -118,6 +118,7 @@ class KnowledgeSystem:
                     forestry_knower_count=snap.forestry_knower_count,
                     textiles_knower_count=snap.textiles_knower_count,
                     dyeing_knower_count=snap.dyeing_knower_count,
+                    tanning_knower_count=snap.tanning_knower_count,
                     total_fact_instances=snap.total_fact_instances,
                     coverage_bps=snap.coverage_bps,
                 )

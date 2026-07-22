@@ -135,7 +135,10 @@ bonuses at the institution seat (stacking with
 scribe/dialectic/scriptorium/academy/forum/school/stoa/collegium/
 architect/cartographer/agronomist/curriculum). Phase 16 Milestone 9 adds
 WAREHOUSE market-fee discounts at the infrastructure seat (stacking with
-bureaucracy, harbor, merchant, dyer, and mordant). The action executor,
+bureaucracy, harbor, merchant, dyer, and mordant). Phase 16 Milestone 10
+adds a global TANNERY produce-energy discount society-wide (stacking with
+guild, workshop, foundry, weaver, fulling mill, mill town, abacus, pulley,
+customs, labor, and loom). The action executor,
 retrieval
 path, market fills, knowledge
 diffusion, and research progression read these helpers; ``EffectsSystem``
@@ -247,6 +250,7 @@ MILL_TOWN_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 MATHEMATICS_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 ENGINEERING_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 TEXTILES_PRODUCE_ENERGY_DISCOUNT: float = 0.02
+TANNING_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 ARCHIVE_RETRIEVAL_LIMIT_BONUS: int = 1
 LIBRARY_RETRIEVAL_LIMIT_BONUS: int = 1
 OBSERVATORY_RETRIEVAL_LIMIT_BONUS: int = 1
@@ -1283,8 +1287,9 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
     society-wide. An active PULLEY innovation contributes
     ``ENGINEERING_PRODUCE_ENERGY_DISCOUNT`` society-wide. An active LOOM
     innovation contributes ``TEXTILES_PRODUCE_ENERGY_DISCOUNT``
-    society-wide. An active ``LABOR`` statute contributes its subject
-    discount. All stack when present.
+    society-wide. An active TANNERY innovation contributes
+    ``TANNING_PRODUCE_ENERGY_DISCOUNT`` society-wide. An active ``LABOR``
+    statute contributes its subject discount. All stack when present.
     """
     discount = 0.0
     if location_has_active_guild(world, agent.location_id):
@@ -1307,6 +1312,8 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
         discount += ENGINEERING_PRODUCE_ENERGY_DISCOUNT
     if innovation_kind_is_active(world, InnovationKind.LOOM):
         discount += TEXTILES_PRODUCE_ENERGY_DISCOUNT
+    if innovation_kind_is_active(world, InnovationKind.TANNERY):
+        discount += TANNING_PRODUCE_ENERGY_DISCOUNT
     return discount
 
 
@@ -1705,6 +1712,8 @@ def census_effects(world: World) -> EffectsCensus:
         produce_discount += ENGINEERING_PRODUCE_ENERGY_DISCOUNT
     if innovation_kind_is_active(world, InnovationKind.LOOM):
         produce_discount += TEXTILES_PRODUCE_ENERGY_DISCOUNT
+    if innovation_kind_is_active(world, InnovationKind.TANNERY):
+        produce_discount += TANNING_PRODUCE_ENERGY_DISCOUNT
     produce_at_guild = clamp_unit(
         max(
             0.0,
