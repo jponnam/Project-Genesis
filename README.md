@@ -129,16 +129,15 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 17 Milestone 9: Forge works infrastructure**
+**Phase 17 Milestone 10: Toolmaking technology**
 
-``InfrastructureKind.FORGE_WORKS`` is a government-attached infrastructure
-piece seated at a city inside its jurisdiction. An active forge works
-grants a produce-energy discount at its seat that stacks with the guild,
-workshop, weaver, smelter, foundry, fulling mill, mill town, tannery,
-bellows, abacus, pulley, customs, labor, and loom discounts. Forge works
-are built via government treasury or institution budget, are not seeded,
-and are surfaced through the infrastructure census and
-``InfrastructuresObserved`` events.
+``TechnologyKind.TOOLMAKING`` is a society-level technology requiring
+smithing, adopted through the ``LATHE`` innovation. An active lathe
+grants a society-wide PRODUCE energy discount that stacks with guild,
+workshop, weaver, smelter, foundry, fulling mill, forge works, mill
+town, tannery, bellows, abacus, pulley, customs, labor, and loom.
+Discovery flows through the standard research, innovation, and
+knowledge-diffusion pipeline.
 
 ### Completed
 
@@ -321,6 +320,7 @@ JSONL storage → `civitas run`
 - Milestone 7: Smithing technology
 - Milestone 8: Smith institutions
 - Milestone 9: Forge works infrastructure
+- Milestone 10: Toolmaking technology
 
 ## License
 

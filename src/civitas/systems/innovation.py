@@ -121,6 +121,7 @@ class InnovationSystem:
                     active_tannery_count=snap.active_tannery_count,
                     active_pickaxe_count=snap.active_pickaxe_count,
                     active_bellows_count=snap.active_bellows_count,
+                    active_lathe_count=snap.active_lathe_count,
                 )
             )
         return world
