@@ -75,6 +75,7 @@ class LawSystem:
                     active_quarantine_count=snap.active_quarantine_count,
                     active_building_codes_count=snap.active_building_codes_count,
                     active_zoning_count=snap.active_zoning_count,
+                    active_passage_count=snap.active_passage_count,
                 )
             )
         return world

@@ -126,10 +126,10 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 14 Milestone 1: Navigation technology**
+**Phase 14 Milestone 2: Passage laws**
 
-``TechnologyKind.NAVIGATION`` requires surveying. Its inactive
-``COMPASS`` innovation grants ``-0.02`` MOVE energy when activated.
+Active ``PASSAGE`` statutes grant living subjects ``-0.02`` MOVE energy
+cost (stacking with road, bridge, building codes, and compass).
 
 ### Completed
 
@@ -262,6 +262,7 @@ JSONL storage → `civitas run`
 
 **Phase 14:**
 - Milestone 1: Navigation technology
+- Milestone 2: Passage laws
 
 ## License
 

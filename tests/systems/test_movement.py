@@ -9,6 +9,7 @@ from civitas.domain import (
     BUILDING_CODES_MOVE_ENERGY_DISCOUNT,
     CAMP_LOCATION,
     DEFAULT_MOVE_ENERGY_COST,
+    PASSAGE_MOVE_ENERGY_DISCOUNT,
     Agent,
     AgentMoved,
     AgentStatus,
@@ -77,6 +78,30 @@ def test_move_to_uses_building_codes_discount() -> None:
         agents=(agent,),
     )
     expected_cost = DEFAULT_MOVE_ENERGY_COST - BUILDING_CODES_MOVE_ENERGY_DISCOUNT
+    system = MovementSystem()
+    assert system.can_move(world, 0, 1) is True
+    updated = system.move_to(world, 0, 1)
+    assert updated.agents[0].location_id.value == 1
+    assert updated.agents[0].needs.energy == pytest.approx(0.04 - expected_cost)
+
+
+def test_move_to_uses_passage_discount() -> None:
+    """MOVE spends the effective energy cost for passage subjects."""
+    plain = Location.create(1, "Plain", 1, 0, kind=LocationKind.PLAIN)
+    agent = Agent.create(
+        agent_id=0,
+        name="A",
+        location_id=0,
+        needs=Needs(food=1.0, water=1.0, energy=0.04, social=1.0, safety=1.0),
+    )
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION, plain),
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        laws=(Law.create(0, 0, "Camp Passage", LawKind.PASSAGE),),
+        agents=(agent,),
+    )
+    expected_cost = DEFAULT_MOVE_ENERGY_COST - PASSAGE_MOVE_ENERGY_DISCOUNT
     system = MovementSystem()
     assert system.can_move(world, 0, 1) is True
     updated = system.move_to(world, 0, 1)
