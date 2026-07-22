@@ -119,12 +119,12 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 7 — Milestone 3: Planning**
+**Phase 7 — Milestone 4: Memory retrieval**
 
-After reflection, `PlanningSystem.apply_planning` sets one
-`satisfy_<need>` goal per living agent from their priority belief (or
-dominant need). Goals feed the existing utility policy. Memory retrieval
-remains a later Phase 7 milestone.
+After planning, `RetrievalSystem.apply_retrieval` loads the top relevant
+episodic/reflection memories into each living agent's `working_memory`,
+keyed by the current satisfy-need query. The utility policy can boost
+matching actions from that context on the next tick.
 
 ### Completed
 
@@ -177,6 +177,7 @@ JSONL storage → `civitas run`
 - Milestone 1: Episodic memory encoding
 - Milestone 2: Reflection
 - Milestone 3: Planning
+- Milestone 4: Memory retrieval
 
 ## License
 

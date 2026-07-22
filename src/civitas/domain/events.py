@@ -669,6 +669,24 @@ class PlansObserved(DomainEvent):
     satisfy_energy_count: NonNegativeInt
 
 
+class MemoryRetrieved(DomainEvent):
+    """Emitted when an agent retrieves memories into working memory."""
+
+    agent_id: AgentId
+    query: NonEmptyStr
+    retrieved_count: NonNegativeInt
+    summary: NonEmptyStr
+
+
+class RetrievalObserved(DomainEvent):
+    """Emitted when a memory-retrieval census is taken."""
+
+    living_count: NonNegativeInt
+    agents_with_context: NonNegativeInt
+    total_retrieved: NonNegativeInt
+    mean_retrieved_bps: NonNegativeInt
+
+
 CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     SimulationStarted,
     SimulationCompleted,
@@ -728,6 +746,8 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     AgentReflected,
     PlanUpdated,
     PlansObserved,
+    MemoryRetrieved,
+    RetrievalObserved,
 )
 
 EVENT_TYPE_REGISTRY: dict[str, type[DomainEvent]] = {

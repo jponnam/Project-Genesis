@@ -2,7 +2,7 @@
 
 Phase 7 Milestone 1. Each apply tick appends a deterministic episode
 record to living agents. Reflection (Milestone 2) may append additional
-records. Planning and retrieval remain later milestones.
+records. Retrieval (Milestone 4) reads these into working memory.
 """
 
 from __future__ import annotations

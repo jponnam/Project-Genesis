@@ -40,6 +40,7 @@ from civitas.domain import (
     ResearchProgressed,
     ResourceConsumed,
     ResourceGathered,
+    RetrievalObserved,
     SimulationCompleted,
     SimulationConfig,
     SimulationStarted,
@@ -762,4 +763,30 @@ def test_plans_observed_each_tick_including_start() -> None:
     assert all(
         plan > cognition
         for cognition, plan in zip(cognition_indexes, plan_indexes, strict=True)
+    )
+
+
+def test_retrieval_observed_each_tick_including_start() -> None:
+    """Engine emits an initial retrieval census plus one per executed tick."""
+    result = SimulationEngine().run(SimulationConfig(seed=42, ticks=3, agent_count=4))
+    observed = [
+        event for event in result.events if isinstance(event, RetrievalObserved)
+    ]
+    assert len(observed) == 4
+    assert observed[0].tick.value == 0
+    assert observed[0].agents_with_context == 0
+    assert observed[-1].tick.value == 3
+    assert observed[-1].agents_with_context == 4
+    assert observed[-1].total_retrieved == 12
+    plan_indexes = [
+        i for i, event in enumerate(result.events) if isinstance(event, PlansObserved)
+    ]
+    retrieval_indexes = [
+        i
+        for i, event in enumerate(result.events)
+        if isinstance(event, RetrievalObserved)
+    ]
+    assert all(
+        retrieval > plan
+        for plan, retrieval in zip(plan_indexes, retrieval_indexes, strict=True)
     )

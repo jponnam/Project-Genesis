@@ -23,6 +23,7 @@ from civitas.domain.attributes import (
     Personality,
     RelationshipMap,
     Skills,
+    WorkingMemory,
 )
 from civitas.domain.ids import AgentId, LocationId
 from civitas.domain.time import Tick
@@ -65,6 +66,7 @@ class Agent(BaseModel):
     skills: Skills = Field(default_factory=Skills)
     knowledge: Knowledge = Field(default_factory=Knowledge)
     memory: Memory = Field(default_factory=Memory)
+    working_memory: WorkingMemory = Field(default_factory=WorkingMemory)
     health: Health = Field(default_factory=Health)
     status: AgentStatus = AgentStatus.ALIVE
 

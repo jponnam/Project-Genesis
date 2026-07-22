@@ -3,7 +3,7 @@
 Phase 7 Milestone 2. After episode encoding, each living agent builds a
 prompt, completes it through an injected language-model port, stores a
 reflection memory, and upserts a priority belief. Planning and retrieval
-remain later milestones.
+consume these outputs in later milestones.
 """
 
 from __future__ import annotations
