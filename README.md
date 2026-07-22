@@ -123,14 +123,14 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 11 — Milestone 11: Assembly laws**
+**Phase 11 — Milestone 12: Agora cities**
 
-``LawKind.ASSEMBLY`` adds a unique-active statute kind for governments.
-Living subjects under an active assembly law gain a ``+0.05`` SOCIALIZE
-restore bonus through ``effective_socialize_restore``; the subject bonus
-stacks with the society-wide ORATION innovation bonus. Law censuses and
-``LawsObserved`` events track active assembly counts without seeding an
-assembly law by default.
+``CityKind.AGORA`` adds a non-capital specialized city seat for civic
+social life. Agents at an active agora city seat gain a ``+0.05``
+SOCIALIZE restore bonus through ``effective_socialize_restore``; the seat
+bonus stacks with the society-wide ORATION innovation bonus and
+subject-scoped ASSEMBLY law bonus. City censuses and ``CitiesObserved``
+events track active agora counts without seeding an agora by default.
 
 ### Completed
 
@@ -231,6 +231,7 @@ JSONL storage → `civitas run`
 - Milestone 9: Stoa infrastructure
 - Milestone 10: Rhetoric technology
 - Milestone 11: Assembly laws
+- Milestone 12: Agora cities
 
 ## License
 

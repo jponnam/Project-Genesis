@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from civitas.domain import (
+    AGORA_SOCIALIZE_RESTORE_BONUS,
     ASSEMBLY_SOCIALIZE_RESTORE_BONUS,
     CAMP_LOCATION,
     CAMP_ORATION,
@@ -18,6 +19,8 @@ from civitas.domain import (
     AgentId,
     AgentMoved,
     AgentStatus,
+    City,
+    CityKind,
     Government,
     Health,
     Inventory,
@@ -38,6 +41,7 @@ from civitas.domain import (
     World,
     default_innovations,
     default_technologies,
+    default_world_map,
     get_bond,
     location_stock,
 )
@@ -642,6 +646,38 @@ def test_socialize_stacks_active_assembly_and_oration_restore_bonuses() -> None:
         + DEFAULT_SOCIALIZE_RESTORE
         + RHETORIC_SOCIALIZE_RESTORE_BONUS
         + ASSEMBLY_SOCIALIZE_RESTORE_BONUS
+    )
+
+
+def test_socialize_uses_active_agora_restore_bonus() -> None:
+    """SOCIALIZE restore includes active agora bonus at the actor's seat."""
+    actor = Agent.create(agent_id=0, name="A", location_id=1).model_copy(
+        update={
+            "needs": Needs(food=1.0, water=1.0, energy=1.0, social=0.4, safety=1.0),
+        }
+    )
+    partner = Agent.create(agent_id=1, name="B", location_id=1)
+    world = World(
+        config=SimulationConfig(agent_count=2, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Agora", CityKind.AGORA),
+        ),
+        agents=(actor, partner),
+    )
+    choice = ActionChoice(
+        agent_id=AgentId(value=0),
+        action=ActionKind.SOCIALIZE,
+        utility=1.0,
+        target_agent_id=AgentId(value=1),
+    )
+    updated = ActionExecutor().execute(world, choice)
+    new_actor = updated.agent_by_id(0)
+    assert new_actor is not None
+    assert new_actor.needs.social == pytest.approx(
+        0.4 + DEFAULT_SOCIALIZE_RESTORE + AGORA_SOCIALIZE_RESTORE_BONUS
     )
 
 
