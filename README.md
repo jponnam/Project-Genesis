@@ -127,12 +127,14 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 15 Milestone 7: Crop rotation technology**
+**Phase 15 Milestone 8: Agronomist institutions**
 
-``TechnologyKind.CROP_ROTATION`` (id 20) requires agriculture. Research
-threshold 10. ``InnovationKind.FALLOW`` raises EAT restore by 0.05
-society-wide when active, stacking with zoning and land tenure for
-subjects.
+``InstitutionKind.AGRONOMIST`` is a teaching institution seated in a
+government's jurisdiction. An active agronomist raises
+teachings-per-knower by ``AGRONOMIST_TEACHINGS_PER_KNOWER_BONUS`` (1) at
+its seat, stacking with every other teaching source (scribe, dialectic,
+scriptorium, stoa, academy, forum, school, collegium, architect,
+cartographer, and curriculum). Agronomists are not seeded.
 
 ### Completed
 
@@ -285,6 +287,7 @@ JSONL storage → `civitas run`
 - Milestone 5: Farmstead cities
 - Milestone 6: Husbandman institutions
 - Milestone 7: Crop rotation technology
+- Milestone 8: Agronomist institutions
 
 ## License
 
