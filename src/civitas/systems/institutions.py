@@ -90,6 +90,7 @@ class InstitutionSystem:
                     active_apothecary_count=snap.active_apothecary_count,
                     active_collegium_count=snap.active_collegium_count,
                     active_workshop_count=snap.active_workshop_count,
+                    active_mason_count=snap.active_mason_count,
                     total_budget=snap.total_budget,
                     funded_count=snap.funded_count,
                 )
