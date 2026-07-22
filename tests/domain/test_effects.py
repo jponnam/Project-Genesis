@@ -21,6 +21,7 @@ from civitas.domain import (
     CAMP_ASTRONOMY,
     CAMP_DIALECTIC,
     CAMP_DISSECTION,
+    CAMP_ENGINEERING,
     CAMP_FIRE,
     CAMP_FIRE_HEARTH,
     CAMP_FORGE,
@@ -36,6 +37,7 @@ from civitas.domain import (
     CAMP_PHILOSOPHY,
     CAMP_POTTERY,
     CAMP_POTTERY_CRAFT,
+    CAMP_PULLEY,
     CAMP_REMEDY,
     CAMP_RHETORIC,
     CAMP_SCRIBE,
@@ -54,6 +56,7 @@ from civitas.domain import (
     DEFAULT_RETRIEVAL_LIMIT,
     DEFAULT_SOCIALIZE_RESTORE,
     DEFAULT_TEACHINGS_PER_KNOWER,
+    ENGINEERING_PRODUCE_ENERGY_DISCOUNT,
     FIRE_HEARTH_REST_BONUS,
     FORUM_TEACHINGS_PER_KNOWER_BONUS,
     GUILD_PRODUCE_ENERGY_DISCOUNT,
@@ -1968,6 +1971,79 @@ def test_abacus_reduces_produce_energy_and_stacks_with_guild() -> None:
         )
         * 10_000
     )
+
+
+def test_pulley_reduces_produce_energy_and_stacks_with_guild_and_abacus() -> None:
+    """Active pulley discounts PRODUCE energy society-wide and stacks."""
+    discovered_pottery = CAMP_POTTERY.model_copy(update={"discovered": True})
+    discovered_irrigation = CAMP_IRRIGATION.model_copy(update={"discovered": True})
+    discovered_metallurgy = CAMP_METALLURGY.model_copy(update={"discovered": True})
+    discovered_writing = CAMP_WRITING.model_copy(update={"discovered": True})
+    discovered_math = CAMP_MATHEMATICS.model_copy(update={"discovered": True})
+    discovered_astronomy = CAMP_ASTRONOMY.model_copy(update={"discovered": True})
+    discovered_philosophy = CAMP_PHILOSOPHY.model_copy(update={"discovered": True})
+    discovered_logic = CAMP_LOGIC.model_copy(update={"discovered": True})
+    discovered_rhetoric = CAMP_RHETORIC.model_copy(update={"discovered": True})
+    discovered_medicine = CAMP_MEDICINE.model_copy(update={"discovered": True})
+    discovered_anatomy = CAMP_ANATOMY.model_copy(update={"discovered": True})
+    discovered_hygiene = CAMP_HYGIENE.model_copy(update={"discovered": True})
+    discovered_engineering = CAMP_ENGINEERING.model_copy(update={"discovered": True})
+    active_abacus = CAMP_ABACUS.model_copy(update={"active": True})
+    active_pulley = CAMP_PULLEY.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        institutions=(
+            Institution.create(0, 0, 0, "Camp Guild", InstitutionKind.GUILD),
+        ),
+        technologies=(
+            CAMP_FIRE,
+            discovered_pottery,
+            discovered_irrigation,
+            discovered_metallurgy,
+            discovered_writing,
+            discovered_math,
+            discovered_astronomy,
+            discovered_philosophy,
+            discovered_logic,
+            discovered_rhetoric,
+            discovered_medicine,
+            discovered_anatomy,
+            discovered_hygiene,
+            discovered_engineering,
+        ),
+        innovations=(
+            CAMP_FIRE_HEARTH,
+            CAMP_POTTERY_CRAFT,
+            CAMP_IRRIGATION_CANAL,
+            CAMP_FORGE,
+            CAMP_SCRIBE,
+            active_abacus,
+            CAMP_STAR_CHART,
+            CAMP_DIALECTIC,
+            CAMP_SYLLOGISM,
+            CAMP_ORATION,
+            CAMP_REMEDY,
+            CAMP_DISSECTION,
+            CAMP_ASEPSIS,
+            active_pulley,
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    expected = (
+        DEFAULT_PRODUCE_ENERGY_COST
+        - GUILD_PRODUCE_ENERGY_DISCOUNT
+        - MATHEMATICS_PRODUCE_ENERGY_DISCOUNT
+        - ENGINEERING_PRODUCE_ENERGY_DISCOUNT
+    )
+    assert effective_produce_energy_cost(
+        world,
+        agent,
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(expected)
+    assert census_effects(world).produce_energy_cost_bps == round(expected * 10_000)
 
 
 def test_archive_raises_retrieval_limit_for_colocated_agents() -> None:
