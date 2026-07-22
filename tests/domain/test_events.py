@@ -25,6 +25,8 @@ from civitas.domain import (
     NeedDecayed,
     PopulationObserved,
     PriceObserved,
+    RelationshipsObserved,
+    RelationshipUpdated,
     ResourceConsumed,
     ResourceGathered,
     ResourceProduced,
@@ -434,3 +436,42 @@ def test_wealth_observed_round_trips() -> None:
     assert restored.society_total == 24
     assert restored.gini_bps == 2000
     assert restored.median_alive == 5
+
+
+def test_relationship_updated_round_trips() -> None:
+    """RelationshipUpdated serializes bond fields losslessly."""
+    event = RelationshipUpdated(
+        sequence=10,
+        tick=Tick(value=4),
+        from_agent_id=AgentId(value=0),
+        to_agent_id=AgentId(value=2),
+        affinity=0.35,
+        trust=0.7,
+        created=True,
+    )
+    restored = event_from_record(event.to_record())
+    assert isinstance(restored, RelationshipUpdated)
+    assert restored.affinity == 0.35
+    assert restored.trust == 0.7
+    assert restored.created is True
+    assert restored.to_agent_id == AgentId(value=2)
+
+
+def test_relationships_observed_round_trips() -> None:
+    """RelationshipsObserved serializes census fields losslessly."""
+    event = RelationshipsObserved(
+        sequence=11,
+        tick=Tick(value=5),
+        bond_count=2,
+        agents_with_bonds=1,
+        living_bond_count=2,
+        mean_affinity=0.25,
+        min_affinity=-0.1,
+        max_affinity=0.6,
+    )
+    restored = event_from_record(event.to_record())
+    assert isinstance(restored, RelationshipsObserved)
+    assert restored.bond_count == 2
+    assert restored.living_bond_count == 2
+    assert restored.min_affinity == -0.1
+    assert restored.max_affinity == 0.6

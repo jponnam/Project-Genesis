@@ -6,3 +6,8 @@ from __future__ import annotations
 def clamp_unit(value: float) -> float:
     """Clamp ``value`` to ``[0.0, 1.0]`` with stable 6-decimal rounding."""
     return max(0.0, min(1.0, round(value, 6)))
+
+
+def clamp_affinity(value: float) -> float:
+    """Clamp ``value`` to ``[-1.0, 1.0]`` with stable 6-decimal rounding."""
+    return max(-1.0, min(1.0, round(value, 6)))

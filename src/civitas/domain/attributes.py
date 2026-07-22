@@ -253,12 +253,30 @@ class RelationshipMap(BaseModel):
             raise ValueError(msg)
         return self
 
-    def toward(self, other_id: AgentId) -> Relationship | None:
+    def toward(self, other_id: AgentId | int) -> Relationship | None:
         """Return the bond toward ``other_id``, if any."""
+        target = other_id if isinstance(other_id, AgentId) else AgentId(value=other_id)
         for bond in self.bonds:
-            if bond.other_id == other_id:
+            if bond.other_id == target:
                 return bond
         return None
+
+    def upsert(self, bond: Relationship) -> RelationshipMap:
+        """Return a map with ``bond`` inserted or replacing the same target."""
+        updated: list[Relationship] = [
+            existing for existing in self.bonds if existing.other_id != bond.other_id
+        ]
+        updated.append(bond)
+        updated.sort(key=lambda item: item.other_id.value)
+        return RelationshipMap(bonds=tuple(updated))
+
+    def without(self, other_id: AgentId | int) -> RelationshipMap:
+        """Return a map with the bond toward ``other_id`` removed, if present."""
+        target = other_id if isinstance(other_id, AgentId) else AgentId(value=other_id)
+        remaining = tuple(bond for bond in self.bonds if bond.other_id != target)
+        if len(remaining) == len(self.bonds):
+            return self
+        return RelationshipMap(bonds=remaining)
 
 
 class Skill(BaseModel):

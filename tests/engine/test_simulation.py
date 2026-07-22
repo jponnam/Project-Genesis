@@ -15,6 +15,7 @@ from civitas.domain import (
     NeedDecayed,
     PopulationObserved,
     PriceObserved,
+    RelationshipsObserved,
     ResourceConsumed,
     ResourceGathered,
     SimulationCompleted,
@@ -321,3 +322,15 @@ def test_wealth_observed_reports_treasury_after_enabled_taxes() -> None:
     assert final.treasury == result.world.treasury
     assert final.society_total == wealth_total(result.world) + result.world.treasury
     assert final.treasury == final.society_total - final.total
+
+
+def test_relationships_observed_each_tick_including_start() -> None:
+    """Engine emits an initial relationship census plus one per executed tick."""
+    result = SimulationEngine().run(SimulationConfig(seed=42, ticks=3, agent_count=4))
+    observed = [
+        event for event in result.events if isinstance(event, RelationshipsObserved)
+    ]
+    assert len(observed) == 4  # tick 0 + ticks 1..3
+    assert observed[0].tick.value == 0
+    assert observed[-1].tick.value == 3
+    assert all(event.bond_count == 0 for event in observed)
