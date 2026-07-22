@@ -127,11 +127,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 15 Milestone 5: Farmstead cities**
+**Phase 15 Milestone 6: Husbandman institutions**
 
-``CityKind.FARMSTEAD`` is a non-capital specialized seat. Active farmsteads
-grant a seat-scoped food gather bonus, stacking with plow, storehouse,
-waystation, entrepot, and granary. Not seeded in ``default_cities()``.
+``InstitutionKind.HUSBANDMAN`` seats add +1 FOOD gather at the institution
+location, stacking with plow, storehouse, waystation, entrepot, granary,
+and farmstead. Not seeded in ``default_institutions()``.
 
 ### Completed
 
@@ -282,6 +282,7 @@ JSONL storage → `civitas run`
 - Milestone 3: Granary institutions
 - Milestone 4: Ditch infrastructure
 - Milestone 5: Farmstead cities
+- Milestone 6: Husbandman institutions
 
 ## License
 

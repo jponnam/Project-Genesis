@@ -98,10 +98,12 @@ storehouse, waystation, and entrepot). Phase 15 Milestone 4 adds DITCH
 water-gather bonuses at the infrastructure seat (stacking with pottery
 craft, irrigation canal, and sail). Phase 15 Milestone 5 adds FARMSTEAD
 city food-gather bonuses at the city seat (stacking with plow,
-storehouse, waystation, entrepot, and granary). The action executor,
-retrieval path, market fills, knowledge diffusion, and research
-progression read these helpers; ``EffectsSystem`` only observes coverage.
-Systems never call each other.
+storehouse, waystation, entrepot, and granary). Phase 15 Milestone 6
+adds HUSBANDMAN food-gather bonuses at the institution seat (stacking
+with plow, storehouse, waystation, entrepot, granary, and farmstead).
+The action executor, retrieval path, market fills, knowledge diffusion,
+and research progression read these helpers; ``EffectsSystem`` only
+observes coverage. Systems never call each other.
 """
 
 from __future__ import annotations
@@ -183,6 +185,7 @@ WAYSTATION_FOOD_GATHER_BONUS: int = 1
 ENTREPOT_FOOD_GATHER_BONUS: int = 1
 FARMSTEAD_FOOD_GATHER_BONUS: int = 1
 GRANARY_FOOD_GATHER_BONUS: int = 1
+HUSBANDMAN_FOOD_GATHER_BONUS: int = 1
 AGRICULTURE_FOOD_GATHER_BONUS: int = 1
 SCAFFOLD_WOOD_GATHER_BONUS: int = 1
 MASON_STONE_GATHER_BONUS: int = 1
@@ -625,6 +628,22 @@ def location_has_active_granary(
     )
 
 
+def location_has_active_husbandman(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active HUSBANDMAN is seated at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InstitutionKind.HUSBANDMAN and item.location_id == target
+        for item in active_institutions(world)
+    )
+
+
 def location_has_active_academy(
     world: World,
     location_id: LocationId | int,
@@ -942,9 +961,10 @@ def gather_amount_bonus(
     society-wide, an active MASON seat at ``location_id`` when provided,
     and an active QUARRY city at ``location_id`` when provided. Food
     bonuses come from an active PLOW innovation society-wide, plus an
-    active STOREHOUSE, WAYSTATION, ENTREPOT city, FARMSTEAD city, and/or
-    GRANARY at ``location_id`` when provided (they stack). Wood bonuses
-    come from an active SCAFFOLD at ``location_id`` when provided.
+    active STOREHOUSE, WAYSTATION, ENTREPOT city, FARMSTEAD city,
+    GRANARY, and/or HUSBANDMAN at ``location_id`` when provided (they
+    stack). Wood bonuses come from an active SCAFFOLD at ``location_id``
+    when provided.
     """
     bonus = 0
     if resource == WATER_RESOURCE:
@@ -977,6 +997,8 @@ def gather_amount_bonus(
                 bonus += FARMSTEAD_FOOD_GATHER_BONUS
             if location_has_active_granary(world, location_id):
                 bonus += GRANARY_FOOD_GATHER_BONUS
+            if location_has_active_husbandman(world, location_id):
+                bonus += HUSBANDMAN_FOOD_GATHER_BONUS
     elif resource == ResourceKind.WOOD.value and location_id is not None:
         if location_has_active_scaffold(world, location_id):
             bonus += SCAFFOLD_WOOD_GATHER_BONUS
