@@ -2,7 +2,7 @@
 
 Phase 7 Milestone 3. Each apply tick sets a single ``satisfy_<need>``
 goal from the agent's priority belief (or dominant need). Memory
-retrieval remains a later milestone.
+retrieval (Milestone 4) uses these goals as retrieval queries.
 """
 
 from __future__ import annotations

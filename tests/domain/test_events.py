@@ -49,6 +49,7 @@ from civitas.domain import (
     MarketId,
     MarketObserved,
     MemoryRecorded,
+    MemoryRetrieved,
     MoneyTransferred,
     NeedDecayed,
     NetworksObserved,
@@ -65,6 +66,7 @@ from civitas.domain import (
     ResourceGathered,
     ResourceProduced,
     ResourceTraded,
+    RetrievalObserved,
     SimulationCompleted,
     SimulationStarted,
     TaxCollected,
@@ -1037,3 +1039,31 @@ def test_planning_events_round_trip() -> None:
     restored_observed = event_from_record(observed.to_record())
     assert isinstance(restored_observed, PlansObserved)
     assert restored_observed.satisfy_food_count == 2
+
+
+def test_retrieval_events_round_trip() -> None:
+    """Memory retrieved / retrieval observe events serialize losslessly."""
+    retrieved = MemoryRetrieved(
+        sequence=43,
+        tick=Tick(value=4),
+        agent_id=AgentId(value=2),
+        query="water",
+        retrieved_count=2,
+        summary="episode@3|reflection@4",
+    )
+    restored_retrieved = event_from_record(retrieved.to_record())
+    assert isinstance(restored_retrieved, MemoryRetrieved)
+    assert restored_retrieved.query == "water"
+    assert restored_retrieved.summary == "episode@3|reflection@4"
+
+    observed = RetrievalObserved(
+        sequence=44,
+        tick=Tick(value=4),
+        living_count=3,
+        agents_with_context=3,
+        total_retrieved=6,
+        mean_retrieved_bps=20_000,
+    )
+    restored_observed = event_from_record(observed.to_record())
+    assert isinstance(restored_observed, RetrievalObserved)
+    assert restored_observed.total_retrieved == 6

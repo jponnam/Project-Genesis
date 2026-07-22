@@ -37,6 +37,7 @@ from civitas.systems import (
     RelationshipSystem,
     ReputationSystem,
     ResearchSystem,
+    RetrievalSystem,
     TaxSystem,
     TechSystem,
     UtilityPolicy,
@@ -82,49 +83,52 @@ class SimulationEngine:
     11. ``KnowledgeSystem.apply_knowledge``
     12. ``CognitionSystem.apply_cognition``
     13. ``PlanningSystem.apply_planning``
-    14. Publish ``TickCompleted``
-    15. ``PopulationSystem.observe``
-    16. ``EconomySystem.observe``
-    17. ``MarketSystem.observe``
-    18. ``PriceSystem.observe``
-    19. ``RelationshipSystem.observe``
-    20. ``ReputationSystem.observe``
-    21. ``FamilySystem.observe``
-    22. ``NetworkSystem.observe``
-    23. ``GovernmentSystem.observe``
-    24. ``LawSystem.observe``
-    25. ``VoteSystem.observe``
-    26. ``InstitutionSystem.observe``
-    27. ``CitySystem.observe``
-    28. ``InfrastructureSystem.observe``
-    29. ``TechSystem.observe``
-    30. ``ResearchSystem.observe``
-    31. ``InnovationSystem.observe``
-    32. ``KnowledgeSystem.observe``
-    33. ``CognitionSystem.observe``
-    34. ``PlanningSystem.observe``
+    14. ``RetrievalSystem.apply_retrieval``
+    15. Publish ``TickCompleted``
+    16. ``PopulationSystem.observe``
+    17. ``EconomySystem.observe``
+    18. ``MarketSystem.observe``
+    19. ``PriceSystem.observe``
+    20. ``RelationshipSystem.observe``
+    21. ``ReputationSystem.observe``
+    22. ``FamilySystem.observe``
+    23. ``NetworkSystem.observe``
+    24. ``GovernmentSystem.observe``
+    25. ``LawSystem.observe``
+    26. ``VoteSystem.observe``
+    27. ``InstitutionSystem.observe``
+    28. ``CitySystem.observe``
+    29. ``InfrastructureSystem.observe``
+    30. ``TechSystem.observe``
+    31. ``ResearchSystem.observe``
+    32. ``InnovationSystem.observe``
+    33. ``KnowledgeSystem.observe``
+    34. ``CognitionSystem.observe``
+    35. ``PlanningSystem.observe``
+    36. ``RetrievalSystem.observe``
 
     Initial population, wealth, market, price, relationship, reputation,
     family, network, government, law, election, institution, city,
     infrastructure, technology, research, innovation, knowledge, cognition,
-    and planning censuses are also observed at tick 0 immediately after world
-    creation. Death runs after actions (recovery chance) and before birth so
-    newly dead parents cannot reproduce. Birth and death both complete before
-    taxes so the levy sees the settled roster. Taxes complete before research
-    so discovery does not affect the levy. Research completes before
+    planning, and retrieval censuses are also observed at tick 0 immediately
+    after world creation. Death runs after actions (recovery chance) and before
+    birth so newly dead parents cannot reproduce. Birth and death both complete
+    before taxes so the levy sees the settled roster. Taxes complete before
+    research so discovery does not affect the levy. Research completes before
     innovation so same-tick discoveries can activate adoptions. Innovation
     completes before knowledge so agents learn against settled society state.
     Knowledge completes before cognition so episode memories capture post-
     learning facts. Cognition completes before planning so goals read the
-    latest reflection beliefs. Planning completes before ``TickCompleted`` so
-    censuses reflect post-discovery/activation/learning/encoding/planning
-    state. Taxes are disabled by default; when enabled, active
-    ``TAX_SCHEDULE`` laws override levy parameters. Relationship observation
-    is wired each tick; SOCIALIZE may mutate bonds during action execution.
-    Reputation observation follows relationships so standings reflect the
-    latest bonds. Family observation follows reputation and reads birth
-    ``parent_id`` lineage without mutating agents. Network observation
-    follows families and measures the living bond graph. Government
+    latest reflection beliefs. Planning completes before retrieval so working
+    memory queries use the latest goals. Retrieval completes before
+    ``TickCompleted`` so censuses reflect post-discovery/activation/learning/
+    encoding/planning/retrieval state. Taxes are disabled by default; when
+    enabled, active ``TAX_SCHEDULE`` laws override levy parameters.
+    Relationship observation is wired each tick; SOCIALIZE may mutate bonds
+    during action execution. Reputation observation follows relationships so
+    standings reflect the latest bonds. Family observation follows reputation
+    and reads birth ``parent_id`` lineage without mutating agents. Network
+    observation follows families and measures the living bond graph. Government
     observation follows networks and reports polity coverage, treasuries, and
     subjects without mutating agents. Law observation follows governments and
     reports statute activity. Election observation follows laws and reports
@@ -141,7 +145,8 @@ class SimulationEngine:
     reports agent fact coverage without mutating agents. Cognition
     observation follows knowledge and reports episodic memory coverage without
     mutating agents. Planning observation follows cognition and reports
-    satisfy-need goals without mutating agents.
+    satisfy-need goals without mutating agents. Retrieval observation follows
+    planning and reports working-memory coverage without mutating agents.
     """
 
     def __init__(
@@ -174,6 +179,7 @@ class SimulationEngine:
         knowledge_system: KnowledgeSystem | None = None,
         cognition_system: CognitionSystem | None = None,
         planning_system: PlanningSystem | None = None,
+        retrieval_system: RetrievalSystem | None = None,
     ) -> None:
         self._world_factory = (
             world_factory if world_factory is not None else WorldFactory()
@@ -240,6 +246,9 @@ class SimulationEngine:
         self._planning_system = (
             planning_system if planning_system is not None else PlanningSystem()
         )
+        self._retrieval_system = (
+            retrieval_system if retrieval_system is not None else RetrievalSystem()
+        )
 
     def run(
         self,
@@ -273,6 +282,7 @@ class SimulationEngine:
         world = self._knowledge_system.observe(world, bus=event_bus)
         world = self._cognition_system.observe(world, bus=event_bus)
         world = self._planning_system.observe(world, bus=event_bus)
+        world = self._retrieval_system.observe(world, bus=event_bus)
 
         for tick in clock.run():
             world = world.with_tick(tick)
@@ -288,6 +298,7 @@ class SimulationEngine:
             world = self._knowledge_system.apply_knowledge(world, bus=event_bus)
             world = self._cognition_system.apply_cognition(world, bus=event_bus)
             world = self._planning_system.apply_planning(world, bus=event_bus)
+            world = self._retrieval_system.apply_retrieval(world, bus=event_bus)
             event_bus.publish(TickCompleted(tick=tick))
             world = self._population_system.observe(world, bus=event_bus)
             world = self._economy_system.observe(world, bus=event_bus)
@@ -309,6 +320,7 @@ class SimulationEngine:
             world = self._knowledge_system.observe(world, bus=event_bus)
             world = self._cognition_system.observe(world, bus=event_bus)
             world = self._planning_system.observe(world, bus=event_bus)
+            world = self._retrieval_system.observe(world, bus=event_bus)
 
         event_bus.publish(
             SimulationCompleted(

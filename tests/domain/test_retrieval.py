@@ -1,0 +1,117 @@
+"""Unit tests for memory retrieval helpers."""
+
+from __future__ import annotations
+
+from civitas.domain import (
+    CAMP_LOCATION,
+    Agent,
+    Goal,
+    GoalSet,
+    Memory,
+    MemoryKind,
+    MemoryRecord,
+    Needs,
+    SimulationConfig,
+    Tick,
+    World,
+    apply_retrieval,
+    census_retrieval,
+    default_innovations,
+    default_research_progress,
+    default_technologies,
+    relevance_score,
+    retrieval_query_for_agent,
+    retrieve_memories,
+)
+
+
+def _world(*agents: Agent) -> World:
+    return World(
+        config=SimulationConfig(agent_count=max(len(agents), 1), seed=1),
+        locations=(CAMP_LOCATION,),
+        technologies=default_technologies(),
+        research_progress=default_research_progress(),
+        innovations=default_innovations(),
+        agents=agents,
+    )
+
+
+def test_retrieval_query_prefers_goal_target() -> None:
+    """Planned satisfy-need goals become the retrieval query."""
+    agent = Agent.create(
+        agent_id=0,
+        name="A",
+        needs=Needs(food=0.2, water=0.9, energy=0.9),
+    )
+    agent = agent.model_copy(
+        update={
+            "goals": GoalSet(
+                goals=(Goal(kind="satisfy_food", priority=0.7, target="food"),)
+            )
+        }
+    )
+    assert retrieval_query_for_agent(agent) == "food"
+
+
+def test_retrieve_memories_ranks_relevant_then_recent() -> None:
+    """Retrieval prefers query matches, then more recent ticks."""
+    records = (
+        MemoryRecord(
+            tick=Tick(value=1),
+            kind=MemoryKind.EPISODE.value,
+            content="food=0.2",
+        ),
+        MemoryRecord(
+            tick=Tick(value=2),
+            kind=MemoryKind.REFLECTION.value,
+            content="priority water",
+        ),
+        MemoryRecord(
+            tick=Tick(value=3),
+            kind=MemoryKind.EPISODE.value,
+            content="food=0.1",
+        ),
+    )
+    agent = Agent.create(agent_id=0, name="A").model_copy(
+        update={
+            "goals": GoalSet(
+                goals=(Goal(kind="satisfy_food", priority=0.8, target="food"),)
+            ),
+            "memory": Memory(records=records),
+        }
+    )
+    retrieved = retrieve_memories(agent, limit=2)
+    assert len(retrieved) == 2
+    assert retrieved[0].tick.value == 3
+    assert retrieved[1].tick.value == 1
+    assert relevance_score(retrieved[0], "food") > relevance_score(retrieved[1], "food")
+
+
+def test_apply_retrieval_writes_working_memory() -> None:
+    """Apply pass stores query + top memories on each living agent."""
+    agent = Agent.create(agent_id=0, name="A").model_copy(
+        update={
+            "goals": GoalSet(
+                goals=(Goal(kind="satisfy_energy", priority=0.6, target="energy"),)
+            ),
+            "memory": Memory(
+                records=(
+                    MemoryRecord(
+                        tick=Tick(value=1),
+                        kind=MemoryKind.EPISODE.value,
+                        content="energy=0.4",
+                    ),
+                )
+            ),
+        }
+    )
+    world, hits = apply_retrieval(_world(agent).with_tick(Tick(value=2)))
+    assert len(hits) == 1
+    assert hits[0].query == "energy"
+    assert hits[0].retrieved_count == 1
+    assert world.agents[0].working_memory.query == "energy"
+    assert len(world.agents[0].working_memory.records) == 1
+    snap = census_retrieval(world)
+    assert snap.agents_with_context == 1
+    assert snap.total_retrieved == 1
+    assert snap.mean_retrieved_bps == 10_000

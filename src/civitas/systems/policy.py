@@ -49,6 +49,7 @@ class PolicyConfig(BaseModel):
 
     Attributes:
         goal_weight: Multiplier applied to matching goal priorities.
+        retrieval_weight: Scales working-memory support for satisfy-need goals.
         idle_weight: Scales idle utility by the least-satisfied need.
         move_weight: Scales exploratory MOVE utility.
         gather_weight: Scales GATHER utility from need/inventory pressure.
@@ -64,6 +65,7 @@ class PolicyConfig(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid", validate_default=True)
 
     goal_weight: UnitInterval = 0.5
+    retrieval_weight: UnitInterval = 0.25
     idle_weight: UnitInterval = 0.15
     move_weight: UnitInterval = 0.35
     gather_weight: UnitInterval = 0.55
@@ -550,13 +552,28 @@ class UtilityPolicy:
         """Add priority-weighted bonus when a goal matches the action."""
         target = ACTION_NEED_TARGET[action]
         best = 0.0
+        matched_need = False
         for goal in agent.goals.goals:
             matches_action = goal.kind == action.value
             matches_need = target is not None and goal.kind == f"satisfy_{target}"
             matches_explore = action is ActionKind.MOVE and goal.kind == "explore"
             if matches_action or matches_need or matches_explore:
                 best = max(best, goal.priority * self._config.goal_weight)
+                if matches_need:
+                    matched_need = True
+        if matched_need and target is not None:
+            best += self._retrieval_support(agent, target)
         return round(best, 6)
+
+    def _retrieval_support(self, agent: Agent, need: str) -> float:
+        """Bonus when working memory holds records relevant to ``need``."""
+        working = agent.working_memory
+        if not working.records or working.query != need:
+            return 0.0
+        hits = sum(1 for record in working.records if need in record.content.lower())
+        support = hits if hits > 0 else len(working.records)
+        scale = float(self._config.retrieval_weight) / 0.25
+        return round(min(0.15, 0.05 * support) * scale, 6)
 
     def _gather_goal_bonus(self, agent: Agent, resource: str) -> float:
         """Goal bonus for gathering a specific resource."""

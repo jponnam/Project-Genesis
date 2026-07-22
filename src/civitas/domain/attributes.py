@@ -393,3 +393,16 @@ class Memory(BaseModel):
         if len(merged) > self.capacity:
             merged = merged[-self.capacity :]
         return Memory(records=tuple(merged), capacity=self.capacity)
+
+
+class WorkingMemory(BaseModel):
+    """Short-term retrieved context for the current planning cycle.
+
+    Replaced each retrieval apply pass; not capacity-evicted like long-term
+    ``Memory``. Empty ``query`` means no retrieval has run yet.
+    """
+
+    model_config = _FROZEN
+
+    query: str = ""
+    records: tuple[MemoryRecord, ...] = ()
