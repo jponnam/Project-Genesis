@@ -6,6 +6,10 @@ import pytest
 
 from civitas.domain import (
     CAMP_LOCATION,
+    CAMP_ORATION,
+    CAMP_RHETORIC,
+    DEFAULT_SOCIALIZE_RESTORE,
+    RHETORIC_SOCIALIZE_RESTORE_BONUS,
     ActionChoice,
     ActionCompleted,
     ActionKind,
@@ -28,6 +32,8 @@ from civitas.domain import (
     ResourceTraded,
     SimulationConfig,
     World,
+    default_innovations,
+    default_technologies,
     get_bond,
     location_stock,
 )
@@ -546,6 +552,47 @@ def test_socialize_updates_mutual_bonds_and_social_need() -> None:
     assert all(event.created for event in bond_events)
     completed = [event for event in bus.history if isinstance(event, ActionCompleted)]
     assert completed[0].success is True
+
+
+def test_socialize_uses_active_oration_restore_bonus() -> None:
+    """SOCIALIZE restore includes the active society-wide oration bonus."""
+    actor = Agent.create(agent_id=0, name="A").model_copy(
+        update={
+            "needs": Needs(food=1.0, water=1.0, energy=1.0, social=0.4, safety=1.0),
+        }
+    )
+    partner = Agent.create(agent_id=1, name="B")
+    discovered_rhetoric = CAMP_RHETORIC.model_copy(update={"discovered": True})
+    active_oration = CAMP_ORATION.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=2, seed=1),
+        locations=(CAMP_LOCATION,),
+        technologies=tuple(
+            discovered_rhetoric
+            if tech.technology_id == CAMP_RHETORIC.technology_id
+            else tech
+            for tech in default_technologies()
+        ),
+        innovations=tuple(
+            active_oration
+            if innovation.innovation_id == CAMP_ORATION.innovation_id
+            else innovation
+            for innovation in default_innovations()
+        ),
+        agents=(actor, partner),
+    )
+    choice = ActionChoice(
+        agent_id=AgentId(value=0),
+        action=ActionKind.SOCIALIZE,
+        utility=1.0,
+        target_agent_id=AgentId(value=1),
+    )
+    updated = ActionExecutor().execute(world, choice)
+    new_actor = updated.agent_by_id(0)
+    assert new_actor is not None
+    assert new_actor.needs.social == pytest.approx(
+        0.4 + DEFAULT_SOCIALIZE_RESTORE + RHETORIC_SOCIALIZE_RESTORE_BONUS
+    )
 
 
 def test_socialize_fails_without_co_located_partner() -> None:

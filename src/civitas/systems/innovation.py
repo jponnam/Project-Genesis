@@ -103,6 +103,7 @@ class InnovationSystem:
                     active_star_chart_count=snap.active_star_chart_count,
                     active_dialectic_count=snap.active_dialectic_count,
                     active_syllogism_count=snap.active_syllogism_count,
+                    active_oration_count=snap.active_oration_count,
                 )
             )
         return world

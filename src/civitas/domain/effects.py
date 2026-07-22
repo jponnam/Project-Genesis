@@ -23,8 +23,9 @@ innovation), SHRINE DRINK restore bonuses (stacking with WELL),
 SANCTUARY city REST restore bonuses (stacking with fire hearth and
 temple), SCHOOL teachings-per-knower bonuses (stacking with
 scribe/scriptorium/stoa/curriculum/academy/forum/dialectic), a global
-SYLLOGISM research-points bonus, and LYCEUM retrieval-limit bonuses
-(stacking with archive/library/observatory/star-chart/calendar). The
+SYLLOGISM research-points bonus, LYCEUM retrieval-limit bonuses
+(stacking with archive/library/observatory/star-chart/calendar), and a
+global ORATION SOCIALIZE restore bonus. The
 action executor, retrieval path, market fills, knowledge diffusion, and
 research progression read these helpers; ``EffectsSystem`` only observes
 coverage. Systems never call each other.
@@ -51,6 +52,7 @@ from civitas.domain.laws import (
 )
 from civitas.domain.numeric import clamp_unit
 from civitas.domain.production import DEFAULT_PRODUCE_ENERGY_COST
+from civitas.domain.relationships import DEFAULT_SOCIALIZE_RESTORE
 from civitas.domain.research import DEFAULT_POINTS_PER_TICK
 from civitas.domain.resources import DEFAULT_GATHER_AMOUNT, ResourceKind
 from civitas.domain.retrieval import DEFAULT_RETRIEVAL_LIMIT
@@ -76,6 +78,7 @@ FORUM_TEACHINGS_PER_KNOWER_BONUS: int = 1
 SCHOOL_TEACHINGS_PER_KNOWER_BONUS: int = 1
 PHILOSOPHY_TEACHINGS_PER_KNOWER_BONUS: int = 1
 LOGIC_RESEARCH_POINTS_BONUS: int = 1
+RHETORIC_SOCIALIZE_RESTORE_BONUS: float = 0.05
 WELL_DRINK_RESTORE_BONUS: float = 0.05
 SHRINE_DRINK_RESTORE_BONUS: float = 0.05
 STOREHOUSE_FOOD_GATHER_BONUS: int = 1
@@ -421,6 +424,13 @@ def research_points_bonus(world: World) -> int:
     return 0
 
 
+def socialize_restore_bonus(world: World) -> float:
+    """Return society-wide SOCIALIZE restore bonus from active oration."""
+    if innovation_kind_is_active(world, InnovationKind.ORATION):
+        return RHETORIC_SOCIALIZE_RESTORE_BONUS
+    return 0.0
+
+
 def gather_amount_bonus(
     world: World,
     resource: str,
@@ -594,6 +604,15 @@ def effective_research_points_per_tick(
     if base < 0:
         return 0
     return base + research_points_bonus(world)
+
+
+def effective_socialize_restore(
+    world: World,
+    *,
+    base: float = DEFAULT_SOCIALIZE_RESTORE,
+) -> float:
+    """Return SOCIALIZE restore amount including active oration bonus."""
+    return clamp_unit(base + socialize_restore_bonus(world))
 
 
 def effective_gather_amount(

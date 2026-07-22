@@ -22,9 +22,11 @@ from civitas.domain import (
     CAMP_LOGIC,
     CAMP_MATHEMATICS,
     CAMP_METALLURGY,
+    CAMP_ORATION,
     CAMP_PHILOSOPHY,
     CAMP_POTTERY,
     CAMP_POTTERY_CRAFT,
+    CAMP_RHETORIC,
     CAMP_SCRIBE,
     CAMP_STAR_CHART,
     CAMP_SYLLOGISM,
@@ -37,6 +39,7 @@ from civitas.domain import (
     DEFAULT_PRODUCE_ENERGY_COST,
     DEFAULT_REST_RESTORE,
     DEFAULT_RETRIEVAL_LIMIT,
+    DEFAULT_SOCIALIZE_RESTORE,
     DEFAULT_TEACHINGS_PER_KNOWER,
     FIRE_HEARTH_REST_BONUS,
     FORUM_TEACHINGS_PER_KNOWER_BONUS,
@@ -50,6 +53,7 @@ from civitas.domain import (
     OBSERVATORY_RETRIEVAL_LIMIT_BONUS,
     PHILOSOPHY_TEACHINGS_PER_KNOWER_BONUS,
     POTTERY_WATER_GATHER_BONUS,
+    RHETORIC_SOCIALIZE_RESTORE_BONUS,
     ROAD_MOVE_ENERGY_DISCOUNT,
     SANCTUARY_REST_RESTORE_BONUS,
     SCHOOL_TEACHINGS_PER_KNOWER_BONUS,
@@ -83,6 +87,7 @@ from civitas.domain import (
     effective_research_points_per_tick,
     effective_rest_restore,
     effective_retrieval_limit,
+    effective_socialize_restore,
     effective_teachings_per_knower,
     gather_amount_bonus,
     location_has_active_academy,
@@ -105,6 +110,7 @@ from civitas.domain import (
     market_fee_for,
     research_points_bonus,
     rest_restore_bonus,
+    socialize_restore_bonus,
     teachings_per_knower_bonus,
 )
 from civitas.engine import WorldFactory
@@ -124,6 +130,7 @@ def _world(*, innovations: tuple = ()) -> World:
             CAMP_ASTRONOMY,
             CAMP_PHILOSOPHY,
             CAMP_LOGIC,
+            CAMP_RHETORIC,
         ),
         innovations=innovations,
         agents=(Agent.create(agent_id=0, name="A"),),
@@ -1674,6 +1681,48 @@ def test_syllogism_boosts_research_points_per_tick() -> None:
     bare = _world()
     assert research_points_bonus(bare) == 0
     assert effective_research_points_per_tick(bare) == DEFAULT_POINTS_PER_TICK
+
+
+def test_oration_boosts_socialize_restore() -> None:
+    """Active oration adds a society-wide SOCIALIZE restore bonus."""
+    discovered_rhetoric = CAMP_RHETORIC.model_copy(update={"discovered": True})
+    active_oration = CAMP_ORATION.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        technologies=(
+            CAMP_FIRE,
+            CAMP_POTTERY,
+            CAMP_IRRIGATION,
+            CAMP_METALLURGY,
+            CAMP_WRITING,
+            CAMP_MATHEMATICS,
+            CAMP_ASTRONOMY,
+            CAMP_PHILOSOPHY,
+            CAMP_LOGIC,
+            discovered_rhetoric,
+        ),
+        innovations=(
+            CAMP_FIRE_HEARTH,
+            CAMP_POTTERY_CRAFT,
+            CAMP_IRRIGATION_CANAL,
+            CAMP_FORGE,
+            CAMP_SCRIBE,
+            CAMP_ABACUS,
+            CAMP_STAR_CHART,
+            CAMP_DIALECTIC,
+            CAMP_SYLLOGISM,
+            active_oration,
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert socialize_restore_bonus(world) == RHETORIC_SOCIALIZE_RESTORE_BONUS
+    assert effective_socialize_restore(world) == pytest.approx(
+        DEFAULT_SOCIALIZE_RESTORE + RHETORIC_SOCIALIZE_RESTORE_BONUS
+    )
+    bare = _world()
+    assert socialize_restore_bonus(bare) == 0.0
+    assert effective_socialize_restore(bare) == DEFAULT_SOCIALIZE_RESTORE
 
 
 def test_bureaucracy_discounts_market_fee_at_seat() -> None:
