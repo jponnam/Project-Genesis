@@ -60,9 +60,10 @@ adds a global BLUEPRINT research-points bonus (stacking with syllogism and
 dissection). Phase 13 Milestone 8 adds ARCHITECT teachings-per-knower
 bonuses at the institution seat (stacking with
 scribe/dialectic/scriptorium/academy/forum/school/stoa/collegium/curriculum).
-The action executor, retrieval path, market fills, knowledge diffusion, and
-research progression read these helpers; ``EffectsSystem`` only observes
-coverage. Systems never call each other.
+Phase 13 Milestone 9 adds SCAFFOLD wood-gather bonuses at the infrastructure
+seat. The action executor, retrieval path, market fills, knowledge
+diffusion, and research progression read these helpers; ``EffectsSystem``
+only observes coverage. Systems never call each other.
 """
 
 from __future__ import annotations
@@ -133,6 +134,7 @@ APOTHECARY_DRINK_RESTORE_BONUS: float = 0.05
 HYGIENE_DRINK_RESTORE_BONUS: float = 0.05
 LAZARETTO_DRINK_RESTORE_BONUS: float = 0.05
 STOREHOUSE_FOOD_GATHER_BONUS: int = 1
+SCAFFOLD_WOOD_GATHER_BONUS: int = 1
 MASON_STONE_GATHER_BONUS: int = 1
 ROAD_MOVE_ENERGY_DISCOUNT: float = 0.02
 BRIDGE_MOVE_ENERGY_DISCOUNT: float = 0.02
@@ -164,6 +166,8 @@ class EffectsCensus(BaseModel):
     drink_restore_bps: NonNegativeInt
     active_storehouse_count: NonNegativeInt = 0
     food_gather_amount: NonNegativeInt = DEFAULT_GATHER_AMOUNT
+    active_scaffold_count: NonNegativeInt = 0
+    wood_gather_amount: NonNegativeInt = DEFAULT_GATHER_AMOUNT
     active_road_count: NonNegativeInt = 0
     move_energy_cost_bps: NonNegativeInt = round(DEFAULT_MOVE_ENERGY_COST * 10_000)
     active_guild_count: NonNegativeInt = 0
@@ -206,6 +210,22 @@ def location_has_active_storehouse(
     )
     return any(
         item.kind is InfrastructureKind.STOREHOUSE and item.location_id == target
+        for item in active_infrastructure(world)
+    )
+
+
+def location_has_active_scaffold(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active SCAFFOLD stands at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InfrastructureKind.SCAFFOLD and item.location_id == target
         for item in active_infrastructure(world)
     )
 
@@ -712,7 +732,8 @@ def gather_amount_bonus(
     Water bonuses come from society innovations. Stone bonuses come from an
     active FORGE innovation society-wide and an active MASON seat at
     ``location_id`` when provided. Food bonuses come from an active
-    STOREHOUSE at ``location_id`` when provided.
+    STOREHOUSE at ``location_id`` when provided. Wood bonuses come from an
+    active SCAFFOLD at ``location_id`` when provided.
     """
     bonus = 0
     if resource == WATER_RESOURCE:
@@ -728,6 +749,9 @@ def gather_amount_bonus(
     elif resource == FOOD_RESOURCE and location_id is not None:
         if location_has_active_storehouse(world, location_id):
             bonus += STOREHOUSE_FOOD_GATHER_BONUS
+    elif resource == ResourceKind.WOOD.value and location_id is not None:
+        if location_has_active_scaffold(world, location_id):
+            bonus += SCAFFOLD_WOOD_GATHER_BONUS
     return bonus
 
 
@@ -1046,6 +1070,17 @@ def census_effects(world: World) -> EffectsCensus:
         FOOD_RESOURCE,
         location_id=storehouses[0].location_id if storehouses else None,
     )
+    scaffolds = tuple(
+        item
+        for item in active_infrastructure(world)
+        if item.kind is InfrastructureKind.SCAFFOLD
+    )
+    # Wood gather potential at a scaffold seat.
+    wood_at_scaffold = effective_gather_amount(
+        world,
+        ResourceKind.WOOD.value,
+        location_id=scaffolds[0].location_id if scaffolds else None,
+    )
     bridges = tuple(
         item
         for item in active_infrastructure(world)
@@ -1092,6 +1127,8 @@ def census_effects(world: World) -> EffectsCensus:
         drink_restore_bps=round(drink_at_well * 10_000),
         active_storehouse_count=len(storehouses),
         food_gather_amount=food_at_storehouse,
+        active_scaffold_count=len(scaffolds),
+        wood_gather_amount=wood_at_scaffold,
         active_road_count=len(roads),
         move_energy_cost_bps=round(move_at_road * 10_000),
         active_guild_count=len(guilds),
