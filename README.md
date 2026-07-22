@@ -126,11 +126,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 14 Milestone 8: Cartographer institutions**
+**Phase 14 Milestone 9: Beacon infrastructure**
 
-``InstitutionKind.CARTOGRAPHER`` sits beside caravans and merchants. Active
-cartographers add ``+1`` teachings-per-knower at their seat, stacking with
-prior teaching bonuses.
+``InfrastructureKind.BEACON`` (build cost 9) grants a seat-scoped retrieval
+limit bonus that stacks with archive, library, observatory, lyceum, star
+chart, plumb line, map, and calendar.
 
 ### Completed
 
@@ -270,6 +270,7 @@ JSONL storage → `civitas run`
 - Milestone 6: Merchant institutions
 - Milestone 7: Cartography technology
 - Milestone 8: Cartographer institutions
+- Milestone 9: Beacon infrastructure
 
 ## License
 

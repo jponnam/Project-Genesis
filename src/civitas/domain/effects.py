@@ -81,10 +81,12 @@ and HARBOR). Phase 14 Milestone 7 adds a global MAP retrieval-limit bonus
 lyceum, and calendar). Phase 14 Milestone 8 adds CARTOGRAPHER
 teachings-per-knower bonuses at the institution seat (stacking with
 scribe/dialectic/scriptorium/academy/forum/school/stoa/collegium/
-architect/curriculum). The action executor, retrieval path, market fills,
-knowledge diffusion, and research progression read these helpers;
-``EffectsSystem`` only observes coverage. Systems never call each
-other.
+architect/curriculum). Phase 14 Milestone 9 adds BEACON retrieval-limit
+bonuses at the infrastructure seat (stacking with archive, library,
+observatory, lyceum, star chart, plumb line, map, and calendar). The
+action executor, retrieval path, market fills, knowledge diffusion, and
+research progression read these helpers; ``EffectsSystem`` only observes
+coverage. Systems never call each other.
 """
 
 from __future__ import annotations
@@ -174,6 +176,7 @@ ENGINEERING_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 ARCHIVE_RETRIEVAL_LIMIT_BONUS: int = 1
 LIBRARY_RETRIEVAL_LIMIT_BONUS: int = 1
 OBSERVATORY_RETRIEVAL_LIMIT_BONUS: int = 1
+BEACON_RETRIEVAL_LIMIT_BONUS: int = 1
 ASTRONOMY_RETRIEVAL_LIMIT_BONUS: int = 1
 SURVEYING_RETRIEVAL_LIMIT_BONUS: int = 1
 CARTOGRAPHY_RETRIEVAL_LIMIT_BONUS: int = 1
@@ -354,6 +357,22 @@ def location_has_active_observatory(
     )
     return any(
         item.kind is InfrastructureKind.OBSERVATORY and item.location_id == target
+        for item in active_infrastructure(world)
+    )
+
+
+def location_has_active_beacon(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active BEACON stands at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InfrastructureKind.BEACON and item.location_id == target
         for item in active_infrastructure(world)
     )
 
@@ -969,14 +988,14 @@ def retrieval_limit_bonus(world: World, agent: Agent) -> int:
     """Return retrieval-limit bonuses for the agent.
 
     Active ARCHIVE and LYCEUM institutions, LIBRARY city seats, and
-    OBSERVATORY infrastructure each contribute ``+1`` when present at
-    the agent's location. An active STAR_CHART innovation contributes
-    ``ASTRONOMY_RETRIEVAL_LIMIT_BONUS`` society-wide. An active
-    PLUMB_LINE innovation contributes ``SURVEYING_RETRIEVAL_LIMIT_BONUS``
-    society-wide. An active MAP innovation contributes
-    ``CARTOGRAPHY_RETRIEVAL_LIMIT_BONUS`` society-wide. An active
-    ``CALENDAR`` statute contributes ``+1`` for living subjects of that
-    government. All stack.
+    OBSERVATORY and BEACON infrastructure each contribute ``+1`` when
+    present at the agent's location. An active STAR_CHART innovation
+    contributes ``ASTRONOMY_RETRIEVAL_LIMIT_BONUS`` society-wide. An
+    active PLUMB_LINE innovation contributes
+    ``SURVEYING_RETRIEVAL_LIMIT_BONUS`` society-wide. An active MAP
+    innovation contributes ``CARTOGRAPHY_RETRIEVAL_LIMIT_BONUS``
+    society-wide. An active ``CALENDAR`` statute contributes ``+1`` for
+    living subjects of that government. All stack.
     """
     bonus = 0
     if location_has_active_archive(world, agent.location_id):
@@ -985,6 +1004,8 @@ def retrieval_limit_bonus(world: World, agent: Agent) -> int:
         bonus += LIBRARY_RETRIEVAL_LIMIT_BONUS
     if location_has_active_observatory(world, agent.location_id):
         bonus += OBSERVATORY_RETRIEVAL_LIMIT_BONUS
+    if location_has_active_beacon(world, agent.location_id):
+        bonus += BEACON_RETRIEVAL_LIMIT_BONUS
     if location_has_active_lyceum(world, agent.location_id):
         bonus += LYCEUM_RETRIEVAL_LIMIT_BONUS
     if innovation_kind_is_active(world, InnovationKind.STAR_CHART):
