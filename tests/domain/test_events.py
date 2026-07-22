@@ -903,6 +903,7 @@ def test_city_created_and_observed_round_trips() -> None:
         active_harbor_count=1,
         active_entrepot_count=1,
         active_farmstead_count=1,
+        active_pastoral_count=1,
     )
     restored = event_from_record(observed.to_record())
     assert isinstance(restored, CitiesObserved)
@@ -920,6 +921,7 @@ def test_city_created_and_observed_round_trips() -> None:
     assert restored.active_harbor_count == 1
     assert restored.active_entrepot_count == 1
     assert restored.active_farmstead_count == 1
+    assert restored.active_pastoral_count == 1
 
     legacy = CitiesObserved(
         sequence=25,
@@ -947,6 +949,7 @@ def test_city_created_and_observed_round_trips() -> None:
     assert legacy.active_harbor_count == 0
     assert legacy.active_entrepot_count == 0
     assert legacy.active_farmstead_count == 0
+    assert legacy.active_pastoral_count == 0
 
 
 def test_infrastructure_created_and_observed_round_trips() -> None:

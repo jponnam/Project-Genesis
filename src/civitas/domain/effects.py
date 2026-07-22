@@ -109,9 +109,14 @@ architect/cartographer/curriculum). Phase 15 Milestone 9 adds TERRACE
 food-gather bonuses at the infrastructure seat (stacking with plow,
 storehouse, waystation, entrepot, granary, farmstead, and husbandman).
 Phase 15 Milestone 10 adds a global COPPICE wood-gather bonus (stacking
-with the scaffold seat). The action executor, retrieval path, market
-fills, knowledge diffusion, and research progression read these helpers;
-``EffectsSystem`` only observes coverage. Systems never call each other.
+with the scaffold seat). Phase 15 Milestone 11 adds CONSERVATION law
+wood-gather bonuses for living subjects (stacking with coppice and the
+scaffold seat). Phase 15 Milestone 12 adds PASTORAL city wood-gather
+bonuses at the city seat (stacking with the scaffold seat, coppice
+society-wide, and the conservation subject bonus). The action executor,
+retrieval path, market fills, knowledge diffusion, and research
+progression read these helpers; ``EffectsSystem`` only observes coverage.
+Systems never call each other.
 """
 
 from __future__ import annotations
@@ -201,6 +206,7 @@ TERRACE_FOOD_GATHER_BONUS: int = 1
 AGRICULTURE_FOOD_GATHER_BONUS: int = 1
 CROP_ROTATION_EAT_RESTORE_BONUS: float = 0.05
 SCAFFOLD_WOOD_GATHER_BONUS: int = 1
+PASTORAL_WOOD_GATHER_BONUS: int = 1
 MASON_STONE_GATHER_BONUS: int = 1
 QUARRY_STONE_GATHER_BONUS: int = 1
 ROAD_MOVE_ENERGY_DISCOUNT: float = 0.02
@@ -900,6 +906,15 @@ def location_has_active_farmstead(
     return city is not None and city.active and city.kind is CityKind.FARMSTEAD
 
 
+def location_has_active_pastoral(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active PASTORAL city is seated at ``location_id``."""
+    city = city_at(world, location_id)
+    return city is not None and city.active and city.kind is CityKind.PASTORAL
+
+
 def rest_restore_bonus(
     world: World,
     *,
@@ -1009,8 +1024,8 @@ def gather_amount_bonus(
     active STOREHOUSE, WAYSTATION, ENTREPOT city, FARMSTEAD city,
     GRANARY, HUSBANDMAN, and/or TERRACE at ``location_id`` when provided
     (they stack). Wood bonuses come from an active COPPICE innovation
-    society-wide, plus an active SCAFFOLD at ``location_id`` when provided
-    (they stack).
+    society-wide, plus an active SCAFFOLD and/or PASTORAL city at
+    ``location_id`` when provided (they stack).
     """
     bonus = 0
     if resource == WATER_RESOURCE:
@@ -1050,10 +1065,11 @@ def gather_amount_bonus(
     elif resource == ResourceKind.WOOD.value:
         if innovation_kind_is_active(world, InnovationKind.COPPICE):
             bonus += FORESTRY_WOOD_GATHER_BONUS
-        if location_id is not None and location_has_active_scaffold(
-            world, location_id
-        ):
-            bonus += SCAFFOLD_WOOD_GATHER_BONUS
+        if location_id is not None:
+            if location_has_active_scaffold(world, location_id):
+                bonus += SCAFFOLD_WOOD_GATHER_BONUS
+            if location_has_active_pastoral(world, location_id):
+                bonus += PASTORAL_WOOD_GATHER_BONUS
     return bonus
 
 
