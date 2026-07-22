@@ -128,6 +128,7 @@ from civitas.domain import (
     STOREHOUSE_FOOD_GATHER_BONUS,
     SURVEYING_RETRIEVAL_LIMIT_BONUS,
     TEMPLE_REST_RESTORE_BONUS,
+    TERRACE_FOOD_GATHER_BONUS,
     WAYSTATION_FOOD_GATHER_BONUS,
     WELL_DRINK_RESTORE_BONUS,
     WORKSHOP_PRODUCE_ENERGY_DISCOUNT,
@@ -208,6 +209,7 @@ from civitas.domain import (
     location_has_active_stoa,
     location_has_active_storehouse,
     location_has_active_temple,
+    location_has_active_terrace,
     location_has_active_waystation,
     location_has_active_well,
     location_has_active_workshop,
@@ -2616,6 +2618,64 @@ def test_waystation_stacks_with_storehouse_food_gather() -> None:
         DEFAULT_GATHER_AMOUNT
         + STOREHOUSE_FOOD_GATHER_BONUS
         + WAYSTATION_FOOD_GATHER_BONUS
+    )
+
+
+def test_terrace_boosts_food_gather_for_colocated_agents() -> None:
+    """Active terraces add a food gather bonus at their seat location."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 0, 0, "Camp Terrace", InfrastructureKind.TERRACE
+            ),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_terrace(world, agent.location_id) is True
+    assert (
+        gather_amount_bonus(world, "food", location_id=agent.location_id)
+        == TERRACE_FOOD_GATHER_BONUS
+    )
+    assert gather_amount_bonus(world, "food") == 0
+    assert (
+        effective_gather_amount(world, "food", agent=agent)
+        == DEFAULT_GATHER_AMOUNT + TERRACE_FOOD_GATHER_BONUS
+    )
+
+
+def test_terrace_stacks_with_storehouse_food_gather() -> None:
+    """Terrace and storehouse food gather bonuses stack at the same seat."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 0, 0, "Camp Storehouse", InfrastructureKind.STOREHOUSE
+            ),
+            Infrastructure.create(
+                1, 0, 0, 0, "Camp Terrace", InfrastructureKind.TERRACE
+            ),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_storehouse(world, agent.location_id) is True
+    assert location_has_active_terrace(world, agent.location_id) is True
+    assert gather_amount_bonus(world, "food", location_id=agent.location_id) == (
+        STOREHOUSE_FOOD_GATHER_BONUS + TERRACE_FOOD_GATHER_BONUS
+    )
+    assert (
+        effective_gather_amount(world, "food", agent=agent)
+        == DEFAULT_GATHER_AMOUNT
+        + STOREHOUSE_FOOD_GATHER_BONUS
+        + TERRACE_FOOD_GATHER_BONUS
     )
 
 

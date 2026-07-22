@@ -105,7 +105,9 @@ Phase 15 Milestone 7 adds a global FALLOW EAT restore bonus (stacking
 with zoning and land tenure for subjects). Phase 15 Milestone 8 adds
 AGRONOMIST teachings-per-knower bonuses at the institution seat (stacking
 with scribe/dialectic/scriptorium/academy/forum/school/stoa/collegium/
-architect/cartographer/curriculum).
+architect/cartographer/curriculum). Phase 15 Milestone 9 adds TERRACE
+food-gather bonuses at the infrastructure seat (stacking with plow,
+storehouse, waystation, entrepot, granary, farmstead, and husbandman).
 The action executor, retrieval path, market fills, knowledge diffusion,
 and research progression read these helpers; ``EffectsSystem`` only
 observes coverage. Systems never call each other.
@@ -192,6 +194,7 @@ ENTREPOT_FOOD_GATHER_BONUS: int = 1
 FARMSTEAD_FOOD_GATHER_BONUS: int = 1
 GRANARY_FOOD_GATHER_BONUS: int = 1
 HUSBANDMAN_FOOD_GATHER_BONUS: int = 1
+TERRACE_FOOD_GATHER_BONUS: int = 1
 AGRICULTURE_FOOD_GATHER_BONUS: int = 1
 CROP_ROTATION_EAT_RESTORE_BONUS: float = 0.05
 SCAFFOLD_WOOD_GATHER_BONUS: int = 1
@@ -327,6 +330,22 @@ def location_has_active_ditch(
     )
     return any(
         item.kind is InfrastructureKind.DITCH and item.location_id == target
+        for item in active_infrastructure(world)
+    )
+
+
+def location_has_active_terrace(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active TERRACE stands at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InfrastructureKind.TERRACE and item.location_id == target
         for item in active_infrastructure(world)
     )
 
@@ -985,9 +1004,9 @@ def gather_amount_bonus(
     and an active QUARRY city at ``location_id`` when provided. Food
     bonuses come from an active PLOW innovation society-wide, plus an
     active STOREHOUSE, WAYSTATION, ENTREPOT city, FARMSTEAD city,
-    GRANARY, and/or HUSBANDMAN at ``location_id`` when provided (they
-    stack). Wood bonuses come from an active SCAFFOLD at ``location_id``
-    when provided.
+    GRANARY, HUSBANDMAN, and/or TERRACE at ``location_id`` when provided
+    (they stack). Wood bonuses come from an active SCAFFOLD at
+    ``location_id`` when provided.
     """
     bonus = 0
     if resource == WATER_RESOURCE:
@@ -1022,6 +1041,8 @@ def gather_amount_bonus(
                 bonus += GRANARY_FOOD_GATHER_BONUS
             if location_has_active_husbandman(world, location_id):
                 bonus += HUSBANDMAN_FOOD_GATHER_BONUS
+            if location_has_active_terrace(world, location_id):
+                bonus += TERRACE_FOOD_GATHER_BONUS
     elif resource == ResourceKind.WOOD.value and location_id is not None:
         if location_has_active_scaffold(world, location_id):
             bonus += SCAFFOLD_WOOD_GATHER_BONUS

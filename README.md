@@ -127,14 +127,16 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 15 Milestone 8: Agronomist institutions**
+**Phase 15 Milestone 9: Terrace infrastructure**
 
-``InstitutionKind.AGRONOMIST`` is a teaching institution seated in a
-government's jurisdiction. An active agronomist raises
-teachings-per-knower by ``AGRONOMIST_TEACHINGS_PER_KNOWER_BONUS`` (1) at
-its seat, stacking with every other teaching source (scribe, dialectic,
-scriptorium, stoa, academy, forum, school, collegium, architect,
-cartographer, and curriculum). Agronomists are not seeded.
+``InfrastructureKind.TERRACE`` is a built-capacity piece attached to a
+city seat inside a government's jurisdiction. An active terrace raises
+FOOD gather amount by ``TERRACE_FOOD_GATHER_BONUS`` (1) at its location,
+stacking with every other food-gather source (plow, storehouse,
+waystation, entrepot, granary, farmstead, and husbandman). Governments
+fund construction via ``build_infrastructure`` and institutions via
+``build_infrastructure_from_institution`` at
+``DEFAULT_TERRACE_BUILD_COST`` (8). Terraces are not seeded.
 
 ### Completed
 
@@ -288,6 +290,7 @@ JSONL storage → `civitas run`
 - Milestone 6: Husbandman institutions
 - Milestone 7: Crop rotation technology
 - Milestone 8: Agronomist institutions
+- Milestone 9: Terrace infrastructure
 
 ## License
 
