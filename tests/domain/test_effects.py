@@ -90,6 +90,7 @@ from civitas.domain import (
     GUILD_PRODUCE_ENERGY_DISCOUNT,
     HARBOR_MARKET_FEE_DISCOUNT,
     HOSPITAL_REST_RESTORE_BONUS,
+    HUSBANDMAN_FOOD_GATHER_BONUS,
     HYGIENE_DRINK_RESTORE_BONUS,
     INFIRMARY_REST_RESTORE_BONUS,
     IRRIGATION_WATER_GATHER_BONUS,
@@ -184,6 +185,7 @@ from civitas.domain import (
     location_has_active_guild,
     location_has_active_harbor,
     location_has_active_hospital,
+    location_has_active_husbandman,
     location_has_active_infirmary,
     location_has_active_lazaretto,
     location_has_active_library,
@@ -2608,10 +2610,32 @@ def test_granary_boosts_food_gather_for_colocated_agents() -> None:
     )
 
 
+def test_husbandman_boosts_food_gather_for_colocated_agents() -> None:
+    """Active husbandman seats add a food gather bonus at their location."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        institutions=(
+            Institution.create(0, 0, 0, "Camp Husbandman", InstitutionKind.HUSBANDMAN),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_husbandman(world, agent.location_id) is True
+    assert gather_amount_bonus(world, "food", location_id=agent.location_id) == (
+        HUSBANDMAN_FOOD_GATHER_BONUS
+    )
+    assert gather_amount_bonus(world, "food") == 0
+    assert effective_gather_amount(world, "food", agent=agent) == (
+        DEFAULT_GATHER_AMOUNT + HUSBANDMAN_FOOD_GATHER_BONUS
+    )
+
+
 def test_plow_stacks_with_storehouse_waystation_entrepot_and_granary_food_gather() -> (
     None
 ):
-    """Plow stacks with storehouse, waystation, entrepot, and granary food bonuses."""
+    """Plow stacks with storehouse, waystation, entrepot, granary, and husbandman."""
     discovered_agriculture = CAMP_AGRICULTURE.model_copy(update={"discovered": True})
     active_plow = CAMP_PLOW.model_copy(update={"active": True})
     world = World(
@@ -2632,6 +2656,9 @@ def test_plow_stacks_with_storehouse_waystation_entrepot_and_granary_food_gather
         ),
         institutions=(
             Institution.create(0, 0, 1, "Entrepot Granary", InstitutionKind.GRANARY),
+            Institution.create(
+                1, 0, 1, "Entrepot Husbandman", InstitutionKind.HUSBANDMAN
+            ),
         ),
         technologies=tuple(
             discovered_agriculture
@@ -2652,8 +2679,10 @@ def test_plow_stacks_with_storehouse_waystation_entrepot_and_granary_food_gather
         + WAYSTATION_FOOD_GATHER_BONUS
         + ENTREPOT_FOOD_GATHER_BONUS
         + GRANARY_FOOD_GATHER_BONUS
+        + HUSBANDMAN_FOOD_GATHER_BONUS
     )
     assert location_has_active_granary(world, agent.location_id) is True
+    assert location_has_active_husbandman(world, agent.location_id) is True
     assert gather_amount_bonus(world, "food") == AGRICULTURE_FOOD_GATHER_BONUS
     assert gather_amount_bonus(world, "food", location_id=agent.location_id) == (
         expected
@@ -2666,7 +2695,7 @@ def test_plow_stacks_with_storehouse_waystation_entrepot_and_granary_food_gather
 def test_plow_stacks_with_storehouse_waystation_farmstead_and_granary_food_gather() -> (
     None
 ):
-    """Plow stacks with storehouse, waystation, farmstead, and granary food bonuses."""
+    """Plow stacks with storehouse, waystation, farmstead, granary, and husbandman."""
     discovered_agriculture = CAMP_AGRICULTURE.model_copy(update={"discovered": True})
     active_plow = CAMP_PLOW.model_copy(update={"active": True})
     world = World(
@@ -2687,6 +2716,9 @@ def test_plow_stacks_with_storehouse_waystation_farmstead_and_granary_food_gathe
         ),
         institutions=(
             Institution.create(0, 0, 1, "Farmstead Granary", InstitutionKind.GRANARY),
+            Institution.create(
+                1, 0, 1, "Farmstead Husbandman", InstitutionKind.HUSBANDMAN
+            ),
         ),
         technologies=tuple(
             discovered_agriculture
@@ -2707,9 +2739,11 @@ def test_plow_stacks_with_storehouse_waystation_farmstead_and_granary_food_gathe
         + WAYSTATION_FOOD_GATHER_BONUS
         + FARMSTEAD_FOOD_GATHER_BONUS
         + GRANARY_FOOD_GATHER_BONUS
+        + HUSBANDMAN_FOOD_GATHER_BONUS
     )
     assert location_has_active_farmstead(world, agent.location_id) is True
     assert location_has_active_granary(world, agent.location_id) is True
+    assert location_has_active_husbandman(world, agent.location_id) is True
     assert gather_amount_bonus(world, "food") == AGRICULTURE_FOOD_GATHER_BONUS
     assert gather_amount_bonus(world, "food", location_id=agent.location_id) == (
         expected
