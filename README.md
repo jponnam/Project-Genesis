@@ -124,11 +124,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 12 Milestone 8: Collegium institutions**
+**Phase 12 Milestone 9: Bathhouse infrastructure**
 
-``InstitutionKind.COLLEGIUM`` adds medical colleges / physicians' collegia as
-government-attached institutions. Active collegia add ``+1``
-teachings-per-knower at their seat, stacking with prior teaching bonuses.
+``InfrastructureKind.BATHHOUSE`` adds paid bathhouses at city seats. Active
+bathhouses add ``+0.05`` REST restore for colocated agents, stacking with prior
+REST bonuses.
 
 ### Completed
 
@@ -240,6 +240,7 @@ JSONL storage → `civitas run`
 - Milestone 6: Apothecary institutions
 - Milestone 7: Anatomy technology
 - Milestone 8: Collegium institutions
+- Milestone 9: Bathhouse infrastructure
 
 ## License
 

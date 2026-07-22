@@ -607,6 +607,7 @@ class InfrastructuresObserved(DomainEvent):
     active_observatory_count: NonNegativeInt = 0
     active_shrine_count: NonNegativeInt = 0
     active_clinic_count: NonNegativeInt = 0
+    active_bathhouse_count: NonNegativeInt = 0
 
 
 class TechnologyCreated(DomainEvent):

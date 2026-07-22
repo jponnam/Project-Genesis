@@ -8,6 +8,7 @@ from civitas.domain import (
     AGORA_SOCIALIZE_RESTORE_BONUS,
     APOTHECARY_DRINK_RESTORE_BONUS,
     ASSEMBLY_SOCIALIZE_RESTORE_BONUS,
+    BATHHOUSE_REST_RESTORE_BONUS,
     CAMP_LOCATION,
     CAMP_ORATION,
     CAMP_RHETORIC,
@@ -28,6 +29,8 @@ from civitas.domain import (
     CityKind,
     Government,
     Health,
+    Infrastructure,
+    InfrastructureKind,
     Institution,
     InstitutionKind,
     Inventory,
@@ -282,6 +285,31 @@ def test_rest_uses_active_infirmary_restore_bonus() -> None:
     updated = ActionExecutor().execute(world, _choice(0, ActionKind.REST))
     assert updated.agents[0].needs.energy == pytest.approx(
         0.4 + DEFAULT_REST_RESTORE + INFIRMARY_REST_RESTORE_BONUS
+    )
+
+
+def test_rest_uses_active_bathhouse_restore_bonus() -> None:
+    """REST through ActionExecutor includes active bathhouse seat bonus."""
+    agent = Agent.create(
+        agent_id=0,
+        name="A",
+        needs=Needs(food=1.0, water=1.0, energy=0.4, social=1.0, safety=1.0),
+    )
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 0, 0, "Camp Bathhouse", InfrastructureKind.BATHHOUSE
+            ),
+        ),
+        agents=(agent,),
+    )
+    updated = ActionExecutor().execute(world, _choice(0, ActionKind.REST))
+    assert updated.agents[0].needs.energy == pytest.approx(
+        0.4 + DEFAULT_REST_RESTORE + BATHHOUSE_REST_RESTORE_BONUS
     )
 
 

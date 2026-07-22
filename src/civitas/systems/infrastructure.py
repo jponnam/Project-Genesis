@@ -89,6 +89,7 @@ class InfrastructureSystem:
                     active_observatory_count=snap.active_observatory_count,
                     active_shrine_count=snap.active_shrine_count,
                     active_clinic_count=snap.active_clinic_count,
+                    active_bathhouse_count=snap.active_bathhouse_count,
                 )
             )
         return world

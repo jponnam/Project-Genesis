@@ -12,6 +12,7 @@ from civitas.domain import (
     ARCHIVE_RETRIEVAL_LIMIT_BONUS,
     ASSEMBLY_SOCIALIZE_RESTORE_BONUS,
     ASTRONOMY_RETRIEVAL_LIMIT_BONUS,
+    BATHHOUSE_REST_RESTORE_BONUS,
     BUREAUCRACY_MARKET_FEE_DISCOUNT,
     CALENDAR_RETRIEVAL_LIMIT_BONUS,
     CAMP_ABACUS,
@@ -111,6 +112,7 @@ from civitas.domain import (
     location_has_active_agora,
     location_has_active_apothecary,
     location_has_active_archive,
+    location_has_active_bathhouse,
     location_has_active_bureaucracy,
     location_has_active_clinic,
     location_has_active_collegium,
@@ -461,7 +463,7 @@ def test_infirmary_boosts_rest_restore_for_residents() -> None:
 
 
 def test_infirmary_stacks_with_rest_restore_sources() -> None:
-    """Infirmary rest bonus stacks with society, temple, and hospital bonuses."""
+    """Infirmary rest bonus stacks with society, temple, hospital, and bathhouse."""
     discovered_medicine = CAMP_MEDICINE.model_copy(update={"discovered": True})
     active_remedy = CAMP_REMEDY.model_copy(update={"active": True})
     world = World(
@@ -476,6 +478,11 @@ def test_infirmary_stacks_with_rest_restore_sources() -> None:
         institutions=(
             Institution.create(0, 0, 1, "Seat Temple", InstitutionKind.TEMPLE),
             Institution.create(1, 0, 1, "Seat Hospital", InstitutionKind.HOSPITAL),
+        ),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 1, 1, "Seat Bathhouse", InfrastructureKind.BATHHOUSE
+            ),
         ),
         technologies=tuple(
             discovered_medicine
@@ -496,12 +503,95 @@ def test_infirmary_stacks_with_rest_restore_sources() -> None:
     assert location_has_active_temple(world, agent.location_id) is True
     assert location_has_active_hospital(world, agent.location_id) is True
     assert location_has_active_sanctuary(world, agent.location_id) is False
+    assert location_has_active_bathhouse(world, agent.location_id) is True
     rest_bonus = (
         FIRE_HEARTH_REST_BONUS
         + MEDICINE_REST_RESTORE_BONUS
         + TEMPLE_REST_RESTORE_BONUS
         + HOSPITAL_REST_RESTORE_BONUS
         + INFIRMARY_REST_RESTORE_BONUS
+        + BATHHOUSE_REST_RESTORE_BONUS
+    )
+    assert rest_restore_bonus(world, agent=agent) == pytest.approx(rest_bonus)
+    assert effective_rest_restore(world, agent=agent) == pytest.approx(
+        DEFAULT_REST_RESTORE + rest_bonus
+    )
+
+
+def test_bathhouse_boosts_rest_restore_for_colocated_agents() -> None:
+    """Active bathhouses add a REST restore bonus at their seat location."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 0, 0, "Camp Bathhouse", InfrastructureKind.BATHHOUSE
+            ),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_bathhouse(world, agent.location_id) is True
+    assert rest_restore_bonus(world, agent=agent) == BATHHOUSE_REST_RESTORE_BONUS
+    assert effective_rest_restore(world, agent=agent) == pytest.approx(
+        DEFAULT_REST_RESTORE + BATHHOUSE_REST_RESTORE_BONUS
+    )
+    # Without agent/location, bathhouse (seat-scoped) does not apply.
+    assert rest_restore_bonus(world) == 0.0
+    assert effective_rest_restore(world) == pytest.approx(DEFAULT_REST_RESTORE)
+    bare = _world()
+    assert location_has_active_bathhouse(bare, bare.agents[0].location_id) is False
+
+
+def test_bathhouse_stacks_with_sanctuary_rest_restore_sources() -> None:
+    """Bathhouse rest bonus stacks with society, temple, sanctuary, and hospital."""
+    discovered_medicine = CAMP_MEDICINE.model_copy(update={"discovered": True})
+    active_remedy = CAMP_REMEDY.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp City", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Sanctuary", CityKind.SANCTUARY),
+        ),
+        institutions=(
+            Institution.create(0, 0, 1, "Seat Temple", InstitutionKind.TEMPLE),
+            Institution.create(1, 0, 1, "Seat Hospital", InstitutionKind.HOSPITAL),
+        ),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 1, 1, "Seat Bathhouse", InfrastructureKind.BATHHOUSE
+            ),
+        ),
+        technologies=tuple(
+            discovered_medicine
+            if tech.technology_id == CAMP_MEDICINE.technology_id
+            else tech
+            for tech in default_technologies()
+        ),
+        innovations=tuple(
+            active_remedy
+            if innovation.innovation_id == CAMP_REMEDY.innovation_id
+            else innovation
+            for innovation in default_innovations()
+        ),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_temple(world, agent.location_id) is True
+    assert location_has_active_sanctuary(world, agent.location_id) is True
+    assert location_has_active_hospital(world, agent.location_id) is True
+    assert location_has_active_bathhouse(world, agent.location_id) is True
+    rest_bonus = (
+        FIRE_HEARTH_REST_BONUS
+        + MEDICINE_REST_RESTORE_BONUS
+        + TEMPLE_REST_RESTORE_BONUS
+        + SANCTUARY_REST_RESTORE_BONUS
+        + HOSPITAL_REST_RESTORE_BONUS
+        + BATHHOUSE_REST_RESTORE_BONUS
     )
     assert rest_restore_bonus(world, agent=agent) == pytest.approx(rest_bonus)
     assert effective_rest_restore(world, agent=agent) == pytest.approx(

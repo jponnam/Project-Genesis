@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from civitas.domain import (
+    BATHHOUSE_REST_RESTORE_BONUS,
     CAMP_FIRE,
     CAMP_FIRE_HEARTH,
     CAMP_LOCATION,
@@ -17,6 +18,8 @@ from civitas.domain import (
     City,
     CityKind,
     Government,
+    Infrastructure,
+    InfrastructureKind,
     Institution,
     InstitutionKind,
     NeedDecayed,
@@ -145,4 +148,29 @@ def test_rest_applies_infirmary_bonus() -> None:
     updated = EnergySystem().rest(world, 0)
     assert updated.agents[0].needs.energy == pytest.approx(
         0.5 + DEFAULT_REST_RESTORE + INFIRMARY_REST_RESTORE_BONUS
+    )
+
+
+def test_rest_applies_bathhouse_bonus() -> None:
+    """EnergySystem.rest includes the bathhouse infrastructure seat bonus."""
+    agent = Agent.create(
+        agent_id=0,
+        name="A",
+        needs=Needs(food=1.0, water=1.0, energy=0.5, social=1.0, safety=1.0),
+    )
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 0, 0, "Camp Bathhouse", InfrastructureKind.BATHHOUSE
+            ),
+        ),
+        agents=(agent,),
+    )
+    updated = EnergySystem().rest(world, 0)
+    assert updated.agents[0].needs.energy == pytest.approx(
+        0.5 + DEFAULT_REST_RESTORE + BATHHOUSE_REST_RESTORE_BONUS
     )
