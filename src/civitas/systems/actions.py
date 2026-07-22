@@ -435,6 +435,7 @@ class ActionExecutor:
             world,
             choice.target_resource,
             base=int(self._config.gather_amount),
+            agent=agent,
         )
         updated = apply_gather(
             world,

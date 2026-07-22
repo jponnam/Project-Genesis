@@ -78,6 +78,7 @@ class InfrastructureSystem:
                     ),
                     cities_with_infrastructure=snap.cities_with_infrastructure,
                     active_well_count=snap.active_well_count,
+                    active_storehouse_count=snap.active_storehouse_count,
                 )
             )
         return world

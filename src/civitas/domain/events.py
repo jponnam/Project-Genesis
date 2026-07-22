@@ -552,6 +552,7 @@ class InfrastructuresObserved(DomainEvent):
     governments_with_infrastructure: NonNegativeInt
     cities_with_infrastructure: NonNegativeInt
     active_well_count: NonNegativeInt
+    active_storehouse_count: NonNegativeInt = 0
 
 
 class TechnologyCreated(DomainEvent):
@@ -730,6 +731,8 @@ class EffectsObserved(DomainEvent):
     water_gather_amount: NonNegativeInt
     active_well_count: NonNegativeInt = 0
     drink_restore_bps: NonNegativeInt = 3000
+    active_storehouse_count: NonNegativeInt = 0
+    food_gather_amount: NonNegativeInt = 1
 
 
 CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (

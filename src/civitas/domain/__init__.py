@@ -90,6 +90,7 @@ from civitas.domain.effects import (
     FIRE_HEARTH_REST_BONUS,
     IRRIGATION_WATER_GATHER_BONUS,
     POTTERY_WATER_GATHER_BONUS,
+    STOREHOUSE_FOOD_GATHER_BONUS,
     WELL_DRINK_RESTORE_BONUS,
     EffectsCensus,
     census_effects,
@@ -99,6 +100,7 @@ from civitas.domain.effects import (
     effective_rest_restore,
     gather_amount_bonus,
     innovation_kind_is_active,
+    location_has_active_storehouse,
     location_has_active_well,
     rest_restore_bonus,
 )
@@ -233,6 +235,7 @@ from civitas.domain.ids import (
 )
 from civitas.domain.infrastructure import (
     CAMP_WELL,
+    DEFAULT_STOREHOUSE_BUILD_COST,
     DEFAULT_WELL_BUILD_COST,
     INFRASTRUCTURE_BUILD_COSTS,
     Infrastructure,
@@ -610,6 +613,7 @@ __all__ = [
     "DEFAULT_REST_RESTORE",
     "DEFAULT_RETRIEVAL_LIMIT",
     "DEFAULT_SOCIALIZE_RESTORE",
+    "DEFAULT_STOREHOUSE_BUILD_COST",
     "DEFAULT_TEACHINGS_PER_KNOWER",
     "DEFAULT_TRADE_PRICE",
     "DEFAULT_TRADE_QUANTITY",
@@ -635,6 +639,7 @@ __all__ = [
     "REPUTATION_RECIPROCITY_WEIGHT",
     "REPUTATION_TRUST_WEIGHT",
     "RESOURCE_NEED",
+    "STOREHOUSE_FOOD_GATHER_BONUS",
     "TOOLS_RESOURCE",
     "WATER_RESOURCE",
     "WELL_DRINK_RESTORE_BONUS",
@@ -970,6 +975,7 @@ __all__ = [
     "lineages",
     "living_subjects",
     "location_density",
+    "location_has_active_storehouse",
     "location_has_active_well",
     "location_stock",
     "market_at",

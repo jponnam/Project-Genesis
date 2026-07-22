@@ -121,11 +121,12 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 9 — Milestone 5: Treasury-funded infrastructure construction**
+**Phase 9 — Milestone 6: Storehouse infrastructure**
 
-Governments can pay catalog build costs from their treasuries to construct
-infrastructure via opt-in helpers. Free seeding of the camp well is
-unchanged; paid builds emit ``InfrastructureBuilt``.
+``STOREHOUSE`` is a second infrastructure kind with a catalog build cost.
+An active storehouse boosts food gathering for agents at its seat. The camp
+well remains the only seeded piece; storehouses are created or paid-built
+on demand.
 
 ### Completed
 
@@ -192,6 +193,7 @@ JSONL storage → `civitas run`
 - Milestone 3: Tax redirection to government treasuries
 - Milestone 4: Institution budgets
 - Milestone 5: Treasury-funded infrastructure construction
+- Milestone 6: Storehouse infrastructure
 
 ## License
 

@@ -61,6 +61,8 @@ class EffectsSystem:
                     water_gather_amount=snap.water_gather_amount,
                     active_well_count=snap.active_well_count,
                     drink_restore_bps=snap.drink_restore_bps,
+                    active_storehouse_count=snap.active_storehouse_count,
+                    food_gather_amount=snap.food_gather_amount,
                 )
             )
         return world
