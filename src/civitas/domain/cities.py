@@ -33,12 +33,14 @@ Milestone 5 adds ``CityKind.MILL_TOWN`` as a non-capital specialized seat
 for craft production (living residents gain a PRODUCE energy discount).
 Phase 16 Milestone 12 adds ``CityKind.EMPORIUM`` as a non-capital
 specialized seat for trade (markets at the seat gain a market-fee
-discount). Resident
+discount). Phase 17 Milestone 5 adds ``CityKind.MINING_CAMP`` as a
+non-capital specialized seat for ore extraction (gatherers at the seat
+gain a stone gather bonus). Resident
 counts are derived from living agents at the seat. Infrastructure remains a
 separate aggregate. Camp City stays the only seeded settlement capital;
 libraries, forums, sanctuaries, agoras, infirmaries, lazarettos, foundries,
-quarries, harbors, entrepots, farmsteads, pastorals, mill towns, and
-emporiums are not seeded.
+quarries, harbors, entrepots, farmsteads, pastorals, mill towns,
+emporiums, and mining camps are not seeded.
 """
 
 from __future__ import annotations
@@ -79,6 +81,7 @@ class CityKind(StrEnum):
     PASTORAL = "pastoral"
     MILL_TOWN = "mill_town"
     EMPORIUM = "emporium"
+    MINING_CAMP = "mining_camp"
 
 
 # City kinds that may never be flagged as capital.
@@ -99,6 +102,7 @@ _NON_CAPITAL_KINDS: frozenset[CityKind] = frozenset(
         CityKind.PASTORAL,
         CityKind.MILL_TOWN,
         CityKind.EMPORIUM,
+        CityKind.MINING_CAMP,
     }
 )
 
@@ -187,6 +191,7 @@ class CityCensus(BaseModel):
     active_pastoral_count: NonNegativeInt = 0
     active_mill_town_count: NonNegativeInt = 0
     active_emporium_count: NonNegativeInt = 0
+    active_mining_camp_count: NonNegativeInt = 0
 
 
 def city_by_id(world: World, city_id: CityId | int) -> City | None:
@@ -387,6 +392,18 @@ def emporiums_for(
     )
 
 
+def mining_camps_for(
+    world: World,
+    government_id: GovernmentId | int,
+) -> tuple[City, ...]:
+    """Return mining camp cities for ``government_id`` in ascending id order."""
+    return tuple(
+        city
+        for city in cities_for(world, government_id)
+        if city.kind is CityKind.MINING_CAMP
+    )
+
+
 def city_at(world: World, location_id: LocationId | int) -> City | None:
     """Return the city seated at ``location_id``, or ``None``."""
     target = (
@@ -465,7 +482,7 @@ def create_city(world: World, city: City) -> World | None:
 
     Outposts, libraries, forums, sanctuaries, agoras, infirmaries,
     lazarettos, foundries, quarries, harbors, entrepots, farmsteads,
-    pastorals, mill towns, and emporiums cannot be capitals.
+    pastorals, mill towns, emporiums, and mining camps cannot be capitals.
     Settlement capital uniqueness is unchanged:
     at most one active capital per government. Every city still needs a unique
     seat location inside its government jurisdiction.
@@ -591,6 +608,9 @@ def census_cities(world: World) -> CityCensus:
     active_pastorals = sum(1 for city in active if city.kind is CityKind.PASTORAL)
     active_mill_towns = sum(1 for city in active if city.kind is CityKind.MILL_TOWN)
     active_emporiums = sum(1 for city in active if city.kind is CityKind.EMPORIUM)
+    active_mining_camps = sum(
+        1 for city in active if city.kind is CityKind.MINING_CAMP
+    )
     return CityCensus(
         tick=world.tick,
         city_count=len(cities),
@@ -618,4 +638,5 @@ def census_cities(world: World) -> CityCensus:
         active_pastoral_count=active_pastorals,
         active_mill_town_count=active_mill_towns,
         active_emporium_count=active_emporiums,
+        active_mining_camp_count=active_mining_camps,
     )

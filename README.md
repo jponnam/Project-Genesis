@@ -129,19 +129,17 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 17 Milestone 4: Mineshaft infrastructure**
+**Phase 17 Milestone 5: Mining camp cities**
 
-``InfrastructureKind.MINESHAFT`` attaches a built capacity piece to a
-city seat inside a government's jurisdiction. An active mineshaft grants a
-``+1`` STONE gather bonus at its seat location
-(``MINESHAFT_STONE_GATHER_BONUS``, resolved via
-``location_has_active_mineshaft``). The bonus stacks additively with the
+``CityKind.MINING_CAMP`` is a non-capital specialized settlement seated at
+its own location inside a government's jurisdiction. An active mining camp
+grants a ``+1`` STONE gather bonus at its seat location
+(``MINING_CAMP_STONE_GATHER_BONUS``, resolved via
+``location_has_active_mining_camp``). The bonus stacks additively with the
 pickaxe and forge bonuses (society-wide), the mason and miner seat
-bonuses, the quarry city bonus, and the mineral rights subject bonus.
-Governments fund construction from the treasury and institutions from
-their budgets (``DEFAULT_MINESHAFT_BUILD_COST``). Mineshafts are observed
-in the infrastructure census (``active_mineshaft_count``) and are not
-seeded.
+bonuses, the mineshaft bonus, the quarry city bonus, and the mineral
+rights subject bonus. Mining camps can never be capitals, are observed in
+the city census (``active_mining_camp_count``), and are not seeded.
 
 ### Completed
 
@@ -319,6 +317,7 @@ JSONL storage → `civitas run`
 - Milestone 2: Mineral rights laws
 - Milestone 3: Miner institutions
 - Milestone 4: Mineshaft infrastructure
+- Milestone 5: Mining camp cities
 
 ## License
 
