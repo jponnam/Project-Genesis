@@ -10,6 +10,8 @@ from civitas.domain import (
     CAMP_IRRIGATION,
     CAMP_IRRIGATION_RESEARCH,
     CAMP_LOCATION,
+    CAMP_MATHEMATICS,
+    CAMP_MATHEMATICS_RESEARCH,
     CAMP_METALLURGY,
     CAMP_METALLURGY_RESEARCH,
     CAMP_POTTERY,
@@ -45,13 +47,14 @@ def _world(
     )
 
 
-def test_default_research_progress_seeds_pottery_through_writing() -> None:
+def test_default_research_progress_seeds_pottery_through_mathematics() -> None:
     """Canonical research tracks undiscovered technologies at zero points."""
     assert default_research_progress() == (
         CAMP_POTTERY_RESEARCH,
         CAMP_IRRIGATION_RESEARCH,
         CAMP_METALLURGY_RESEARCH,
         CAMP_WRITING_RESEARCH,
+        CAMP_MATHEMATICS_RESEARCH,
     )
     assert CAMP_POTTERY_RESEARCH.technology_id == CAMP_POTTERY.technology_id
     assert CAMP_POTTERY_RESEARCH.points == 0
@@ -65,6 +68,9 @@ def test_default_research_progress_seeds_pottery_through_writing() -> None:
     assert CAMP_WRITING_RESEARCH.technology_id == CAMP_WRITING.technology_id
     assert CAMP_WRITING_RESEARCH.points == 0
     assert CAMP_WRITING_RESEARCH.threshold == 10
+    assert CAMP_MATHEMATICS_RESEARCH.technology_id == CAMP_MATHEMATICS.technology_id
+    assert CAMP_MATHEMATICS_RESEARCH.points == 0
+    assert CAMP_MATHEMATICS_RESEARCH.threshold == 10
 
 
 def test_advance_research_increments_and_discovers() -> None:
@@ -87,6 +93,7 @@ def test_advance_research_increments_and_discovers() -> None:
         CAMP_IRRIGATION_RESEARCH,
         CAMP_METALLURGY_RESEARCH,
         CAMP_WRITING_RESEARCH,
+        CAMP_MATHEMATICS_RESEARCH,
     )
     assert world.technologies[1].discovered is True
     assert world.technologies[1].kind is TechnologyKind.POTTERY
@@ -105,6 +112,7 @@ def test_advance_research_large_step_discovers_immediately() -> None:
         CAMP_IRRIGATION_RESEARCH,
         CAMP_METALLURGY_RESEARCH,
         CAMP_WRITING_RESEARCH,
+        CAMP_MATHEMATICS_RESEARCH,
     )
     assert world.technologies[1].discovered is True
 
@@ -125,6 +133,8 @@ def test_irrigation_research_locked_until_pottery_discovered() -> None:
     assert metallurgy == CAMP_METALLURGY_RESEARCH
     writing = research_by_technology_id(world, CAMP_WRITING.technology_id)
     assert writing == CAMP_WRITING_RESEARCH
+    mathematics = research_by_technology_id(world, CAMP_MATHEMATICS.technology_id)
+    assert mathematics == CAMP_MATHEMATICS_RESEARCH
 
     discovered = discover_technology(world, CAMP_POTTERY.technology_id)
     assert discovered is not None
@@ -181,6 +191,36 @@ def test_writing_research_locked_until_metallurgy_discovered() -> None:
     world, outcomes = advance_research(with_metallurgy, points_per_tick=1)
     assert [outcome.technology_id for outcome in outcomes] == [
         CAMP_WRITING.technology_id
+    ]
+    assert outcomes[0].points_after == 1
+
+
+def test_mathematics_research_locked_until_writing_discovered() -> None:
+    """Mathematics progress is preserved but blocked until writing is known."""
+    world = _world(
+        Agent.create(agent_id=0, name="A"),
+        research_progress=default_research_progress(),
+    )
+    with_pottery = discover_technology(world, CAMP_POTTERY.technology_id)
+    assert with_pottery is not None
+    with_irrigation = discover_technology(with_pottery, CAMP_IRRIGATION.technology_id)
+    assert with_irrigation is not None
+    with_metallurgy = discover_technology(
+        with_irrigation, CAMP_METALLURGY.technology_id
+    )
+    assert with_metallurgy is not None
+    world, outcomes = advance_research(with_metallurgy, points_per_tick=1)
+    assert [outcome.technology_id for outcome in outcomes] == [
+        CAMP_WRITING.technology_id
+    ]
+    mathematics = research_by_technology_id(world, CAMP_MATHEMATICS.technology_id)
+    assert mathematics == CAMP_MATHEMATICS_RESEARCH
+
+    with_writing = discover_technology(world, CAMP_WRITING.technology_id)
+    assert with_writing is not None
+    world, outcomes = advance_research(with_writing, points_per_tick=1)
+    assert [outcome.technology_id for outcome in outcomes] == [
+        CAMP_MATHEMATICS.technology_id
     ]
     assert outcomes[0].points_after == 1
 

@@ -10,6 +10,7 @@ from civitas.domain import (
     CAMP_IRRIGATION,
     CAMP_LOCATION,
     CAMP_MARKET,
+    CAMP_MATHEMATICS,
     CAMP_METALLURGY,
     CAMP_POLL_TAX_LAW,
     CAMP_POTTERY,
@@ -93,6 +94,7 @@ def test_agents_have_stable_ids_names_and_origin_location() -> None:
     assert world.technologies[2] == CAMP_IRRIGATION
     assert world.technologies[3] == CAMP_METALLURGY
     assert world.technologies[4] == CAMP_WRITING
+    assert world.technologies[5] == CAMP_MATHEMATICS
     assert world.treasury == 0
     assert world.agents_at(0) == world.agents
 

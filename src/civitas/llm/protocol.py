@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
-from typing import Protocol, runtime_checkable
+from typing import Annotated, Protocol, runtime_checkable
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from civitas.domain.types import NonEmptyStr, NonNegativeInt
+
+# Reflection prompts embed episode content plus need metadata; tech-tree
+# fact lists can push past the shared NonEmptyStr 128-char bound.
+PromptStr = Annotated[str, Field(min_length=1, max_length=256)]
 
 
 class LanguageModelRequest(BaseModel):
@@ -14,7 +18,7 @@ class LanguageModelRequest(BaseModel):
 
     model_config = ConfigDict(frozen=True, extra="forbid", validate_default=True)
 
-    prompt: NonEmptyStr
+    prompt: PromptStr
     seed: NonNegativeInt = 0
 
 

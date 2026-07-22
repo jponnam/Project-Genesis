@@ -122,14 +122,14 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 10 — Milestone 6: Bureaucracy institutions**
+**Phase 10 — Milestone 7: Mathematics technology**
 
-``InstitutionKind.BUREAUCRACY`` adds an administrative organization that
-reduces market fill fees at its seat. When an active bureaucracy sits at
-a market location, buyers filling listings there owe
-``max(0, market_fee_for(...) - 1)``; government treasury credit matches
-the discounted fee so money stays conserved. Bureaucracies are not
-seeded; Camp Council remains the only default institution.
+``TechnologyKind.MATHEMATICS`` extends the prereq tree past writing.
+Camp Mathematics seeds undiscovered (requires writing), with research
+progress locked until writing is known, an inactive abacus innovation,
+a mathematics knowledge fact, and a society-wide produce-energy discount
+of ``0.02`` when the abacus is active (stacks with guild seat discounts
+via ``effective_produce_energy_cost``).
 
 ### Completed
 
@@ -211,6 +211,7 @@ JSONL storage → `civitas run`
 - Milestone 4: Curriculum laws
 - Milestone 5: Library cities
 - Milestone 6: Bureaucracy institutions
+- Milestone 7: Mathematics technology
 
 ## License
 

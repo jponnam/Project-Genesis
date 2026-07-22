@@ -72,6 +72,7 @@ class TechSystem:
                     discovered_irrigation_count=snap.discovered_irrigation_count,
                     discovered_metallurgy_count=snap.discovered_metallurgy_count,
                     discovered_writing_count=snap.discovered_writing_count,
+                    discovered_mathematics_count=snap.discovered_mathematics_count,
                     locked_count=snap.locked_count,
                     researchable_count=snap.researchable_count,
                 )

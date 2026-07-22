@@ -7,12 +7,14 @@ import pytest
 from civitas.domain import (
     ARCHIVE_RETRIEVAL_LIMIT_BONUS,
     BUREAUCRACY_MARKET_FEE_DISCOUNT,
+    CAMP_ABACUS,
     CAMP_FIRE,
     CAMP_FIRE_HEARTH,
     CAMP_FORGE,
     CAMP_IRRIGATION,
     CAMP_IRRIGATION_CANAL,
     CAMP_LOCATION,
+    CAMP_MATHEMATICS,
     CAMP_METALLURGY,
     CAMP_POTTERY,
     CAMP_POTTERY_CRAFT,
@@ -30,6 +32,7 @@ from civitas.domain import (
     GUILD_PRODUCE_ENERGY_DISCOUNT,
     IRRIGATION_WATER_GATHER_BONUS,
     LIBRARY_RETRIEVAL_LIMIT_BONUS,
+    MATHEMATICS_PRODUCE_ENERGY_DISCOUNT,
     METALLURGY_STONE_GATHER_BONUS,
     POTTERY_WATER_GATHER_BONUS,
     ROAD_MOVE_ENERGY_DISCOUNT,
@@ -86,6 +89,7 @@ def _world(*, innovations: tuple = ()) -> World:
             CAMP_IRRIGATION,
             CAMP_METALLURGY,
             CAMP_WRITING,
+            CAMP_MATHEMATICS,
         ),
         innovations=innovations,
         agents=(Agent.create(agent_id=0, name="A"),),
@@ -118,6 +122,7 @@ def test_pottery_and_irrigation_stack_water_gather_bonus() -> None:
             discovered_irrigation,
             CAMP_METALLURGY,
             CAMP_WRITING,
+            CAMP_MATHEMATICS,
         ),
         innovations=(
             CAMP_FIRE_HEARTH,
@@ -125,6 +130,7 @@ def test_pottery_and_irrigation_stack_water_gather_bonus() -> None:
             active_irrigation,
             CAMP_FORGE,
             CAMP_SCRIBE,
+            CAMP_ABACUS,
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
     )
@@ -153,6 +159,7 @@ def test_forge_boosts_stone_gather_bonus() -> None:
             discovered_irrigation,
             discovered_metallurgy,
             CAMP_WRITING,
+            CAMP_MATHEMATICS,
         ),
         innovations=(
             CAMP_FIRE_HEARTH,
@@ -160,6 +167,7 @@ def test_forge_boosts_stone_gather_bonus() -> None:
             CAMP_IRRIGATION_CANAL,
             active_forge,
             CAMP_SCRIBE,
+            CAMP_ABACUS,
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
     )
@@ -187,6 +195,7 @@ def test_scribe_boosts_teachings_per_knower() -> None:
             discovered_irrigation,
             discovered_metallurgy,
             discovered_writing,
+            CAMP_MATHEMATICS,
         ),
         innovations=(
             CAMP_FIRE_HEARTH,
@@ -194,6 +203,7 @@ def test_scribe_boosts_teachings_per_knower() -> None:
             CAMP_IRRIGATION_CANAL,
             CAMP_FORGE,
             active_scribe,
+            CAMP_ABACUS,
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
     )
@@ -228,6 +238,7 @@ def test_scriptorium_boosts_teachings_and_stacks_with_scribe() -> None:
             discovered_irrigation,
             discovered_metallurgy,
             discovered_writing,
+            CAMP_MATHEMATICS,
         ),
         innovations=(
             CAMP_FIRE_HEARTH,
@@ -235,6 +246,7 @@ def test_scriptorium_boosts_teachings_and_stacks_with_scribe() -> None:
             CAMP_IRRIGATION_CANAL,
             CAMP_FORGE,
             active_scribe,
+            CAMP_ABACUS,
         ),
         infrastructure=(
             Infrastructure.create(
@@ -297,6 +309,7 @@ def test_curriculum_boosts_teachings_and_stacks_with_scribe_scriptorium() -> Non
             discovered_irrigation,
             discovered_metallurgy,
             discovered_writing,
+            CAMP_MATHEMATICS,
         ),
         innovations=(
             CAMP_FIRE_HEARTH,
@@ -304,6 +317,7 @@ def test_curriculum_boosts_teachings_and_stacks_with_scribe_scriptorium() -> Non
             CAMP_IRRIGATION_CANAL,
             CAMP_FORGE,
             active_scribe,
+            CAMP_ABACUS,
         ),
         infrastructure=(
             Infrastructure.create(
@@ -454,6 +468,96 @@ def test_guild_reduces_produce_energy_for_colocated_agents() -> None:
     assert snap.active_guild_count == 1
     assert snap.produce_energy_cost_bps == round(
         (DEFAULT_PRODUCE_ENERGY_COST - GUILD_PRODUCE_ENERGY_DISCOUNT) * 10_000
+    )
+
+
+def test_abacus_reduces_produce_energy_and_stacks_with_guild() -> None:
+    """Active abacus discounts PRODUCE energy society-wide and stacks with guild."""
+    discovered_pottery = CAMP_POTTERY.model_copy(update={"discovered": True})
+    discovered_irrigation = CAMP_IRRIGATION.model_copy(update={"discovered": True})
+    discovered_metallurgy = CAMP_METALLURGY.model_copy(update={"discovered": True})
+    discovered_writing = CAMP_WRITING.model_copy(update={"discovered": True})
+    discovered_math = CAMP_MATHEMATICS.model_copy(update={"discovered": True})
+    active_abacus = CAMP_ABACUS.model_copy(update={"active": True})
+    bare = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        technologies=(
+            CAMP_FIRE,
+            discovered_pottery,
+            discovered_irrigation,
+            discovered_metallurgy,
+            discovered_writing,
+            discovered_math,
+        ),
+        innovations=(
+            CAMP_FIRE_HEARTH,
+            CAMP_POTTERY_CRAFT,
+            CAMP_IRRIGATION_CANAL,
+            CAMP_FORGE,
+            CAMP_SCRIBE,
+            active_abacus,
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = bare.agents[0]
+    assert effective_produce_energy_cost(
+        bare,
+        agent,
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(
+        DEFAULT_PRODUCE_ENERGY_COST - MATHEMATICS_PRODUCE_ENERGY_DISCOUNT
+    )
+    snap = census_effects(bare)
+    assert snap.produce_energy_cost_bps == round(
+        (DEFAULT_PRODUCE_ENERGY_COST - MATHEMATICS_PRODUCE_ENERGY_DISCOUNT) * 10_000
+    )
+
+    stacked = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        institutions=(
+            Institution.create(0, 0, 0, "Camp Guild", InstitutionKind.GUILD),
+        ),
+        technologies=(
+            CAMP_FIRE,
+            discovered_pottery,
+            discovered_irrigation,
+            discovered_metallurgy,
+            discovered_writing,
+            discovered_math,
+        ),
+        innovations=(
+            CAMP_FIRE_HEARTH,
+            CAMP_POTTERY_CRAFT,
+            CAMP_IRRIGATION_CANAL,
+            CAMP_FORGE,
+            CAMP_SCRIBE,
+            active_abacus,
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    stacked_agent = stacked.agents[0]
+    assert location_has_active_guild(stacked, stacked_agent.location_id) is True
+    assert effective_produce_energy_cost(
+        stacked,
+        stacked_agent,
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(
+        DEFAULT_PRODUCE_ENERGY_COST
+        - GUILD_PRODUCE_ENERGY_DISCOUNT
+        - MATHEMATICS_PRODUCE_ENERGY_DISCOUNT
+    )
+    stacked_snap = census_effects(stacked)
+    assert stacked_snap.active_guild_count == 1
+    assert stacked_snap.produce_energy_cost_bps == round(
+        (
+            DEFAULT_PRODUCE_ENERGY_COST
+            - GUILD_PRODUCE_ENERGY_DISCOUNT
+            - MATHEMATICS_PRODUCE_ENERGY_DISCOUNT
+        )
+        * 10_000
     )
 
 

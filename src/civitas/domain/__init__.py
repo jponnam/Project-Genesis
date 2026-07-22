@@ -95,6 +95,7 @@ from civitas.domain.effects import (
     GUILD_PRODUCE_ENERGY_DISCOUNT,
     IRRIGATION_WATER_GATHER_BONUS,
     LIBRARY_RETRIEVAL_LIMIT_BONUS,
+    MATHEMATICS_PRODUCE_ENERGY_DISCOUNT,
     METALLURGY_STONE_GATHER_BONUS,
     POTTERY_WATER_GATHER_BONUS,
     ROAD_MOVE_ENERGY_DISCOUNT,
@@ -287,6 +288,7 @@ from civitas.domain.infrastructure import (
     set_infrastructure_active,
 )
 from civitas.domain.innovation import (
+    CAMP_ABACUS,
     CAMP_FIRE_HEARTH,
     CAMP_FORGE,
     CAMP_IRRIGATION_CANAL,
@@ -334,6 +336,7 @@ from civitas.domain.knowledge import (
     DEFAULT_TEACHINGS_PER_KNOWER,
     FIRE_FACT,
     IRRIGATION_FACT,
+    MATHEMATICS_FACT,
     METALLURGY_FACT,
     POTTERY_FACT,
     WRITING_FACT,
@@ -502,6 +505,7 @@ from civitas.domain.reputation import (
 )
 from civitas.domain.research import (
     CAMP_IRRIGATION_RESEARCH,
+    CAMP_MATHEMATICS_RESEARCH,
     CAMP_METALLURGY_RESEARCH,
     CAMP_POTTERY_RESEARCH,
     CAMP_WRITING_RESEARCH,
@@ -551,6 +555,7 @@ from civitas.domain.taxes import (
 from civitas.domain.technology import (
     CAMP_FIRE,
     CAMP_IRRIGATION,
+    CAMP_MATHEMATICS,
     CAMP_METALLURGY,
     CAMP_POTTERY,
     CAMP_WRITING,
@@ -617,6 +622,7 @@ __all__ = [
     "ARCHIVE_RETRIEVAL_LIMIT_BONUS",
     "BPS_DENOMINATOR",
     "BUREAUCRACY_MARKET_FEE_DISCOUNT",
+    "CAMP_ABACUS",
     "CAMP_CITY",
     "CAMP_COUNCIL",
     "CAMP_FIRE",
@@ -628,6 +634,8 @@ __all__ = [
     "CAMP_IRRIGATION_RESEARCH",
     "CAMP_LOCATION",
     "CAMP_MARKET",
+    "CAMP_MATHEMATICS",
+    "CAMP_MATHEMATICS_RESEARCH",
     "CAMP_METALLURGY",
     "CAMP_METALLURGY_RESEARCH",
     "CAMP_POLL_TAX_LAW",
@@ -687,6 +695,8 @@ __all__ = [
     "IRRIGATION_WATER_GATHER_BONUS",
     "LIBRARY_RETRIEVAL_LIMIT_BONUS",
     "LOCATION_RESOURCE_KINDS",
+    "MATHEMATICS_FACT",
+    "MATHEMATICS_PRODUCE_ENERGY_DISCOUNT",
     "METALLURGY_FACT",
     "METALLURGY_STONE_GATHER_BONUS",
     "POTTERY_FACT",
