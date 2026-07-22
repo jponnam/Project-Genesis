@@ -7,10 +7,12 @@ from civitas.domain import (
     Agent,
     Government,
     Institution,
+    InstitutionFunded,
     InstitutionKind,
     InstitutionsObserved,
     SimulationConfig,
     World,
+    society_money_total,
 )
 from civitas.domain.ids import AgentId
 from civitas.engine import EventBus, WorldFactory
@@ -29,6 +31,8 @@ def test_observe_emits_institutions_observed_without_mutating_world() -> None:
     assert events[0].active_count == 1
     assert events[0].active_council_count == 1
     assert events[0].vacant_officer_count == 1
+    assert events[0].total_budget == 0
+    assert events[0].funded_count == 0
 
 
 def test_observe_can_suppress_events() -> None:
@@ -63,3 +67,30 @@ def test_system_wrappers_create_dissolve_and_appoint() -> None:
     assert staffed.institutions[0].officer_id == AgentId(value=0)
     dissolved = system.dissolve(staffed, 0)
     assert dissolved.institutions[0].active is False
+
+
+def test_system_fund_emits_institution_funded() -> None:
+    """fund moves treasury money into the budget and emits InstitutionFunded."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,), treasury=8),),
+        institutions=(Institution.create(0, 0, 0, "Council", InstitutionKind.COUNCIL),),
+        agents=(Agent.create(agent_id=0, name="A", money=2),),
+    )
+    bus = EventBus()
+    system = InstitutionSystem()
+    initial = society_money_total(world)
+    funded = system.fund(world, 0, 5, bus=bus)
+    assert funded.governments[0].treasury == 3
+    assert funded.institutions[0].budget == 5
+    assert society_money_total(funded) == initial
+    events = [event for event in bus.history if isinstance(event, InstitutionFunded)]
+    assert len(events) == 1
+    assert events[0].amount == 5
+    assert events[0].budget_after == 5
+    assert events[0].treasury_after == 3
+
+    unchanged = system.fund(funded, 0, 9, bus=bus)
+    assert unchanged == funded
+    assert len([e for e in bus.history if isinstance(e, InstitutionFunded)]) == 1

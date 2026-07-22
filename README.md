@@ -121,11 +121,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 9 — Milestone 3: Tax redirection to government treasuries**
+**Phase 9 — Milestone 4: Institution budgets**
 
-Tax collections now flow into the governing polity's treasury when the
-payer lives inside a government jurisdiction. Ungoverned payers continue to
-fund the legacy world treasury, preserving existing no-government behavior.
+Institutions hold integer budgets that governments can fund from their
+treasuries. Funding is opt-in (not automatic each tick). Society money
+totals include institution budgets so wealth conservation still holds.
 
 ### Completed
 
@@ -190,6 +190,7 @@ JSONL storage → `civitas run`
 - Milestone 1: Technology prerequisite trees
 - Milestone 2: Irrigation technology
 - Milestone 3: Tax redirection to government treasuries
+- Milestone 4: Institution budgets
 
 ## License
 
