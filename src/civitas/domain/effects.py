@@ -73,9 +73,11 @@ building codes, and compass). Phase 14 Milestone 3 adds CARAVAN MOVE energy
 discounts at the institution seat (stacking with road, bridge, building
 codes, passage, and compass). Phase 14 Milestone 4 adds WAYSTATION
 food-gather bonuses at the infrastructure seat (stacking with STOREHOUSE).
-The action executor, retrieval path, market fills, knowledge diffusion,
-and research progression read these helpers; ``EffectsSystem`` only
-observes coverage. Systems never call each other.
+Phase 14 Milestone 5 adds HARBOR city market-fee discounts at the city
+seat (stacking with BUREAUCRACY). The action executor, retrieval path,
+market fills, knowledge diffusion, and research progression read these
+helpers; ``EffectsSystem`` only observes coverage. Systems never call
+each other.
 """
 
 from __future__ import annotations
@@ -168,6 +170,7 @@ ASTRONOMY_RETRIEVAL_LIMIT_BONUS: int = 1
 SURVEYING_RETRIEVAL_LIMIT_BONUS: int = 1
 LYCEUM_RETRIEVAL_LIMIT_BONUS: int = 1
 BUREAUCRACY_MARKET_FEE_DISCOUNT: int = 1
+HARBOR_MARKET_FEE_DISCOUNT: int = 1
 
 
 class EffectsCensus(BaseModel):
@@ -689,6 +692,15 @@ def location_has_active_quarry(
     return city is not None and city.active and city.kind is CityKind.QUARRY
 
 
+def location_has_active_harbor(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active HARBOR city is seated at ``location_id``."""
+    city = city_at(world, location_id)
+    return city is not None and city.active and city.kind is CityKind.HARBOR
+
+
 def rest_restore_bonus(
     world: World,
     *,
@@ -940,18 +952,27 @@ def retrieval_limit_bonus(world: World, agent: Agent) -> int:
 
 
 def market_fee_discount(world: World, location_id: LocationId | int) -> int:
-    """Return market-fee discount from a BUREAUCRACY at ``location_id``."""
+    """Return market-fee discount from bureaucracy and harbor at ``location_id``.
+
+    An active BUREAUCRACY contributes ``BUREAUCRACY_MARKET_FEE_DISCOUNT``.
+    An active HARBOR city seat contributes ``HARBOR_MARKET_FEE_DISCOUNT``.
+    Both stack.
+    """
+    discount = 0
     if location_has_active_bureaucracy(world, location_id):
-        return BUREAUCRACY_MARKET_FEE_DISCOUNT
-    return 0
+        discount += BUREAUCRACY_MARKET_FEE_DISCOUNT
+    if location_has_active_harbor(world, location_id):
+        discount += HARBOR_MARKET_FEE_DISCOUNT
+    return discount
 
 
 def effective_market_fee(world: World, location_id: LocationId | int) -> int:
-    """Return market fill fee after bureaucracy discount (floor at 0).
+    """Return market fill fee after bureaucracy/harbor discounts (floor at 0).
 
     ``effective_market_fee = max(0, market_fee_for(...) - discount)`` where
-    an active bureaucracy at the market location contributes a discount of
-    ``BUREAUCRACY_MARKET_FEE_DISCOUNT`` (1).
+    an active bureaucracy at the market location contributes
+    ``BUREAUCRACY_MARKET_FEE_DISCOUNT`` (1) and an active harbor city seat
+    contributes ``HARBOR_MARKET_FEE_DISCOUNT`` (1). Discounts stack.
     """
     base = market_fee_for(world, location_id)
     return max(0, base - market_fee_discount(world, location_id))

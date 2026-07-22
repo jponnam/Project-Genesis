@@ -126,10 +126,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 14 Milestone 4: Waystation infrastructure**
+**Phase 14 Milestone 5: Harbor cities**
 
-``InfrastructureKind.WAYSTATION`` (build cost 8) grants a seat-scoped food
-gather bonus that stacks with storehouse.
+``CityKind.HARBOR`` is a non-capital specialized seat. An active harbor at
+a market location discounts the market fill fee by 1, stacking with
+bureaucracy.
 
 ### Completed
 
@@ -265,6 +266,7 @@ JSONL storage → `civitas run`
 - Milestone 2: Passage laws
 - Milestone 3: Caravan institutions
 - Milestone 4: Waystation infrastructure
+- Milestone 5: Harbor cities
 
 ## License
 

@@ -20,11 +20,13 @@ Phase 13 Milestone 5 adds ``CityKind.FOUNDRY`` as a non-capital
 specialized seat for industrial production (living residents gain a
 PRODUCE energy discount). Phase 13 Milestone 12 adds ``CityKind.QUARRY``
 as a non-capital specialized seat for stone extraction (gatherers at the
-seat gain a stone gather bonus). Resident counts are derived from living
-agents at the seat. Infrastructure remains a separate aggregate. Camp
-City stays the only seeded settlement capital; libraries, forums,
-sanctuaries, agoras, infirmaries, lazarettos, foundries, and quarries are
-not seeded.
+seat gain a stone gather bonus). Phase 14 Milestone 5 adds
+``CityKind.HARBOR`` as a non-capital specialized seat for trade routes
+(markets at the seat gain a market-fee discount). Resident counts are
+derived from living agents at the seat. Infrastructure remains a separate
+aggregate. Camp City stays the only seeded settlement capital; libraries,
+forums, sanctuaries, agoras, infirmaries, lazarettos, foundries, quarries,
+and harbors are not seeded.
 """
 
 from __future__ import annotations
@@ -59,6 +61,7 @@ class CityKind(StrEnum):
     LAZARETTO = "lazaretto"
     FOUNDRY = "foundry"
     QUARRY = "quarry"
+    HARBOR = "harbor"
 
 
 # City kinds that may never be flagged as capital.
@@ -73,6 +76,7 @@ _NON_CAPITAL_KINDS: frozenset[CityKind] = frozenset(
         CityKind.LAZARETTO,
         CityKind.FOUNDRY,
         CityKind.QUARRY,
+        CityKind.HARBOR,
     }
 )
 
@@ -155,6 +159,7 @@ class CityCensus(BaseModel):
     active_lazaretto_count: NonNegativeInt = 0
     active_foundry_count: NonNegativeInt = 0
     active_quarry_count: NonNegativeInt = 0
+    active_harbor_count: NonNegativeInt = 0
 
 
 def city_by_id(world: World, city_id: CityId | int) -> City | None:
@@ -283,6 +288,18 @@ def quarries_for(
     )
 
 
+def harbors_for(
+    world: World,
+    government_id: GovernmentId | int,
+) -> tuple[City, ...]:
+    """Return harbor cities for ``government_id`` in ascending id order."""
+    return tuple(
+        city
+        for city in cities_for(world, government_id)
+        if city.kind is CityKind.HARBOR
+    )
+
+
 def city_at(world: World, location_id: LocationId | int) -> City | None:
     """Return the city seated at ``location_id``, or ``None``."""
     target = (
@@ -359,8 +376,9 @@ def _has_active_capital(
 def create_city(world: World, city: City) -> World | None:
     """Add ``city`` to the world when legal.
 
-    Outposts, libraries, forums, sanctuaries, agoras, infirmaries, and
-    lazarettos cannot be capitals. Settlement capital uniqueness is unchanged:
+    Outposts, libraries, forums, sanctuaries, agoras, infirmaries,
+    lazarettos, foundries, quarries, and harbors cannot be capitals.
+    Settlement capital uniqueness is unchanged:
     at most one active capital per government. Every city still needs a unique
     seat location inside its government jurisdiction.
     """
@@ -479,6 +497,7 @@ def census_cities(world: World) -> CityCensus:
     active_lazarettos = sum(1 for city in active if city.kind is CityKind.LAZARETTO)
     active_foundries = sum(1 for city in active if city.kind is CityKind.FOUNDRY)
     active_quarries = sum(1 for city in active if city.kind is CityKind.QUARRY)
+    active_harbors = sum(1 for city in active if city.kind is CityKind.HARBOR)
     return CityCensus(
         tick=world.tick,
         city_count=len(cities),
@@ -500,4 +519,5 @@ def census_cities(world: World) -> CityCensus:
         active_lazaretto_count=active_lazarettos,
         active_foundry_count=active_foundries,
         active_quarry_count=active_quarries,
+        active_harbor_count=active_harbors,
     )
