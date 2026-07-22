@@ -138,7 +138,10 @@ WAREHOUSE market-fee discounts at the infrastructure seat (stacking with
 bureaucracy, harbor, merchant, dyer, and mordant). Phase 16 Milestone 10
 adds a global TANNERY produce-energy discount society-wide (stacking with
 guild, workshop, foundry, weaver, fulling mill, mill town, abacus, pulley,
-customs, labor, and loom). The action executor,
+customs, labor, and loom). Phase 16 Milestone 12 adds EMPORIUM city
+market-fee discounts at the city seat (stacking with bureaucracy, harbor,
+merchant, dyer, mordant, warehouse, and the sumptuary subject discount).
+The action executor,
 retrieval
 path, market fills, knowledge
 diffusion, and research progression read these helpers; ``EffectsSystem``
@@ -266,6 +269,7 @@ MERCHANT_MARKET_FEE_DISCOUNT: int = 1
 DYER_MARKET_FEE_DISCOUNT: int = 1
 DYEING_MARKET_FEE_DISCOUNT: int = 1
 WAREHOUSE_MARKET_FEE_DISCOUNT: int = 1
+EMPORIUM_MARKET_FEE_DISCOUNT: int = 1
 
 
 class EffectsCensus(BaseModel):
@@ -1041,6 +1045,15 @@ def location_has_active_mill_town(
     return city is not None and city.active and city.kind is CityKind.MILL_TOWN
 
 
+def location_has_active_emporium(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active EMPORIUM city is seated at ``location_id``."""
+    city = city_at(world, location_id)
+    return city is not None and city.active and city.kind is CityKind.EMPORIUM
+
+
 def rest_restore_bonus(
     world: World,
     *,
@@ -1353,7 +1366,7 @@ def retrieval_limit_bonus(world: World, agent: Agent) -> int:
 
 
 def market_fee_discount(world: World, location_id: LocationId | int) -> int:
-    """Return market-fee discount from seats, laws, dyer, mordant, warehouse.
+    """Return market-fee discount from seats, laws, tech, and city trade seats.
 
     An active BUREAUCRACY contributes ``BUREAUCRACY_MARKET_FEE_DISCOUNT``.
     An active HARBOR city seat contributes ``HARBOR_MARKET_FEE_DISCOUNT``.
@@ -1361,9 +1374,10 @@ def market_fee_discount(world: World, location_id: LocationId | int) -> int:
     active DYER contributes ``DYER_MARKET_FEE_DISCOUNT``. An active MORDANT
     innovation contributes ``DYEING_MARKET_FEE_DISCOUNT`` society-wide. An
     active WAREHOUSE at the seat contributes
-    ``WAREHOUSE_MARKET_FEE_DISCOUNT``. An active ``SUMPTUARY`` statute for
-    the market's government contributes ``SUMPTUARY_MARKET_FEE_DISCOUNT``.
-    All stack.
+    ``WAREHOUSE_MARKET_FEE_DISCOUNT``. An active EMPORIUM city seat
+    contributes ``EMPORIUM_MARKET_FEE_DISCOUNT``. An active ``SUMPTUARY``
+    statute for the market's government contributes
+    ``SUMPTUARY_MARKET_FEE_DISCOUNT``. All stack.
     """
     discount = 0
     if location_has_active_bureaucracy(world, location_id):
@@ -1378,6 +1392,8 @@ def market_fee_discount(world: World, location_id: LocationId | int) -> int:
         discount += DYEING_MARKET_FEE_DISCOUNT
     if location_has_active_warehouse(world, location_id):
         discount += WAREHOUSE_MARKET_FEE_DISCOUNT
+    if location_has_active_emporium(world, location_id):
+        discount += EMPORIUM_MARKET_FEE_DISCOUNT
     discount += sumptuary_market_discount_for(world, location_id)
     return discount
 
@@ -1393,8 +1409,9 @@ def effective_market_fee(world: World, location_id: LocationId | int) -> int:
     contributes ``DYER_MARKET_FEE_DISCOUNT`` (1), an active MORDANT
     innovation contributes ``DYEING_MARKET_FEE_DISCOUNT`` (1) society-wide,
     an active warehouse at the seat contributes
-    ``WAREHOUSE_MARKET_FEE_DISCOUNT`` (1), and an active ``SUMPTUARY``
-    statute for the market's government contributes
+    ``WAREHOUSE_MARKET_FEE_DISCOUNT`` (1), an active emporium city seat
+    contributes ``EMPORIUM_MARKET_FEE_DISCOUNT`` (1), and an active
+    ``SUMPTUARY`` statute for the market's government contributes
     ``SUMPTUARY_MARKET_FEE_DISCOUNT`` (1). Discounts stack.
     """
     base = market_fee_for(world, location_id)
