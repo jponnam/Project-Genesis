@@ -8,13 +8,14 @@ hospitals, Milestone 6 apothecaries, and Milestone 8 collegia, plus
 Phase 13 Milestone 3 workshops, Milestone 6 masons, and Milestone 8
 architects, plus Phase 14 Milestone 3 caravans, Milestone 6
 merchants, and Milestone 8 cartographers, plus Phase 15 Milestone 3
-granaries and Milestone 6 husbandmen. Institutions are gov-attached
-civic organizations with a seat location inside the government's
-jurisdiction, an optional officer, and an integer budget funded from
-the parent government treasury. Councils, guilds, archives,
-bureaucracies, academies, temples, schools, lyceums, hospitals,
-apothecaries, collegia, workshops, masons, architects, caravans,
-merchants, cartographers, granaries, and husbandmen coexist; this
+granaries, Milestone 6 husbandmen, and Milestone 8 agronomists.
+Institutions are gov-attached civic organizations with a seat location
+inside the government's jurisdiction, an optional officer, and an
+integer budget funded from the parent government treasury. Councils,
+guilds, archives, bureaucracies, academies, temples, schools, lyceums,
+hospitals, apothecaries, collegia, workshops, masons, architects,
+caravans, merchants, cartographers, granaries, husbandmen, and
+agronomists coexist; this
 package seeds a single ``COUNCIL``. Writing-gated archive creation is
 a later milestone.
 """
@@ -58,6 +59,7 @@ class InstitutionKind(StrEnum):
     CARTOGRAPHER = "cartographer"
     GRANARY = "granary"
     HUSBANDMAN = "husbandman"
+    AGRONOMIST = "agronomist"
 
 
 class Institution(BaseModel):
@@ -146,6 +148,7 @@ class InstitutionCensus(BaseModel):
     active_cartographer_count: NonNegativeInt = 0
     active_granary_count: NonNegativeInt = 0
     active_husbandman_count: NonNegativeInt = 0
+    active_agronomist_count: NonNegativeInt = 0
     total_budget: NonNegativeInt = 0
     funded_count: NonNegativeInt = 0
 
@@ -477,6 +480,9 @@ def census_institutions(world: World) -> InstitutionCensus:
     active_husbandmen = sum(
         1 for institution in active if institution.kind is InstitutionKind.HUSBANDMAN
     )
+    active_agronomists = sum(
+        1 for institution in active if institution.kind is InstitutionKind.AGRONOMIST
+    )
     total_budget = institution_budget_total(world)
     funded_count = sum(1 for institution in institutions if institution.budget > 0)
     return InstitutionCensus(
@@ -506,6 +512,7 @@ def census_institutions(world: World) -> InstitutionCensus:
         active_cartographer_count=active_cartographers,
         active_granary_count=active_granaries,
         active_husbandman_count=active_husbandmen,
+        active_agronomist_count=active_agronomists,
         total_budget=total_budget,
         funded_count=funded_count,
     )

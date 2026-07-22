@@ -812,6 +812,7 @@ def test_institution_created_and_observed_round_trips() -> None:
         active_cartographer_count=1,
         active_granary_count=1,
         active_husbandman_count=1,
+        active_agronomist_count=1,
         total_budget=3,
         funded_count=1,
     )
@@ -837,6 +838,7 @@ def test_institution_created_and_observed_round_trips() -> None:
     assert restored.active_cartographer_count == 1
     assert restored.active_granary_count == 1
     assert restored.active_husbandman_count == 1
+    assert restored.active_agronomist_count == 1
     assert restored.total_budget == 3
     assert restored.funded_count == 1
 
