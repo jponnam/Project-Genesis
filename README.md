@@ -122,14 +122,13 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 10 — Milestone 4: Curriculum laws**
+**Phase 10 — Milestone 5: Library cities**
 
-``LawKind.CURRICULUM`` adds a government-scoped knowledge diffusion
-bonus. An active curriculum statute grants living subjects of that
-government +1 teachings-per-knower, stacking with the society-wide
-scribe innovation and location-scoped scriptorium bonuses. Curriculum
-laws are not seeded by default (kind alone enables the +1; at most one
-active curriculum per government).
+``CityKind.LIBRARY`` adds a specialized non-capital city seat for
+record-keeping. Living residents at an active library city gain +1
+memory retrieval limit, stacking with the ARCHIVE institution bonus at
+the same seat. Libraries follow outpost capital rules (never capital)
+and are not seeded; Camp City remains the only default settlement.
 
 ### Completed
 
@@ -209,6 +208,7 @@ JSONL storage → `civitas run`
 - Milestone 2: Archive institutions
 - Milestone 3: Scriptorium infrastructure
 - Milestone 4: Curriculum laws
+- Milestone 5: Library cities
 
 ## License
 

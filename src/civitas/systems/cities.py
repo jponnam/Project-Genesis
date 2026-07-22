@@ -73,6 +73,7 @@ class CitySystem:
                     max_residents_city_id=snap.max_residents_city_id,
                     active_settlement_count=snap.active_settlement_count,
                     active_outpost_count=snap.active_outpost_count,
+                    active_library_count=snap.active_library_count,
                 )
             )
         return world

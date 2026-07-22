@@ -28,6 +28,7 @@ from civitas.domain import (
     FIRE_HEARTH_REST_BONUS,
     GUILD_PRODUCE_ENERGY_DISCOUNT,
     IRRIGATION_WATER_GATHER_BONUS,
+    LIBRARY_RETRIEVAL_LIMIT_BONUS,
     METALLURGY_STONE_GATHER_BONUS,
     POTTERY_WATER_GATHER_BONUS,
     ROAD_MOVE_ENERGY_DISCOUNT,
@@ -48,6 +49,7 @@ from civitas.domain import (
     SimulationConfig,
     World,
     census_effects,
+    default_world_map,
     drink_restore_bonus,
     effective_drink_restore,
     effective_gather_amount,
@@ -59,6 +61,7 @@ from civitas.domain import (
     gather_amount_bonus,
     location_has_active_archive,
     location_has_active_guild,
+    location_has_active_library,
     location_has_active_road,
     location_has_active_scriptorium,
     location_has_active_storehouse,
@@ -474,3 +477,62 @@ def test_archive_raises_retrieval_limit_for_colocated_agents() -> None:
     )
     assert location_has_active_archive(bare, bare.agents[0].location_id) is False
     assert effective_retrieval_limit(bare, bare.agents[0]) == DEFAULT_RETRIEVAL_LIMIT
+
+
+def test_library_raises_retrieval_limit_for_residents() -> None:
+    """Active library cities raise the memory retrieval limit for residents."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Library", CityKind.LIBRARY),
+        ),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_library(world, agent.location_id) is True
+    assert effective_retrieval_limit(world, agent) == (
+        DEFAULT_RETRIEVAL_LIMIT + LIBRARY_RETRIEVAL_LIMIT_BONUS
+    )
+    at_capital = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Library", CityKind.LIBRARY),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_library(at_capital, 0) is False
+    assert (
+        effective_retrieval_limit(at_capital, at_capital.agents[0])
+        == DEFAULT_RETRIEVAL_LIMIT
+    )
+
+
+def test_archive_and_library_retrieval_bonuses_stack() -> None:
+    """Archive institution and library city bonuses stack at the same seat."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Library", CityKind.LIBRARY),
+        ),
+        institutions=(
+            Institution.create(0, 0, 1, "Library Archive", InstitutionKind.ARCHIVE),
+        ),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_archive(world, agent.location_id) is True
+    assert location_has_active_library(world, agent.location_id) is True
+    assert effective_retrieval_limit(world, agent) == (
+        DEFAULT_RETRIEVAL_LIMIT
+        + ARCHIVE_RETRIEVAL_LIMIT_BONUS
+        + LIBRARY_RETRIEVAL_LIMIT_BONUS
+    )

@@ -331,8 +331,11 @@ class World(BaseModel):
                     f"inside government jurisdiction"
                 )
                 raise ValueError(msg)
-            if city.is_capital and city.kind is CityKind.OUTPOST:
-                msg = "outpost cities cannot be capitals"
+            if city.is_capital and city.kind in (
+                CityKind.OUTPOST,
+                CityKind.LIBRARY,
+            ):
+                msg = f"{city.kind.value} cities cannot be capitals"
                 raise ValueError(msg)
             if city.active and city.is_capital:
                 if gov_value in active_capitals:

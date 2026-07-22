@@ -116,8 +116,9 @@ def apply_retrieval(
 ) -> tuple[World, tuple[RetrievalHit, ...]]:
     """Refresh each living agent's working memory from long-term memory.
 
-    When an active ARCHIVE sits at an agent's location, the effective
-    retrieval limit includes the archive bonus from society effects.
+    When an active ARCHIVE institution or LIBRARY city sits at an agent's
+    location, the effective retrieval limit includes those bonuses from
+    society effects (they stack when both are present).
     """
     # Local import avoids a module-level cycle with effects → retrieval.
     from civitas.domain.effects import effective_retrieval_limit

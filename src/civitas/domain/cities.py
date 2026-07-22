@@ -2,9 +2,12 @@
 
 Phase 5 Milestone 5 introduced settlement capitals. Phase 9 Milestone 11
 adds ``CityKind.OUTPOST`` for non-capital secondary seats that may share a
-government with the capital but must occupy their own location. Resident
-counts are derived from living agents at the seat. Infrastructure remains
-a separate aggregate. Camp City stays the only seeded settlement capital.
+government with the capital but must occupy their own location. Phase 10
+Milestone 5 adds ``CityKind.LIBRARY`` as another non-capital specialized
+seat for record-keeping (living residents gain a retrieval-limit bonus).
+Resident counts are derived from living agents at the seat. Infrastructure
+remains a separate aggregate. Camp City stays the only seeded settlement
+capital; libraries are not seeded.
 """
 
 from __future__ import annotations
@@ -31,6 +34,13 @@ class CityKind(StrEnum):
 
     SETTLEMENT = "settlement"
     OUTPOST = "outpost"
+    LIBRARY = "library"
+
+
+# City kinds that may never be flagged as capital.
+_NON_CAPITAL_KINDS: frozenset[CityKind] = frozenset(
+    {CityKind.OUTPOST, CityKind.LIBRARY}
+)
 
 
 class City(BaseModel):
@@ -103,6 +113,7 @@ class CityCensus(BaseModel):
     max_residents_city_id: CityId | None = None
     active_settlement_count: NonNegativeInt
     active_outpost_count: NonNegativeInt = 0
+    active_library_count: NonNegativeInt = 0
 
 
 def city_by_id(world: World, city_id: CityId | int) -> City | None:
@@ -136,6 +147,18 @@ def outposts_for(
         city
         for city in cities_for(world, government_id)
         if city.kind is CityKind.OUTPOST
+    )
+
+
+def libraries_for(
+    world: World,
+    government_id: GovernmentId | int,
+) -> tuple[City, ...]:
+    """Return library cities for ``government_id`` in ascending id order."""
+    return tuple(
+        city
+        for city in cities_for(world, government_id)
+        if city.kind is CityKind.LIBRARY
     )
 
 
@@ -215,11 +238,11 @@ def _has_active_capital(
 def create_city(world: World, city: City) -> World | None:
     """Add ``city`` to the world when legal.
 
-    Outposts cannot be capitals. Settlement capital uniqueness is unchanged:
-    at most one active capital per government. Every city still needs a
-    unique seat location inside its government jurisdiction.
+    Outposts and libraries cannot be capitals. Settlement capital uniqueness
+    is unchanged: at most one active capital per government. Every city
+    still needs a unique seat location inside its government jurisdiction.
     """
-    if city.kind is CityKind.OUTPOST and city.is_capital:
+    if city.kind in _NON_CAPITAL_KINDS and city.is_capital:
         return None
     if government_by_id(world, city.government_id) is None:
         return None
@@ -284,7 +307,7 @@ def set_capital(
     city = city_by_id(world, city_id)
     if city is None:
         return None
-    if is_capital and city.kind is CityKind.OUTPOST:
+    if is_capital and city.kind in _NON_CAPITAL_KINDS:
         return None
     if is_capital and not city.active:
         return None
@@ -326,6 +349,7 @@ def census_cities(world: World) -> CityCensus:
         max_residents_city_id = None
     active_settlements = sum(1 for city in active if city.kind is CityKind.SETTLEMENT)
     active_outposts = sum(1 for city in active if city.kind is CityKind.OUTPOST)
+    active_libraries = sum(1 for city in active if city.kind is CityKind.LIBRARY)
     return CityCensus(
         tick=world.tick,
         city_count=len(cities),
@@ -339,4 +363,5 @@ def census_cities(world: World) -> CityCensus:
         max_residents_city_id=max_residents_city_id,
         active_settlement_count=active_settlements,
         active_outpost_count=active_outposts,
+        active_library_count=active_libraries,
     )
