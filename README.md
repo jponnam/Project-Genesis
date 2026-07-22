@@ -129,15 +129,14 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 17 Milestone 10: Toolmaking technology**
+**Phase 17 Milestone 11: Safety codes laws**
 
-``TechnologyKind.TOOLMAKING`` is a society-level technology requiring
-smithing, adopted through the ``LATHE`` innovation. An active lathe
-grants a society-wide PRODUCE energy discount that stacks with guild,
-workshop, weaver, smelter, foundry, fulling mill, forge works, mill
-town, tannery, bellows, abacus, pulley, customs, labor, and loom.
-Discovery flows through the standard research, innovation, and
-knowledge-diffusion pipeline.
+``LawKind.SAFETY_CODES`` is a government statute that grants living
+subjects a PRODUCE energy discount. It stacks with the full produce
+chain: guild, workshop, weaver, smelter, foundry, fulling mill, forge
+works, mill town, tannery, bellows, lathe, abacus, pulley, customs,
+labor, and loom. At most one safety codes law may be active per
+government. The statute is not seeded and must be enacted.
 
 ### Completed
 
@@ -321,6 +320,7 @@ JSONL storage → `civitas run`
 - Milestone 8: Smith institutions
 - Milestone 9: Forge works infrastructure
 - Milestone 10: Toolmaking technology
+- Milestone 11: Safety codes laws
 
 ## License
 

@@ -207,6 +207,7 @@ from civitas.domain.laws import (
     mineral_rights_stone_bonus_for,
     passage_move_discount_for,
     quarantine_rest_bonus_for,
+    safety_codes_produce_discount_for,
     sanitation_drink_bonus_for,
     sumptuary_market_discount_for,
     zoning_eat_bonus_for,
@@ -1457,8 +1458,9 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
     innovation contributes ``SMITHING_PRODUCE_ENERGY_DISCOUNT``
     society-wide. An active LATHE innovation contributes
     ``TOOLMAKING_PRODUCE_ENERGY_DISCOUNT`` society-wide. An active
-    ``LABOR`` statute contributes its subject discount. All stack when
-    present.
+    ``LABOR`` statute contributes its subject discount. An active
+    ``SAFETY_CODES`` statute contributes its subject discount. All stack
+    when present.
     """
     discount = 0.0
     if location_has_active_guild(world, agent.location_id):
@@ -1479,6 +1481,7 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
         discount += MILL_TOWN_PRODUCE_ENERGY_DISCOUNT
     discount += customs_produce_discount_for(world, agent)
     discount += labor_produce_discount_for(world, agent)
+    discount += safety_codes_produce_discount_for(world, agent)
     if innovation_kind_is_active(world, InnovationKind.ABACUS):
         discount += MATHEMATICS_PRODUCE_ENERGY_DISCOUNT
     if innovation_kind_is_active(world, InnovationKind.PULLEY):
