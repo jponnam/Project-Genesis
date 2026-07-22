@@ -2,8 +2,9 @@
 
 A market is anchored to a location. Sellers post listings that escrow
 inventory onto the book; buyers fill listings by paying integer money.
-Domain helpers keep the market system aligned without systems calling
-each other. Dynamic price discovery is a later milestone.
+Filled trades update per-resource last-trade prices used by the prices
+layer. Domain helpers keep the market system aligned without systems
+calling each other.
 """
 
 from __future__ import annotations
@@ -37,8 +38,17 @@ class SellListing(BaseModel):
     unit_price: NonNegativeInt = DEFAULT_UNIT_PRICE
 
 
+class LastTrade(BaseModel):
+    """Most recent fill price for one resource on a market."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid", validate_default=True)
+
+    resource: NonEmptyStr
+    unit_price: NonNegativeInt
+
+
 class Market(BaseModel):
-    """A market venue with an ordered sell book."""
+    """A market venue with an ordered sell book and last-trade marks."""
 
     model_config = ConfigDict(frozen=True, extra="forbid", validate_default=True)
 
@@ -46,16 +56,25 @@ class Market(BaseModel):
     location_id: LocationId
     name: NonEmptyStr
     listings: tuple[SellListing, ...] = ()
+    last_trades: tuple[LastTrade, ...] = ()
 
     @model_validator(mode="after")
-    def listings_must_be_unique_and_sorted(self) -> Self:
-        """Reject duplicate or unsorted listing ids."""
+    def listings_and_trades_must_be_consistent(self) -> Self:
+        """Reject duplicate/unsorted listings or last-trade resources."""
         ids = [listing.listing_id.value for listing in self.listings]
         if len(ids) != len(set(ids)):
             msg = "market listing ids must be unique"
             raise ValueError(msg)
         if ids != sorted(ids):
             msg = "market listings must be ordered by ascending listing_id"
+            raise ValueError(msg)
+
+        resources = [trade.resource for trade in self.last_trades]
+        if len(resources) != len(set(resources)):
+            msg = "market last_trades resources must be unique"
+            raise ValueError(msg)
+        if resources != sorted(resources):
+            msg = "market last_trades must be ordered by resource name"
             raise ValueError(msg)
         return self
 
@@ -67,6 +86,7 @@ class Market(BaseModel):
         name: str,
         *,
         listings: tuple[SellListing, ...] = (),
+        last_trades: tuple[LastTrade, ...] = (),
     ) -> Market:
         """Construct a validated market from primitive fields."""
         return cls(
@@ -74,6 +94,7 @@ class Market(BaseModel):
             location_id=LocationId(value=location_id),
             name=name,
             listings=listings,
+            last_trades=last_trades,
         )
 
     def listing_by_id(self, listing_id: ListingId | int) -> SellListing | None:
@@ -88,9 +109,26 @@ class Market(BaseModel):
                 return listing
         return None
 
+    def last_trade_price(self, resource: str) -> int | None:
+        """Return the last fill unit price for ``resource``, if any."""
+        for trade in self.last_trades:
+            if trade.resource == resource:
+                return trade.unit_price
+        return None
+
     def with_listings(self, listings: tuple[SellListing, ...]) -> Market:
         """Return this market with a replaced listing book."""
         return self.model_copy(update={"listings": listings})
+
+    def with_last_trade(self, resource: str, unit_price: int) -> Market:
+        """Return this market with an upserted last-trade mark."""
+        if unit_price < 0:
+            msg = f"unit_price must be >= 0, got {unit_price}"
+            raise ValueError(msg)
+        updated = [trade for trade in self.last_trades if trade.resource != resource]
+        updated.append(LastTrade(resource=resource, unit_price=unit_price))
+        updated.sort(key=lambda trade: trade.resource)
+        return self.model_copy(update={"last_trades": tuple(updated)})
 
 
 class MarketCensus(BaseModel):
@@ -303,7 +341,11 @@ def fill_listing(
 
     world = world.with_agent(stocked_buyer)
     world = world.with_agent(paid_seller)
-    return world.with_market(market.with_listings(new_listings))
+    updated_market = market.with_listings(new_listings).with_last_trade(
+        listing.resource,
+        listing.unit_price,
+    )
+    return world.with_market(updated_market)
 
 
 def can_cancel_listing(

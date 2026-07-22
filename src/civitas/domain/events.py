@@ -237,6 +237,22 @@ class MarketObserved(DomainEvent):
     market_listings: tuple[tuple[int, int], ...] = ()
 
 
+class PriceObserved(DomainEvent):
+    """Emitted when a market price census is taken.
+
+    Each quote tuple is:
+    ``(market_id, resource, best_ask, ask_quantity, last_trade,
+    listing_count, total_units, suggested_unit_price)`` with ``None``
+    allowed for missing best ask / last trade.
+    """
+
+    quote_count: NonNegativeInt
+    quotes: tuple[
+        tuple[int, str, int | None, int, int | None, int, int, int],
+        ...,
+    ] = ()
+
+
 class WealthObserved(DomainEvent):
     """Emitted when a wealth census is taken."""
 
@@ -272,6 +288,7 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     PopulationObserved,
     MoneyTransferred,
     MarketObserved,
+    PriceObserved,
     WealthObserved,
 )
 

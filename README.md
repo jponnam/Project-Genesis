@@ -118,12 +118,12 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 3 — Milestone 3: Markets**
+**Phase 3 — Milestone 4: Prices**
 
-Location-anchored markets hold escrowed sell listings (`Market` /
-`SellListing`). Sellers post goods onto the book; buyers fill listings
-for integer money. The world factory seeds the camp market; each tick
-emits `MarketObserved`. Dynamic prices are a later Phase 3 milestone.
+Integer price quotes (`PriceQuote` / `PriceSystem`) report best ask, last
+trade, depth, and suggested listing prices from each market book. Fills
+update last-trade marks; each tick emits `PriceObserved`. Production is
+a later Phase 3 milestone.
 
 ### Completed
 
@@ -146,6 +146,7 @@ JSONL storage → `civitas run`
 - Milestone 1: Economy
 - Milestone 2: Trading
 - Milestone 3: Markets
+- Milestone 4: Prices
 
 ## License
 
