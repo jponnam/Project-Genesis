@@ -83,6 +83,7 @@ class CitySystem:
                     active_quarry_count=snap.active_quarry_count,
                     active_harbor_count=snap.active_harbor_count,
                     active_entrepot_count=snap.active_entrepot_count,
+                    active_farmstead_count=snap.active_farmstead_count,
                 )
             )
         return world

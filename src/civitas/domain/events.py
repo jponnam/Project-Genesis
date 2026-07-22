@@ -607,6 +607,7 @@ class CitiesObserved(DomainEvent):
     active_quarry_count: NonNegativeInt = 0
     active_harbor_count: NonNegativeInt = 0
     active_entrepot_count: NonNegativeInt = 0
+    active_farmstead_count: NonNegativeInt = 0
 
 
 class InfrastructuresObserved(DomainEvent):
