@@ -13,6 +13,9 @@ from civitas.domain import (
     AgentId,
     AgentMoved,
     AgentSpawned,
+    CitiesObserved,
+    CityCreated,
+    CityId,
     DomainEvent,
     ElectionId,
     ElectionResolved,
@@ -723,3 +726,41 @@ def test_institution_created_and_observed_round_trips() -> None:
     assert isinstance(restored, InstitutionsObserved)
     assert restored.institution_count == 1
     assert restored.active_council_count == 1
+
+
+def test_city_created_and_observed_round_trips() -> None:
+    """City create/observe events serialize losslessly."""
+    created = CityCreated(
+        sequence=23,
+        tick=Tick(value=0),
+        city_id=CityId(value=0),
+        government_id=GovernmentId(value=0),
+        location_id=LocationId(value=0),
+        name="Camp City",
+        kind="settlement",
+        active=True,
+        is_capital=True,
+    )
+    restored_created = event_from_record(created.to_record())
+    assert isinstance(restored_created, CityCreated)
+    assert restored_created.name == "Camp City"
+    assert restored_created.is_capital is True
+
+    observed = CitiesObserved(
+        sequence=24,
+        tick=Tick(value=6),
+        city_count=1,
+        active_count=1,
+        inactive_count=0,
+        governments_with_cities=1,
+        capital_count=1,
+        total_residents=4,
+        mean_residents=4.0,
+        max_residents=4,
+        max_residents_city_id=CityId(value=0),
+        active_settlement_count=1,
+    )
+    restored = event_from_record(observed.to_record())
+    assert isinstance(restored, CitiesObserved)
+    assert restored.city_count == 1
+    assert restored.total_residents == 4

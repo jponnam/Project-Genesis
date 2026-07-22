@@ -2,9 +2,9 @@
 
 Phase 5 Milestone 4. Institutions are gov-attached civic organizations
 with a seat location inside the government's jurisdiction and an optional
-officer. This milestone seeds a single ``COUNCIL`` kind. Cities,
-infrastructure, extra kinds, and institution budgets remain later
-milestones.
+officer. This milestone seeds a single ``COUNCIL`` kind. Cities are a
+separate Phase 5 aggregate; infrastructure, extra kinds, and institution
+budgets remain later milestones.
 """
 
 from __future__ import annotations

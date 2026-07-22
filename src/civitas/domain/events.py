@@ -13,6 +13,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from civitas.domain.ids import (
     AgentId,
+    CityId,
     ElectionId,
     GovernmentId,
     InstitutionId,
@@ -259,6 +260,18 @@ class InstitutionCreated(DomainEvent):
     officer_id: AgentId | None = None
 
 
+class CityCreated(DomainEvent):
+    """Emitted when a city / settlement is added to the world."""
+
+    city_id: CityId
+    government_id: GovernmentId
+    location_id: LocationId
+    name: NonEmptyStr
+    kind: NonEmptyStr
+    active: bool = True
+    is_capital: bool = False
+
+
 class ListingPosted(DomainEvent):
     """Emitted when a seller escrows goods onto a market listing."""
 
@@ -472,6 +485,21 @@ class InstitutionsObserved(DomainEvent):
     active_council_count: NonNegativeInt
 
 
+class CitiesObserved(DomainEvent):
+    """Emitted when a city census is taken."""
+
+    city_count: NonNegativeInt
+    active_count: NonNegativeInt
+    inactive_count: NonNegativeInt
+    governments_with_cities: NonNegativeInt
+    capital_count: NonNegativeInt
+    total_residents: NonNegativeInt
+    mean_residents: float
+    max_residents: NonNegativeInt
+    max_residents_city_id: CityId | None = None
+    active_settlement_count: NonNegativeInt
+
+
 CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     SimulationStarted,
     SimulationCompleted,
@@ -512,6 +540,8 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     ElectionsObserved,
     InstitutionCreated,
     InstitutionsObserved,
+    CityCreated,
+    CitiesObserved,
 )
 
 EVENT_TYPE_REGISTRY: dict[str, type[DomainEvent]] = {

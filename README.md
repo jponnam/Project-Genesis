@@ -118,13 +118,12 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 5 — Milestone 4: Institutions**
+**Phase 5 — Milestone 5: Cities**
 
-Civic organizations attach to governments with a seat inside jurisdiction.
-The factory seeds active `Camp Council` (`COUNCIL`). Officers may be
-appointed via domain helpers; `InstitutionSystem.observe` emits
-`InstitutionsObserved`. Cities and infrastructure remain later Phase 5
-milestones.
+Settlements designate locations under governments. The factory seeds
+active capital `Camp City` (`SETTLEMENT`). Resident counts are derived
+from living agents at the seat; `CitySystem.observe` emits `CitiesObserved`.
+Infrastructure remains a later Phase 5 milestone.
 
 ### Completed
 
@@ -164,6 +163,7 @@ JSONL storage → `civitas run`
 - Milestone 2: Laws
 - Milestone 3: Voting
 - Milestone 4: Institutions
+- Milestone 5: Cities
 
 ## License
 
