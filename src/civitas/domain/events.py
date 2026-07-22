@@ -519,6 +519,7 @@ class LawsObserved(DomainEvent):
     governments_with_active_laws: NonNegativeInt
     active_tax_schedule_count: NonNegativeInt
     active_market_fee_count: NonNegativeInt
+    active_curriculum_count: NonNegativeInt
 
 
 class ElectionResolved(DomainEvent):

@@ -122,13 +122,14 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 10 — Milestone 3: Scriptorium infrastructure**
+**Phase 10 — Milestone 4: Curriculum laws**
 
-``InfrastructureKind.SCRIPTORIUM`` adds a location-scoped knowledge
-diffusion bonus. An active scriptorium at a knower's seat raises
-teachings-per-knower by +1, stacking with the society-wide writing scribe
-innovation bonus. Scriptoriums are not seeded by default (catalog build
-cost 10).
+``LawKind.CURRICULUM`` adds a government-scoped knowledge diffusion
+bonus. An active curriculum statute grants living subjects of that
+government +1 teachings-per-knower, stacking with the society-wide
+scribe innovation and location-scoped scriptorium bonuses. Curriculum
+laws are not seeded by default (kind alone enables the +1; at most one
+active curriculum per government).
 
 ### Completed
 
@@ -207,6 +208,7 @@ JSONL storage → `civitas run`
 - Milestone 1: Writing technology
 - Milestone 2: Archive institutions
 - Milestone 3: Scriptorium infrastructure
+- Milestone 4: Curriculum laws
 
 ## License
 

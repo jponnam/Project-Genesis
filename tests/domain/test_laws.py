@@ -10,13 +10,16 @@ from civitas.domain import (
     CAMP_LOCATION,
     CAMP_POLL_TAX_LAW,
     Agent,
+    AgentStatus,
     Government,
     Law,
     LawKind,
     SimulationConfig,
     World,
+    active_curriculum_law,
     active_market_fee_law,
     census_laws,
+    curriculum_teachings_bonus_for,
     default_laws,
     default_world_map,
     enact_law,
@@ -73,6 +76,14 @@ def test_world_rejects_duplicate_active_market_fee() -> None:
         _world(Agent.create(agent_id=0, name="A"), laws=(left, right))
 
 
+def test_world_rejects_duplicate_active_curriculum() -> None:
+    """At most one active CURRICULUM law per government."""
+    left = Law.create(0, 0, "Schools A", LawKind.CURRICULUM)
+    right = Law.create(1, 0, "Schools B", LawKind.CURRICULUM)
+    with pytest.raises(ValidationError, match="CURRICULUM"):
+        _world(Agent.create(agent_id=0, name="A"), laws=(left, right))
+
+
 def test_enact_repeal_and_set_active() -> None:
     """Enactment and soft repeal follow legality rules."""
     world = _world(Agent.create(agent_id=0, name="A"))
@@ -108,6 +119,50 @@ def test_enact_market_fee_and_uniqueness() -> None:
     assert market_fee_for(with_tax, 0) == 2
 
 
+def test_enact_curriculum_and_uniqueness() -> None:
+    """CURRICULUM enacts once per government; kind alone enables the bonus."""
+    world = _world(Agent.create(agent_id=0, name="A"))
+    curriculum = Law.create(0, 0, "Camp Schools", LawKind.CURRICULUM)
+    enacted = enact_law(world, curriculum)
+    assert enacted is not None
+    assert active_curriculum_law(enacted, 0) == curriculum
+    assert curriculum_teachings_bonus_for(enacted, enacted.agents[0]) == 1
+    duplicate = Law.create(1, 0, "Other Schools", LawKind.CURRICULUM)
+    assert enact_law(enacted, duplicate) is None
+    # TAX_SCHEDULE and MARKET_FEE may coexist with CURRICULUM.
+    tax = Law.create(1, 0, "Poll", LawKind.TAX_SCHEDULE, flat_amount=1)
+    with_tax = enact_law(enacted, tax)
+    assert with_tax is not None
+    fee = Law.create(2, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=1)
+    with_fee = enact_law(with_tax, fee)
+    assert with_fee is not None
+    assert active_curriculum_law(with_fee, 0) == curriculum
+
+
+def test_curriculum_bonus_requires_living_subject() -> None:
+    """Only living agents under a CURRICULUM polity receive the teaching bonus."""
+    curriculum = Law.create(0, 0, "Camp Schools", LawKind.CURRICULUM)
+    world = _world(Agent.create(agent_id=0, name="A"), laws=(curriculum,))
+    assert curriculum_teachings_bonus_for(world, world.agents[0]) == 1
+    dead = world.agents[0].model_copy(
+        update={
+            "status": AgentStatus.DEAD,
+            "health": world.agents[0].health.model_copy(update={"vitality": 0.0}),
+        }
+    )
+    assert curriculum_teachings_bonus_for(world, dead) == 0
+    ungoverned = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(),
+        laws=(),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert curriculum_teachings_bonus_for(ungoverned, ungoverned.agents[0]) == 0
+    bare = _world(Agent.create(agent_id=0, name="A"))
+    assert curriculum_teachings_bonus_for(bare, bare.agents[0]) == 0
+
+
 def test_tax_schedule_overrides_levy_fallback() -> None:
     """Active TAX_SCHEDULE beats levy_taxes fallback parameters."""
     law = Law.create(0, 0, "Heavy", LawKind.TAX_SCHEDULE, flat_amount=2)
@@ -133,14 +188,19 @@ def test_census_laws_counts() -> None:
     active = Law.create(0, 0, "A", LawKind.TAX_SCHEDULE, flat_amount=1, active=True)
     inactive = Law.create(1, 0, "B", LawKind.TAX_SCHEDULE, flat_amount=1, active=False)
     fee = Law.create(2, 0, "Fee", LawKind.MARKET_FEE, flat_amount=1, active=True)
-    world = _world(Agent.create(agent_id=0, name="A"), laws=(active, inactive, fee))
+    curriculum = Law.create(3, 0, "Schools", LawKind.CURRICULUM, active=True)
+    world = _world(
+        Agent.create(agent_id=0, name="A"),
+        laws=(active, inactive, fee, curriculum),
+    )
     snap = census_laws(world)
-    assert snap.law_count == 3
-    assert snap.active_count == 2
+    assert snap.law_count == 4
+    assert snap.active_count == 3
     assert snap.inactive_count == 1
     assert snap.governments_with_active_laws == 1
     assert snap.active_tax_schedule_count == 1
     assert snap.active_market_fee_count == 1
+    assert snap.active_curriculum_count == 1
     assert census_laws(world) == snap
 
 
