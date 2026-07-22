@@ -115,6 +115,7 @@ from civitas.domain import (
     NAVIGATION_MOVE_ENERGY_DISCOUNT,
     OBSERVATORY_RETRIEVAL_LIMIT_BONUS,
     PASSAGE_MOVE_ENERGY_DISCOUNT,
+    PASTORAL_WOOD_GATHER_BONUS,
     PHILOSOPHY_TEACHINGS_PER_KNOWER_BONUS,
     POTTERY_WATER_GATHER_BONUS,
     QUARANTINE_REST_RESTORE_BONUS,
@@ -204,6 +205,7 @@ from civitas.domain import (
     location_has_active_mason,
     location_has_active_merchant,
     location_has_active_observatory,
+    location_has_active_pastoral,
     location_has_active_quarry,
     location_has_active_road,
     location_has_active_sanctuary,
@@ -1182,6 +1184,79 @@ def test_conservation_stacks_with_coppice_and_scaffold_wood_gather() -> None:
     )
     assert effective_gather_amount(world, "wood", agent=agent) == (
         DEFAULT_GATHER_AMOUNT + wood_bonus
+    )
+
+
+def test_pastoral_boosts_wood_gather_for_residents() -> None:
+    """Active pastoral cities add a wood gather bonus at their seat."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Pastoral", CityKind.PASTORAL),
+        ),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_pastoral(world, agent.location_id) is True
+    assert gather_amount_bonus(world, "wood", location_id=agent.location_id) == (
+        PASTORAL_WOOD_GATHER_BONUS
+    )
+    assert gather_amount_bonus(world, "wood") == 0
+    assert effective_gather_amount(world, "wood", agent=agent) == (
+        DEFAULT_GATHER_AMOUNT + PASTORAL_WOOD_GATHER_BONUS
+    )
+
+
+def test_pastoral_stacks_with_coppice_scaffold_and_conservation_wood_gather() -> None:
+    """Pastoral wood bonus stacks with coppice, scaffold, and conservation."""
+    discovered_forestry = CAMP_FORESTRY.model_copy(update={"discovered": True})
+    active_coppice = CAMP_COPPICE.model_copy(update={"active": True})
+    conservation = Law.create(0, 0, "Camp Conservation", LawKind.CONSERVATION)
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Pastoral", CityKind.PASTORAL),
+        ),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 1, 1, "Pastoral Scaffold", InfrastructureKind.SCAFFOLD
+            ),
+        ),
+        laws=(conservation,),
+        technologies=tuple(
+            discovered_forestry
+            if item.technology_id == CAMP_FORESTRY.technology_id
+            else item
+            for item in default_technologies()
+        ),
+        innovations=tuple(
+            active_coppice
+            if item.innovation_id == CAMP_COPPICE.innovation_id
+            else item
+            for item in default_innovations()
+        ),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    agent = world.agents[0]
+    seat_bonus = (
+        FORESTRY_WOOD_GATHER_BONUS
+        + SCAFFOLD_WOOD_GATHER_BONUS
+        + PASTORAL_WOOD_GATHER_BONUS
+    )
+    assert location_has_active_pastoral(world, agent.location_id) is True
+    assert location_has_active_scaffold(world, agent.location_id) is True
+    assert gather_amount_bonus(world, "wood") == FORESTRY_WOOD_GATHER_BONUS
+    assert gather_amount_bonus(world, "wood", location_id=agent.location_id) == (
+        seat_bonus
+    )
+    assert effective_gather_amount(world, "wood", agent=agent) == (
+        DEFAULT_GATHER_AMOUNT + seat_bonus + CONSERVATION_WOOD_GATHER_BONUS
     )
 
 

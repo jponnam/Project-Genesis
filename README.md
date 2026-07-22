@@ -127,12 +127,12 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 15 Milestone 11: Conservation laws**
+**Phase 15 Milestone 12: Pastoral cities**
 
-``LawKind.CONSERVATION`` grants living subjects +1 WOOD gather while an
-active conservation statute governs their location, stacking with the
-coppice innovation society-wide and the scaffold seat. At most one active
-conservation law per government; not seeded.
+``CityKind.PASTORAL`` is a non-capital specialized seat. Active pastorals
+grant a seat-scoped wood gather bonus, stacking with the scaffold seat,
+the coppice innovation society-wide, and the conservation subject bonus.
+Not seeded in ``default_cities()``.
 
 ### Completed
 
@@ -289,6 +289,7 @@ JSONL storage → `civitas run`
 - Milestone 9: Terrace infrastructure
 - Milestone 10: Forestry technology
 - Milestone 11: Conservation laws
+- Milestone 12: Pastoral cities
 
 ## License
 
