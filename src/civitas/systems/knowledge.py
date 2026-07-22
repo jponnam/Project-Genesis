@@ -1,8 +1,8 @@
 """Knowledge system: diffuse discovered-tech facts among agents.
 
-Owns tick-time ``apply_knowledge`` (bootstrap + peer teach) and
-observe-time ``KnowledgeObserved``. Uses domain helpers only — does not
-call Tech/Research/Innovation systems.
+Owns tick-time ``apply_knowledge`` (bootstrap + trust-gated peer teach)
+and observe-time ``KnowledgeObserved``. Uses domain helpers only — does
+not call Tech/Research/Innovation systems.
 """
 
 from __future__ import annotations
@@ -12,12 +12,13 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict
 
 from civitas.domain import (
+    DEFAULT_MIN_TEACH_TRUST,
     KnowledgeLearned,
     KnowledgeObserved,
     apply_knowledge_diffusion,
     census_knowledge,
 )
-from civitas.domain.types import NonNegativeInt
+from civitas.domain.types import NonNegativeInt, UnitInterval
 
 if TYPE_CHECKING:
     from civitas.domain import KnowledgeCensus, World
@@ -32,6 +33,7 @@ class KnowledgeConfig(BaseModel):
     enabled: bool = True
     emit_events: bool = True
     teachings_per_knower: NonNegativeInt = 1
+    min_teach_trust: UnitInterval = DEFAULT_MIN_TEACH_TRUST
 
 
 class KnowledgeSystem:
@@ -59,7 +61,9 @@ class KnowledgeSystem:
             return world
 
         world, gains = apply_knowledge_diffusion(
-            world, teachings_per_knower=self._config.teachings_per_knower
+            world,
+            teachings_per_knower=self._config.teachings_per_knower,
+            min_trust=float(self._config.min_teach_trust),
         )
         if bus is not None and self._config.emit_events:
             for gain in gains:
