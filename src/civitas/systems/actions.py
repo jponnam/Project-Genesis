@@ -531,6 +531,7 @@ class ActionExecutor:
         restore = effective_socialize_restore(
             world,
             base=float(self._config.socialize),
+            agent=agent,
         )
         updated = apply_socialize(
             world,

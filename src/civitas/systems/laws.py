@@ -70,6 +70,7 @@ class LawSystem:
                     active_curriculum_count=snap.active_curriculum_count,
                     active_calendar_count=snap.active_calendar_count,
                     active_ethics_count=snap.active_ethics_count,
+                    active_assembly_count=snap.active_assembly_count,
                 )
             )
         return world

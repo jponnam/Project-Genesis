@@ -7,6 +7,7 @@ import pytest
 from civitas.domain import (
     ACADEMY_TEACHINGS_PER_KNOWER_BONUS,
     ARCHIVE_RETRIEVAL_LIMIT_BONUS,
+    ASSEMBLY_SOCIALIZE_RESTORE_BONUS,
     ASTRONOMY_RETRIEVAL_LIMIT_BONUS,
     BUREAUCRACY_MARKET_FEE_DISCOUNT,
     CALENDAR_RETRIEVAL_LIMIT_BONUS,
@@ -76,7 +77,10 @@ from civitas.domain import (
     LawKind,
     SimulationConfig,
     World,
+    assembly_socialize_bonus_for,
     census_effects,
+    default_innovations,
+    default_technologies,
     default_world_map,
     drink_restore_bonus,
     effective_drink_restore,
@@ -1723,6 +1727,69 @@ def test_oration_boosts_socialize_restore() -> None:
     bare = _world()
     assert socialize_restore_bonus(bare) == 0.0
     assert effective_socialize_restore(bare) == DEFAULT_SOCIALIZE_RESTORE
+
+
+def test_assembly_boosts_socialize_restore_for_subjects() -> None:
+    """Active ASSEMBLY raises SOCIALIZE restore for living subjects only."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(Law.create(0, 0, "Camp Assembly", LawKind.ASSEMBLY, flat_amount=5),),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert assembly_socialize_bonus_for(world, agent) == (
+        ASSEMBLY_SOCIALIZE_RESTORE_BONUS
+    )
+    assert socialize_restore_bonus(world) == 0.0
+    assert socialize_restore_bonus(world, agent=agent) == (
+        ASSEMBLY_SOCIALIZE_RESTORE_BONUS
+    )
+    assert effective_socialize_restore(world, agent=agent) == pytest.approx(
+        DEFAULT_SOCIALIZE_RESTORE + ASSEMBLY_SOCIALIZE_RESTORE_BONUS
+    )
+    bare = _world()
+    assert assembly_socialize_bonus_for(bare, bare.agents[0]) == 0.0
+    assert effective_socialize_restore(bare, agent=bare.agents[0]) == (
+        DEFAULT_SOCIALIZE_RESTORE
+    )
+
+
+def test_assembly_stacks_with_oration_socialize_restore() -> None:
+    """Assembly subject bonus stacks with society-wide oration."""
+    discovered_rhetoric = CAMP_RHETORIC.model_copy(update={"discovered": True})
+    active_oration = CAMP_ORATION.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(Law.create(0, 0, "Camp Assembly", LawKind.ASSEMBLY),),
+        technologies=tuple(
+            discovered_rhetoric
+            if tech.technology_id == CAMP_RHETORIC.technology_id
+            else tech
+            for tech in default_technologies()
+        ),
+        innovations=tuple(
+            active_oration
+            if innovation.innovation_id == CAMP_ORATION.innovation_id
+            else innovation
+            for innovation in default_innovations()
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert socialize_restore_bonus(world, agent=agent) == pytest.approx(
+        RHETORIC_SOCIALIZE_RESTORE_BONUS + ASSEMBLY_SOCIALIZE_RESTORE_BONUS
+    )
+    assert effective_socialize_restore(world, agent=agent) == pytest.approx(
+        DEFAULT_SOCIALIZE_RESTORE
+        + RHETORIC_SOCIALIZE_RESTORE_BONUS
+        + ASSEMBLY_SOCIALIZE_RESTORE_BONUS
+    )
+    # Without an agent, the subject-scoped assembly law does not apply.
+    assert socialize_restore_bonus(world) == RHETORIC_SOCIALIZE_RESTORE_BONUS
 
 
 def test_bureaucracy_discounts_market_fee_at_seat() -> None:
