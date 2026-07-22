@@ -118,6 +118,7 @@ from civitas.domain import (
     HUSBANDMAN_FOOD_GATHER_BONUS,
     HYGIENE_DRINK_RESTORE_BONUS,
     INFIRMARY_REST_RESTORE_BONUS,
+    IRONWORKS_PRODUCE_ENERGY_DISCOUNT,
     IRRIGATION_WATER_GATHER_BONUS,
     LABOR_PRODUCE_ENERGY_DISCOUNT,
     LAND_TENURE_EAT_RESTORE_BONUS,
@@ -239,6 +240,7 @@ from civitas.domain import (
     location_has_active_hospital,
     location_has_active_husbandman,
     location_has_active_infirmary,
+    location_has_active_ironworks,
     location_has_active_lazaretto,
     location_has_active_library,
     location_has_active_lyceum,
@@ -5648,6 +5650,77 @@ def test_mill_town_stacks_with_guild_workshop_weaver_and_fulling_mill() -> None:
         + MILL_TOWN_PRODUCE_ENERGY_DISCOUNT
     )
     assert location_has_active_mill_town(world, agent.location_id) is True
+    assert produce_energy_discount(world, agent) == pytest.approx(expected_discount)
+    expected = DEFAULT_PRODUCE_ENERGY_COST - expected_discount
+    assert effective_produce_energy_cost(
+        world,
+        agent,
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(expected)
+    assert census_effects(world).produce_energy_cost_bps == round(expected * 10_000)
+
+
+def test_ironworks_reduces_produce_energy_for_residents() -> None:
+    """Active ironworks cities discount PRODUCE energy for residents at the seat."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Ironworks", CityKind.IRONWORKS),
+        ),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_ironworks(world, agent.location_id) is True
+    assert effective_produce_energy_cost(
+        world,
+        agent,
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(DEFAULT_PRODUCE_ENERGY_COST - IRONWORKS_PRODUCE_ENERGY_DISCOUNT)
+    assert census_effects(world).produce_energy_cost_bps == round(
+        (DEFAULT_PRODUCE_ENERGY_COST - IRONWORKS_PRODUCE_ENERGY_DISCOUNT) * 10_000
+    )
+    bare = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_ironworks(bare, bare.agents[0].location_id) is False
+
+
+def test_ironworks_stacks_with_guild_workshop_smelter_and_forge_works() -> None:
+    """Ironworks seat discount stacks with guild, workshop, smelter, forge works."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Ironworks", CityKind.IRONWORKS),
+        ),
+        institutions=(
+            Institution.create(0, 0, 1, "Camp Guild", InstitutionKind.GUILD),
+            Institution.create(1, 0, 1, "Camp Workshop", InstitutionKind.WORKSHOP),
+            Institution.create(2, 0, 1, "Camp Smelter", InstitutionKind.SMELTER),
+        ),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 1, 1, "Camp Forge Works", InfrastructureKind.FORGE_WORKS
+            ),
+        ),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    agent = world.agents[0]
+    expected_discount = (
+        GUILD_PRODUCE_ENERGY_DISCOUNT
+        + WORKSHOP_PRODUCE_ENERGY_DISCOUNT
+        + SMELTER_PRODUCE_ENERGY_DISCOUNT
+        + FORGE_WORKS_PRODUCE_ENERGY_DISCOUNT
+        + IRONWORKS_PRODUCE_ENERGY_DISCOUNT
+    )
+    assert location_has_active_ironworks(world, agent.location_id) is True
     assert produce_energy_discount(world, agent) == pytest.approx(expected_discount)
     expected = DEFAULT_PRODUCE_ENERGY_COST - expected_discount
     assert effective_produce_energy_cost(

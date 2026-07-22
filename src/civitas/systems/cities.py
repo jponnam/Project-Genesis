@@ -88,6 +88,7 @@ class CitySystem:
                     active_mill_town_count=snap.active_mill_town_count,
                     active_emporium_count=snap.active_emporium_count,
                     active_mining_camp_count=snap.active_mining_camp_count,
+                    active_ironworks_count=snap.active_ironworks_count,
                 )
             )
         return world
