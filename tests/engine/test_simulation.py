@@ -574,6 +574,7 @@ def test_institutions_observed_each_tick_including_start() -> None:
     assert all(event.active_agronomist_count == 0 for event in observed)
     assert all(event.active_weaver_count == 0 for event in observed)
     assert all(event.active_dyer_count == 0 for event in observed)
+    assert all(event.active_tailor_count == 0 for event in observed)
     # Institutions follow elections in the observe chain.
     vote_indexes = [
         i

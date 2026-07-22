@@ -130,7 +130,11 @@ labor, and loom). Phase 16 Milestone 6 adds DYER market-fee discounts
 at the institution seat (stacking with BUREAUCRACY, HARBOR, and
 MERCHANT). Phase 16 Milestone 7 adds a global MORDANT market-fee
 discount society-wide (stacking with bureaucracy, harbor, merchant,
-and dyer). The action executor, retrieval
+and dyer). Phase 16 Milestone 8 adds TAILOR teachings-per-knower
+bonuses at the institution seat (stacking with
+scribe/dialectic/scriptorium/academy/forum/school/stoa/collegium/
+architect/cartographer/agronomist/curriculum). The action executor,
+retrieval
 path, market fills, knowledge
 diffusion, and research progression read these helpers; ``EffectsSystem``
 only observes coverage. Systems never call each other.
@@ -202,6 +206,7 @@ COLLEGIUM_TEACHINGS_PER_KNOWER_BONUS: int = 1
 ARCHITECT_TEACHINGS_PER_KNOWER_BONUS: int = 1
 CARTOGRAPHER_TEACHINGS_PER_KNOWER_BONUS: int = 1
 AGRONOMIST_TEACHINGS_PER_KNOWER_BONUS: int = 1
+TAILOR_TEACHINGS_PER_KNOWER_BONUS: int = 1
 PHILOSOPHY_TEACHINGS_PER_KNOWER_BONUS: int = 1
 LOGIC_RESEARCH_POINTS_BONUS: int = 1
 ANATOMY_RESEARCH_POINTS_BONUS: int = 1
@@ -667,6 +672,22 @@ def location_has_active_agronomist(
     )
     return any(
         item.kind is InstitutionKind.AGRONOMIST and item.location_id == target
+        for item in active_institutions(world)
+    )
+
+
+def location_has_active_tailor(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active TAILOR is seated at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InstitutionKind.TAILOR and item.location_id == target
         for item in active_institutions(world)
     )
 
@@ -1376,9 +1397,10 @@ def effective_teachings_per_knower(
 
     The scribe and dialectic innovation bonuses are society-wide. The
     scriptorium, stoa, academy, forum, school, collegium, architect,
-    cartographer, and agronomist bonuses apply only when ``location_id`` or
-    ``agent`` places the knower at an active SCRIPTORIUM, STOA, ACADEMY,
-    FORUM, SCHOOL, COLLEGIUM, ARCHITECT, CARTOGRAPHER, or AGRONOMIST seat.
+    cartographer, agronomist, and tailor bonuses apply only when
+    ``location_id`` or ``agent`` places the knower at an active SCRIPTORIUM,
+    STOA, ACADEMY, FORUM, SCHOOL, COLLEGIUM, ARCHITECT, CARTOGRAPHER,
+    AGRONOMIST, or TAILOR seat.
     The curriculum law bonus applies when ``agent`` is a living subject of
     a government with an active ``CURRICULUM`` statute. All bonuses stack.
     """
@@ -1408,6 +1430,8 @@ def effective_teachings_per_knower(
         bonus += CARTOGRAPHER_TEACHINGS_PER_KNOWER_BONUS
     if seat is not None and location_has_active_agronomist(world, seat):
         bonus += AGRONOMIST_TEACHINGS_PER_KNOWER_BONUS
+    if seat is not None and location_has_active_tailor(world, seat):
+        bonus += TAILOR_TEACHINGS_PER_KNOWER_BONUS
     if agent is not None:
         bonus += curriculum_teachings_bonus_for(world, agent)
     return base + bonus
