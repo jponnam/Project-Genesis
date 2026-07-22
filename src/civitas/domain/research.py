@@ -18,6 +18,7 @@ from civitas.domain.ids import TechnologyId
 from civitas.domain.technology import (
     CAMP_ASTRONOMY,
     CAMP_IRRIGATION,
+    CAMP_LOGIC,
     CAMP_MATHEMATICS,
     CAMP_METALLURGY,
     CAMP_PHILOSOPHY,
@@ -97,6 +98,11 @@ CAMP_PHILOSOPHY_RESEARCH: ResearchProgress = ResearchProgress.create(
     points=0,
     threshold=DEFAULT_POTTERY_THRESHOLD,
 )
+CAMP_LOGIC_RESEARCH: ResearchProgress = ResearchProgress.create(
+    CAMP_LOGIC.technology_id.value,
+    points=0,
+    threshold=DEFAULT_POTTERY_THRESHOLD,
+)
 
 
 def default_research_progress() -> tuple[ResearchProgress, ...]:
@@ -111,6 +117,7 @@ def default_research_progress() -> tuple[ResearchProgress, ...]:
                 CAMP_MATHEMATICS_RESEARCH,
                 CAMP_ASTRONOMY_RESEARCH,
                 CAMP_PHILOSOPHY_RESEARCH,
+                CAMP_LOGIC_RESEARCH,
             ),
             key=lambda item: item.technology_id.value,
         )
@@ -170,6 +177,12 @@ def advance_research(
     if points_per_tick < 0:
         msg = f"points_per_tick must be >= 0, got {points_per_tick}"
         raise ValueError(msg)
+    from civitas.domain.effects import effective_research_points_per_tick
+
+    effective_points_per_tick = effective_research_points_per_tick(
+        world,
+        base=points_per_tick,
+    )
 
     outcomes: list[ResearchAdvance] = []
     remaining: list[ResearchProgress] = []
@@ -185,7 +198,10 @@ def advance_research(
             continue
 
         points_before = progress.points
-        points_after = min(points_before + points_per_tick, progress.threshold)
+        points_after = min(
+            points_before + effective_points_per_tick,
+            progress.threshold,
+        )
         discovered = points_after >= progress.threshold
         outcomes.append(
             ResearchAdvance(

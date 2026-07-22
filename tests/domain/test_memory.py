@@ -3,8 +3,16 @@
 from __future__ import annotations
 
 from civitas.domain import (
+    ASTRONOMY_FACT,
     CAMP_LOCATION,
     FIRE_FACT,
+    IRRIGATION_FACT,
+    LOGIC_FACT,
+    MATHEMATICS_FACT,
+    METALLURGY_FACT,
+    PHILOSOPHY_FACT,
+    POTTERY_FACT,
+    WRITING_FACT,
     Agent,
     Knowledge,
     MemoryKind,
@@ -44,6 +52,29 @@ def test_encode_agent_episode_is_deterministic() -> None:
     assert "loc=0" in record.content
     assert "facts=fire" in record.content
     assert encode_agent_episode(agent, Tick(value=3)) == record
+
+
+def test_encode_agent_episode_accepts_full_technology_fact_content() -> None:
+    """Episode content can fit every canonical technology fact."""
+    all_facts = frozenset(
+        {
+            ASTRONOMY_FACT,
+            FIRE_FACT,
+            IRRIGATION_FACT,
+            LOGIC_FACT,
+            MATHEMATICS_FACT,
+            METALLURGY_FACT,
+            PHILOSOPHY_FACT,
+            POTTERY_FACT,
+            WRITING_FACT,
+        }
+    )
+    record = encode_agent_episode(
+        Agent.create(agent_id=0, name="A", knowledge=Knowledge(facts=all_facts)),
+        Tick(value=3),
+    )
+    assert len(record.content) == 129
+    assert "facts=astronomy,fire,irrigation,logic" in record.content
 
 
 def test_apply_memory_encoding_writes_one_record_per_living_agent() -> None:

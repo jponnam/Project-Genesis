@@ -42,6 +42,7 @@ WRITING_FACT: str = TechnologyKind.WRITING.value
 MATHEMATICS_FACT: str = TechnologyKind.MATHEMATICS.value
 ASTRONOMY_FACT: str = TechnologyKind.ASTRONOMY.value
 PHILOSOPHY_FACT: str = TechnologyKind.PHILOSOPHY.value
+LOGIC_FACT: str = TechnologyKind.LOGIC.value
 
 
 class KnowledgeSource(StrEnum):
@@ -68,6 +69,7 @@ class KnowledgeCensus(BaseModel):
     mathematics_knower_count: NonNegativeInt = 0
     astronomy_knower_count: NonNegativeInt = 0
     philosophy_knower_count: NonNegativeInt = 0
+    logic_knower_count: NonNegativeInt = 0
     total_fact_instances: NonNegativeInt
     coverage_bps: NonNegativeInt
 
@@ -301,6 +303,7 @@ def census_knowledge(world: World) -> KnowledgeCensus:
     philosophy_knowers = sum(
         1 for agent in living if agent.knowledge.knows(PHILOSOPHY_FACT)
     )
+    logic_knowers = sum(1 for agent in living if agent.knowledge.knows(LOGIC_FACT))
     total_fact_instances = 0
     for agent in living:
         total_fact_instances += sum(
@@ -326,6 +329,7 @@ def census_knowledge(world: World) -> KnowledgeCensus:
         mathematics_knower_count=mathematics_knowers,
         astronomy_knower_count=astronomy_knowers,
         philosophy_knower_count=philosophy_knowers,
+        logic_knower_count=logic_knowers,
         total_fact_instances=total_fact_instances,
         coverage_bps=coverage_bps,
     )

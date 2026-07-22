@@ -977,9 +977,9 @@ def test_technology_created_and_observed_round_trips() -> None:
     observed = TechnologiesObserved(
         sequence=28,
         tick=Tick(value=8),
-        technology_count=8,
+        technology_count=9,
         discovered_count=1,
-        undiscovered_count=7,
+        undiscovered_count=8,
         discovered_fire_count=1,
         discovered_pottery_count=0,
         discovered_irrigation_count=0,
@@ -988,7 +988,8 @@ def test_technology_created_and_observed_round_trips() -> None:
         discovered_mathematics_count=0,
         discovered_astronomy_count=0,
         discovered_philosophy_count=0,
-        locked_count=6,
+        discovered_logic_count=0,
+        locked_count=7,
         researchable_count=1,
     )
     restored = event_from_record(observed.to_record())
@@ -1000,6 +1001,7 @@ def test_technology_created_and_observed_round_trips() -> None:
     assert restored.discovered_mathematics_count == 0
     assert restored.discovered_astronomy_count == 0
     assert restored.discovered_philosophy_count == 0
+    assert restored.discovered_logic_count == 0
     assert restored.researchable_count == 1
 
 
@@ -1072,9 +1074,9 @@ def test_innovation_events_round_trip() -> None:
     observed = InnovationsObserved(
         sequence=34,
         tick=Tick(value=8),
-        innovation_count=8,
+        innovation_count=9,
         active_count=1,
-        inactive_count=7,
+        inactive_count=8,
         active_fire_hearth_count=1,
         active_pottery_craft_count=0,
         active_irrigation_canal_count=0,
@@ -1083,6 +1085,7 @@ def test_innovation_events_round_trip() -> None:
         active_abacus_count=0,
         active_star_chart_count=0,
         active_dialectic_count=0,
+        active_syllogism_count=0,
     )
     restored_observed = event_from_record(observed.to_record())
     assert isinstance(restored_observed, InnovationsObserved)
@@ -1093,6 +1096,7 @@ def test_innovation_events_round_trip() -> None:
     assert restored_observed.active_abacus_count == 0
     assert restored_observed.active_star_chart_count == 0
     assert restored_observed.active_dialectic_count == 0
+    assert restored_observed.active_syllogism_count == 0
 
 
 def test_knowledge_events_round_trip() -> None:
@@ -1136,6 +1140,7 @@ def test_knowledge_events_round_trip() -> None:
         mathematics_knower_count=0,
         astronomy_knower_count=0,
         philosophy_knower_count=0,
+        logic_knower_count=0,
         total_fact_instances=3,
         coverage_bps=10_000,
     )
@@ -1147,6 +1152,7 @@ def test_knowledge_events_round_trip() -> None:
     assert restored_observed.mathematics_knower_count == 0
     assert restored_observed.astronomy_knower_count == 0
     assert restored_observed.philosophy_knower_count == 0
+    assert restored_observed.logic_knower_count == 0
     assert restored_observed.coverage_bps == 10_000
 
 

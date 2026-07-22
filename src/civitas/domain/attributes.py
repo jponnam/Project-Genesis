@@ -16,6 +16,7 @@ from civitas.domain.ids import AgentId
 from civitas.domain.time import Tick
 from civitas.domain.types import (
     AffinityScore,
+    MemoryContentStr,
     NonEmptyStr,
     NonNegativeInt,
     PositiveInt,
@@ -365,7 +366,7 @@ class MemoryRecord(BaseModel):
 
     tick: Tick
     kind: NonEmptyStr
-    content: NonEmptyStr
+    content: MemoryContentStr
 
 
 class Memory(BaseModel):

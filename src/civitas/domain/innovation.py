@@ -20,6 +20,7 @@ from civitas.domain.technology import (
     CAMP_ASTRONOMY,
     CAMP_FIRE,
     CAMP_IRRIGATION,
+    CAMP_LOGIC,
     CAMP_MATHEMATICS,
     CAMP_METALLURGY,
     CAMP_PHILOSOPHY,
@@ -45,6 +46,7 @@ class InnovationKind(StrEnum):
     ABACUS = "abacus"
     STAR_CHART = "star_chart"
     DIALECTIC = "dialectic"
+    SYLLOGISM = "syllogism"
 
 
 class Innovation(BaseModel):
@@ -142,6 +144,14 @@ CAMP_DIALECTIC: Innovation = Innovation.create(
     active=False,
 )
 
+CAMP_SYLLOGISM: Innovation = Innovation.create(
+    8,
+    CAMP_LOGIC.technology_id.value,
+    "Camp Syllogism",
+    InnovationKind.SYLLOGISM,
+    active=False,
+)
+
 
 def default_innovations() -> tuple[Innovation, ...]:
     """Return the canonical initial innovation set."""
@@ -154,6 +164,7 @@ def default_innovations() -> tuple[Innovation, ...]:
         CAMP_ABACUS,
         CAMP_STAR_CHART,
         CAMP_DIALECTIC,
+        CAMP_SYLLOGISM,
     )
 
 
@@ -174,6 +185,7 @@ class InnovationCensus(BaseModel):
     active_abacus_count: NonNegativeInt = 0
     active_star_chart_count: NonNegativeInt = 0
     active_dialectic_count: NonNegativeInt = 0
+    active_syllogism_count: NonNegativeInt = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -329,6 +341,7 @@ def census_innovations(world: World) -> InnovationCensus:
     abacus = sum(1 for item in active if item.kind is InnovationKind.ABACUS)
     star_chart = sum(1 for item in active if item.kind is InnovationKind.STAR_CHART)
     dialectic = sum(1 for item in active if item.kind is InnovationKind.DIALECTIC)
+    syllogism = sum(1 for item in active if item.kind is InnovationKind.SYLLOGISM)
     return InnovationCensus(
         tick=world.tick,
         innovation_count=len(innovations),
@@ -342,4 +355,5 @@ def census_innovations(world: World) -> InnovationCensus:
         active_abacus_count=abacus,
         active_star_chart_count=star_chart,
         active_dialectic_count=dialectic,
+        active_syllogism_count=syllogism,
     )

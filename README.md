@@ -123,14 +123,15 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 11 — Milestone 6: School institutions**
+**Phase 11 — Milestone 7: Logic technology**
 
-``InstitutionKind.SCHOOL`` is a gov-attached civic organization like
-academies and temples. An active school at a knower's seat grants ``+1``
-teachings-per-knower (``SCHOOL_TEACHINGS_PER_KNOWER_BONUS``), stacking
-with scribe, dialectic, scriptorium, academy, forum, and curriculum via
-``effective_teachings_per_knower``. Census tracks ``active_school_count``
-on ``InstitutionsObserved``. No school is seeded by default.
+``TechnologyKind.LOGIC`` extends the prerequisite chain after philosophy.
+``CAMP_LOGIC`` is initially undiscovered, with ``CAMP_LOGIC_RESEARCH``
+tracking progress at the default threshold. Its ``CAMP_SYLLOGISM``
+innovation starts inactive; once active, syllogism adds ``+1`` research
+point per tick through ``effective_research_points_per_tick``. Census and
+knowledge observers track logic discovery, syllogism activation, and logic
+knowers.
 
 ### Completed
 
@@ -226,6 +227,7 @@ JSONL storage → `civitas run`
 - Milestone 4: Shrine infrastructure
 - Milestone 5: Sanctuary cities
 - Milestone 6: School institutions
+- Milestone 7: Logic technology
 
 ## License
 
