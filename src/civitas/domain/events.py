@@ -22,6 +22,7 @@ from civitas.domain.ids import (
     ListingId,
     LocationId,
     MarketId,
+    TechnologyId,
 )
 from civitas.domain.time import Tick
 from civitas.domain.types import (
@@ -524,6 +525,25 @@ class InfrastructuresObserved(DomainEvent):
     active_well_count: NonNegativeInt
 
 
+class TechnologyCreated(DomainEvent):
+    """Emitted when a technology catalog entry is added to the world."""
+
+    technology_id: TechnologyId
+    name: NonEmptyStr
+    kind: NonEmptyStr
+    discovered: bool = False
+
+
+class TechnologiesObserved(DomainEvent):
+    """Emitted when a technology census is taken."""
+
+    technology_count: NonNegativeInt
+    discovered_count: NonNegativeInt
+    undiscovered_count: NonNegativeInt
+    discovered_fire_count: NonNegativeInt
+    discovered_pottery_count: NonNegativeInt
+
+
 CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     SimulationStarted,
     SimulationCompleted,
@@ -568,6 +588,8 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     CitiesObserved,
     InfrastructureCreated,
     InfrastructuresObserved,
+    TechnologyCreated,
+    TechnologiesObserved,
 )
 
 EVENT_TYPE_REGISTRY: dict[str, type[DomainEvent]] = {

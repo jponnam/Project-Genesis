@@ -55,6 +55,9 @@ from civitas.domain import (
     SimulationCompleted,
     SimulationStarted,
     TaxCollected,
+    TechnologiesObserved,
+    TechnologyCreated,
+    TechnologyId,
     Tick,
     TickCompleted,
     TickStarted,
@@ -800,3 +803,31 @@ def test_infrastructure_created_and_observed_round_trips() -> None:
     restored = event_from_record(observed.to_record())
     assert isinstance(restored, InfrastructuresObserved)
     assert restored.active_well_count == 1
+
+
+def test_technology_created_and_observed_round_trips() -> None:
+    """Technology create/observe events serialize losslessly."""
+    created = TechnologyCreated(
+        sequence=27,
+        tick=Tick(value=0),
+        technology_id=TechnologyId(value=0),
+        name="Camp Fire",
+        kind="fire",
+        discovered=True,
+    )
+    restored_created = event_from_record(created.to_record())
+    assert isinstance(restored_created, TechnologyCreated)
+    assert restored_created.discovered is True
+
+    observed = TechnologiesObserved(
+        sequence=28,
+        tick=Tick(value=8),
+        technology_count=2,
+        discovered_count=1,
+        undiscovered_count=1,
+        discovered_fire_count=1,
+        discovered_pottery_count=0,
+    )
+    restored = event_from_record(observed.to_record())
+    assert isinstance(restored, TechnologiesObserved)
+    assert restored.discovered_fire_count == 1

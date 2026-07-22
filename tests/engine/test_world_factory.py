@@ -5,10 +5,12 @@ from __future__ import annotations
 from civitas.domain import (
     CAMP_CITY,
     CAMP_COUNCIL,
+    CAMP_FIRE,
     CAMP_GOVERNMENT,
     CAMP_LOCATION,
     CAMP_MARKET,
     CAMP_POLL_TAX_LAW,
+    CAMP_POTTERY,
     CAMP_WELL,
     CANONICAL_SEED,
     AgentSpawned,
@@ -22,6 +24,7 @@ from civitas.domain import (
     default_institutions,
     default_laws,
     default_markets,
+    default_technologies,
     default_world_map,
 )
 from civitas.engine import EventBus, WorldFactory
@@ -81,6 +84,9 @@ def test_agents_have_stable_ids_names_and_origin_location() -> None:
     assert world.cities[0] == CAMP_CITY
     assert world.infrastructure == default_infrastructure()
     assert world.infrastructure[0] == CAMP_WELL
+    assert world.technologies == default_technologies()
+    assert world.technologies[0] == CAMP_FIRE
+    assert world.technologies[1] == CAMP_POTTERY
     assert world.treasury == 0
     assert world.agents_at(0) == world.agents
 
@@ -133,4 +139,5 @@ def test_map_is_independent_of_seed() -> None:
     assert left.institutions == right.institutions
     assert left.cities == right.cities
     assert left.infrastructure == right.infrastructure
+    assert left.technologies == right.technologies
     assert left.agents[0].personality != right.agents[0].personality

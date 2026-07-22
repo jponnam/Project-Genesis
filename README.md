@@ -118,12 +118,12 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 5 — Milestone 6: Infrastructure**
+**Phase 6 — Milestone 1: Technology**
 
-Built capacity attaches to city seats. The factory seeds active
-`Camp Well` (`WELL`). `InfrastructureSystem.observe` emits
-`InfrastructuresObserved`. Phase 5 complete; Phase 6 begins with
-technology / research.
+Society-level technology catalog with discovery flags. The factory seeds
+discovered `Camp Fire` (`FIRE`) and undiscovered `Camp Pottery`
+(`POTTERY`). `TechSystem.observe` emits `TechnologiesObserved`. Research,
+innovation, and knowledge diffusion remain later Phase 6 milestones.
 
 ### Completed
 
@@ -165,6 +165,9 @@ JSONL storage → `civitas run`
 - Milestone 4: Institutions
 - Milestone 5: Cities
 - Milestone 6: Infrastructure
+
+**Phase 6:**
+- Milestone 1: Technology
 
 ## License
 

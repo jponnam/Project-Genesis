@@ -28,12 +28,14 @@ from civitas.domain.ids import (
     LawId,
     LocationId,
     MarketId,
+    TechnologyId,
 )
 from civitas.domain.infrastructure import Infrastructure
 from civitas.domain.institutions import Institution
 from civitas.domain.laws import Law, LawKind
 from civitas.domain.location import Location
 from civitas.domain.market import Market
+from civitas.domain.technology import Technology
 from civitas.domain.time import Tick
 from civitas.domain.types import NonNegativeInt
 from civitas.domain.voting import Election
@@ -53,6 +55,7 @@ class World(BaseModel):
         institutions: Civic organizations, ordered by ascending ``institution_id``.
         cities: Settlements, ordered by ascending ``city_id``.
         infrastructure: Built capacity, ordered by ascending ``infrastructure_id``.
+        technologies: Society tech catalog, ordered by ascending ``technology_id``.
         agents: Agents ordered by ascending ``agent_id``.
         treasury: Public money balance collected from taxes.
     """
@@ -69,6 +72,7 @@ class World(BaseModel):
     institutions: tuple[Institution, ...] = ()
     cities: tuple[City, ...] = ()
     infrastructure: tuple[Infrastructure, ...] = ()
+    technologies: tuple[Technology, ...] = ()
     agents: tuple[Agent, ...] = ()
     treasury: NonNegativeInt = 0
 
@@ -371,6 +375,18 @@ class World(BaseModel):
                     raise ValueError(msg)
                 active_kind_locations.add(key)
 
+        technology_ids = [tech.technology_id.value for tech in self.technologies]
+        if len(technology_ids) != len(set(technology_ids)):
+            msg = "technology ids must be unique"
+            raise ValueError(msg)
+        if technology_ids != sorted(technology_ids):
+            msg = "technologies must be ordered by ascending technology_id"
+            raise ValueError(msg)
+        tech_kinds = [tech.kind.value for tech in self.technologies]
+        if len(tech_kinds) != len(set(tech_kinds)):
+            msg = "technology kinds must be unique"
+            raise ValueError(msg)
+
         return self
 
     @property
@@ -481,6 +497,21 @@ class World(BaseModel):
                 return item
         return None
 
+    def technology_by_id(
+        self,
+        technology_id: TechnologyId | int,
+    ) -> Technology | None:
+        """Return the technology with ``technology_id``, or ``None`` if absent."""
+        target = (
+            technology_id
+            if isinstance(technology_id, TechnologyId)
+            else TechnologyId(value=technology_id)
+        )
+        for technology in self.technologies:
+            if technology.technology_id == target:
+                return technology
+        return None
+
     def agents_at(self, location_id: LocationId | int) -> tuple[Agent, ...]:
         """Return agents occupying ``location_id`` in stable id order."""
         target = (
@@ -533,6 +564,7 @@ class World(BaseModel):
             institutions=self.institutions,
             cities=self.cities,
             infrastructure=self.infrastructure,
+            technologies=self.technologies,
             agents=agents,
             treasury=self.treasury,
         )
@@ -700,3 +732,22 @@ class World(BaseModel):
             msg = f"infrastructure id {item.infrastructure_id.value} not found in world"
             raise ValueError(msg)
         return self.model_copy(update={"infrastructure": tuple(updated)})
+
+    def with_technology(self, technology: Technology) -> World:
+        """Return a copy replacing the technology that shares ``technology_id``.
+
+        Raises:
+            ValueError: If no technology with that id exists.
+        """
+        updated: list[Technology] = []
+        found = False
+        for existing in self.technologies:
+            if existing.technology_id == technology.technology_id:
+                updated.append(technology)
+                found = True
+            else:
+                updated.append(existing)
+        if not found:
+            msg = f"technology id {technology.technology_id.value} not found in world"
+            raise ValueError(msg)
+        return self.model_copy(update={"technologies": tuple(updated)})
