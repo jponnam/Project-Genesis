@@ -125,10 +125,10 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 13 Milestone 4: Bridge infrastructure**
+**Phase 13 Milestone 5: Foundry cities**
 
-``InfrastructureKind.BRIDGE`` (build cost 9) grants a seat-scoped MOVE energy
-discount that stacks with road seats and building-code laws.
+``CityKind.FOUNDRY`` is a non-capital industrial seat that grants a PRODUCE
+energy discount stacking with guild, workshop, abacus, and pulley.
 
 ### Completed
 
@@ -250,6 +250,7 @@ JSONL storage → `civitas run`
 - Milestone 2: Building codes laws
 - Milestone 3: Workshop institutions
 - Milestone 4: Bridge infrastructure
+- Milestone 5: Foundry cities
 
 ## License
 
