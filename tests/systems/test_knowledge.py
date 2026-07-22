@@ -28,6 +28,7 @@ def test_observe_emits_without_mutating_world() -> None:
     assert events[0].metallurgy_knower_count == 0
     assert events[0].writing_knower_count == 0
     assert events[0].mathematics_knower_count == 0
+    assert events[0].astronomy_knower_count == 0
     assert events[0].coverage_bps == 10_000
 
 

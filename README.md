@@ -122,15 +122,16 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 10 — Milestone 9: Observatory infrastructure**
+**Phase 10 — Milestone 10: Astronomy technology**
 
-``InfrastructureKind.OBSERVATORY`` is paid infrastructure
-(``DEFAULT_OBSERVATORY_BUILD_COST`` = 12) like roads and scriptoria. An
-active observatory at an agent's location grants ``+1`` retrieval limit
-(``OBSERVATORY_RETRIEVAL_LIMIT_BONUS``), stacking with archive and
-library via ``effective_retrieval_limit``. Census tracks
-``active_observatory_count`` on ``InfrastructuresObserved``. No
-observatory is seeded by default.
+``TechnologyKind.ASTRONOMY`` continues the tech tree after mathematics
+(``CAMP_ASTRONOMY`` id=6, prerequisite mathematics). Research stays
+locked until mathematics is discovered. ``InnovationKind.STAR_CHART``
+seeds inactive; when active it grants ``+1`` retrieval limit
+society-wide (``ASTRONOMY_RETRIEVAL_LIMIT_BONUS``), stacking with
+archive, library, and observatory via ``effective_retrieval_limit``.
+Knowledge fact ``ASTRONOMY_FACT`` diffuses after discovery. Census
+tracks astronomy discovery, star-chart activation, and knower counts.
 
 ### Completed
 
@@ -215,6 +216,7 @@ JSONL storage → `civitas run`
 - Milestone 7: Mathematics technology
 - Milestone 8: Academy institutions
 - Milestone 9: Observatory infrastructure
+- Milestone 10: Astronomy technology
 
 ## License
 

@@ -91,6 +91,7 @@ from civitas.domain.economy import (
 from civitas.domain.effects import (
     ACADEMY_TEACHINGS_PER_KNOWER_BONUS,
     ARCHIVE_RETRIEVAL_LIMIT_BONUS,
+    ASTRONOMY_RETRIEVAL_LIMIT_BONUS,
     BUREAUCRACY_MARKET_FEE_DISCOUNT,
     FIRE_HEARTH_REST_BONUS,
     GUILD_PRODUCE_ENERGY_DISCOUNT,
@@ -299,6 +300,7 @@ from civitas.domain.innovation import (
     CAMP_IRRIGATION_CANAL,
     CAMP_POTTERY_CRAFT,
     CAMP_SCRIBE,
+    CAMP_STAR_CHART,
     Innovation,
     InnovationActivation,
     InnovationCensus,
@@ -337,6 +339,7 @@ from civitas.domain.institutions import (
     set_officer,
 )
 from civitas.domain.knowledge import (
+    ASTRONOMY_FACT,
     DEFAULT_MIN_TEACH_TRUST,
     DEFAULT_TEACHINGS_PER_KNOWER,
     FIRE_FACT,
@@ -509,6 +512,7 @@ from civitas.domain.reputation import (
     top_standing,
 )
 from civitas.domain.research import (
+    CAMP_ASTRONOMY_RESEARCH,
     CAMP_IRRIGATION_RESEARCH,
     CAMP_MATHEMATICS_RESEARCH,
     CAMP_METALLURGY_RESEARCH,
@@ -558,6 +562,7 @@ from civitas.domain.taxes import (
     tax_due,
 )
 from civitas.domain.technology import (
+    CAMP_ASTRONOMY,
     CAMP_FIRE,
     CAMP_IRRIGATION,
     CAMP_MATHEMATICS,
@@ -626,9 +631,13 @@ __all__ = [
     "ACTION_NEED_TARGET",
     "ACTION_RESOURCE",
     "ARCHIVE_RETRIEVAL_LIMIT_BONUS",
+    "ASTRONOMY_FACT",
+    "ASTRONOMY_RETRIEVAL_LIMIT_BONUS",
     "BPS_DENOMINATOR",
     "BUREAUCRACY_MARKET_FEE_DISCOUNT",
     "CAMP_ABACUS",
+    "CAMP_ASTRONOMY",
+    "CAMP_ASTRONOMY_RESEARCH",
     "CAMP_CITY",
     "CAMP_COUNCIL",
     "CAMP_FIRE",
@@ -649,6 +658,7 @@ __all__ = [
     "CAMP_POTTERY_CRAFT",
     "CAMP_POTTERY_RESEARCH",
     "CAMP_SCRIBE",
+    "CAMP_STAR_CHART",
     "CAMP_WELL",
     "CAMP_WRITING",
     "CAMP_WRITING_RESEARCH",
