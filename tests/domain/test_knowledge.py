@@ -9,6 +9,7 @@ from civitas.domain import (
     CAMP_ANATOMY,
     CAMP_ARCHITECTURE,
     CAMP_ASTRONOMY,
+    CAMP_CARTOGRAPHY,
     CAMP_DIALECTIC,
     CAMP_ENGINEERING,
     CAMP_HYGIENE,
@@ -25,6 +26,7 @@ from civitas.domain import (
     CAMP_SCRIBE,
     CAMP_SURVEYING,
     CAMP_WRITING,
+    CARTOGRAPHY_FACT,
     DEFAULT_TEACHINGS_PER_KNOWER,
     ENGINEERING_FACT,
     FIRE_FACT,
@@ -719,7 +721,6 @@ def test_bootstrap_uses_architecture_technology_fact() -> None:
     assert world.agents[0].knowledge.knows(ARCHITECTURE_FACT)
 
 
-
 def test_bootstrap_uses_surveying_technology_fact() -> None:
     """Discovered surveying bootstraps through the generic tech fact mapping."""
     prior = Knowledge(
@@ -830,6 +831,65 @@ def test_bootstrap_uses_navigation_technology_fact() -> None:
     assert len(gains) == 1
     assert gains[0].fact == NAVIGATION_FACT
     assert world.agents[0].knowledge.knows(NAVIGATION_FACT)
+
+
+def test_bootstrap_uses_cartography_technology_fact() -> None:
+    """Discovered cartography bootstraps through the generic tech fact mapping."""
+    prior = Knowledge(
+        facts=frozenset(
+            {
+                FIRE_FACT,
+                POTTERY_FACT,
+                IRRIGATION_FACT,
+                METALLURGY_FACT,
+                WRITING_FACT,
+                MATHEMATICS_FACT,
+                ASTRONOMY_FACT,
+                PHILOSOPHY_FACT,
+                LOGIC_FACT,
+                RHETORIC_FACT,
+                MEDICINE_FACT,
+                ANATOMY_FACT,
+                HYGIENE_FACT,
+                ENGINEERING_FACT,
+                ARCHITECTURE_FACT,
+                SURVEYING_FACT,
+                NAVIGATION_FACT,
+            }
+        )
+    )
+    world = _world(
+        Agent.create(agent_id=0, name="A", knowledge=prior),
+        Agent.create(agent_id=1, name="B", knowledge=prior),
+    )
+    current = world
+    for technology in (
+        CAMP_POTTERY,
+        CAMP_IRRIGATION,
+        CAMP_METALLURGY,
+        CAMP_WRITING,
+        CAMP_MATHEMATICS,
+        CAMP_ASTRONOMY,
+        CAMP_PHILOSOPHY,
+        CAMP_LOGIC,
+        CAMP_RHETORIC,
+        CAMP_MEDICINE,
+        CAMP_ANATOMY,
+        CAMP_HYGIENE,
+        CAMP_ENGINEERING,
+        CAMP_ARCHITECTURE,
+        CAMP_SURVEYING,
+        CAMP_NAVIGATION,
+    ):
+        updated = discover_technology(current, technology.technology_id)
+        assert updated is not None
+        current = updated
+    with_cartography = discover_technology(current, CAMP_CARTOGRAPHY.technology_id)
+    assert with_cartography is not None
+    world, gains = bootstrap_discovered_knowledge(with_cartography)
+    assert len(gains) == 1
+    assert gains[0].fact == CARTOGRAPHY_FACT
+    assert world.agents[0].knowledge.knows(CARTOGRAPHY_FACT)
 
 
 def test_active_scribe_raises_teachings_per_knower() -> None:
@@ -1338,6 +1398,7 @@ def test_census_knowledge_counts_coverage() -> None:
     assert snap.architecture_knower_count == 0
     assert snap.surveying_knower_count == 0
     assert snap.navigation_knower_count == 0
+    assert snap.cartography_knower_count == 0
     assert snap.total_fact_instances == 2
     assert snap.coverage_bps == 10_000
     assert agents_knowing(world, FIRE_FACT)[0].agent_id.value == 0

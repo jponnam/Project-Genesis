@@ -111,6 +111,7 @@ class InnovationSystem:
                     active_blueprint_count=snap.active_blueprint_count,
                     active_plumb_line_count=snap.active_plumb_line_count,
                     active_compass_count=snap.active_compass_count,
+                    active_map_count=snap.active_map_count,
                 )
             )
         return world

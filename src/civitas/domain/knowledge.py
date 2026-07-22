@@ -51,6 +51,7 @@ ENGINEERING_FACT: str = TechnologyKind.ENGINEERING.value
 ARCHITECTURE_FACT: str = TechnologyKind.ARCHITECTURE.value
 SURVEYING_FACT: str = TechnologyKind.SURVEYING.value
 NAVIGATION_FACT: str = TechnologyKind.NAVIGATION.value
+CARTOGRAPHY_FACT: str = TechnologyKind.CARTOGRAPHY.value
 
 
 class KnowledgeSource(StrEnum):
@@ -86,6 +87,7 @@ class KnowledgeCensus(BaseModel):
     architecture_knower_count: NonNegativeInt = 0
     surveying_knower_count: NonNegativeInt = 0
     navigation_knower_count: NonNegativeInt = 0
+    cartography_knower_count: NonNegativeInt = 0
     total_fact_instances: NonNegativeInt
     coverage_bps: NonNegativeInt
 
@@ -340,6 +342,9 @@ def census_knowledge(world: World) -> KnowledgeCensus:
     navigation_knowers = sum(
         1 for agent in living if agent.knowledge.knows(NAVIGATION_FACT)
     )
+    cartography_knowers = sum(
+        1 for agent in living if agent.knowledge.knows(CARTOGRAPHY_FACT)
+    )
     total_fact_instances = 0
     for agent in living:
         total_fact_instances += sum(
@@ -374,6 +379,7 @@ def census_knowledge(world: World) -> KnowledgeCensus:
         architecture_knower_count=architecture_knowers,
         surveying_knower_count=surveying_knowers,
         navigation_knower_count=navigation_knowers,
+        cartography_knower_count=cartography_knowers,
         total_fact_instances=total_fact_instances,
         coverage_bps=coverage_bps,
     )

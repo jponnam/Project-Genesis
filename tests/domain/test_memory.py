@@ -7,6 +7,7 @@ from civitas.domain import (
     ARCHITECTURE_FACT,
     ASTRONOMY_FACT,
     CAMP_LOCATION,
+    CARTOGRAPHY_FACT,
     ENGINEERING_FACT,
     FIRE_FACT,
     HYGIENE_FACT,
@@ -69,6 +70,7 @@ def test_encode_agent_episode_accepts_full_technology_fact_content() -> None:
             ARCHITECTURE_FACT,
             ASTRONOMY_FACT,
             ANATOMY_FACT,
+            CARTOGRAPHY_FACT,
             ENGINEERING_FACT,
             FIRE_FACT,
             HYGIENE_FACT,
@@ -89,8 +91,11 @@ def test_encode_agent_episode_accepts_full_technology_fact_content() -> None:
         Agent.create(agent_id=0, name="A", knowledge=Knowledge(facts=all_facts)),
         Tick(value=3),
     )
-    assert len(record.content) == 209
-    assert "facts=anatomy,architecture,astronomy,engineering,fire" in record.content
+    assert len(record.content) == 221
+    assert (
+        "facts=anatomy,architecture,astronomy,cartography,engineering,fire"
+        in record.content
+    )
 
 
 def test_apply_memory_encoding_writes_one_record_per_living_agent() -> None:

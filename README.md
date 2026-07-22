@@ -126,11 +126,12 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 14 Milestone 6: Merchant institutions**
+**Phase 14 Milestone 7: Cartography technology**
 
-``InstitutionKind.MERCHANT`` is a non-seeded institution kind. An active
-merchant at a market location discounts the market fill fee by 1,
-stacking with bureaucracy and harbor.
+``TechnologyKind.CARTOGRAPHY`` (id 17) requires navigation. Research
+threshold 10. ``InnovationKind.MAP`` raises the memory retrieval limit
+by 1 society-wide when active, stacking with star chart, plumb line,
+archive/library/observatory/lyceum seats, and calendar.
 
 ### Completed
 
@@ -268,6 +269,7 @@ JSONL storage → `civitas run`
 - Milestone 4: Waystation infrastructure
 - Milestone 5: Harbor cities
 - Milestone 6: Merchant institutions
+- Milestone 7: Cartography technology
 
 ## License
 

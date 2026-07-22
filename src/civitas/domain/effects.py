@@ -76,7 +76,9 @@ food-gather bonuses at the infrastructure seat (stacking with STOREHOUSE).
 Phase 14 Milestone 5 adds HARBOR city market-fee discounts at the city
 seat (stacking with BUREAUCRACY). Phase 14 Milestone 6 adds MERCHANT
 market-fee discounts at the institution seat (stacking with BUREAUCRACY
-and HARBOR). The action executor, retrieval path, market fills,
+and HARBOR). Phase 14 Milestone 7 adds a global MAP retrieval-limit bonus
+(stacking with star chart, plumb line, archive, library, observatory,
+lyceum, and calendar). The action executor, retrieval path, market fills,
 knowledge diffusion, and research progression read these helpers;
 ``EffectsSystem`` only observes coverage. Systems never call each
 other.
@@ -170,6 +172,7 @@ LIBRARY_RETRIEVAL_LIMIT_BONUS: int = 1
 OBSERVATORY_RETRIEVAL_LIMIT_BONUS: int = 1
 ASTRONOMY_RETRIEVAL_LIMIT_BONUS: int = 1
 SURVEYING_RETRIEVAL_LIMIT_BONUS: int = 1
+CARTOGRAPHY_RETRIEVAL_LIMIT_BONUS: int = 1
 LYCEUM_RETRIEVAL_LIMIT_BONUS: int = 1
 BUREAUCRACY_MARKET_FEE_DISCOUNT: int = 1
 HARBOR_MARKET_FEE_DISCOUNT: int = 1
@@ -950,8 +953,10 @@ def retrieval_limit_bonus(world: World, agent: Agent) -> int:
     the agent's location. An active STAR_CHART innovation contributes
     ``ASTRONOMY_RETRIEVAL_LIMIT_BONUS`` society-wide. An active
     PLUMB_LINE innovation contributes ``SURVEYING_RETRIEVAL_LIMIT_BONUS``
-    society-wide. An active ``CALENDAR`` statute contributes ``+1`` for
-    living subjects of that government. All stack.
+    society-wide. An active MAP innovation contributes
+    ``CARTOGRAPHY_RETRIEVAL_LIMIT_BONUS`` society-wide. An active
+    ``CALENDAR`` statute contributes ``+1`` for living subjects of that
+    government. All stack.
     """
     bonus = 0
     if location_has_active_archive(world, agent.location_id):
@@ -966,6 +971,8 @@ def retrieval_limit_bonus(world: World, agent: Agent) -> int:
         bonus += ASTRONOMY_RETRIEVAL_LIMIT_BONUS
     if innovation_kind_is_active(world, InnovationKind.PLUMB_LINE):
         bonus += SURVEYING_RETRIEVAL_LIMIT_BONUS
+    if innovation_kind_is_active(world, InnovationKind.MAP):
+        bonus += CARTOGRAPHY_RETRIEVAL_LIMIT_BONUS
     bonus += calendar_retrieval_bonus_for(world, agent)
     return bonus
 
