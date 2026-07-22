@@ -5,6 +5,9 @@ from __future__ import annotations
 from civitas.domain import (
     CAMP_LOCATION,
     Agent,
+    Government,
+    Law,
+    LawKind,
     SimulationConfig,
     TaxCollected,
     World,
@@ -14,10 +17,17 @@ from civitas.engine import EventBus
 from civitas.systems import TaxConfig, TaxSystem
 
 
-def _world(*agents: Agent, treasury: int = 0) -> World:
+def _world(
+    *agents: Agent,
+    treasury: int = 0,
+    governments: tuple[Government, ...] = (),
+    laws: tuple[Law, ...] = (),
+) -> World:
     return World(
         config=SimulationConfig(agent_count=len(agents), seed=1),
         locations=(CAMP_LOCATION,),
+        governments=governments,
+        laws=laws,
         agents=agents,
         treasury=treasury,
     )
@@ -80,3 +90,17 @@ def test_tax_system_tax_due_uses_config() -> None:
     system = TaxSystem(TaxConfig(enabled=True, flat_amount=1, rate_bps=100))
     assert system.tax_due(world, 0) == 2
     assert system.tax_due(world, 9) == 0
+
+
+def test_tax_system_uses_active_tax_schedule_law() -> None:
+    """Active TAX_SCHEDULE overrides TaxConfig flat amount for subjects."""
+    world = _world(
+        Agent.create(agent_id=0, name="A", money=5),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(Law.create(0, 0, "Heavy", LawKind.TAX_SCHEDULE, flat_amount=2),),
+    )
+    system = TaxSystem(TaxConfig(enabled=True, flat_amount=1))
+    assert system.tax_due(world, 0) == 2
+    updated = system.apply_taxes(world)
+    assert updated.treasury == 2
+    assert updated.agent_by_id(0).money == 3  # type: ignore[union-attr]

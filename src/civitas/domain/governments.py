@@ -1,8 +1,9 @@
 """Governments: polities with jurisdiction, treasury, and optional leader.
 
 A government is a location-anchored public authority. Domain helpers own
-lookups, treasury mutations, leader appointment, and censuses. Laws,
-voting, and tax redirection are later Phase 5 milestones.
+lookups, treasury mutations, leader appointment, and censuses. Laws attach
+to governments separately; voting and tax redirection are later Phase 5
+milestones.
 """
 
 from __future__ import annotations

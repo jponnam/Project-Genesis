@@ -16,6 +16,7 @@ from civitas.domain import (
     Agent,
     AgentSpawned,
     GovernmentCreated,
+    LawCreated,
     LocationCreated,
     LocationId,
     MarketCreated,
@@ -24,6 +25,7 @@ from civitas.domain import (
     Tick,
     World,
     default_governments,
+    default_laws,
     default_markets,
 )
 from civitas.domain.ids import AgentId
@@ -60,14 +62,16 @@ class WorldFactory:
         3. Build canonical markets; optionally publish ``MarketCreated``.
         4. Build canonical governments; optionally publish
            ``GovernmentCreated``.
-        5. For each ``agent_id`` in ``0 .. agent_count-1``, spawn a child
+        5. Build canonical laws; optionally publish ``LawCreated``.
+        6. For each ``agent_id`` in ``0 .. agent_count-1``, spawn a child
            RNG stream and sample personality + starting money at camp.
-        6. Optionally publish ``AgentSpawned`` for each agent in id order.
+        7. Optionally publish ``AgentSpawned`` for each agent in id order.
         """
         root_rng = SeededRNG.from_config(config)
         locations = default_world_map()
         markets = default_markets()
         governments = default_governments()
+        laws = default_laws()
         agents: list[Agent] = []
 
         if bus is not None:
@@ -113,6 +117,19 @@ class WorldFactory:
                         leader_id=government.leader_id,
                     )
                 )
+            for law in laws:
+                bus.publish(
+                    LawCreated(
+                        tick=Tick(value=0),
+                        law_id=law.law_id,
+                        government_id=law.government_id,
+                        name=law.name,
+                        kind=law.kind.value,
+                        active=law.active,
+                        flat_amount=law.flat_amount,
+                        rate_bps=law.rate_bps,
+                    )
+                )
 
         for agent_id in range(config.agent_count):
             agent = self._build_agent(root_rng=root_rng, agent_id=agent_id)
@@ -133,6 +150,7 @@ class WorldFactory:
             locations=locations,
             markets=markets,
             governments=governments,
+            laws=laws,
             agents=tuple(agents),
         )
 

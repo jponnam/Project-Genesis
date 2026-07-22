@@ -18,6 +18,9 @@ from civitas.domain import (
     GovernmentCreated,
     GovernmentId,
     GovernmentsObserved,
+    LawCreated,
+    LawId,
+    LawsObserved,
     ListingFilled,
     ListingId,
     ListingPosted,
@@ -614,3 +617,38 @@ def test_government_created_and_observed_round_trips() -> None:
     assert restored.covered_location_count == 9
     assert restored.total_treasury == 4
     assert restored.max_subjects_government_id == GovernmentId(value=0)
+
+
+def test_law_created_and_observed_round_trips() -> None:
+    """Law create/observe events serialize losslessly."""
+    created = LawCreated(
+        sequence=17,
+        tick=Tick(value=0),
+        law_id=LawId(value=0),
+        government_id=GovernmentId(value=0),
+        name="Camp Poll Tax",
+        kind="tax_schedule",
+        active=True,
+        flat_amount=1,
+        rate_bps=0,
+    )
+    restored_created = event_from_record(created.to_record())
+    assert isinstance(restored_created, LawCreated)
+    assert restored_created.name == "Camp Poll Tax"
+    assert restored_created.kind == "tax_schedule"
+    assert restored_created.flat_amount == 1
+
+    observed = LawsObserved(
+        sequence=18,
+        tick=Tick(value=3),
+        law_count=2,
+        active_count=1,
+        inactive_count=1,
+        governments_with_active_laws=1,
+        active_tax_schedule_count=1,
+    )
+    restored = event_from_record(observed.to_record())
+    assert isinstance(restored, LawsObserved)
+    assert restored.law_count == 2
+    assert restored.active_count == 1
+    assert restored.active_tax_schedule_count == 1

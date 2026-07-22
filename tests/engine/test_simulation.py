@@ -12,6 +12,8 @@ from civitas.domain import (
     FamiliesObserved,
     GovernmentCreated,
     GovernmentsObserved,
+    LawCreated,
+    LawsObserved,
     LocationCreated,
     MarketCreated,
     MarketObserved,
@@ -84,11 +86,13 @@ def test_run_emits_lifecycle_and_tick_events() -> None:
     assert types.count(LocationCreated.__name__) == 9
     assert types.count(MarketCreated.__name__) == 1
     assert types.count(GovernmentCreated.__name__) == 1
+    assert types.count(LawCreated.__name__) == 1
     assert types.count(AgentSpawned.__name__) == 2
     assert types[1] == LocationCreated.__name__
     assert types[10] == MarketCreated.__name__
     assert types[11] == GovernmentCreated.__name__
-    assert types[12] == AgentSpawned.__name__
+    assert types[12] == LawCreated.__name__
+    assert types[13] == AgentSpawned.__name__
     assert types.count(TickStarted.__name__) == 2
     assert types.count(TickCompleted.__name__) == 2
     assert types[-1] == SimulationCompleted.__name__
@@ -98,6 +102,7 @@ def test_run_emits_lifecycle_and_tick_events() -> None:
     assert len(result.world.locations) == 9
     assert len(result.world.markets) == 1
     assert len(result.world.governments) == 1
+    assert len(result.world.laws) == 1
 
 
 def test_each_tick_selects_and_executes_actions() -> None:
@@ -435,3 +440,24 @@ def test_governments_observed_each_tick_including_start() -> None:
         if isinstance(event, GovernmentsObserved)
     ]
     assert all(gov > net for net, gov in zip(net_indexes, gov_indexes, strict=True))
+
+
+def test_laws_observed_each_tick_including_start() -> None:
+    """Engine emits an initial law census plus one per executed tick."""
+    result = SimulationEngine().run(SimulationConfig(seed=42, ticks=3, agent_count=4))
+    observed = [event for event in result.events if isinstance(event, LawsObserved)]
+    assert len(observed) == 4  # tick 0 + ticks 1..3
+    assert observed[0].tick.value == 0
+    assert observed[-1].tick.value == 3
+    assert all(event.law_count == 1 for event in observed)
+    assert all(event.active_tax_schedule_count == 1 for event in observed)
+    # Laws follow governments in the observe chain.
+    gov_indexes = [
+        i
+        for i, event in enumerate(result.events)
+        if isinstance(event, GovernmentsObserved)
+    ]
+    law_indexes = [
+        i for i, event in enumerate(result.events) if isinstance(event, LawsObserved)
+    ]
+    assert all(law > gov for gov, law in zip(gov_indexes, law_indexes, strict=True))

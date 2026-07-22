@@ -11,7 +11,14 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from civitas.domain.ids import AgentId, GovernmentId, ListingId, LocationId, MarketId
+from civitas.domain.ids import (
+    AgentId,
+    GovernmentId,
+    LawId,
+    ListingId,
+    LocationId,
+    MarketId,
+)
 from civitas.domain.time import Tick
 from civitas.domain.types import (
     AffinityScore,
@@ -226,6 +233,18 @@ class GovernmentCreated(DomainEvent):
     leader_id: AgentId | None = None
 
 
+class LawCreated(DomainEvent):
+    """Emitted when a statute is added to the world."""
+
+    law_id: LawId
+    government_id: GovernmentId
+    name: NonEmptyStr
+    kind: NonEmptyStr
+    active: bool = True
+    flat_amount: NonNegativeInt = 0
+    rate_bps: NonNegativeInt = 0
+
+
 class ListingPosted(DomainEvent):
     """Emitted when a seller escrows goods onto a market listing."""
 
@@ -398,6 +417,16 @@ class GovernmentsObserved(DomainEvent):
     max_subjects_government_id: GovernmentId | None = None
 
 
+class LawsObserved(DomainEvent):
+    """Emitted when a statute census is taken."""
+
+    law_count: NonNegativeInt
+    active_count: NonNegativeInt
+    inactive_count: NonNegativeInt
+    governments_with_active_laws: NonNegativeInt
+    active_tax_schedule_count: NonNegativeInt
+
+
 CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     SimulationStarted,
     SimulationCompleted,
@@ -406,6 +435,7 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     LocationCreated,
     MarketCreated,
     GovernmentCreated,
+    LawCreated,
     AgentSpawned,
     AgentMoved,
     AgentBorn,
@@ -432,6 +462,7 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     FamiliesObserved,
     NetworksObserved,
     GovernmentsObserved,
+    LawsObserved,
 )
 
 EVENT_TYPE_REGISTRY: dict[str, type[DomainEvent]] = {
