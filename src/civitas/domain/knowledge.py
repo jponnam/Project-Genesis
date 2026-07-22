@@ -56,6 +56,7 @@ SEAFARING_FACT: str = TechnologyKind.SEAFARING.value
 AGRICULTURE_FACT: str = TechnologyKind.AGRICULTURE.value
 CROP_ROTATION_FACT: str = TechnologyKind.CROP_ROTATION.value
 FORESTRY_FACT: str = TechnologyKind.FORESTRY.value
+TEXTILES_FACT: str = TechnologyKind.TEXTILES.value
 
 
 class KnowledgeSource(StrEnum):
@@ -96,6 +97,7 @@ class KnowledgeCensus(BaseModel):
     agriculture_knower_count: NonNegativeInt = 0
     crop_rotation_knower_count: NonNegativeInt = 0
     forestry_knower_count: NonNegativeInt = 0
+    textiles_knower_count: NonNegativeInt = 0
     total_fact_instances: NonNegativeInt
     coverage_bps: NonNegativeInt
 
@@ -365,6 +367,9 @@ def census_knowledge(world: World) -> KnowledgeCensus:
     forestry_knowers = sum(
         1 for agent in living if agent.knowledge.knows(FORESTRY_FACT)
     )
+    textiles_knowers = sum(
+        1 for agent in living if agent.knowledge.knows(TEXTILES_FACT)
+    )
     total_fact_instances = 0
     for agent in living:
         total_fact_instances += sum(
@@ -404,6 +409,7 @@ def census_knowledge(world: World) -> KnowledgeCensus:
         agriculture_knower_count=agriculture_knowers,
         crop_rotation_knower_count=crop_rotation_knowers,
         forestry_knower_count=forestry_knowers,
+        textiles_knower_count=textiles_knowers,
         total_fact_instances=total_fact_instances,
         coverage_bps=coverage_bps,
     )

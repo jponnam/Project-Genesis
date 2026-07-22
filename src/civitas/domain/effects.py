@@ -113,8 +113,10 @@ with the scaffold seat). Phase 15 Milestone 11 adds CONSERVATION law
 wood-gather bonuses for living subjects (stacking with coppice and the
 scaffold seat). Phase 15 Milestone 12 adds PASTORAL city wood-gather
 bonuses at the city seat (stacking with the scaffold seat, coppice
-society-wide, and the conservation subject bonus). The action executor,
-retrieval path, market fills, knowledge diffusion, and research
+society-wide, and the conservation subject bonus). Phase 16 Milestone 1
+adds a global LOOM produce-energy discount (stacking with guild, workshop,
+foundry, abacus, pulley, and the customs subject discount). The action
+executor, retrieval path, market fills, knowledge diffusion, and research
 progression read these helpers; ``EffectsSystem`` only observes coverage.
 Systems never call each other.
 """
@@ -218,6 +220,7 @@ WORKSHOP_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 FOUNDRY_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 MATHEMATICS_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 ENGINEERING_PRODUCE_ENERGY_DISCOUNT: float = 0.02
+TEXTILES_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 ARCHIVE_RETRIEVAL_LIMIT_BONUS: int = 1
 LIBRARY_RETRIEVAL_LIMIT_BONUS: int = 1
 OBSERVATORY_RETRIEVAL_LIMIT_BONUS: int = 1
@@ -1155,8 +1158,9 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
     contributes its subject discount. An active ABACUS innovation
     contributes ``MATHEMATICS_PRODUCE_ENERGY_DISCOUNT`` society-wide. An
     active PULLEY innovation contributes
-    ``ENGINEERING_PRODUCE_ENERGY_DISCOUNT`` society-wide. All stack when
-    present.
+    ``ENGINEERING_PRODUCE_ENERGY_DISCOUNT`` society-wide. An active LOOM
+    innovation contributes ``TEXTILES_PRODUCE_ENERGY_DISCOUNT``
+    society-wide. All stack when present.
     """
     discount = 0.0
     if location_has_active_guild(world, agent.location_id):
@@ -1170,6 +1174,8 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
         discount += MATHEMATICS_PRODUCE_ENERGY_DISCOUNT
     if innovation_kind_is_active(world, InnovationKind.PULLEY):
         discount += ENGINEERING_PRODUCE_ENERGY_DISCOUNT
+    if innovation_kind_is_active(world, InnovationKind.LOOM):
+        discount += TEXTILES_PRODUCE_ENERGY_DISCOUNT
     return discount
 
 
@@ -1531,6 +1537,8 @@ def census_effects(world: World) -> EffectsCensus:
         produce_discount += MATHEMATICS_PRODUCE_ENERGY_DISCOUNT
     if innovation_kind_is_active(world, InnovationKind.PULLEY):
         produce_discount += ENGINEERING_PRODUCE_ENERGY_DISCOUNT
+    if innovation_kind_is_active(world, InnovationKind.LOOM):
+        produce_discount += TEXTILES_PRODUCE_ENERGY_DISCOUNT
     produce_at_guild = clamp_unit(
         max(
             0.0,

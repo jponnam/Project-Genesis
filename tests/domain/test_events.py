@@ -1091,6 +1091,7 @@ def test_technology_created_and_observed_round_trips() -> None:
         discovered_agriculture_count=0,
         discovered_crop_rotation_count=0,
         discovered_forestry_count=0,
+        discovered_textiles_count=0,
         locked_count=12,
         researchable_count=1,
     )
@@ -1117,6 +1118,7 @@ def test_technology_created_and_observed_round_trips() -> None:
     assert restored.discovered_agriculture_count == 0
     assert restored.discovered_crop_rotation_count == 0
     assert restored.discovered_forestry_count == 0
+    assert restored.discovered_textiles_count == 0
     assert restored.researchable_count == 1
 
 
@@ -1214,6 +1216,7 @@ def test_innovation_events_round_trip() -> None:
         active_plow_count=0,
         active_fallow_count=0,
         active_coppice_count=0,
+        active_loom_count=0,
     )
     restored_observed = event_from_record(observed.to_record())
     assert isinstance(restored_observed, InnovationsObserved)
@@ -1238,6 +1241,7 @@ def test_innovation_events_round_trip() -> None:
     assert restored_observed.active_plow_count == 0
     assert restored_observed.active_fallow_count == 0
     assert restored_observed.active_coppice_count == 0
+    assert restored_observed.active_loom_count == 0
 
 
 def test_knowledge_events_round_trip() -> None:
@@ -1295,6 +1299,7 @@ def test_knowledge_events_round_trip() -> None:
         agriculture_knower_count=0,
         crop_rotation_knower_count=0,
         forestry_knower_count=0,
+        textiles_knower_count=0,
         total_fact_instances=3,
         coverage_bps=10_000,
     )
@@ -1320,6 +1325,7 @@ def test_knowledge_events_round_trip() -> None:
     assert restored_observed.agriculture_knower_count == 0
     assert restored_observed.crop_rotation_knower_count == 0
     assert restored_observed.forestry_knower_count == 0
+    assert restored_observed.textiles_knower_count == 0
     assert restored_observed.coverage_bps == 10_000
 
 

@@ -29,6 +29,7 @@ from civitas.domain import (
     CAMP_IRRIGATION,
     CAMP_IRRIGATION_CANAL,
     CAMP_LOCATION,
+    CAMP_LOOM,
     CAMP_MAP,
     CAMP_MATHEMATICS,
     CAMP_MEDICINE,
@@ -49,6 +50,7 @@ from civitas.domain import (
     CAMP_STAR_CHART,
     CAMP_SURVEYING,
     CAMP_SYLLOGISM,
+    CAMP_TEXTILES,
     CAMP_WRITING,
     Agent,
     Innovation,
@@ -83,7 +85,7 @@ def _world(
     )
 
 
-def test_default_innovations_seed_hearth_through_coppice() -> None:
+def test_default_innovations_seed_hearth_through_loom() -> None:
     """Canonical set has active hearth and inactive later adoptions."""
     assert default_innovations() == (
         CAMP_FIRE_HEARTH,
@@ -108,6 +110,7 @@ def test_default_innovations_seed_hearth_through_coppice() -> None:
         CAMP_PLOW,
         CAMP_FALLOW,
         CAMP_COPPICE,
+        CAMP_LOOM,
     )
     assert CAMP_FIRE_HEARTH.kind is InnovationKind.FIRE_HEARTH
     assert CAMP_FIRE_HEARTH.active is True
@@ -158,6 +161,9 @@ def test_default_innovations_seed_hearth_through_coppice() -> None:
     assert CAMP_COPPICE.kind is InnovationKind.COPPICE
     assert CAMP_COPPICE.active is False
     assert CAMP_COPPICE.technology_id == CAMP_FORESTRY.technology_id
+    assert CAMP_LOOM.kind is InnovationKind.LOOM
+    assert CAMP_LOOM.active is False
+    assert CAMP_LOOM.technology_id == CAMP_TEXTILES.technology_id
 
 
 def test_activate_due_innovations_after_discovery() -> None:
@@ -360,6 +366,15 @@ def test_activate_due_innovations_after_discovery() -> None:
     assert innovation_by_id(world, 21).active is True
     assert innovation_for_technology(world, 21) is not None
 
+    discovered = discover_technology(world, CAMP_TEXTILES.technology_id)
+    assert discovered is not None
+    world, activations = activate_due_innovations(discovered)
+    assert len(activations) == 1
+    assert activations[0].kind is InnovationKind.LOOM
+    assert innovation_by_id(world, 22) is not None
+    assert innovation_by_id(world, 22).active is True
+    assert innovation_for_technology(world, 22) is not None
+
 
 def test_activate_innovation_requires_discovered_technology() -> None:
     """Manual activate fails while the linked technology is unknown."""
@@ -397,9 +412,9 @@ def test_census_innovations_counts() -> None:
         innovations=default_innovations(),
     )
     snap = census_innovations(world)
-    assert snap.innovation_count == 22
+    assert snap.innovation_count == 23
     assert snap.active_count == 1
-    assert snap.inactive_count == 21
+    assert snap.inactive_count == 22
     assert snap.active_fire_hearth_count == 1
     assert snap.active_pottery_craft_count == 0
     assert snap.active_irrigation_canal_count == 0
@@ -422,6 +437,7 @@ def test_census_innovations_counts() -> None:
     assert snap.active_plow_count == 0
     assert snap.active_fallow_count == 0
     assert snap.active_coppice_count == 0
+    assert snap.active_loom_count == 0
     assert census_innovations(world) == snap
 
 

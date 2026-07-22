@@ -89,6 +89,7 @@ class TechSystem:
                     discovered_agriculture_count=snap.discovered_agriculture_count,
                     discovered_crop_rotation_count=snap.discovered_crop_rotation_count,
                     discovered_forestry_count=snap.discovered_forestry_count,
+                    discovered_textiles_count=snap.discovered_textiles_count,
                     locked_count=snap.locked_count,
                     researchable_count=snap.researchable_count,
                 )
