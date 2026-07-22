@@ -15,6 +15,7 @@ from civitas.domain.ids import (
     AgentId,
     ElectionId,
     GovernmentId,
+    InstitutionId,
     LawId,
     ListingId,
     LocationId,
@@ -246,6 +247,18 @@ class LawCreated(DomainEvent):
     rate_bps: NonNegativeInt = 0
 
 
+class InstitutionCreated(DomainEvent):
+    """Emitted when an institution is added to the world."""
+
+    institution_id: InstitutionId
+    government_id: GovernmentId
+    location_id: LocationId
+    name: NonEmptyStr
+    kind: NonEmptyStr
+    active: bool = True
+    officer_id: AgentId | None = None
+
+
 class ListingPosted(DomainEvent):
     """Emitted when a seller escrows goods onto a market listing."""
 
@@ -447,6 +460,18 @@ class ElectionsObserved(DomainEvent):
     governments_with_elections: NonNegativeInt
 
 
+class InstitutionsObserved(DomainEvent):
+    """Emitted when an institution census is taken."""
+
+    institution_count: NonNegativeInt
+    active_count: NonNegativeInt
+    inactive_count: NonNegativeInt
+    governments_with_institutions: NonNegativeInt
+    staffed_count: NonNegativeInt
+    vacant_officer_count: NonNegativeInt
+    active_council_count: NonNegativeInt
+
+
 CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     SimulationStarted,
     SimulationCompleted,
@@ -485,6 +510,8 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     LawsObserved,
     ElectionResolved,
     ElectionsObserved,
+    InstitutionCreated,
+    InstitutionsObserved,
 )
 
 EVENT_TYPE_REGISTRY: dict[str, type[DomainEvent]] = {

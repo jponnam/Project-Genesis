@@ -6,6 +6,7 @@ candidate with highest society-wide ``standing_of`` / ``standing_bps`` (ties →
 smaller agent id). Empty franchise leaves the seat vacant. Elections are
 archived on ``World.elections``; they are not auto-run each tick — call
 ``conduct_election`` (or ``VoteSystem.conduct``) when an election should fire.
+Institutions are a separate Phase 5 aggregate.
 """
 
 from __future__ import annotations

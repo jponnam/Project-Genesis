@@ -13,6 +13,8 @@ from civitas.domain import (
     FamiliesObserved,
     GovernmentCreated,
     GovernmentsObserved,
+    InstitutionCreated,
+    InstitutionsObserved,
     LawCreated,
     LawsObserved,
     LocationCreated,
@@ -88,12 +90,14 @@ def test_run_emits_lifecycle_and_tick_events() -> None:
     assert types.count(MarketCreated.__name__) == 1
     assert types.count(GovernmentCreated.__name__) == 1
     assert types.count(LawCreated.__name__) == 1
+    assert types.count(InstitutionCreated.__name__) == 1
     assert types.count(AgentSpawned.__name__) == 2
     assert types[1] == LocationCreated.__name__
     assert types[10] == MarketCreated.__name__
     assert types[11] == GovernmentCreated.__name__
     assert types[12] == LawCreated.__name__
-    assert types[13] == AgentSpawned.__name__
+    assert types[13] == InstitutionCreated.__name__
+    assert types[14] == AgentSpawned.__name__
     assert types.count(TickStarted.__name__) == 2
     assert types.count(TickCompleted.__name__) == 2
     assert types[-1] == SimulationCompleted.__name__
@@ -105,6 +109,7 @@ def test_run_emits_lifecycle_and_tick_events() -> None:
     assert len(result.world.governments) == 1
     assert len(result.world.laws) == 1
     assert result.world.elections == ()
+    assert len(result.world.institutions) == 1
 
 
 def test_each_tick_selects_and_executes_actions() -> None:
@@ -485,3 +490,30 @@ def test_elections_observed_each_tick_including_start() -> None:
         if isinstance(event, ElectionsObserved)
     ]
     assert all(vote > law for law, vote in zip(law_indexes, vote_indexes, strict=True))
+
+
+def test_institutions_observed_each_tick_including_start() -> None:
+    """Engine emits an initial institution census plus one per executed tick."""
+    result = SimulationEngine().run(SimulationConfig(seed=42, ticks=3, agent_count=4))
+    observed = [
+        event for event in result.events if isinstance(event, InstitutionsObserved)
+    ]
+    assert len(observed) == 4  # tick 0 + ticks 1..3
+    assert observed[0].tick.value == 0
+    assert observed[-1].tick.value == 3
+    assert all(event.institution_count == 1 for event in observed)
+    assert all(event.active_council_count == 1 for event in observed)
+    # Institutions follow elections in the observe chain.
+    vote_indexes = [
+        i
+        for i, event in enumerate(result.events)
+        if isinstance(event, ElectionsObserved)
+    ]
+    inst_indexes = [
+        i
+        for i, event in enumerate(result.events)
+        if isinstance(event, InstitutionsObserved)
+    ]
+    assert all(
+        inst > vote for vote, inst in zip(vote_indexes, inst_indexes, strict=True)
+    )

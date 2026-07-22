@@ -21,6 +21,7 @@ from civitas.systems import (
     EconomySystem,
     FamilySystem,
     GovernmentSystem,
+    InstitutionSystem,
     LawSystem,
     MarketSystem,
     NeedsSystem,
@@ -80,25 +81,28 @@ class SimulationEngine:
     18. ``GovernmentSystem.observe``
     19. ``LawSystem.observe``
     20. ``VoteSystem.observe``
+    21. ``InstitutionSystem.observe``
 
     Initial population, wealth, market, price, relationship, reputation,
-    family, network, government, law, and election censuses are also
-    observed at tick 0 immediately after world creation. Death runs after
-    actions (recovery chance) and before birth so newly dead parents cannot
-    reproduce. Birth and death both complete before taxes so the levy sees
-    the settled roster. Taxes complete before ``TickCompleted`` so wealth
-    censuses reflect post-levy balances. Taxes are disabled by default;
-    when enabled, active ``TAX_SCHEDULE`` laws override levy parameters.
-    Relationship observation is wired each tick; SOCIALIZE may mutate bonds
-    during action execution. Reputation observation follows relationships
-    so standings reflect the latest bonds. Family observation follows
-    reputation and reads birth ``parent_id`` lineage without mutating
-    agents. Network observation follows families and measures the living
-    bond graph. Government observation follows networks and reports polity
-    coverage, treasuries, and subjects without mutating agents. Law
-    observation follows governments and reports statute activity. Election
-    observation follows laws and reports the archived vote history;
-    elections are not auto-conducted each tick.
+    family, network, government, law, election, and institution censuses
+    are also observed at tick 0 immediately after world creation. Death
+    runs after actions (recovery chance) and before birth so newly dead
+    parents cannot reproduce. Birth and death both complete before taxes
+    so the levy sees the settled roster. Taxes complete before
+    ``TickCompleted`` so wealth censuses reflect post-levy balances. Taxes
+    are disabled by default; when enabled, active ``TAX_SCHEDULE`` laws
+    override levy parameters. Relationship observation is wired each tick;
+    SOCIALIZE may mutate bonds during action execution. Reputation
+    observation follows relationships so standings reflect the latest
+    bonds. Family observation follows reputation and reads birth
+    ``parent_id`` lineage without mutating agents. Network observation
+    follows families and measures the living bond graph. Government
+    observation follows networks and reports polity coverage, treasuries,
+    and subjects without mutating agents. Law observation follows
+    governments and reports statute activity. Election observation follows
+    laws and reports the archived vote history; elections are not
+    auto-conducted each tick. Institution observation follows elections
+    and reports civic organizations without mutating agents.
     """
 
     def __init__(
@@ -122,6 +126,7 @@ class SimulationEngine:
         government_system: GovernmentSystem | None = None,
         law_system: LawSystem | None = None,
         vote_system: VoteSystem | None = None,
+        institution_system: InstitutionSystem | None = None,
     ) -> None:
         self._world_factory = (
             world_factory if world_factory is not None else WorldFactory()
@@ -161,6 +166,11 @@ class SimulationEngine:
         )
         self._law_system = law_system if law_system is not None else LawSystem()
         self._vote_system = vote_system if vote_system is not None else VoteSystem()
+        self._institution_system = (
+            institution_system
+            if institution_system is not None
+            else InstitutionSystem()
+        )
 
     def run(
         self,
@@ -185,6 +195,7 @@ class SimulationEngine:
         world = self._government_system.observe(world, bus=event_bus)
         world = self._law_system.observe(world, bus=event_bus)
         world = self._vote_system.observe(world, bus=event_bus)
+        world = self._institution_system.observe(world, bus=event_bus)
 
         for tick in clock.run():
             world = world.with_tick(tick)
@@ -207,6 +218,7 @@ class SimulationEngine:
             world = self._government_system.observe(world, bus=event_bus)
             world = self._law_system.observe(world, bus=event_bus)
             world = self._vote_system.observe(world, bus=event_bus)
+            world = self._institution_system.observe(world, bus=event_bus)
 
         event_bus.publish(
             SimulationCompleted(

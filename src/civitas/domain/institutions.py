@@ -1,0 +1,317 @@
+"""Institutions: durable organizations under governments.
+
+Phase 5 Milestone 4. Institutions are gov-attached civic organizations
+with a seat location inside the government's jurisdiction and an optional
+officer. This milestone seeds a single ``COUNCIL`` kind. Cities,
+infrastructure, extra kinds, and institution budgets remain later
+milestones.
+"""
+
+from __future__ import annotations
+
+from enum import StrEnum
+from typing import TYPE_CHECKING
+
+from pydantic import BaseModel, ConfigDict
+
+from civitas.domain.governments import government_by_id
+from civitas.domain.ids import AgentId, GovernmentId, InstitutionId, LocationId
+from civitas.domain.location import CAMP_LOCATION
+from civitas.domain.time import Tick
+from civitas.domain.types import NonEmptyStr, NonNegativeInt
+
+if TYPE_CHECKING:
+    from civitas.domain.world import World
+
+
+class InstitutionKind(StrEnum):
+    """Supported institution kinds."""
+
+    COUNCIL = "council"
+
+
+class Institution(BaseModel):
+    """One durable organization attached to a government."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid", validate_default=True)
+
+    institution_id: InstitutionId
+    government_id: GovernmentId
+    location_id: LocationId
+    name: NonEmptyStr
+    kind: InstitutionKind
+    active: bool = True
+    officer_id: AgentId | None = None
+
+    @classmethod
+    def create(
+        cls,
+        institution_id: int,
+        government_id: int,
+        location_id: int,
+        name: str,
+        kind: InstitutionKind | str,
+        *,
+        active: bool = True,
+        officer_id: int | None = None,
+    ) -> Institution:
+        """Construct a validated institution from primitive fields."""
+        return cls(
+            institution_id=InstitutionId(value=institution_id),
+            government_id=GovernmentId(value=government_id),
+            location_id=LocationId(value=location_id),
+            name=name,
+            kind=InstitutionKind(kind),
+            active=active,
+            officer_id=None if officer_id is None else AgentId(value=officer_id),
+        )
+
+
+# Canonical camp council seated at the camp under Camp Authority.
+CAMP_COUNCIL: Institution = Institution.create(
+    0,
+    0,
+    CAMP_LOCATION.location_id.value,
+    "Camp Council",
+    InstitutionKind.COUNCIL,
+)
+
+
+def default_institutions() -> tuple[Institution, ...]:
+    """Return the canonical initial institution set."""
+    return (CAMP_COUNCIL,)
+
+
+class InstitutionCensus(BaseModel):
+    """Aggregate institution snapshot at a world tick."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid", validate_default=True)
+
+    tick: Tick
+    institution_count: NonNegativeInt
+    active_count: NonNegativeInt
+    inactive_count: NonNegativeInt
+    governments_with_institutions: NonNegativeInt
+    staffed_count: NonNegativeInt
+    vacant_officer_count: NonNegativeInt
+    active_council_count: NonNegativeInt
+
+
+def institution_by_id(
+    world: World,
+    institution_id: InstitutionId | int,
+) -> Institution | None:
+    """Return the institution with ``institution_id``, or ``None``."""
+    target = (
+        institution_id
+        if isinstance(institution_id, InstitutionId)
+        else InstitutionId(value=institution_id)
+    )
+    for institution in world.institutions:
+        if institution.institution_id == target:
+            return institution
+    return None
+
+
+def institutions_for(
+    world: World,
+    government_id: GovernmentId | int,
+) -> tuple[Institution, ...]:
+    """Return institutions for ``government_id`` in ascending id order."""
+    target = (
+        government_id
+        if isinstance(government_id, GovernmentId)
+        else GovernmentId(value=government_id)
+    )
+    return tuple(
+        institution
+        for institution in world.institutions
+        if institution.government_id == target
+    )
+
+
+def institution_at(
+    world: World,
+    location_id: LocationId | int,
+) -> Institution | None:
+    """Return the first active institution seated at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    for institution in world.institutions:
+        if institution.active and institution.location_id == target:
+            return institution
+    return None
+
+
+def active_institutions(world: World) -> tuple[Institution, ...]:
+    """Return active institutions in ascending id order."""
+    return tuple(
+        institution for institution in world.institutions if institution.active
+    )
+
+
+def next_institution_id(world: World) -> InstitutionId:
+    """Allocate the next unused ``InstitutionId`` (max existing + 1, or 0)."""
+    if not world.institutions:
+        return InstitutionId(value=0)
+    highest = max(
+        institution.institution_id.value for institution in world.institutions
+    )
+    return InstitutionId(value=highest + 1)
+
+
+def officer_is_active(world: World, institution: Institution) -> bool:
+    """Return True when the recorded officer exists and is alive."""
+    if institution.officer_id is None:
+        return False
+    officer = world.agent_by_id(institution.officer_id)
+    return officer is not None and officer.is_alive()
+
+
+def _seat_in_jurisdiction(world: World, institution: Institution) -> bool:
+    government = government_by_id(world, institution.government_id)
+    if government is None:
+        return False
+    return any(
+        location == institution.location_id for location in government.jurisdiction
+    )
+
+
+def _has_active_kind(
+    world: World,
+    government_id: GovernmentId,
+    kind: InstitutionKind,
+    *,
+    excluding_institution_id: InstitutionId | None = None,
+) -> bool:
+    for institution in world.institutions:
+        if (
+            excluding_institution_id is not None
+            and institution.institution_id == excluding_institution_id
+        ):
+            continue
+        if (
+            institution.active
+            and institution.kind == kind
+            and institution.government_id == government_id
+        ):
+            return True
+    return False
+
+
+def create_institution(world: World, institution: Institution) -> World | None:
+    """Add ``institution`` to the world when legal."""
+    if government_by_id(world, institution.government_id) is None:
+        return None
+    if world.location_by_id(institution.location_id) is None:
+        return None
+    if not _seat_in_jurisdiction(world, institution):
+        return None
+    if institution_by_id(world, institution.institution_id) is not None:
+        return None
+    if institution.officer_id is not None:
+        officer = world.agent_by_id(institution.officer_id)
+        if officer is None:
+            return None
+    if institution.active and _has_active_kind(
+        world, institution.government_id, institution.kind
+    ):
+        return None
+    institutions = tuple(
+        sorted(
+            (*world.institutions, institution),
+            key=lambda item: item.institution_id.value,
+        )
+    )
+    return world.model_copy(update={"institutions": institutions})
+
+
+def set_institution_active(
+    world: World,
+    institution_id: InstitutionId | int,
+    active: bool,
+) -> World | None:
+    """Activate or deactivate an existing institution when legal."""
+    institution = institution_by_id(world, institution_id)
+    if institution is None:
+        return None
+    if active and _has_active_kind(
+        world,
+        institution.government_id,
+        institution.kind,
+        excluding_institution_id=institution.institution_id,
+    ):
+        return None
+    if institution.active == active:
+        return world
+    updated = institution.model_copy(update={"active": active})
+    return world.with_institution(updated)
+
+
+def dissolve_institution(
+    world: World,
+    institution_id: InstitutionId | int,
+) -> World | None:
+    """Deactivate ``institution_id`` (soft dissolve); ``None`` if missing."""
+    return set_institution_active(world, institution_id, False)
+
+
+def set_officer(
+    world: World,
+    institution_id: InstitutionId | int,
+    officer_id: AgentId | int | None,
+) -> World | None:
+    """Appoint or clear an institution officer when legal.
+
+    A non-``None`` officer must exist, be alive, and currently occupy a
+    location inside the parent government's jurisdiction.
+    """
+    institution = institution_by_id(world, institution_id)
+    if institution is None:
+        return None
+    government = government_by_id(world, institution.government_id)
+    if government is None:
+        return None
+
+    if officer_id is None:
+        updated = institution.model_copy(update={"officer_id": None})
+        return world.with_institution(updated)
+
+    target = (
+        officer_id if isinstance(officer_id, AgentId) else AgentId(value=officer_id)
+    )
+    agent = world.agent_by_id(target)
+    if agent is None or not agent.is_alive():
+        return None
+    covered = {location.value for location in government.jurisdiction}
+    if agent.location_id.value not in covered:
+        return None
+    updated = institution.model_copy(update={"officer_id": target})
+    return world.with_institution(updated)
+
+
+def census_institutions(world: World) -> InstitutionCensus:
+    """Build a deterministic institution census for ``world``."""
+    institutions = world.institutions
+    active = [institution for institution in institutions if institution.active]
+    governments = {institution.government_id.value for institution in institutions}
+    staffed = sum(
+        1 for institution in institutions if officer_is_active(world, institution)
+    )
+    vacant = len(institutions) - staffed
+    active_councils = sum(
+        1 for institution in active if institution.kind is InstitutionKind.COUNCIL
+    )
+    return InstitutionCensus(
+        tick=world.tick,
+        institution_count=len(institutions),
+        active_count=len(active),
+        inactive_count=len(institutions) - len(active),
+        governments_with_institutions=len(governments),
+        staffed_count=staffed,
+        vacant_officer_count=vacant,
+        active_council_count=active_councils,
+    )
