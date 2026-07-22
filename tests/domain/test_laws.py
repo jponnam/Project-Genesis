@@ -19,6 +19,7 @@ from civitas.domain import (
     PASSAGE_MOVE_ENERGY_DISCOUNT,
     QUARANTINE_REST_RESTORE_BONUS,
     SANITATION_DRINK_RESTORE_BONUS,
+    SUMPTUARY_MARKET_FEE_DISCOUNT,
     ZONING_EAT_RESTORE_BONUS,
     Agent,
     AgentStatus,
@@ -40,6 +41,7 @@ from civitas.domain import (
     active_passage_law,
     active_quarantine_law,
     active_sanitation_law,
+    active_sumptuary_law,
     active_zoning_law,
     assembly_socialize_bonus_for,
     building_codes_move_discount_for,
@@ -61,6 +63,7 @@ from civitas.domain import (
     repeal_law,
     sanitation_drink_bonus_for,
     set_law_active,
+    sumptuary_market_discount_for,
     tax_schedule_for_agent,
     zoning_eat_bonus_for,
 )
@@ -95,6 +98,7 @@ def test_default_laws_seed_camp_poll_tax() -> None:
     assert all(law.kind is not LawKind.CUSTOMS for law in default_laws())
     assert all(law.kind is not LawKind.LAND_TENURE for law in default_laws())
     assert all(law.kind is not LawKind.LABOR for law in default_laws())
+    assert all(law.kind is not LawKind.SUMPTUARY for law in default_laws())
 
 
 def test_world_rejects_unknown_government_and_duplicate_active_tax() -> None:
@@ -212,6 +216,14 @@ def test_world_rejects_duplicate_active_labor() -> None:
     left = Law.create(0, 0, "Labor A", LawKind.LABOR)
     right = Law.create(1, 0, "Labor B", LawKind.LABOR)
     with pytest.raises(ValidationError, match="LABOR"):
+        _world(Agent.create(agent_id=0, name="A"), laws=(left, right))
+
+
+def test_world_rejects_duplicate_active_sumptuary() -> None:
+    """At most one active SUMPTUARY law per government."""
+    left = Law.create(0, 0, "Sumptuary A", LawKind.SUMPTUARY)
+    right = Law.create(1, 0, "Sumptuary B", LawKind.SUMPTUARY)
+    with pytest.raises(ValidationError, match="SUMPTUARY"):
         _world(Agent.create(agent_id=0, name="A"), laws=(left, right))
 
 
@@ -1102,6 +1114,46 @@ def test_labor_discount_requires_living_subject() -> None:
     assert labor_produce_discount_for(bare, bare.agents[0]) == 0.0
 
 
+def test_enact_sumptuary_and_uniqueness() -> None:
+    """SUMPTUARY enacts once per government; kind alone enables discount."""
+    world = _world(Agent.create(agent_id=0, name="A"))
+    sumptuary = Law.create(0, 0, "Camp Sumptuary", LawKind.SUMPTUARY)
+    enacted = enact_law(world, sumptuary)
+    assert enacted is not None
+    assert active_sumptuary_law(enacted, 0) == sumptuary
+    assert sumptuary_market_discount_for(enacted, 0) == SUMPTUARY_MARKET_FEE_DISCOUNT
+    assert SUMPTUARY_MARKET_FEE_DISCOUNT == 1
+    duplicate = Law.create(1, 0, "Other Sumptuary", LawKind.SUMPTUARY)
+    assert enact_law(enacted, duplicate) is None
+    # Other unique kinds may coexist with SUMPTUARY.
+    fee = Law.create(1, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=2)
+    with_fee = enact_law(enacted, fee)
+    assert with_fee is not None
+    assert active_sumptuary_law(with_fee, 0) == sumptuary
+    assert sumptuary_market_discount_for(with_fee, 0) == SUMPTUARY_MARKET_FEE_DISCOUNT
+
+
+def test_sumptuary_discount_requires_governed_location() -> None:
+    """Only markets under active SUMPTUARY receive the fill-fee discount."""
+    sumptuary = Law.create(0, 0, "Camp Sumptuary", LawKind.SUMPTUARY)
+    world = _world(Agent.create(agent_id=0, name="A"), laws=(sumptuary,))
+    assert sumptuary_market_discount_for(world, 0) == SUMPTUARY_MARKET_FEE_DISCOUNT
+    ungoverned = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(),
+        laws=(),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert sumptuary_market_discount_for(ungoverned, 0) == 0
+    assert active_sumptuary_law(ungoverned, 0) is None
+    bare = _world(Agent.create(agent_id=0, name="A"))
+    assert sumptuary_market_discount_for(bare, 0) == 0
+    repealed = repeal_law(world, 0)
+    assert repealed is not None
+    assert sumptuary_market_discount_for(repealed, 0) == 0
+
+
 def test_tax_schedule_overrides_levy_fallback() -> None:
     """Active TAX_SCHEDULE beats levy_taxes fallback parameters."""
     law = Law.create(0, 0, "Heavy", LawKind.TAX_SCHEDULE, flat_amount=2)
@@ -1146,6 +1198,7 @@ def test_census_laws_counts() -> None:
     land_tenure = Law.create(13, 0, "Land Tenure", LawKind.LAND_TENURE, active=True)
     conservation = Law.create(14, 0, "Conservation", LawKind.CONSERVATION, active=True)
     labor = Law.create(15, 0, "Labor", LawKind.LABOR, active=True)
+    sumptuary = Law.create(16, 0, "Sumptuary", LawKind.SUMPTUARY, active=True)
     world = _world(
         Agent.create(agent_id=0, name="A"),
         laws=(
@@ -1165,11 +1218,12 @@ def test_census_laws_counts() -> None:
             land_tenure,
             conservation,
             labor,
+            sumptuary,
         ),
     )
     snap = census_laws(world)
-    assert snap.law_count == 16
-    assert snap.active_count == 15
+    assert snap.law_count == 17
+    assert snap.active_count == 16
     assert snap.inactive_count == 1
     assert snap.governments_with_active_laws == 1
     assert snap.active_tax_schedule_count == 1
@@ -1187,6 +1241,7 @@ def test_census_laws_counts() -> None:
     assert snap.active_land_tenure_count == 1
     assert snap.active_conservation_count == 1
     assert snap.active_labor_count == 1
+    assert snap.active_sumptuary_count == 1
     assert census_laws(world) == snap
 
 

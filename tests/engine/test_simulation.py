@@ -517,6 +517,7 @@ def test_laws_observed_each_tick_including_start() -> None:
     assert all(event.active_customs_count == 0 for event in observed)
     assert all(event.active_land_tenure_count == 0 for event in observed)
     assert all(event.active_labor_count == 0 for event in observed)
+    assert all(event.active_sumptuary_count == 0 for event in observed)
     # Laws follow governments in the observe chain.
     gov_indexes = [
         i

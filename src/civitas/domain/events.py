@@ -533,6 +533,7 @@ class LawsObserved(DomainEvent):
     active_land_tenure_count: NonNegativeInt = 0
     active_conservation_count: NonNegativeInt = 0
     active_labor_count: NonNegativeInt = 0
+    active_sumptuary_count: NonNegativeInt = 0
 
 
 class ElectionResolved(DomainEvent):
