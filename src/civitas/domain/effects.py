@@ -12,12 +12,14 @@ market-fee discounts, a global ABACUS produce-energy discount
 teachings-per-knower bonuses (stacking with scribe/scriptorium/
 curriculum), OBSERVATORY retrieval-limit bonuses (stacking with
 archive and library), a global STAR_CHART retrieval-limit
-bonus (stacking with archive, library, and observatory), and
+bonus (stacking with archive, library, and observatory),
 CALENDAR law retrieval-limit bonuses for living subjects
-(stacking with archive, library, observatory, and star chart).
-The action executor, retrieval path, market fills, and knowledge
-diffusion read these helpers; ``EffectsSystem`` only observes
-coverage. Systems never call each other.
+(stacking with archive, library, observatory, and star chart),
+and FORUM city teachings-per-knower bonuses (stacking with
+academy/scriptorium/curriculum/scribe). The action executor,
+retrieval path, market fills, and knowledge diffusion read
+these helpers; ``EffectsSystem`` only observes coverage.
+Systems never call each other.
 """
 
 from __future__ import annotations
@@ -58,6 +60,7 @@ METALLURGY_STONE_GATHER_BONUS: int = 1
 WRITING_TEACHINGS_PER_KNOWER_BONUS: int = 1
 SCRIPTORIUM_TEACHINGS_PER_KNOWER_BONUS: int = 1
 ACADEMY_TEACHINGS_PER_KNOWER_BONUS: int = 1
+FORUM_TEACHINGS_PER_KNOWER_BONUS: int = 1
 WELL_DRINK_RESTORE_BONUS: float = 0.05
 STOREHOUSE_FOOD_GATHER_BONUS: int = 1
 ROAD_MOVE_ENERGY_DISCOUNT: float = 0.02
@@ -252,6 +255,15 @@ def location_has_active_library(
     return city is not None and city.active and city.kind is CityKind.LIBRARY
 
 
+def location_has_active_forum(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active FORUM city is seated at ``location_id``."""
+    city = city_at(world, location_id)
+    return city is not None and city.active and city.kind is CityKind.FORUM
+
+
 def rest_restore_bonus(world: World) -> float:
     """Return the REST restore bonus from active fire-hearth innovations."""
     if innovation_kind_is_active(world, InnovationKind.FIRE_HEARTH):
@@ -379,13 +391,13 @@ def effective_teachings_per_knower(
     location_id: LocationId | int | None = None,
     agent: Agent | None = None,
 ) -> int:
-    """Return teachings-per-knower including scribe, scriptorium, curriculum, academy.
+    """Return teachings-per-knower including scribe, seats, curriculum, forum.
 
-    The scribe innovation bonus is society-wide. The scriptorium and academy
-    bonuses apply only when ``location_id`` or ``agent`` places the knower at
-    an active SCRIPTORIUM or ACADEMY seat. The curriculum law bonus applies
-    when ``agent`` is a living subject of a government with an active
-    ``CURRICULUM`` statute. All bonuses stack.
+    The scribe innovation bonus is society-wide. The scriptorium, academy,
+    and forum bonuses apply only when ``location_id`` or ``agent`` places
+    the knower at an active SCRIPTORIUM, ACADEMY, or FORUM seat. The
+    curriculum law bonus applies when ``agent`` is a living subject of a
+    government with an active ``CURRICULUM`` statute. All bonuses stack.
     """
     if base < 0:
         return 0
@@ -399,6 +411,8 @@ def effective_teachings_per_knower(
         bonus += SCRIPTORIUM_TEACHINGS_PER_KNOWER_BONUS
     if seat is not None and location_has_active_academy(world, seat):
         bonus += ACADEMY_TEACHINGS_PER_KNOWER_BONUS
+    if seat is not None and location_has_active_forum(world, seat):
+        bonus += FORUM_TEACHINGS_PER_KNOWER_BONUS
     if agent is not None:
         bonus += curriculum_teachings_bonus_for(world, agent)
     return base + bonus

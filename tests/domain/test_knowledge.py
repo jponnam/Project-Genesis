@@ -41,6 +41,7 @@ from civitas.domain import (
     default_innovations,
     default_research_progress,
     default_technologies,
+    default_world_map,
     diffuse_knowledge,
     discover_technology,
     grant_knowledge,
@@ -469,6 +470,69 @@ def test_academy_stacks_with_scribe_scriptorium_curriculum_in_diffusion() -> Non
     assert stacked.agents[3].knowledge.knows(POTTERY_FACT)
     assert stacked.agents[4].knowledge.knows(POTTERY_FACT)
     assert stacked.agents[5].knowledge.knows(POTTERY_FACT)
+
+
+def test_forum_stacks_with_academy_scriptorium_in_diffusion() -> None:
+    """Forum seat bonus stacks with academy, scriptorium, curriculum, and scribe."""
+    world = World(
+        config=SimulationConfig(agent_count=7, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        laws=(Law.create(0, 0, "Camp Schools", LawKind.CURRICULUM),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Forum", CityKind.FORUM),
+        ),
+        technologies=default_technologies(),
+        research_progress=default_research_progress(),
+        innovations=default_innovations(),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 1, 1, "Forum Scriptorium", InfrastructureKind.SCRIPTORIUM
+            ),
+        ),
+        institutions=(
+            Institution.create(0, 0, 1, "Forum Academy", InstitutionKind.ACADEMY),
+        ),
+        agents=(
+            Agent.create(
+                agent_id=0, name="A", location_id=1, knowledge=_FIRE_AND_POTTERY
+            ),
+            Agent.create(agent_id=1, name="B", location_id=1, knowledge=_FIRE),
+            Agent.create(agent_id=2, name="C", location_id=1, knowledge=_FIRE),
+            Agent.create(agent_id=3, name="D", location_id=1, knowledge=_FIRE),
+            Agent.create(agent_id=4, name="E", location_id=1, knowledge=_FIRE),
+            Agent.create(agent_id=5, name="F", location_id=1, knowledge=_FIRE),
+            Agent.create(agent_id=6, name="G", location_id=1, knowledge=_FIRE),
+        ),
+    )
+    with_pottery = discover_technology(world, CAMP_POTTERY.technology_id)
+    assert with_pottery is not None
+    with_irrigation = discover_technology(with_pottery, CAMP_IRRIGATION.technology_id)
+    assert with_irrigation is not None
+    with_metallurgy = discover_technology(
+        with_irrigation, CAMP_METALLURGY.technology_id
+    )
+    assert with_metallurgy is not None
+    with_writing = discover_technology(with_metallurgy, CAMP_WRITING.technology_id)
+    assert with_writing is not None
+    active_scribe = CAMP_SCRIBE.model_copy(update={"active": True})
+    innovations = tuple(
+        active_scribe if item.innovation_id == CAMP_SCRIBE.innovation_id else item
+        for item in with_writing.innovations
+    )
+    stacked_world = with_writing.model_copy(update={"innovations": innovations})
+    stacked, gains = diffuse_knowledge(
+        stacked_world, teachings_per_knower=DEFAULT_TEACHINGS_PER_KNOWER
+    )
+    # Base 1 + scribe 1 + scriptorium 1 + curriculum 1 + academy 1 + forum 1 = 6.
+    assert len(gains) == 6
+    assert stacked.agents[1].knowledge.knows(POTTERY_FACT)
+    assert stacked.agents[2].knowledge.knows(POTTERY_FACT)
+    assert stacked.agents[3].knowledge.knows(POTTERY_FACT)
+    assert stacked.agents[4].knowledge.knows(POTTERY_FACT)
+    assert stacked.agents[5].knowledge.knows(POTTERY_FACT)
+    assert stacked.agents[6].knowledge.knows(POTTERY_FACT)
 
 
 def test_census_knowledge_counts_coverage() -> None:

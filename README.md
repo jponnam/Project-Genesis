@@ -122,14 +122,14 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 10 — Milestone 11: Calendar laws**
+**Phase 10 — Milestone 12: Forum cities**
 
-``LawKind.CALENDAR`` is a kind-only statute (``flat_amount`` ignored; not
-seeded). At most one active calendar per government. Living subjects of a
-government with an active calendar receive ``+1`` retrieval limit via
-``calendar_retrieval_bonus_for``, stacking with archive, library,
-observatory, and star chart through ``effective_retrieval_limit``. Census
-and ``LawsObserved`` report ``active_calendar_count``.
+``CityKind.FORUM`` is a non-capital specialized seat (not seeded). Living
+agents at an active forum receive ``+1`` teachings per knower via
+``location_has_active_forum`` and ``FORUM_TEACHINGS_PER_KNOWER_BONUS``,
+stacking with academy, scriptorium, curriculum, and scribe through
+``effective_teachings_per_knower``. Census and ``CitiesObserved`` report
+``active_forum_count``.
 
 ### Completed
 
@@ -216,6 +216,7 @@ JSONL storage → `civitas run`
 - Milestone 9: Observatory infrastructure
 - Milestone 10: Astronomy technology
 - Milestone 11: Calendar laws
+- Milestone 12: Forum cities
 
 ## License
 

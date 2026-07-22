@@ -843,6 +843,7 @@ def test_city_created_and_observed_round_trips() -> None:
         active_settlement_count=1,
         active_outpost_count=1,
         active_library_count=1,
+        active_forum_count=1,
     )
     restored = event_from_record(observed.to_record())
     assert isinstance(restored, CitiesObserved)
@@ -850,6 +851,7 @@ def test_city_created_and_observed_round_trips() -> None:
     assert restored.total_residents == 4
     assert restored.active_outpost_count == 1
     assert restored.active_library_count == 1
+    assert restored.active_forum_count == 1
 
     legacy = CitiesObserved(
         sequence=25,
@@ -867,6 +869,7 @@ def test_city_created_and_observed_round_trips() -> None:
     )
     assert legacy.active_outpost_count == 0
     assert legacy.active_library_count == 0
+    assert legacy.active_forum_count == 0
 
 
 def test_infrastructure_created_and_observed_round_trips() -> None:
