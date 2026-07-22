@@ -23,6 +23,7 @@ from civitas.systems import (
     NeedsSystem,
     PopulationSystem,
     PriceSystem,
+    TaxSystem,
     UtilityPolicy,
 )
 
@@ -59,17 +60,20 @@ class SimulationEngine:
     5. ``ActionExecutor.execute_all``
     6. ``DeathSystem.apply_deaths``
     7. ``BirthSystem.apply_births``
-    8. Publish ``TickCompleted``
-    9. ``PopulationSystem.observe``
-    10. ``EconomySystem.observe``
-    11. ``MarketSystem.observe``
-    12. ``PriceSystem.observe``
+    8. ``TaxSystem.apply_taxes``
+    9. Publish ``TickCompleted``
+    10. ``PopulationSystem.observe``
+    11. ``EconomySystem.observe``
+    12. ``MarketSystem.observe``
+    13. ``PriceSystem.observe``
 
     Initial population, wealth, market, and price censuses are also
     observed at tick 0 immediately after world creation. Death runs after
     actions (recovery chance) and before birth so newly dead parents
-    cannot reproduce. Birth and death both complete before
-    ``TickCompleted`` so censuses reflect the final roster.
+    cannot reproduce. Birth and death both complete before taxes so the
+    levy sees the settled roster. Taxes complete before ``TickCompleted``
+    so wealth censuses reflect post-levy balances. Taxes are disabled by
+    default.
     """
 
     def __init__(
@@ -81,6 +85,7 @@ class SimulationEngine:
         executor: ActionExecutor | None = None,
         death_system: DeathSystem | None = None,
         birth_system: BirthSystem | None = None,
+        tax_system: TaxSystem | None = None,
         population_system: PopulationSystem | None = None,
         economy_system: EconomySystem | None = None,
         market_system: MarketSystem | None = None,
@@ -94,6 +99,7 @@ class SimulationEngine:
         self._executor = executor if executor is not None else ActionExecutor()
         self._death_system = death_system if death_system is not None else DeathSystem()
         self._birth_system = birth_system if birth_system is not None else BirthSystem()
+        self._tax_system = tax_system if tax_system is not None else TaxSystem()
         self._population_system = (
             population_system if population_system is not None else PopulationSystem()
         )
@@ -130,6 +136,7 @@ class SimulationEngine:
             world = self._executor.execute_all(world, choices, bus=event_bus)
             world = self._death_system.apply_deaths(world, bus=event_bus)
             world = self._birth_system.apply_births(world, bus=event_bus)
+            world = self._tax_system.apply_taxes(world, bus=event_bus)
             event_bus.publish(TickCompleted(tick=tick))
             world = self._population_system.observe(world, bus=event_bus)
             world = self._economy_system.observe(world, bus=event_bus)

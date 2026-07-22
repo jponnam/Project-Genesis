@@ -121,7 +121,7 @@ def test_with_agent_unknown_id_raises() -> None:
 
 def test_with_agents_replaces_roster() -> None:
     """with_agents replaces the full roster when ids stay sorted."""
-    world = _world(1)
+    world = _world(1).with_treasury(4)
     expanded = world.with_agents(
         (
             Agent.create(agent_id=0, name="A"),
@@ -129,6 +129,7 @@ def test_with_agents_replaces_roster() -> None:
         )
     )
     assert expanded.population_size == 2
+    assert expanded.treasury == 4
     assert world.population_size == 1
 
 
