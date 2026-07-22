@@ -194,11 +194,12 @@ class MoneyTransferred(DomainEvent):
 
 
 class TaxCollected(DomainEvent):
-    """Emitted when an agent pays tax into the world treasury."""
+    """Emitted when an agent pays tax into a public treasury."""
 
     agent_id: AgentId
     amount: NonNegativeInt
     treasury_after: NonNegativeInt
+    government_id: GovernmentId | None = None
 
 
 class ResourceTraded(DomainEvent):
@@ -358,6 +359,7 @@ class WealthObserved(DomainEvent):
     min_alive: NonNegativeInt | None = None
     max_alive: NonNegativeInt | None = None
     treasury: NonNegativeInt = 0
+    government_treasury: NonNegativeInt = 0
     society_total: NonNegativeInt = 0
     treasury_share_bps: NonNegativeInt = 0
     median_alive: NonNegativeInt | None = None

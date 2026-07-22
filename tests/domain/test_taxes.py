@@ -9,6 +9,7 @@ from civitas.domain import (
     Agent,
     AgentId,
     AgentStatus,
+    Government,
     Health,
     SimulationConfig,
     World,
@@ -20,10 +21,15 @@ from civitas.domain import (
 )
 
 
-def _world(*agents: Agent, treasury: int = 0) -> World:
+def _world(
+    *agents: Agent,
+    treasury: int = 0,
+    governments: tuple[Government, ...] = (),
+) -> World:
     return World(
         config=SimulationConfig(agent_count=len(agents), seed=1),
         locations=(CAMP_LOCATION,),
+        governments=governments,
         agents=agents,
         treasury=treasury,
     )
@@ -72,6 +78,23 @@ def test_apply_tax_moves_money_to_treasury() -> None:
     assert after == before
 
 
+def test_apply_tax_redirects_to_government_treasury() -> None:
+    """Governed payers fund their polity instead of world treasury."""
+    government = Government.create(0, "Camp", 0, (0,))
+    world = _world(
+        Agent.create(agent_id=0, name="A", money=5),
+        treasury=2,
+        governments=(government,),
+    )
+    updated = apply_tax(world, 0, 3)
+    assert updated is not None
+    agent = updated.agent_by_id(0)
+    assert agent is not None
+    assert agent.money == 2
+    assert updated.treasury == 2
+    assert updated.government_by_id(0).treasury == 3  # type: ignore[union-attr]
+
+
 def test_apply_tax_illegal_cases() -> None:
     """Missing, dead, or unaffordable payments return None."""
     alive = Agent.create(agent_id=0, name="A", money=1)
@@ -94,13 +117,31 @@ def test_levy_taxes_collects_in_id_order() -> None:
     )
     updated, collections = levy_taxes(world, flat_amount=1, rate_bps=0)
     assert collections == (
-        (AgentId(value=0), 1, 1),
-        (AgentId(value=2), 1, 2),
+        (AgentId(value=0), 1, 1, None),
+        (AgentId(value=2), 1, 2, None),
     )
     assert updated.treasury == 2
     assert updated.agent_by_id(0).money == 1  # type: ignore[union-attr]
     assert updated.agent_by_id(1).money == 0  # type: ignore[union-attr]
     assert updated.agent_by_id(2).money == 3  # type: ignore[union-attr]
+
+
+def test_levy_taxes_reports_government_destination() -> None:
+    """Collections include the destination balance and government id."""
+    government = Government.create(0, "Camp", 0, (0,))
+    world = _world(
+        Agent.create(agent_id=0, name="A", money=2),
+        Agent.create(agent_id=1, name="B", money=4),
+        treasury=5,
+        governments=(government,),
+    )
+    updated, collections = levy_taxes(world, flat_amount=1, rate_bps=0)
+    assert collections == (
+        (AgentId(value=0), 1, 1, government.government_id),
+        (AgentId(value=1), 1, 2, government.government_id),
+    )
+    assert updated.treasury == 5
+    assert updated.government_by_id(0).treasury == 2  # type: ignore[union-attr]
 
 
 def test_world_treasury_helpers() -> None:

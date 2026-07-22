@@ -1,4 +1,4 @@
-"""Tax levy helpers for integer money collection into the treasury.
+"""Tax levy helpers for integer money collection into public treasuries.
 
 Living agents pay a flat poll tax plus an optional basis-point wealth
 component each levy. Collection is capped at the agent's balance so poor
@@ -7,6 +7,10 @@ agents pay what they can. Money math stays integer-only.
 When an agent lives under a government with an active ``TAX_SCHEDULE`` law,
 that statute's ``flat_amount`` / ``rate_bps`` override the fallback levy
 parameters for that agent.
+
+Collected money is redirected to the governing polity's treasury when the
+payer lives inside a government jurisdiction; otherwise it remains in the
+legacy ``World.treasury`` pool.
 """
 
 from __future__ import annotations
@@ -14,7 +18,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from civitas.domain.economy import debit_money
-from civitas.domain.ids import AgentId
+from civitas.domain.governments import credit_government_treasury, government_at
+from civitas.domain.ids import AgentId, GovernmentId
 from civitas.domain.laws import tax_schedule_for_agent
 
 if TYPE_CHECKING:
@@ -76,11 +81,12 @@ def resolve_tax_params(
 
 
 def apply_tax(world: World, agent_id: AgentId | int, amount: int) -> World | None:
-    """Debit ``amount`` from ``agent_id`` into ``world.treasury``.
+    """Debit ``amount`` from ``agent_id`` into the applicable treasury.
 
     Returns the updated world, or ``None`` when the agent is missing, dead,
     or cannot afford ``amount``. ``amount`` of 0 is a no-op success for
-    living agents.
+    living agents. Tax paid inside a government jurisdiction is credited to
+    that government's treasury; otherwise it is credited to ``world.treasury``.
     """
     if amount < 0:
         msg = f"tax amount must be >= 0, got {amount}"
@@ -96,6 +102,9 @@ def apply_tax(world: World, agent_id: AgentId | int, amount: int) -> World | Non
     if debited is None:
         return None
     world = world.with_agent(debited)
+    government = government_at(world, agent.location_id)
+    if government is not None:
+        return credit_government_treasury(world, government.government_id, amount)
     return world.with_treasury(world.treasury + amount)
 
 
@@ -104,16 +113,19 @@ def levy_taxes(
     *,
     flat_amount: int = DEFAULT_FLAT_AMOUNT,
     rate_bps: int = DEFAULT_RATE_BPS,
-) -> tuple[World, tuple[tuple[AgentId, int, int], ...]]:
+) -> tuple[World, tuple[tuple[AgentId, int, int, GovernmentId | None], ...]]:
     """Collect taxes from every living agent in ascending id order.
 
     Per-agent schedules come from active ``TAX_SCHEDULE`` laws when present;
     otherwise ``flat_amount`` / ``rate_bps`` are used. Returns the updated
-    world and ``(agent_id, amount, treasury_after)`` triples for each
-    non-zero collection.
+    world and ``(agent_id, amount, treasury_after, government_id)`` tuples
+    for each non-zero collection. ``treasury_after`` is the credited
+    destination balance and ``government_id`` is ``None`` for world treasury
+    collections.
     """
-    collections: list[tuple[AgentId, int, int]] = []
+    collections: list[tuple[AgentId, int, int, GovernmentId | None]] = []
     for agent in world.alive_agents():
+        government = government_at(world, agent.location_id)
         effective_flat, effective_rate = resolve_tax_params(
             world,
             agent,
@@ -131,5 +143,14 @@ def levy_taxes(
         if updated is None:
             continue
         world = updated
-        collections.append((agent.agent_id, amount, world.treasury))
+        if government is None:
+            treasury_after = world.treasury
+            government_id = None
+        else:
+            updated_government = world.government_by_id(government.government_id)
+            if updated_government is None:
+                continue
+            treasury_after = updated_government.treasury
+            government_id = updated_government.government_id
+        collections.append((agent.agent_id, amount, treasury_after, government_id))
     return world, tuple(collections)

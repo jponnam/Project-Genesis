@@ -49,8 +49,10 @@ def test_tax_system_emits_tax_collected_in_id_order() -> None:
     assert events[0].agent_id.value == 0
     assert events[0].amount == 1
     assert events[0].treasury_after == 1
+    assert events[0].government_id is None
     assert events[1].agent_id.value == 1
     assert events[1].treasury_after == 2
+    assert events[1].government_id is None
 
 
 def test_tax_system_disabled_is_noop() -> None:
@@ -84,6 +86,25 @@ def test_tax_system_accumulates_across_calls() -> None:
     assert agent.money == 1
 
 
+def test_tax_system_redirects_governed_collections() -> None:
+    """Governed payers credit their government treasury."""
+    government = Government.create(0, "Camp", 0, (0,))
+    world = _world(
+        Agent.create(agent_id=0, name="A", money=4),
+        treasury=7,
+        governments=(government,),
+    )
+    bus = EventBus()
+    system = TaxSystem(TaxConfig(enabled=True, flat_amount=1))
+    updated = system.apply_taxes(world, bus=bus)
+    assert updated.treasury == 7
+    assert updated.government_by_id(0).treasury == 1  # type: ignore[union-attr]
+    events = [event for event in bus.history if isinstance(event, TaxCollected)]
+    assert len(events) == 1
+    assert events[0].treasury_after == 1
+    assert events[0].government_id == government.government_id
+
+
 def test_tax_system_tax_due_uses_config() -> None:
     """tax_due mirrors collectable amounts under the active config."""
     world = _world(Agent.create(agent_id=0, name="A", money=100))
@@ -102,5 +123,6 @@ def test_tax_system_uses_active_tax_schedule_law() -> None:
     system = TaxSystem(TaxConfig(enabled=True, flat_amount=1))
     assert system.tax_due(world, 0) == 2
     updated = system.apply_taxes(world)
-    assert updated.treasury == 2
+    assert updated.treasury == 0
+    assert updated.government_by_id(0).treasury == 2  # type: ignore[union-attr]
     assert updated.agent_by_id(0).money == 3  # type: ignore[union-attr]

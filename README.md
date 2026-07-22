@@ -121,11 +121,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 9 — Milestone 2: Irrigation technology**
+**Phase 9 — Milestone 3: Tax redirection to government treasuries**
 
-Irrigation extends the technology tree after pottery. It adds locked
-research progression, an irrigation canal innovation, knowledge diffusion,
-and a stacking water-gather bonus once the canal is active.
+Tax collections now flow into the governing polity's treasury when the
+payer lives inside a government jurisdiction. Ungoverned payers continue to
+fund the legacy world treasury, preserving existing no-government behavior.
 
 ### Completed
 
@@ -189,6 +189,7 @@ JSONL storage → `civitas run`
 **Phase 9:**
 - Milestone 1: Technology prerequisite trees
 - Milestone 2: Irrigation technology
+- Milestone 3: Tax redirection to government treasuries
 
 ## License
 

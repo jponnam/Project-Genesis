@@ -1,8 +1,8 @@
-"""Wealth analytics: treasury-aware totals and inequality metrics.
+"""Wealth analytics: public-treasury-aware totals and inequality metrics.
 
 Read-only helpers extend the basic agent-money census with society totals
-(including ``World.treasury``) and integer inequality measures. Money math
-stays integer-only via basis points.
+(including ``World.treasury`` and government treasuries) and integer
+inequality measures. Money math stays integer-only via basis points.
 """
 
 from __future__ import annotations
@@ -45,11 +45,16 @@ class WealthCensus(BaseModel):
         description="Maximum living-agent money, or None when none are alive.",
     )
     treasury: NonNegativeInt = Field(description="Public treasury balance.")
+    government_treasury: NonNegativeInt = Field(
+        description="Sum of all government treasury balances."
+    )
     society_total: NonNegativeInt = Field(
-        description="Agent money total plus treasury."
+        description="Agent money total plus world and government treasuries."
     )
     treasury_share_bps: NonNegativeInt = Field(
-        description="Treasury share of society_total in basis points."
+        description=(
+            "World plus government treasury share of society_total in basis points."
+        )
     )
     median_alive: NonNegativeInt | None = Field(
         default=None,
@@ -70,8 +75,13 @@ class WealthCensus(BaseModel):
 
 
 def society_money_total(world: World) -> int:
-    """Return agent money plus treasury (society-wide money stock)."""
-    return wealth_total(world) + world.treasury
+    """Return agent money plus all public treasuries."""
+    return wealth_total(world) + world.treasury + government_treasury_total(world)
+
+
+def government_treasury_total(world: World) -> int:
+    """Return the sum of all government treasury balances."""
+    return sum(government.treasury for government in world.governments)
 
 
 def share_bps(part: int, whole: int) -> int:
@@ -142,7 +152,8 @@ def census_wealth(world: World) -> WealthCensus:
     alive_total = wealth_alive_total(world)
     alive_count = len(alive)
     treasury = world.treasury
-    society_total = total + treasury
+    government_treasury = government_treasury_total(world)
+    society_total = total + treasury + government_treasury
     balances = tuple(sorted(agent.money for agent in alive))
 
     if alive_count == 0:
@@ -174,8 +185,9 @@ def census_wealth(world: World) -> WealthCensus:
         min_alive=min_alive,
         max_alive=max_alive,
         treasury=treasury,
+        government_treasury=government_treasury,
         society_total=society_total,
-        treasury_share_bps=share_bps(treasury, society_total),
+        treasury_share_bps=share_bps(treasury + government_treasury, society_total),
         median_alive=median_alive,
         gini_bps=gini,
         top1_share_bps=top1,

@@ -1,8 +1,10 @@
-"""Tax system: per-tick levies into the world treasury.
+"""Tax system: per-tick levies into public treasuries.
 
 Owns taxation as a first-class tick concern that emits ``TaxCollected``.
 Due amounts and world mutation live in domain helpers so other layers can
-reason about taxes without calling this system.
+reason about taxes without calling this system. Collections credit the
+governing polity's treasury when the payer is under a government
+jurisdiction, falling back to ``World.treasury`` otherwise.
 """
 
 from __future__ import annotations
@@ -82,13 +84,14 @@ class TaxSystem:
             rate_bps=self._config.rate_bps,
         )
         if bus is not None and self._config.emit_events:
-            for agent_id, amount, treasury_after in collections:
+            for agent_id, amount, treasury_after, government_id in collections:
                 bus.publish(
                     TaxCollected(
                         tick=world.tick,
                         agent_id=agent_id,
                         amount=amount,
                         treasury_after=treasury_after,
+                        government_id=government_id,
                     )
                 )
         return world

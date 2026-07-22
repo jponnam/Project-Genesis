@@ -365,12 +365,14 @@ def test_tax_collected_round_trips() -> None:
         agent_id=AgentId(value=2),
         amount=3,
         treasury_after=11,
+        government_id=GovernmentId(value=0),
     )
     restored = event_from_record(event.to_record())
     assert isinstance(restored, TaxCollected)
     assert restored.amount == 3
     assert restored.treasury_after == 11
     assert restored.agent_id == AgentId(value=2)
+    assert restored.government_id == GovernmentId(value=0)
 
 
 def test_market_created_and_listing_events_round_trip() -> None:
@@ -460,8 +462,9 @@ def test_wealth_observed_round_trips() -> None:
         min_alive=1,
         max_alive=9,
         treasury=4,
-        society_total=24,
-        treasury_share_bps=1666,
+        government_treasury=2,
+        society_total=26,
+        treasury_share_bps=2307,
         median_alive=5,
         gini_bps=2000,
         top1_share_bps=6000,
@@ -474,7 +477,8 @@ def test_wealth_observed_round_trips() -> None:
     assert restored.min_alive == 1
     assert restored.max_alive == 9
     assert restored.treasury == 4
-    assert restored.society_total == 24
+    assert restored.government_treasury == 2
+    assert restored.society_total == 26
     assert restored.gini_bps == 2000
     assert restored.median_alive == 5
 
