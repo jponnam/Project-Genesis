@@ -10,6 +10,7 @@ from civitas.domain import (
     CAMP_GOVERNMENT,
     CAMP_LOCATION,
     CAMP_WELL,
+    DEFAULT_BATHHOUSE_BUILD_COST,
     DEFAULT_CLINIC_BUILD_COST,
     DEFAULT_OBSERVATORY_BUILD_COST,
     DEFAULT_ROAD_BUILD_COST,
@@ -71,6 +72,10 @@ def test_default_infrastructure_seeds_camp_well() -> None:
     assert CAMP_WELL.city_id.value == CAMP_CITY.city_id.value
     assert CAMP_WELL.government_id.value == CAMP_GOVERNMENT.government_id.value
     assert CAMP_WELL.location_id.value == CAMP_LOCATION.location_id.value
+    assert all(
+        item.kind is not InfrastructureKind.BATHHOUSE
+        for item in default_infrastructure()
+    )
 
 
 def test_create_and_lookup_infrastructure() -> None:
@@ -192,6 +197,7 @@ def test_census_infrastructure_counts() -> None:
     assert snap.active_observatory_count == 0
     assert snap.active_shrine_count == 0
     assert snap.active_clinic_count == 0
+    assert snap.active_bathhouse_count == 0
     assert census_infrastructure(world) == snap
 
 
@@ -488,6 +494,43 @@ def test_create_and_build_clinic() -> None:
     )
     assert built is not None
     assert built.governments[0].treasury == 20 - DEFAULT_CLINIC_BUILD_COST
+
+
+def test_create_and_build_bathhouse() -> None:
+    """BATHHOUSE is a distinct kind with its own catalog build cost."""
+    assert (
+        build_cost_for(InfrastructureKind.BATHHOUSE) == DEFAULT_BATHHOUSE_BUILD_COST
+    )
+    world = _world(
+        Agent.create(agent_id=0, name="A"),
+        governments=(Government.create(0, "Camp", 0, (0,), treasury=20),),
+        infrastructure=(
+            Infrastructure.create(0, 0, 0, 0, "Well", InfrastructureKind.WELL),
+        ),
+    )
+    # Bathhouse may coexist with a well at the same seat.
+    created = create_infrastructure(
+        world,
+        Infrastructure.create(1, 0, 0, 0, "Bathhouse", InfrastructureKind.BATHHOUSE),
+    )
+    assert created is not None
+    assert created.infrastructure[1].kind is InfrastructureKind.BATHHOUSE
+    snap = census_infrastructure(created)
+    assert snap.active_well_count == 1
+    assert snap.active_bathhouse_count == 1
+
+    empty = _world(
+        Agent.create(agent_id=0, name="A"),
+        governments=(Government.create(0, "Camp", 0, (0,), treasury=20),),
+    )
+    built = build_infrastructure(
+        empty,
+        Infrastructure.create(
+            0, 0, 0, 0, "Paid Bathhouse", InfrastructureKind.BATHHOUSE
+        ),
+    )
+    assert built is not None
+    assert built.governments[0].treasury == 20 - DEFAULT_BATHHOUSE_BUILD_COST
 
 
 def test_world_rejects_city_location_mismatch() -> None:
