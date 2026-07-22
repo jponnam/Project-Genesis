@@ -7,9 +7,11 @@ import pytest
 from civitas.domain import (
     CAMP_FIRE,
     CAMP_FIRE_HEARTH,
+    CAMP_FORGE,
     CAMP_IRRIGATION,
     CAMP_IRRIGATION_CANAL,
     CAMP_LOCATION,
+    CAMP_METALLURGY,
     CAMP_POTTERY,
     CAMP_POTTERY_CRAFT,
     DEFAULT_DRINK_RESTORE,
@@ -20,6 +22,7 @@ from civitas.domain import (
     FIRE_HEARTH_REST_BONUS,
     GUILD_PRODUCE_ENERGY_DISCOUNT,
     IRRIGATION_WATER_GATHER_BONUS,
+    METALLURGY_STONE_GATHER_BONUS,
     POTTERY_WATER_GATHER_BONUS,
     ROAD_MOVE_ENERGY_DISCOUNT,
     STOREHOUSE_FOOD_GATHER_BONUS,
@@ -55,7 +58,7 @@ def _world(*, innovations: tuple = ()) -> World:
     return World(
         config=SimulationConfig(agent_count=1, seed=1),
         locations=(CAMP_LOCATION,),
-        technologies=(CAMP_FIRE, CAMP_POTTERY, CAMP_IRRIGATION),
+        technologies=(CAMP_FIRE, CAMP_POTTERY, CAMP_IRRIGATION, CAMP_METALLURGY),
         innovations=innovations,
         agents=(Agent.create(agent_id=0, name="A"),),
     )
@@ -81,17 +84,54 @@ def test_pottery_and_irrigation_stack_water_gather_bonus() -> None:
     world = World(
         config=SimulationConfig(agent_count=1, seed=1),
         locations=(CAMP_LOCATION,),
-        technologies=(CAMP_FIRE, discovered_pottery, discovered_irrigation),
-        innovations=(CAMP_FIRE_HEARTH, active_pottery, active_irrigation),
+        technologies=(
+            CAMP_FIRE,
+            discovered_pottery,
+            discovered_irrigation,
+            CAMP_METALLURGY,
+        ),
+        innovations=(CAMP_FIRE_HEARTH, active_pottery, active_irrigation, CAMP_FORGE),
         agents=(Agent.create(agent_id=0, name="A"),),
     )
     water_bonus = POTTERY_WATER_GATHER_BONUS + IRRIGATION_WATER_GATHER_BONUS
     assert gather_amount_bonus(world, "water") == water_bonus
     assert gather_amount_bonus(world, "food") == 0
+    assert gather_amount_bonus(world, "stone") == 0
     assert (
         effective_gather_amount(world, "water") == DEFAULT_GATHER_AMOUNT + water_bonus
     )
     assert effective_gather_amount(world, "food") == DEFAULT_GATHER_AMOUNT
+
+
+def test_forge_boosts_stone_gather_bonus() -> None:
+    """Active forge adds a deterministic stone gather bonus."""
+    discovered_pottery = CAMP_POTTERY.model_copy(update={"discovered": True})
+    discovered_irrigation = CAMP_IRRIGATION.model_copy(update={"discovered": True})
+    discovered_metallurgy = CAMP_METALLURGY.model_copy(update={"discovered": True})
+    active_forge = CAMP_FORGE.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        technologies=(
+            CAMP_FIRE,
+            discovered_pottery,
+            discovered_irrigation,
+            discovered_metallurgy,
+        ),
+        innovations=(
+            CAMP_FIRE_HEARTH,
+            CAMP_POTTERY_CRAFT,
+            CAMP_IRRIGATION_CANAL,
+            active_forge,
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert gather_amount_bonus(world, "stone") == METALLURGY_STONE_GATHER_BONUS
+    assert gather_amount_bonus(world, "water") == 0
+    assert (
+        effective_gather_amount(world, "stone")
+        == DEFAULT_GATHER_AMOUNT + METALLURGY_STONE_GATHER_BONUS
+    )
 
 
 def test_census_effects_reports_active_bonuses() -> None:

@@ -5,9 +5,11 @@ from __future__ import annotations
 from civitas.domain import (
     CAMP_IRRIGATION,
     CAMP_LOCATION,
+    CAMP_METALLURGY,
     CAMP_POTTERY,
     FIRE_FACT,
     IRRIGATION_FACT,
+    METALLURGY_FACT,
     POTTERY_FACT,
     Agent,
     Knowledge,
@@ -137,6 +139,27 @@ def test_bootstrap_uses_irrigation_technology_fact() -> None:
     assert world.agents[0].knowledge.knows(IRRIGATION_FACT)
 
 
+def test_bootstrap_uses_metallurgy_technology_fact() -> None:
+    """Discovered metallurgy bootstraps through the generic tech fact mapping."""
+    prior = Knowledge(facts=frozenset({FIRE_FACT, POTTERY_FACT, IRRIGATION_FACT}))
+    world = _world(
+        Agent.create(agent_id=0, name="A", knowledge=prior),
+        Agent.create(agent_id=1, name="B", knowledge=prior),
+    )
+    with_pottery = discover_technology(world, CAMP_POTTERY.technology_id)
+    assert with_pottery is not None
+    with_irrigation = discover_technology(with_pottery, CAMP_IRRIGATION.technology_id)
+    assert with_irrigation is not None
+    with_metallurgy = discover_technology(
+        with_irrigation, CAMP_METALLURGY.technology_id
+    )
+    assert with_metallurgy is not None
+    world, gains = bootstrap_discovered_knowledge(with_metallurgy)
+    assert len(gains) == 1
+    assert gains[0].fact == METALLURGY_FACT
+    assert world.agents[0].knowledge.knows(METALLURGY_FACT)
+
+
 def test_census_knowledge_counts_coverage() -> None:
     """Census reports fire coverage and zero pottery before discovery."""
     world = _world(
@@ -149,6 +172,7 @@ def test_census_knowledge_counts_coverage() -> None:
     assert snap.fire_knower_count == 2
     assert snap.pottery_knower_count == 0
     assert snap.irrigation_knower_count == 0
+    assert snap.metallurgy_knower_count == 0
     assert snap.total_fact_instances == 2
     assert snap.coverage_bps == 10_000
     assert agents_knowing(world, FIRE_FACT)[0].agent_id.value == 0

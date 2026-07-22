@@ -30,6 +30,7 @@ class TechnologyKind(StrEnum):
     FIRE = "fire"
     POTTERY = "pottery"
     IRRIGATION = "irrigation"
+    METALLURGY = "metallurgy"
 
 
 class Technology(BaseModel):
@@ -99,11 +100,18 @@ CAMP_IRRIGATION: Technology = Technology.create(
     discovered=False,
     prerequisite_ids=(1,),
 )
+CAMP_METALLURGY: Technology = Technology.create(
+    3,
+    "Camp Metallurgy",
+    TechnologyKind.METALLURGY,
+    discovered=False,
+    prerequisite_ids=(2,),
+)
 
 
 def default_technologies() -> tuple[Technology, ...]:
     """Return the canonical initial technology catalog."""
-    return (CAMP_FIRE, CAMP_POTTERY, CAMP_IRRIGATION)
+    return (CAMP_FIRE, CAMP_POTTERY, CAMP_IRRIGATION, CAMP_METALLURGY)
 
 
 class TechnologyCensus(BaseModel):
@@ -118,6 +126,7 @@ class TechnologyCensus(BaseModel):
     discovered_fire_count: NonNegativeInt
     discovered_pottery_count: NonNegativeInt
     discovered_irrigation_count: NonNegativeInt
+    discovered_metallurgy_count: NonNegativeInt = 0
     locked_count: NonNegativeInt
     researchable_count: NonNegativeInt
 
@@ -222,6 +231,7 @@ def census_technologies(world: World) -> TechnologyCensus:
     fire = sum(1 for tech in discovered if tech.kind is TechnologyKind.FIRE)
     pottery = sum(1 for tech in discovered if tech.kind is TechnologyKind.POTTERY)
     irrigation = sum(1 for tech in discovered if tech.kind is TechnologyKind.IRRIGATION)
+    metallurgy = sum(1 for tech in discovered if tech.kind is TechnologyKind.METALLURGY)
     return TechnologyCensus(
         tick=world.tick,
         technology_count=len(technologies),
@@ -230,6 +240,7 @@ def census_technologies(world: World) -> TechnologyCensus:
         discovered_fire_count=fire,
         discovered_pottery_count=pottery,
         discovered_irrigation_count=irrigation,
+        discovered_metallurgy_count=metallurgy,
         locked_count=len(locked),
         researchable_count=len(researchable),
     )

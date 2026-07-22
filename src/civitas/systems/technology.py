@@ -70,6 +70,7 @@ class TechSystem:
                     discovered_fire_count=snap.discovered_fire_count,
                     discovered_pottery_count=snap.discovered_pottery_count,
                     discovered_irrigation_count=snap.discovered_irrigation_count,
+                    discovered_metallurgy_count=snap.discovered_metallurgy_count,
                     locked_count=snap.locked_count,
                     researchable_count=snap.researchable_count,
                 )

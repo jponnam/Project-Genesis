@@ -19,6 +19,7 @@ from civitas.domain.ids import InnovationId, TechnologyId
 from civitas.domain.technology import (
     CAMP_FIRE,
     CAMP_IRRIGATION,
+    CAMP_METALLURGY,
     CAMP_POTTERY,
     technology_by_id,
 )
@@ -35,6 +36,7 @@ class InnovationKind(StrEnum):
     FIRE_HEARTH = "fire_hearth"
     POTTERY_CRAFT = "pottery_craft"
     IRRIGATION_CANAL = "irrigation_canal"
+    FORGE = "forge"
 
 
 class Innovation(BaseModel):
@@ -92,10 +94,23 @@ CAMP_IRRIGATION_CANAL: Innovation = Innovation.create(
     active=False,
 )
 
+CAMP_FORGE: Innovation = Innovation.create(
+    3,
+    CAMP_METALLURGY.technology_id.value,
+    "Camp Forge",
+    InnovationKind.FORGE,
+    active=False,
+)
+
 
 def default_innovations() -> tuple[Innovation, ...]:
     """Return the canonical initial innovation set."""
-    return (CAMP_FIRE_HEARTH, CAMP_POTTERY_CRAFT, CAMP_IRRIGATION_CANAL)
+    return (
+        CAMP_FIRE_HEARTH,
+        CAMP_POTTERY_CRAFT,
+        CAMP_IRRIGATION_CANAL,
+        CAMP_FORGE,
+    )
 
 
 class InnovationCensus(BaseModel):
@@ -110,6 +125,7 @@ class InnovationCensus(BaseModel):
     active_fire_hearth_count: NonNegativeInt
     active_pottery_craft_count: NonNegativeInt
     active_irrigation_canal_count: NonNegativeInt
+    active_forge_count: NonNegativeInt = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -260,6 +276,7 @@ def census_innovations(world: World) -> InnovationCensus:
     irrigation = sum(
         1 for item in active if item.kind is InnovationKind.IRRIGATION_CANAL
     )
+    forge = sum(1 for item in active if item.kind is InnovationKind.FORGE)
     return InnovationCensus(
         tick=world.tick,
         innovation_count=len(innovations),
@@ -268,4 +285,5 @@ def census_innovations(world: World) -> InnovationCensus:
         active_fire_hearth_count=fire,
         active_pottery_craft_count=pottery,
         active_irrigation_canal_count=irrigation,
+        active_forge_count=forge,
     )

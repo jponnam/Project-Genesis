@@ -97,6 +97,7 @@ class InnovationSystem:
                     active_fire_hearth_count=snap.active_fire_hearth_count,
                     active_pottery_craft_count=snap.active_pottery_craft_count,
                     active_irrigation_canal_count=(snap.active_irrigation_canal_count),
+                    active_forge_count=snap.active_forge_count,
                 )
             )
         return world
