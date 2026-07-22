@@ -6,14 +6,19 @@ from civitas.domain import (
     CAMP_LOCATION,
     CAMP_MARKET,
     Agent,
+    Government,
     Inventory,
+    Law,
+    LawKind,
     ListingCancelled,
     ListingFilled,
     ListingPosted,
+    MarketFeeCollected,
     MarketObserved,
     ResourceStack,
     SimulationConfig,
     World,
+    society_money_total,
 )
 from civitas.engine import EventBus, WorldFactory
 from civitas.systems import MarketConfig, MarketSystem
@@ -32,11 +37,17 @@ def _with_food(agent_id: int, quantity: int, *, money: int = 0) -> Agent:
     )
 
 
-def _world(*agents: Agent) -> World:
+def _world(
+    *agents: Agent,
+    governments: tuple[Government, ...] = (),
+    laws: tuple[Law, ...] = (),
+) -> World:
     return World(
         config=SimulationConfig(agent_count=len(agents), seed=1),
         locations=(CAMP_LOCATION,),
         markets=(CAMP_MARKET,),
+        governments=governments,
+        laws=laws,
         agents=agents,
     )
 
@@ -82,3 +93,28 @@ def test_observe_can_suppress_events() -> None:
     bus = EventBus()
     MarketSystem(MarketConfig(emit_events=False)).observe(world, bus=bus)
     assert bus.history == ()
+
+
+def test_fill_emits_market_fee_collected() -> None:
+    """MarketSystem emits MarketFeeCollected when a MARKET_FEE applies."""
+    government = Government.create(0, "Camp", 0, (0,))
+    fee = Law.create(0, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=1)
+    system = MarketSystem()
+    bus = EventBus()
+    world = _world(
+        _with_food(0, 1, money=0),
+        _with_food(1, 0, money=4),
+        governments=(government,),
+        laws=(fee,),
+    )
+    world = system.post_listing(world, 0, 0, "food", bus=bus, quantity=1, unit_price=2)
+    listing_id = world.markets[0].listings[0].listing_id
+    initial = society_money_total(world)
+    world = system.fill_listing(world, 0, listing_id, 1, bus=bus, quantity=1)
+    fees = [event for event in bus.history if isinstance(event, MarketFeeCollected)]
+    assert len(fees) == 1
+    assert fees[0].amount == 1
+    assert fees[0].treasury_after == 1
+    assert fees[0].government_id == government.government_id
+    assert world.government_by_id(0).treasury == 1  # type: ignore[union-attr]
+    assert society_money_total(world) == initial

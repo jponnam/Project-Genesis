@@ -121,12 +121,12 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 9 — Milestone 9: Guild institutions**
+**Phase 9 — Milestone 10: Market fee laws**
 
-``InstitutionKind.GUILD`` is a second institution kind that coexists with
-councils. An active guild at an agent's location discounts PRODUCE energy
-cost. Camp council remains the only seeded institution; guilds are created
-opt-in, with at most one active guild per government.
+``LawKind.MARKET_FEE`` is an opt-in statute that charges a flat buyer fee
+once per market listing fill, credited to the governing polity treasury at
+the market location (or ``world.treasury`` when ungoverned). Camp poll tax
+remains the only seeded law; market fees are not seeded by default.
 
 ### Completed
 
@@ -197,6 +197,7 @@ JSONL storage → `civitas run`
 - Milestone 7: Road infrastructure
 - Milestone 8: Institution-funded infrastructure construction
 - Milestone 9: Guild institutions
+- Milestone 10: Market fee laws
 
 ## License
 

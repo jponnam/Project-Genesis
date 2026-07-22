@@ -349,6 +349,17 @@ class ListingFilled(DomainEvent):
     total_price: NonNegativeInt
 
 
+class MarketFeeCollected(DomainEvent):
+    """Emitted when a market fill collects a MARKET_FEE statute charge."""
+
+    market_id: MarketId
+    listing_id: ListingId
+    buyer_id: AgentId
+    amount: NonNegativeInt
+    treasury_after: NonNegativeInt
+    government_id: GovernmentId | None = None
+
+
 class ListingCancelled(DomainEvent):
     """Emitted when a seller cancels an open listing and recovers escrow."""
 
@@ -507,6 +518,7 @@ class LawsObserved(DomainEvent):
     inactive_count: NonNegativeInt
     governments_with_active_laws: NonNegativeInt
     active_tax_schedule_count: NonNegativeInt
+    active_market_fee_count: NonNegativeInt
 
 
 class ElectionResolved(DomainEvent):
@@ -776,6 +788,7 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     ResourceProduced,
     ListingPosted,
     ListingFilled,
+    MarketFeeCollected,
     ListingCancelled,
     NeedDecayed,
     PopulationObserved,

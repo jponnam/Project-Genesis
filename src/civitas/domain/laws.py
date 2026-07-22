@@ -1,10 +1,11 @@
-"""Laws: statutes attached to governments with optional tax effects.
+"""Laws: statutes attached to governments with optional fiscal effects.
 
 Laws are first-class world aggregates. Domain helpers own enactment,
-repeal, and tax-schedule lookup. Active ``TAX_SCHEDULE`` statutes override
-fallback levy parameters when collecting taxes. Elections (voting) are a
-separate Phase 5 aggregate, as are institutions; further statute kinds
-remain later milestones.
+repeal, tax-schedule lookup, and market-fee lookup. Active
+``TAX_SCHEDULE`` statutes override fallback levy parameters when
+collecting taxes. Active ``MARKET_FEE`` statutes charge a flat buyer fee
+on market listing fills (Phase 9 M10). Elections (voting) are a separate
+Phase 5 aggregate, as are institutions.
 """
 
 from __future__ import annotations
@@ -15,7 +16,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict, Field
 
 from civitas.domain.governments import government_at, government_by_id
-from civitas.domain.ids import GovernmentId, LawId
+from civitas.domain.ids import GovernmentId, LawId, LocationId
 from civitas.domain.time import Tick
 from civitas.domain.types import NonEmptyStr, NonNegativeInt
 
@@ -28,6 +29,16 @@ class LawKind(StrEnum):
     """Supported statute kinds."""
 
     TAX_SCHEDULE = "tax_schedule"
+    MARKET_FEE = "market_fee"
+
+
+# Statute kinds that allow at most one active law per government.
+_UNIQUE_ACTIVE_KINDS: frozenset[LawKind] = frozenset(
+    {
+        LawKind.TAX_SCHEDULE,
+        LawKind.MARKET_FEE,
+    }
+)
 
 
 class Law(BaseModel):
@@ -42,7 +53,10 @@ class Law(BaseModel):
     active: bool = True
     flat_amount: NonNegativeInt = Field(
         default=0,
-        description="TAX_SCHEDULE flat poll amount; ignored by other kinds.",
+        description=(
+            "TAX_SCHEDULE flat poll amount, or MARKET_FEE flat fill fee; "
+            "ignored by other kinds."
+        ),
     )
     rate_bps: NonNegativeInt = Field(
         default=0,
@@ -101,6 +115,7 @@ class LawCensus(BaseModel):
     inactive_count: NonNegativeInt
     governments_with_active_laws: NonNegativeInt
     active_tax_schedule_count: NonNegativeInt
+    active_market_fee_count: NonNegativeInt
 
 
 def law_by_id(world: World, law_id: LawId | int) -> Law | None:
@@ -145,6 +160,21 @@ def active_tax_schedule(
     return None
 
 
+def active_market_fee_law(
+    world: World,
+    government_id: GovernmentId | int,
+) -> Law | None:
+    """Return the active market-fee statute for ``government_id``, if any.
+
+    When multiple active ``MARKET_FEE`` laws exist (should not under
+    uniqueness rules), the lowest ``law_id`` wins.
+    """
+    for law in active_laws(world, government_id):
+        if law.kind == LawKind.MARKET_FEE:
+            return law
+    return None
+
+
 def tax_schedule_for_agent(
     world: World,
     agent: Agent,
@@ -159,20 +189,31 @@ def tax_schedule_for_agent(
     return (law.flat_amount, law.rate_bps)
 
 
-def _has_active_tax_schedule(
+def market_fee_for(world: World, location_id: LocationId | int) -> int:
+    """Return the flat market fill fee at ``location_id``, or 0.
+
+    Looks up the active ``MARKET_FEE`` law for ``government_at(location)``.
+    """
+    government = government_at(world, location_id)
+    if government is None:
+        return 0
+    law = active_market_fee_law(world, government.government_id)
+    if law is None:
+        return 0
+    return law.flat_amount
+
+
+def _has_active_kind(
     world: World,
     government_id: GovernmentId,
+    kind: LawKind,
     *,
     excluding_law_id: LawId | None = None,
 ) -> bool:
     for law in world.laws:
         if excluding_law_id is not None and law.law_id == excluding_law_id:
             continue
-        if (
-            law.active
-            and law.kind == LawKind.TAX_SCHEDULE
-            and law.government_id == government_id
-        ):
+        if law.active and law.kind == kind and law.government_id == government_id:
             return True
     return False
 
@@ -185,8 +226,8 @@ def enact_law(world: World, law: Law) -> World | None:
         return None
     if (
         law.active
-        and law.kind == LawKind.TAX_SCHEDULE
-        and _has_active_tax_schedule(world, law.government_id)
+        and law.kind in _UNIQUE_ACTIVE_KINDS
+        and _has_active_kind(world, law.government_id, law.kind)
     ):
         return None
     laws = tuple(sorted((*world.laws, law), key=lambda item: item.law_id.value))
@@ -204,10 +245,11 @@ def set_law_active(
         return None
     if (
         active
-        and law.kind == LawKind.TAX_SCHEDULE
-        and _has_active_tax_schedule(
+        and law.kind in _UNIQUE_ACTIVE_KINDS
+        and _has_active_kind(
             world,
             law.government_id,
+            law.kind,
             excluding_law_id=law.law_id,
         )
     ):
@@ -229,6 +271,7 @@ def census_laws(world: World) -> LawCensus:
     active = [law for law in laws if law.active]
     governments_with_active = {law.government_id.value for law in active}
     active_tax = sum(1 for law in active if law.kind == LawKind.TAX_SCHEDULE)
+    active_fee = sum(1 for law in active if law.kind == LawKind.MARKET_FEE)
     return LawCensus(
         tick=world.tick,
         law_count=len(laws),
@@ -236,6 +279,7 @@ def census_laws(world: World) -> LawCensus:
         inactive_count=len(laws) - len(active),
         governments_with_active_laws=len(governments_with_active),
         active_tax_schedule_count=active_tax,
+        active_market_fee_count=active_fee,
     )
 
 
@@ -245,12 +289,14 @@ __all__ = [
     "LawCensus",
     "LawKind",
     "active_laws",
+    "active_market_fee_law",
     "active_tax_schedule",
     "census_laws",
     "default_laws",
     "enact_law",
     "law_by_id",
     "laws_for",
+    "market_fee_for",
     "repeal_law",
     "set_law_active",
     "tax_schedule_for_agent",

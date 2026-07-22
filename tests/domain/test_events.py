@@ -50,6 +50,7 @@ from civitas.domain import (
     ListingPosted,
     LocationId,
     MarketCreated,
+    MarketFeeCollected,
     MarketId,
     MarketObserved,
     MemoryRecorded,
@@ -419,6 +420,22 @@ def test_market_created_and_listing_events_round_trip() -> None:
     assert isinstance(restored_filled, ListingFilled)
     assert restored_filled.total_price == 1
 
+    fee = MarketFeeCollected(
+        sequence=4,
+        tick=Tick(value=2),
+        market_id=MarketId(value=0),
+        listing_id=ListingId(value=0),
+        buyer_id=AgentId(value=2),
+        amount=1,
+        treasury_after=3,
+        government_id=GovernmentId(value=0),
+    )
+    restored_fee = event_from_record(fee.to_record())
+    assert isinstance(restored_fee, MarketFeeCollected)
+    assert restored_fee.amount == 1
+    assert restored_fee.treasury_after == 3
+    assert restored_fee.government_id == GovernmentId(value=0)
+
 
 def test_market_observed_round_trips() -> None:
     """MarketObserved serializes open-book census fields losslessly."""
@@ -687,12 +704,14 @@ def test_law_created_and_observed_round_trips() -> None:
         inactive_count=1,
         governments_with_active_laws=1,
         active_tax_schedule_count=1,
+        active_market_fee_count=0,
     )
     restored = event_from_record(observed.to_record())
     assert isinstance(restored, LawsObserved)
     assert restored.law_count == 2
     assert restored.active_count == 1
     assert restored.active_tax_schedule_count == 1
+    assert restored.active_market_fee_count == 0
 
 
 def test_election_resolved_and_observed_round_trips() -> None:
