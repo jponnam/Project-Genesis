@@ -43,6 +43,7 @@ from civitas.domain import (
     resident_count,
     sanctuaries_for,
     set_capital,
+    timber_towns_for,
 )
 from civitas.engine import WorldFactory
 
@@ -163,6 +164,7 @@ def test_census_cities_counts_residents() -> None:
     assert snap.active_emporium_count == 0
     assert snap.active_mining_camp_count == 0
     assert snap.active_ironworks_count == 0
+    assert snap.active_timber_town_count == 0
     assert census_cities(world) == snap
 
 
@@ -288,6 +290,7 @@ def test_factory_still_seeds_one_settlement_capital() -> None:
     assert snap.active_emporium_count == 0
     assert snap.active_mining_camp_count == 0
     assert snap.active_ironworks_count == 0
+    assert snap.active_timber_town_count == 0
 
 
 def test_create_library_under_camp_government() -> None:
@@ -1839,6 +1842,105 @@ def test_world_rejects_capital_ironworks() -> None:
                     0,
                     "Bad",
                     CityKind.IRONWORKS,
+                    is_capital=True,
+                ),
+            ),
+            agents=(Agent.create(agent_id=0, name="A"),),
+        )
+
+
+def test_create_timber_town_under_camp_government() -> None:
+    """Timber towns may share a government with the capital on a distinct seat."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map(),
+        governments=(CAMP_GOVERNMENT,),
+        cities=(CAMP_CITY,),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    timber_town = City.create(
+        1,
+        CAMP_GOVERNMENT.government_id.value,
+        1,
+        "Timber Town",
+        CityKind.TIMBER_TOWN,
+    )
+    created = create_city(world, timber_town)
+    assert created is not None
+    assert city_by_id(created, 1) is not None
+    assert city_by_id(created, 1).kind is CityKind.TIMBER_TOWN  # type: ignore[union-attr]
+    assert city_by_id(created, 1).is_capital is False  # type: ignore[union-attr]
+    assert timber_towns_for(created, CAMP_GOVERNMENT.government_id.value) == (
+        timber_town,
+    )
+    snap = census_cities(created)
+    assert snap.active_settlement_count == 1
+    assert snap.active_timber_town_count == 1
+    assert snap.capital_count == 1
+    assert snap.city_count == 2
+
+
+def test_create_rejects_capital_timber_town() -> None:
+    """Timber towns cannot be capitals."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map(),
+        governments=(CAMP_GOVERNMENT,),
+        cities=(CAMP_CITY,),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert (
+        create_city(
+            world,
+            City.create(
+                1,
+                CAMP_GOVERNMENT.government_id.value,
+                1,
+                "Bad Town",
+                CityKind.TIMBER_TOWN,
+                is_capital=True,
+            ),
+        )
+        is None
+    )
+
+
+def test_set_capital_rejects_timber_town() -> None:
+    """set_capital cannot promote a timber town to capital."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map(),
+        governments=(CAMP_GOVERNMENT,),
+        cities=(
+            CAMP_CITY,
+            City.create(
+                1,
+                CAMP_GOVERNMENT.government_id.value,
+                1,
+                "Timber Town",
+                CityKind.TIMBER_TOWN,
+            ),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert set_capital(world, 1, True) is None
+    assert capital_for(world, 0) == CAMP_CITY
+
+
+def test_world_rejects_capital_timber_town() -> None:
+    """World validation rejects timber towns flagged as capital."""
+    with pytest.raises(ValidationError):
+        World(
+            config=SimulationConfig(agent_count=1, seed=1),
+            locations=default_world_map()[:2],
+            governments=(Government.create(0, "Camp", 0, (0, 1)),),
+            cities=(
+                City.create(
+                    0,
+                    0,
+                    0,
+                    "Bad",
+                    CityKind.TIMBER_TOWN,
                     is_capital=True,
                 ),
             ),

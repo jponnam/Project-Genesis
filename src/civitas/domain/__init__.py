@@ -84,6 +84,7 @@ from civitas.domain.cities import (
     sanctuaries_for,
     set_capital,
     set_city_active,
+    timber_towns_for,
 )
 from civitas.domain.config import CANONICAL_SEED, SimulationConfig
 from civitas.domain.death import (
@@ -187,6 +188,7 @@ from civitas.domain.effects import (
     TEMPLE_REST_RESTORE_BONUS,
     TERRACE_FOOD_GATHER_BONUS,
     TEXTILES_PRODUCE_ENERGY_DISCOUNT,
+    TIMBER_TOWN_WOOD_GATHER_BONUS,
     TOOLMAKING_PRODUCE_ENERGY_DISCOUNT,
     WAREHOUSE_MARKET_FEE_DISCOUNT,
     WAYSTATION_FOOD_GATHER_BONUS,
@@ -268,6 +270,7 @@ from civitas.domain.effects import (
     location_has_active_tailor,
     location_has_active_temple,
     location_has_active_terrace,
+    location_has_active_timber_town,
     location_has_active_warehouse,
     location_has_active_waystation,
     location_has_active_weaver,
@@ -1212,6 +1215,7 @@ __all__ = [
     "TEXTILES_FACT",
     "TEXTILES_PRODUCE_ENERGY_DISCOUNT",
     "TIMBER_RIGHTS_WOOD_GATHER_BONUS",
+    "TIMBER_TOWN_WOOD_GATHER_BONUS",
     "TOOLMAKING_FACT",
     "TOOLMAKING_PRODUCE_ENERGY_DISCOUNT",
     "TOOLS_RESOURCE",
@@ -1663,6 +1667,7 @@ __all__ = [
     "location_has_active_tailor",
     "location_has_active_temple",
     "location_has_active_terrace",
+    "location_has_active_timber_town",
     "location_has_active_warehouse",
     "location_has_active_waystation",
     "location_has_active_weaver",
@@ -1754,6 +1759,7 @@ __all__ = [
     "technology_by_kind",
     "technology_fact",
     "timber_rights_wood_bonus_for",
+    "timber_towns_for",
     "top_share_bps",
     "top_standing",
     "transfer_money",
