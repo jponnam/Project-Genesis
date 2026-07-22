@@ -145,6 +145,7 @@ from civitas.domain import (
     TEMPLE_REST_RESTORE_BONUS,
     TERRACE_FOOD_GATHER_BONUS,
     TEXTILES_PRODUCE_ENERGY_DISCOUNT,
+    WAREHOUSE_MARKET_FEE_DISCOUNT,
     WAYSTATION_FOOD_GATHER_BONUS,
     WEAVER_PRODUCE_ENERGY_DISCOUNT,
     WELL_DRINK_RESTORE_BONUS,
@@ -234,6 +235,7 @@ from civitas.domain import (
     location_has_active_tailor,
     location_has_active_temple,
     location_has_active_terrace,
+    location_has_active_warehouse,
     location_has_active_waystation,
     location_has_active_weaver,
     location_has_active_well,
@@ -6054,4 +6056,100 @@ def test_mordant_stacks_with_bureaucracy_harbor_merchant_and_dyer() -> None:
         - MERCHANT_MARKET_FEE_DISCOUNT
         - DYER_MARKET_FEE_DISCOUNT
         - DYEING_MARKET_FEE_DISCOUNT
+    )
+
+
+def test_warehouse_discounts_market_fee_at_seat() -> None:
+    """Active warehouse reduces market fee by 1 at its seat (floor 0)."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        laws=(Law.create(0, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=2),),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 0, 0, "Camp Warehouse", InfrastructureKind.WAREHOUSE
+            ),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_warehouse(world, 0) is True
+    assert market_fee_for(world, 0) == 2
+    assert effective_market_fee(world, 0) == 2 - WAREHOUSE_MARKET_FEE_DISCOUNT
+    floored = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        laws=(Law.create(0, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=1),),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 0, 0, "Camp Warehouse", InfrastructureKind.WAREHOUSE
+            ),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert effective_market_fee(floored, 0) == 0
+    bare = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(Law.create(0, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=2),),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_warehouse(bare, 0) is False
+    assert effective_market_fee(bare, 0) == 2
+
+
+def test_warehouse_stacks_with_all_market_fee_discounts() -> None:
+    """Warehouse stacks with bureaucracy, harbor, merchant, dyer, and mordant."""
+    discovered_dyeing = CAMP_DYEING.model_copy(update={"discovered": True})
+    active_mordant = CAMP_MORDANT.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp Harbor", CityKind.HARBOR),),
+        laws=(Law.create(0, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=7),),
+        institutions=(
+            Institution.create(
+                0, 0, 0, "Camp Bureaucracy", InstitutionKind.BUREAUCRACY
+            ),
+            Institution.create(1, 0, 0, "Camp Merchant", InstitutionKind.MERCHANT),
+            Institution.create(2, 0, 0, "Camp Dyer", InstitutionKind.DYER),
+        ),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 0, 0, "Camp Warehouse", InfrastructureKind.WAREHOUSE
+            ),
+        ),
+        technologies=tuple(
+            discovered_dyeing
+            if item.technology_id == CAMP_DYEING.technology_id
+            else item
+            for item in default_technologies()
+        ),
+        innovations=tuple(
+            active_mordant
+            if item.innovation_id == CAMP_MORDANT.innovation_id
+            else item
+            for item in default_innovations()
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_harbor(world, 0) is True
+    assert location_has_active_bureaucracy(world, 0) is True
+    assert location_has_active_merchant(world, 0) is True
+    assert location_has_active_dyer(world, 0) is True
+    assert location_has_active_warehouse(world, 0) is True
+    assert market_fee_for(world, 0) == 7
+    assert effective_market_fee(world, 0) == (
+        7
+        - BUREAUCRACY_MARKET_FEE_DISCOUNT
+        - HARBOR_MARKET_FEE_DISCOUNT
+        - MERCHANT_MARKET_FEE_DISCOUNT
+        - DYER_MARKET_FEE_DISCOUNT
+        - DYEING_MARKET_FEE_DISCOUNT
+        - WAREHOUSE_MARKET_FEE_DISCOUNT
     )

@@ -133,7 +133,9 @@ discount society-wide (stacking with bureaucracy, harbor, merchant,
 and dyer). Phase 16 Milestone 8 adds TAILOR teachings-per-knower
 bonuses at the institution seat (stacking with
 scribe/dialectic/scriptorium/academy/forum/school/stoa/collegium/
-architect/cartographer/agronomist/curriculum). The action executor,
+architect/cartographer/agronomist/curriculum). Phase 16 Milestone 9 adds
+WAREHOUSE market-fee discounts at the infrastructure seat (stacking with
+bureaucracy, harbor, merchant, dyer, and mordant). The action executor,
 retrieval
 path, market fills, knowledge
 diffusion, and research progression read these helpers; ``EffectsSystem``
@@ -258,6 +260,7 @@ HARBOR_MARKET_FEE_DISCOUNT: int = 1
 MERCHANT_MARKET_FEE_DISCOUNT: int = 1
 DYER_MARKET_FEE_DISCOUNT: int = 1
 DYEING_MARKET_FEE_DISCOUNT: int = 1
+WAREHOUSE_MARKET_FEE_DISCOUNT: int = 1
 
 
 class EffectsCensus(BaseModel):
@@ -400,6 +403,22 @@ def location_has_active_fulling_mill(
     )
     return any(
         item.kind is InfrastructureKind.FULLING_MILL and item.location_id == target
+        for item in active_infrastructure(world)
+    )
+
+
+def location_has_active_warehouse(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active WAREHOUSE stands at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InfrastructureKind.WAREHOUSE and item.location_id == target
         for item in active_infrastructure(world)
     )
 
@@ -1326,14 +1345,15 @@ def retrieval_limit_bonus(world: World, agent: Agent) -> int:
 
 
 def market_fee_discount(world: World, location_id: LocationId | int) -> int:
-    """Return market-fee discount from bureaucracy, harbor, merchant, dyer, mordant.
+    """Return market-fee discount from seats, dyer, mordant, and warehouse.
 
     An active BUREAUCRACY contributes ``BUREAUCRACY_MARKET_FEE_DISCOUNT``.
     An active HARBOR city seat contributes ``HARBOR_MARKET_FEE_DISCOUNT``.
     An active MERCHANT contributes ``MERCHANT_MARKET_FEE_DISCOUNT``. An
     active DYER contributes ``DYER_MARKET_FEE_DISCOUNT``. An active MORDANT
-    innovation contributes ``DYEING_MARKET_FEE_DISCOUNT`` society-wide. All
-    stack.
+    innovation contributes ``DYEING_MARKET_FEE_DISCOUNT`` society-wide. An
+    active WAREHOUSE at the seat contributes
+    ``WAREHOUSE_MARKET_FEE_DISCOUNT``. All stack.
     """
     discount = 0
     if location_has_active_bureaucracy(world, location_id):
@@ -1346,20 +1366,23 @@ def market_fee_discount(world: World, location_id: LocationId | int) -> int:
         discount += DYER_MARKET_FEE_DISCOUNT
     if innovation_kind_is_active(world, InnovationKind.MORDANT):
         discount += DYEING_MARKET_FEE_DISCOUNT
+    if location_has_active_warehouse(world, location_id):
+        discount += WAREHOUSE_MARKET_FEE_DISCOUNT
     return discount
 
 
 def effective_market_fee(world: World, location_id: LocationId | int) -> int:
-    """Return market fill fee after bureaucracy/harbor/merchant/dyer/mordant.
+    """Return market fill fee after seats, dyer, mordant, and warehouse.
 
     ``effective_market_fee = max(0, market_fee_for(...) - discount)`` where
     an active bureaucracy at the market location contributes
     ``BUREAUCRACY_MARKET_FEE_DISCOUNT`` (1), an active harbor city seat
     contributes ``HARBOR_MARKET_FEE_DISCOUNT`` (1), an active merchant
     contributes ``MERCHANT_MARKET_FEE_DISCOUNT`` (1), an active dyer
-    contributes ``DYER_MARKET_FEE_DISCOUNT`` (1), and an active MORDANT
-    innovation contributes ``DYEING_MARKET_FEE_DISCOUNT`` (1) society-wide.
-    Discounts stack.
+    contributes ``DYER_MARKET_FEE_DISCOUNT`` (1), an active MORDANT
+    innovation contributes ``DYEING_MARKET_FEE_DISCOUNT`` (1) society-wide,
+    and an active warehouse at the seat contributes
+    ``WAREHOUSE_MARKET_FEE_DISCOUNT`` (1). Discounts stack.
     """
     base = market_fee_for(world, location_id)
     return max(0, base - market_fee_discount(world, location_id))

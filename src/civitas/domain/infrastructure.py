@@ -8,8 +8,8 @@ attach to a city seat inside a government jurisdiction. This package
 seeds a single ``WELL`` kind; ``STOREHOUSE``, ``ROAD``, ``SCRIPTORIUM``,
 ``STOA``, ``OBSERVATORY``, ``SHRINE``, ``CLINIC``, ``BATHHOUSE``,
 ``BRIDGE``, ``SCAFFOLD``, ``WAYSTATION``, ``BEACON``, ``DITCH``,
-``TERRACE``, and ``FULLING_MILL`` are available via free create or paid
-construction.
+``TERRACE``, ``FULLING_MILL``, and ``WAREHOUSE`` are available via free
+create or paid construction.
 Governments pay via ``build_infrastructure``; institutions pay via
 ``build_infrastructure_from_institution``. Effect wiring applies WELL
 drink restore, STOREHOUSE/WAYSTATION/TERRACE food gather (stacking),
@@ -65,6 +65,7 @@ class InfrastructureKind(StrEnum):
     DITCH = "ditch"
     TERRACE = "terrace"
     FULLING_MILL = "fulling_mill"
+    WAREHOUSE = "warehouse"
 
 
 # Canonical treasury cost to construct each infrastructure kind.
@@ -84,6 +85,7 @@ DEFAULT_BEACON_BUILD_COST: int = 9
 DEFAULT_DITCH_BUILD_COST: int = 7
 DEFAULT_TERRACE_BUILD_COST: int = 8
 DEFAULT_FULLING_MILL_BUILD_COST: int = 10
+DEFAULT_WAREHOUSE_BUILD_COST: int = 9
 INFRASTRUCTURE_BUILD_COSTS: dict[InfrastructureKind, int] = {
     InfrastructureKind.WELL: DEFAULT_WELL_BUILD_COST,
     InfrastructureKind.STOREHOUSE: DEFAULT_STOREHOUSE_BUILD_COST,
@@ -101,6 +103,7 @@ INFRASTRUCTURE_BUILD_COSTS: dict[InfrastructureKind, int] = {
     InfrastructureKind.DITCH: DEFAULT_DITCH_BUILD_COST,
     InfrastructureKind.TERRACE: DEFAULT_TERRACE_BUILD_COST,
     InfrastructureKind.FULLING_MILL: DEFAULT_FULLING_MILL_BUILD_COST,
+    InfrastructureKind.WAREHOUSE: DEFAULT_WAREHOUSE_BUILD_COST,
 }
 
 
@@ -184,6 +187,7 @@ class InfrastructureCensus(BaseModel):
     active_ditch_count: NonNegativeInt = 0
     active_terrace_count: NonNegativeInt = 0
     active_fulling_mill_count: NonNegativeInt = 0
+    active_warehouse_count: NonNegativeInt = 0
 
 
 def infrastructure_by_id(
@@ -438,6 +442,9 @@ def census_infrastructure(world: World) -> InfrastructureCensus:
     active_fulling_mills = sum(
         1 for item in active if item.kind is InfrastructureKind.FULLING_MILL
     )
+    active_warehouses = sum(
+        1 for item in active if item.kind is InfrastructureKind.WAREHOUSE
+    )
     return InfrastructureCensus(
         tick=world.tick,
         infrastructure_count=len(items),
@@ -461,4 +468,5 @@ def census_infrastructure(world: World) -> InfrastructureCensus:
         active_ditch_count=active_ditches,
         active_terrace_count=active_terraces,
         active_fulling_mill_count=active_fulling_mills,
+        active_warehouse_count=active_warehouses,
     )
