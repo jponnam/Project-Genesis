@@ -117,6 +117,7 @@ class InnovationSystem:
                     active_fallow_count=snap.active_fallow_count,
                     active_coppice_count=snap.active_coppice_count,
                     active_loom_count=snap.active_loom_count,
+                    active_mordant_count=snap.active_mordant_count,
                 )
             )
         return world

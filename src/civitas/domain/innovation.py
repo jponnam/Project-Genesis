@@ -23,6 +23,7 @@ from civitas.domain.technology import (
     CAMP_ASTRONOMY,
     CAMP_CARTOGRAPHY,
     CAMP_CROP_ROTATION,
+    CAMP_DYEING,
     CAMP_ENGINEERING,
     CAMP_FIRE,
     CAMP_FORESTRY,
@@ -75,6 +76,7 @@ class InnovationKind(StrEnum):
     FALLOW = "fallow"
     COPPICE = "coppice"
     LOOM = "loom"
+    MORDANT = "mordant"
 
 
 class Innovation(BaseModel):
@@ -292,6 +294,14 @@ CAMP_LOOM: Innovation = Innovation.create(
     active=False,
 )
 
+CAMP_MORDANT: Innovation = Innovation.create(
+    23,
+    CAMP_DYEING.technology_id.value,
+    "Camp Mordant",
+    InnovationKind.MORDANT,
+    active=False,
+)
+
 
 def default_innovations() -> tuple[Innovation, ...]:
     """Return the canonical initial innovation set."""
@@ -319,6 +329,7 @@ def default_innovations() -> tuple[Innovation, ...]:
         CAMP_FALLOW,
         CAMP_COPPICE,
         CAMP_LOOM,
+        CAMP_MORDANT,
     )
 
 
@@ -354,6 +365,7 @@ class InnovationCensus(BaseModel):
     active_fallow_count: NonNegativeInt = 0
     active_coppice_count: NonNegativeInt = 0
     active_loom_count: NonNegativeInt = 0
+    active_mordant_count: NonNegativeInt = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -524,6 +536,7 @@ def census_innovations(world: World) -> InnovationCensus:
     fallow = sum(1 for item in active if item.kind is InnovationKind.FALLOW)
     coppice = sum(1 for item in active if item.kind is InnovationKind.COPPICE)
     loom = sum(1 for item in active if item.kind is InnovationKind.LOOM)
+    mordant = sum(1 for item in active if item.kind is InnovationKind.MORDANT)
     return InnovationCensus(
         tick=world.tick,
         innovation_count=len(innovations),
@@ -552,4 +565,5 @@ def census_innovations(world: World) -> InnovationCensus:
         active_fallow_count=fallow,
         active_coppice_count=coppice,
         active_loom_count=loom,
+        active_mordant_count=mordant,
     )

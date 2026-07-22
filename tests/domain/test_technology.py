@@ -12,6 +12,7 @@ from civitas.domain import (
     CAMP_ASTRONOMY,
     CAMP_CARTOGRAPHY,
     CAMP_CROP_ROTATION,
+    CAMP_DYEING,
     CAMP_ENGINEERING,
     CAMP_FIRE,
     CAMP_FORESTRY,
@@ -56,8 +57,8 @@ def _world(*agents: Agent, technologies: tuple[Technology, ...] = ()) -> World:
     )
 
 
-def test_default_technologies_seed_fire_through_textiles() -> None:
-    """Canonical catalog has fire through textiles progression."""
+def test_default_technologies_seed_fire_through_dyeing() -> None:
+    """Canonical catalog has fire through dyeing progression."""
     assert default_technologies() == (
         CAMP_FIRE,
         CAMP_POTTERY,
@@ -82,6 +83,7 @@ def test_default_technologies_seed_fire_through_textiles() -> None:
         CAMP_CROP_ROTATION,
         CAMP_FORESTRY,
         CAMP_TEXTILES,
+        CAMP_DYEING,
     )
     assert CAMP_FIRE.kind is TechnologyKind.FIRE
     assert CAMP_FIRE.discovered is True
@@ -151,6 +153,9 @@ def test_default_technologies_seed_fire_through_textiles() -> None:
     assert CAMP_TEXTILES.kind is TechnologyKind.TEXTILES
     assert CAMP_TEXTILES.discovered is False
     assert CAMP_TEXTILES.prerequisite_ids == (CAMP_FORESTRY.technology_id,)
+    assert CAMP_DYEING.kind is TechnologyKind.DYEING
+    assert CAMP_DYEING.discovered is False
+    assert CAMP_DYEING.prerequisite_ids == (CAMP_TEXTILES.technology_id,)
 
 
 def test_create_and_discover_technology() -> None:
@@ -191,9 +196,9 @@ def test_census_technologies_counts() -> None:
         technologies=default_technologies(),
     )
     snap = census_technologies(world)
-    assert snap.technology_count == 23
+    assert snap.technology_count == 24
     assert snap.discovered_count == 1
-    assert snap.undiscovered_count == 22
+    assert snap.undiscovered_count == 23
     assert snap.discovered_fire_count == 1
     assert snap.discovered_pottery_count == 0
     assert snap.discovered_irrigation_count == 0
@@ -217,7 +222,8 @@ def test_census_technologies_counts() -> None:
     assert snap.discovered_crop_rotation_count == 0
     assert snap.discovered_forestry_count == 0
     assert snap.discovered_textiles_count == 0
-    assert snap.locked_count == 21
+    assert snap.discovered_dyeing_count == 0
+    assert snap.locked_count == 22
     assert snap.researchable_count == 1
     assert prerequisites_met(world, CAMP_POTTERY) is True
     assert prerequisites_met(world, CAMP_IRRIGATION) is False
@@ -1036,6 +1042,55 @@ def test_textiles_locked_until_forestry_discovered() -> None:
     )
     assert with_textiles is not None
     assert with_textiles.technologies[22].discovered is True
+
+
+def test_dyeing_locked_until_textiles_discovered() -> None:
+    """Dyeing cannot be discovered until textiles is already known."""
+    world = _world(
+        Agent.create(agent_id=0, name="A"),
+        technologies=default_technologies(),
+    )
+    assert prerequisites_met(world, CAMP_DYEING) is False
+    assert discover_technology(world, CAMP_DYEING.technology_id) is None
+
+    current = world
+    for technology in (
+        CAMP_POTTERY,
+        CAMP_IRRIGATION,
+        CAMP_METALLURGY,
+        CAMP_WRITING,
+        CAMP_MATHEMATICS,
+        CAMP_ASTRONOMY,
+        CAMP_PHILOSOPHY,
+        CAMP_LOGIC,
+        CAMP_RHETORIC,
+        CAMP_MEDICINE,
+        CAMP_ANATOMY,
+        CAMP_HYGIENE,
+        CAMP_ENGINEERING,
+        CAMP_ARCHITECTURE,
+        CAMP_SURVEYING,
+        CAMP_NAVIGATION,
+        CAMP_CARTOGRAPHY,
+        CAMP_SEAFARING,
+        CAMP_AGRICULTURE,
+        CAMP_CROP_ROTATION,
+        CAMP_FORESTRY,
+    ):
+        updated = discover_technology(current, technology.technology_id)
+        assert updated is not None
+        current = updated
+    assert prerequisites_met(current, CAMP_DYEING) is False
+    assert discover_technology(current, CAMP_DYEING.technology_id) is None
+
+    with_textiles = discover_technology(current, CAMP_TEXTILES.technology_id)
+    assert with_textiles is not None
+    assert prerequisites_met(with_textiles, CAMP_DYEING) is True
+    with_dyeing = discover_technology(
+        with_textiles, CAMP_DYEING.technology_id
+    )
+    assert with_dyeing is not None
+    assert with_dyeing.technologies[23].discovered is True
 
 
 def test_world_rejects_duplicate_kinds() -> None:

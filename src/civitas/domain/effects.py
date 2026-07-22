@@ -128,7 +128,9 @@ PRODUCE energy discounts at the city seat (stacking with guild,
 workshop, foundry, weaver, fulling mill, abacus, pulley, customs,
 labor, and loom). Phase 16 Milestone 6 adds DYER market-fee discounts
 at the institution seat (stacking with BUREAUCRACY, HARBOR, and
-MERCHANT). The action executor, retrieval
+MERCHANT). Phase 16 Milestone 7 adds a global MORDANT market-fee
+discount society-wide (stacking with bureaucracy, harbor, merchant,
+and dyer). The action executor, retrieval
 path, market fills, knowledge
 diffusion, and research progression read these helpers; ``EffectsSystem``
 only observes coverage. Systems never call each other.
@@ -250,6 +252,7 @@ BUREAUCRACY_MARKET_FEE_DISCOUNT: int = 1
 HARBOR_MARKET_FEE_DISCOUNT: int = 1
 MERCHANT_MARKET_FEE_DISCOUNT: int = 1
 DYER_MARKET_FEE_DISCOUNT: int = 1
+DYEING_MARKET_FEE_DISCOUNT: int = 1
 
 
 class EffectsCensus(BaseModel):
@@ -1302,12 +1305,14 @@ def retrieval_limit_bonus(world: World, agent: Agent) -> int:
 
 
 def market_fee_discount(world: World, location_id: LocationId | int) -> int:
-    """Return market-fee discount from bureaucracy, harbor, merchant, and dyer.
+    """Return market-fee discount from bureaucracy, harbor, merchant, dyer, mordant.
 
     An active BUREAUCRACY contributes ``BUREAUCRACY_MARKET_FEE_DISCOUNT``.
     An active HARBOR city seat contributes ``HARBOR_MARKET_FEE_DISCOUNT``.
     An active MERCHANT contributes ``MERCHANT_MARKET_FEE_DISCOUNT``. An
-    active DYER contributes ``DYER_MARKET_FEE_DISCOUNT``. All stack.
+    active DYER contributes ``DYER_MARKET_FEE_DISCOUNT``. An active MORDANT
+    innovation contributes ``DYEING_MARKET_FEE_DISCOUNT`` society-wide. All
+    stack.
     """
     discount = 0
     if location_has_active_bureaucracy(world, location_id):
@@ -1318,18 +1323,22 @@ def market_fee_discount(world: World, location_id: LocationId | int) -> int:
         discount += MERCHANT_MARKET_FEE_DISCOUNT
     if location_has_active_dyer(world, location_id):
         discount += DYER_MARKET_FEE_DISCOUNT
+    if innovation_kind_is_active(world, InnovationKind.MORDANT):
+        discount += DYEING_MARKET_FEE_DISCOUNT
     return discount
 
 
 def effective_market_fee(world: World, location_id: LocationId | int) -> int:
-    """Return market fill fee after bureaucracy/harbor/merchant/dyer discounts.
+    """Return market fill fee after bureaucracy/harbor/merchant/dyer/mordant.
 
     ``effective_market_fee = max(0, market_fee_for(...) - discount)`` where
     an active bureaucracy at the market location contributes
     ``BUREAUCRACY_MARKET_FEE_DISCOUNT`` (1), an active harbor city seat
     contributes ``HARBOR_MARKET_FEE_DISCOUNT`` (1), an active merchant
-    contributes ``MERCHANT_MARKET_FEE_DISCOUNT`` (1), and an active dyer
-    contributes ``DYER_MARKET_FEE_DISCOUNT`` (1). Discounts stack.
+    contributes ``MERCHANT_MARKET_FEE_DISCOUNT`` (1), an active dyer
+    contributes ``DYER_MARKET_FEE_DISCOUNT`` (1), and an active MORDANT
+    innovation contributes ``DYEING_MARKET_FEE_DISCOUNT`` (1) society-wide.
+    Discounts stack.
     """
     base = market_fee_for(world, location_id)
     return max(0, base - market_fee_discount(world, location_id))
