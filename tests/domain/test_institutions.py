@@ -19,15 +19,20 @@ from civitas.domain import (
     World,
     census_institutions,
     create_institution,
+    credit_institution_budget,
+    debit_institution_budget,
     default_institutions,
     default_world_map,
     dissolve_institution,
+    fund_institution_from_treasury,
     institution_at,
+    institution_budget_total,
     institution_by_id,
     institutions_for,
     next_institution_id,
     set_institution_active,
     set_officer,
+    society_money_total,
 )
 
 
@@ -51,6 +56,7 @@ def test_default_institutions_seed_camp_council() -> None:
     assert CAMP_COUNCIL.kind is InstitutionKind.COUNCIL
     assert CAMP_COUNCIL.active is True
     assert CAMP_COUNCIL.officer_id is None
+    assert CAMP_COUNCIL.budget == 0
     assert CAMP_COUNCIL.government_id.value == CAMP_GOVERNMENT.government_id.value
     assert CAMP_COUNCIL.location_id.value == CAMP_LOCATION.location_id.value
 
@@ -143,7 +149,50 @@ def test_census_institutions_counts() -> None:
     assert snap.staffed_count == 1
     assert snap.vacant_officer_count == 1
     assert snap.active_council_count == 1
+    assert snap.total_budget == 0
+    assert snap.funded_count == 0
     assert census_institutions(world) == snap
+
+
+def test_fund_institution_from_treasury_moves_money() -> None:
+    """Funding debits the government treasury and credits the institution."""
+    world = _world(
+        Agent.create(agent_id=0, name="A", money=10),
+        governments=(Government.create(0, "Camp", 0, (0,), treasury=5),),
+        institutions=(Institution.create(0, 0, 0, "Council", InstitutionKind.COUNCIL),),
+    )
+    initial = society_money_total(world)
+    funded = fund_institution_from_treasury(world, 0, 3)
+    assert funded is not None
+    assert funded.governments[0].treasury == 2
+    assert funded.institutions[0].budget == 3
+    assert institution_budget_total(funded) == 3
+    assert society_money_total(funded) == initial
+    snap = census_institutions(funded)
+    assert snap.total_budget == 3
+    assert snap.funded_count == 1
+
+    assert fund_institution_from_treasury(funded, 0, 9) is None
+    assert fund_institution_from_treasury(world, 0, 0) is None
+    dissolved = dissolve_institution(world, 0)
+    assert dissolved is not None
+    assert fund_institution_from_treasury(dissolved, 0, 1) is None
+
+
+def test_credit_and_debit_institution_budget() -> None:
+    """Direct budget helpers reject non-positive and overdraft amounts."""
+    world = _world(
+        Agent.create(agent_id=0, name="A"),
+        institutions=(Institution.create(0, 0, 0, "Council", InstitutionKind.COUNCIL),),
+    )
+    credited = credit_institution_budget(world, 0, 4)
+    assert credited is not None
+    assert credited.institutions[0].budget == 4
+    assert debit_institution_budget(credited, 0, 5) is None
+    debited = debit_institution_budget(credited, 0, 2)
+    assert debited is not None
+    assert debited.institutions[0].budget == 2
+    assert credit_institution_budget(world, 0, 0) is None
 
 
 def test_world_rejects_seat_outside_jurisdiction() -> None:

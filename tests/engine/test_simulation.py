@@ -380,9 +380,13 @@ def test_wealth_observed_reports_treasury_after_enabled_taxes() -> None:
     assert final.government_treasury == sum(
         government.treasury for government in result.world.governments
     )
+    assert final.institution_budget == sum(
+        institution.budget for institution in result.world.institutions
+    )
     assert final.society_total == society_money_total(result.world)
     assert (
-        final.treasury + final.government_treasury == final.society_total - final.total
+        final.treasury + final.government_treasury + final.institution_budget
+        == final.society_total - final.total
     )
 
 

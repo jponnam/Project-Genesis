@@ -1,10 +1,10 @@
 """Institutions: durable organizations under governments.
 
-Phase 5 Milestone 4. Institutions are gov-attached civic organizations
-with a seat location inside the government's jurisdiction and an optional
-officer. This milestone seeds a single ``COUNCIL`` kind. Cities are a
-separate Phase 5 aggregate; infrastructure, extra kinds, and institution
-budgets remain later milestones.
+Phase 5 Milestone 4 plus Phase 9 Milestone 4 budgets. Institutions are
+gov-attached civic organizations with a seat location inside the
+government's jurisdiction, an optional officer, and an integer budget
+funded from the parent government treasury. This package seeds a single
+``COUNCIL`` kind. Extra kinds remain later milestones.
 """
 
 from __future__ import annotations
@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
-from civitas.domain.governments import government_by_id
+from civitas.domain.governments import debit_government_treasury, government_by_id
 from civitas.domain.ids import AgentId, GovernmentId, InstitutionId, LocationId
 from civitas.domain.location import CAMP_LOCATION
 from civitas.domain.time import Tick
@@ -42,6 +42,7 @@ class Institution(BaseModel):
     kind: InstitutionKind
     active: bool = True
     officer_id: AgentId | None = None
+    budget: NonNegativeInt = 0
 
     @classmethod
     def create(
@@ -54,6 +55,7 @@ class Institution(BaseModel):
         *,
         active: bool = True,
         officer_id: int | None = None,
+        budget: int = 0,
     ) -> Institution:
         """Construct a validated institution from primitive fields."""
         return cls(
@@ -64,6 +66,7 @@ class Institution(BaseModel):
             kind=InstitutionKind(kind),
             active=active,
             officer_id=None if officer_id is None else AgentId(value=officer_id),
+            budget=budget,
         )
 
 
@@ -95,6 +98,8 @@ class InstitutionCensus(BaseModel):
     staffed_count: NonNegativeInt
     vacant_officer_count: NonNegativeInt
     active_council_count: NonNegativeInt
+    total_budget: NonNegativeInt = 0
+    funded_count: NonNegativeInt = 0
 
 
 def institution_by_id(
@@ -293,6 +298,71 @@ def set_officer(
     return world.with_institution(updated)
 
 
+def institution_budget_total(world: World) -> int:
+    """Return the sum of all institution budget balances."""
+    return sum(institution.budget for institution in world.institutions)
+
+
+def credit_institution_budget(
+    world: World,
+    institution_id: InstitutionId | int,
+    amount: int,
+) -> World | None:
+    """Add ``amount`` to an institution's budget when legal."""
+    if amount <= 0:
+        return None
+    institution = institution_by_id(world, institution_id)
+    if institution is None:
+        return None
+    updated = institution.model_copy(update={"budget": institution.budget + amount})
+    return world.with_institution(updated)
+
+
+def debit_institution_budget(
+    world: World,
+    institution_id: InstitutionId | int,
+    amount: int,
+) -> World | None:
+    """Subtract ``amount`` from an institution's budget when affordable."""
+    if amount <= 0:
+        return None
+    institution = institution_by_id(world, institution_id)
+    if institution is None:
+        return None
+    if institution.budget < amount:
+        return None
+    updated = institution.model_copy(update={"budget": institution.budget - amount})
+    return world.with_institution(updated)
+
+
+def fund_institution_from_treasury(
+    world: World,
+    institution_id: InstitutionId | int,
+    amount: int,
+) -> World | None:
+    """Move ``amount`` from the parent government treasury into the budget.
+
+    Debits the institution's government treasury, then credits the
+    institution budget. Returns ``None`` when the institution is missing,
+    inactive, the parent government is missing, or the treasury cannot
+    afford ``amount``.
+    """
+    if amount <= 0:
+        return None
+    institution = institution_by_id(world, institution_id)
+    if institution is None or not institution.active:
+        return None
+    if government_by_id(world, institution.government_id) is None:
+        return None
+    debited = debit_government_treasury(world, institution.government_id, amount)
+    if debited is None:
+        return None
+    credited = credit_institution_budget(debited, institution.institution_id, amount)
+    if credited is None:
+        return None
+    return credited
+
+
 def census_institutions(world: World) -> InstitutionCensus:
     """Build a deterministic institution census for ``world``."""
     institutions = world.institutions
@@ -305,6 +375,8 @@ def census_institutions(world: World) -> InstitutionCensus:
     active_councils = sum(
         1 for institution in active if institution.kind is InstitutionKind.COUNCIL
     )
+    total_budget = institution_budget_total(world)
+    funded_count = sum(1 for institution in institutions if institution.budget > 0)
     return InstitutionCensus(
         tick=world.tick,
         institution_count=len(institutions),
@@ -314,4 +386,6 @@ def census_institutions(world: World) -> InstitutionCensus:
         staffed_count=staffed,
         vacant_officer_count=vacant,
         active_council_count=active_councils,
+        total_budget=total_budget,
+        funded_count=funded_count,
     )

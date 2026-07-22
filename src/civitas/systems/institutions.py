@@ -1,8 +1,9 @@
 """Institution system: organization observation and thin mutation wrappers.
 
 Owns observe-time institution censuses that emit ``InstitutionsObserved``.
-Create/dissolve/officer helpers live in domain so other layers can reason
-about institutions without calling this system.
+Create/dissolve/officer/budget helpers live in domain so other layers can
+reason about institutions without calling this system. Funding is opt-in
+via ``fund`` (mirrors taxes disabled-by-default).
 """
 
 from __future__ import annotations
@@ -12,10 +13,13 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict
 
 from civitas.domain import (
+    InstitutionFunded,
     InstitutionsObserved,
     census_institutions,
     create_institution,
     dissolve_institution,
+    fund_institution_from_treasury,
+    institution_by_id,
     set_institution_active,
     set_officer,
 )
@@ -75,6 +79,8 @@ class InstitutionSystem:
                     staffed_count=snap.staffed_count,
                     vacant_officer_count=snap.vacant_officer_count,
                     active_council_count=snap.active_council_count,
+                    total_budget=snap.total_budget,
+                    funded_count=snap.funded_count,
                 )
             )
         return world
@@ -108,3 +114,38 @@ class InstitutionSystem:
         """Appoint or clear an officer when legal; otherwise leave unchanged."""
         updated = set_officer(world, institution_id, officer_id)
         return world if updated is None else updated
+
+    def fund(
+        self,
+        world: World,
+        institution_id: InstitutionId | int,
+        amount: int,
+        bus: EventBus | None = None,
+    ) -> World:
+        """Fund ``institution_id`` from its government treasury when legal.
+
+        Emits ``InstitutionFunded`` on success. Illegal funding leaves the
+        world unchanged.
+        """
+        updated = fund_institution_from_treasury(world, institution_id, amount)
+        if updated is None:
+            return world
+        if bus is not None and self._config.emit_events:
+            institution = institution_by_id(updated, institution_id)
+            government = (
+                None
+                if institution is None
+                else updated.government_by_id(institution.government_id)
+            )
+            if institution is not None and government is not None:
+                bus.publish(
+                    InstitutionFunded(
+                        tick=updated.tick,
+                        institution_id=institution.institution_id,
+                        government_id=institution.government_id,
+                        amount=amount,
+                        budget_after=institution.budget,
+                        treasury_after=government.treasury,
+                    )
+                )
+        return updated

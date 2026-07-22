@@ -264,6 +264,16 @@ class InstitutionCreated(DomainEvent):
     officer_id: AgentId | None = None
 
 
+class InstitutionFunded(DomainEvent):
+    """Emitted when a government treasury funds an institution budget."""
+
+    institution_id: InstitutionId
+    government_id: GovernmentId
+    amount: NonNegativeInt
+    budget_after: NonNegativeInt
+    treasury_after: NonNegativeInt
+
+
 class CityCreated(DomainEvent):
     """Emitted when a city / settlement is added to the world."""
 
@@ -360,6 +370,7 @@ class WealthObserved(DomainEvent):
     max_alive: NonNegativeInt | None = None
     treasury: NonNegativeInt = 0
     government_treasury: NonNegativeInt = 0
+    institution_budget: NonNegativeInt = 0
     society_total: NonNegativeInt = 0
     treasury_share_bps: NonNegativeInt = 0
     median_alive: NonNegativeInt | None = None
@@ -500,6 +511,8 @@ class InstitutionsObserved(DomainEvent):
     staffed_count: NonNegativeInt
     vacant_officer_count: NonNegativeInt
     active_council_count: NonNegativeInt
+    total_budget: NonNegativeInt = 0
+    funded_count: NonNegativeInt = 0
 
 
 class CitiesObserved(DomainEvent):
@@ -745,6 +758,7 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     ElectionResolved,
     ElectionsObserved,
     InstitutionCreated,
+    InstitutionFunded,
     InstitutionsObserved,
     CityCreated,
     CitiesObserved,

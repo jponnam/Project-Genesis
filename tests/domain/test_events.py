@@ -35,6 +35,7 @@ from civitas.domain import (
     InnovationId,
     InnovationsObserved,
     InstitutionCreated,
+    InstitutionFunded,
     InstitutionId,
     InstitutionsObserved,
     KnowledgeLearned,
@@ -463,8 +464,9 @@ def test_wealth_observed_round_trips() -> None:
         max_alive=9,
         treasury=4,
         government_treasury=2,
-        society_total=26,
-        treasury_share_bps=2307,
+        institution_budget=1,
+        society_total=27,
+        treasury_share_bps=2592,
         median_alive=5,
         gini_bps=2000,
         top1_share_bps=6000,
@@ -478,7 +480,8 @@ def test_wealth_observed_round_trips() -> None:
     assert restored.max_alive == 9
     assert restored.treasury == 4
     assert restored.government_treasury == 2
-    assert restored.society_total == 26
+    assert restored.institution_budget == 1
+    assert restored.society_total == 27
     assert restored.gini_bps == 2000
     assert restored.median_alive == 5
 
@@ -748,11 +751,30 @@ def test_institution_created_and_observed_round_trips() -> None:
         staffed_count=0,
         vacant_officer_count=1,
         active_council_count=1,
+        total_budget=3,
+        funded_count=1,
     )
     restored = event_from_record(observed.to_record())
     assert isinstance(restored, InstitutionsObserved)
     assert restored.institution_count == 1
     assert restored.active_council_count == 1
+    assert restored.total_budget == 3
+    assert restored.funded_count == 1
+
+    funded = InstitutionFunded(
+        sequence=23,
+        tick=Tick(value=2),
+        institution_id=InstitutionId(value=0),
+        government_id=GovernmentId(value=0),
+        amount=3,
+        budget_after=3,
+        treasury_after=7,
+    )
+    restored_funded = event_from_record(funded.to_record())
+    assert isinstance(restored_funded, InstitutionFunded)
+    assert restored_funded.amount == 3
+    assert restored_funded.budget_after == 3
+    assert restored_funded.treasury_after == 7
 
 
 def test_city_created_and_observed_round_trips() -> None:

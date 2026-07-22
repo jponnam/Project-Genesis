@@ -2,9 +2,10 @@
 
 Owns economic mutations that emit ``MoneyTransferred`` and tick-level
 wealth censuses that emit ``WealthObserved`` (including treasury-aware
-society totals across world and government treasuries plus inequality
-metrics). Transfer legality and census math live in domain helpers so
-other layers can reason about money without calling this system.
+society totals across world/government treasuries and institution budgets
+plus inequality metrics). Transfer legality and census math live in
+domain helpers so other layers can reason about money without calling
+this system.
 """
 
 from __future__ import annotations
@@ -71,6 +72,7 @@ class EconomySystem:
                     max_alive=snap.max_alive,
                     treasury=snap.treasury,
                     government_treasury=snap.government_treasury,
+                    institution_budget=snap.institution_budget,
                     society_total=snap.society_total,
                     treasury_share_bps=snap.treasury_share_bps,
                     median_alive=snap.median_alive,
