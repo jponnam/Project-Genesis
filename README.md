@@ -118,14 +118,14 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 6 — Milestone 2: Research**
+**Phase 6 — Milestone 3: Innovation**
 
-Deterministic research progress toward undiscovered technologies. The
-factory seeds pottery research at 0/10 points. Each tick
-`ResearchSystem.apply_research` adds one point; at threshold pottery is
-discovered and the progress row is removed. `ResearchSystem.observe`
-emits `ResearchObserved`. Innovation and knowledge diffusion remain later
-Phase 6 milestones.
+Society adoption of discovered technologies. The factory seeds an active
+`Camp Fire Hearth` and inactive `Camp Pottery Craft`. After research
+discovers pottery, `InnovationSystem.apply_innovations` activates the
+craft the same tick. `InnovationSystem.observe` emits
+`InnovationsObserved`. Knowledge diffusion remains a later Phase 6
+milestone.
 
 ### Completed
 
@@ -171,6 +171,7 @@ JSONL storage → `civitas run`
 **Phase 6:**
 - Milestone 1: Technology
 - Milestone 2: Research
+- Milestone 3: Innovation
 
 ## License
 

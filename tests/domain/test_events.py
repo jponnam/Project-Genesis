@@ -27,6 +27,10 @@ from civitas.domain import (
     InfrastructureCreated,
     InfrastructureId,
     InfrastructuresObserved,
+    InnovationActivated,
+    InnovationCreated,
+    InnovationId,
+    InnovationsObserved,
     InstitutionCreated,
     InstitutionId,
     InstitutionsObserved,
@@ -873,3 +877,44 @@ def test_research_events_round_trip() -> None:
     restored_observed = event_from_record(observed.to_record())
     assert isinstance(restored_observed, ResearchObserved)
     assert restored_observed.completion_bps == 4_000
+
+
+def test_innovation_events_round_trip() -> None:
+    """Innovation create/activate/observe events serialize losslessly."""
+    created = InnovationCreated(
+        sequence=32,
+        tick=Tick(value=0),
+        innovation_id=InnovationId(value=0),
+        technology_id=TechnologyId(value=0),
+        name="Camp Fire Hearth",
+        kind="fire_hearth",
+        active=True,
+    )
+    restored_created = event_from_record(created.to_record())
+    assert isinstance(restored_created, InnovationCreated)
+    assert restored_created.active is True
+
+    activated = InnovationActivated(
+        sequence=33,
+        tick=Tick(value=10),
+        innovation_id=InnovationId(value=1),
+        technology_id=TechnologyId(value=1),
+        name="Camp Pottery Craft",
+        kind="pottery_craft",
+    )
+    restored_activated = event_from_record(activated.to_record())
+    assert isinstance(restored_activated, InnovationActivated)
+    assert restored_activated.kind == "pottery_craft"
+
+    observed = InnovationsObserved(
+        sequence=34,
+        tick=Tick(value=8),
+        innovation_count=2,
+        active_count=1,
+        inactive_count=1,
+        active_fire_hearth_count=1,
+        active_pottery_craft_count=0,
+    )
+    restored_observed = event_from_record(observed.to_record())
+    assert isinstance(restored_observed, InnovationsObserved)
+    assert restored_observed.active_fire_hearth_count == 1
