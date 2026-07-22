@@ -14,6 +14,7 @@ from civitas.domain import (
     AgentMoved,
     AgentSpawned,
     DomainEvent,
+    FamiliesObserved,
     ListingFilled,
     ListingId,
     ListingPosted,
@@ -508,3 +509,32 @@ def test_reputation_observed_round_trips() -> None:
     assert restored.agents_with_inbound_bonds == 2
     assert restored.top_agent_id == AgentId(value=0)
     assert restored.top_standing == 0.75
+
+
+def test_families_observed_round_trips() -> None:
+    """FamiliesObserved serializes kinship census fields losslessly."""
+    event = FamiliesObserved(
+        sequence=13,
+        tick=Tick(value=7),
+        living_agent_count=5,
+        founder_count=2,
+        parented_count=3,
+        orphan_count=1,
+        living_with_living_parent=2,
+        lineage_count=2,
+        mean_lineage_size=2.5,
+        max_lineage_size=3,
+        max_generation_depth=2,
+        parents_with_living_children=1,
+        mean_living_children=2.0,
+        max_living_children=2,
+    )
+    restored = event_from_record(event.to_record())
+    assert isinstance(restored, FamiliesObserved)
+    assert restored.founder_count == 2
+    assert restored.parented_count == 3
+    assert restored.orphan_count == 1
+    assert restored.lineage_count == 2
+    assert restored.mean_lineage_size == 2.5
+    assert restored.max_generation_depth == 2
+    assert restored.max_living_children == 2

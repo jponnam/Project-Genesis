@@ -19,6 +19,7 @@ from civitas.systems import (
     BirthSystem,
     DeathSystem,
     EconomySystem,
+    FamilySystem,
     MarketSystem,
     NeedsSystem,
     PopulationSystem,
@@ -70,16 +71,19 @@ class SimulationEngine:
     13. ``PriceSystem.observe``
     14. ``RelationshipSystem.observe``
     15. ``ReputationSystem.observe``
+    16. ``FamilySystem.observe``
 
-    Initial population, wealth, market, price, relationship, and reputation
-    censuses are also observed at tick 0 immediately after world creation.
-    Death runs after actions (recovery chance) and before birth so newly
-    dead parents cannot reproduce. Birth and death both complete before
-    taxes so the levy sees the settled roster. Taxes complete before
+    Initial population, wealth, market, price, relationship, reputation,
+    and family censuses are also observed at tick 0 immediately after world
+    creation. Death runs after actions (recovery chance) and before birth
+    so newly dead parents cannot reproduce. Birth and death both complete
+    before taxes so the levy sees the settled roster. Taxes complete before
     ``TickCompleted`` so wealth censuses reflect post-levy balances.
     Taxes are disabled by default. Relationship observation is wired each
     tick; SOCIALIZE may mutate bonds during action execution. Reputation
     observation follows relationships so standings reflect the latest bonds.
+    Family observation follows reputation and reads birth ``parent_id``
+    lineage without mutating agents.
     """
 
     def __init__(
@@ -98,6 +102,7 @@ class SimulationEngine:
         price_system: PriceSystem | None = None,
         relationship_system: RelationshipSystem | None = None,
         reputation_system: ReputationSystem | None = None,
+        family_system: FamilySystem | None = None,
     ) -> None:
         self._world_factory = (
             world_factory if world_factory is not None else WorldFactory()
@@ -126,6 +131,9 @@ class SimulationEngine:
         self._reputation_system = (
             reputation_system if reputation_system is not None else ReputationSystem()
         )
+        self._family_system = (
+            family_system if family_system is not None else FamilySystem()
+        )
 
     def run(
         self,
@@ -145,6 +153,7 @@ class SimulationEngine:
         world = self._price_system.observe(world, bus=event_bus)
         world = self._relationship_system.observe(world, bus=event_bus)
         world = self._reputation_system.observe(world, bus=event_bus)
+        world = self._family_system.observe(world, bus=event_bus)
 
         for tick in clock.run():
             world = world.with_tick(tick)
@@ -162,6 +171,7 @@ class SimulationEngine:
             world = self._price_system.observe(world, bus=event_bus)
             world = self._relationship_system.observe(world, bus=event_bus)
             world = self._reputation_system.observe(world, bus=event_bus)
+            world = self._family_system.observe(world, bus=event_bus)
 
         event_bus.publish(
             SimulationCompleted(

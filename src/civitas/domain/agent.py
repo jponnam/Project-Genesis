@@ -37,6 +37,10 @@ class AgentIdentity(BaseModel):
     agent_id: AgentId
     name: NonEmptyStr
     birth_tick: Tick = Field(default_factory=Tick)
+    parent_id: AgentId | None = Field(
+        default=None,
+        description="Birth parent id when born in-sim; None for founders.",
+    )
 
 
 class Agent(BaseModel):
@@ -82,6 +86,11 @@ class Agent(BaseModel):
         """Shorthand for ``identity.name``."""
         return self.identity.name
 
+    @property
+    def parent_id(self) -> AgentId | None:
+        """Shorthand for ``identity.parent_id``."""
+        return self.identity.parent_id
+
     def is_alive(self) -> bool:
         """Return True when the agent can act in the simulation."""
         return self.status == AgentStatus.ALIVE and self.health.vitality > 0.0
@@ -95,19 +104,21 @@ class Agent(BaseModel):
         *,
         money: int = 0,
         birth_tick: int = 0,
+        parent_id: int | None = None,
         personality: Personality | None = None,
         needs: Needs | None = None,
     ) -> Agent:
         """Construct a living agent with validated identifiers.
 
         Optional personality/needs default to neutral/satisfied baselines
-        suitable for seeded world construction.
+        suitable for seeded world construction. Founders omit ``parent_id``.
         """
         return cls(
             identity=AgentIdentity(
                 agent_id=AgentId(value=agent_id),
                 name=name,
                 birth_tick=Tick(value=birth_tick),
+                parent_id=(None if parent_id is None else AgentId(value=parent_id)),
             ),
             location_id=LocationId(value=location_id),
             money=money,
