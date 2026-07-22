@@ -648,6 +648,7 @@ class InfrastructuresObserved(DomainEvent):
     active_terrace_count: NonNegativeInt = 0
     active_fulling_mill_count: NonNegativeInt = 0
     active_warehouse_count: NonNegativeInt = 0
+    active_mineshaft_count: NonNegativeInt = 0
 
 
 class TechnologyCreated(DomainEvent):
