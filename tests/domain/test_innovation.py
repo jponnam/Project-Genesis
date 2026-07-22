@@ -16,11 +16,13 @@ from civitas.domain import (
     CAMP_IRRIGATION_CANAL,
     CAMP_LOCATION,
     CAMP_MATHEMATICS,
+    CAMP_MEDICINE,
     CAMP_METALLURGY,
     CAMP_ORATION,
     CAMP_PHILOSOPHY,
     CAMP_POTTERY,
     CAMP_POTTERY_CRAFT,
+    CAMP_REMEDY,
     CAMP_RHETORIC,
     CAMP_SCRIBE,
     CAMP_STAR_CHART,
@@ -59,7 +61,7 @@ def _world(
     )
 
 
-def test_default_innovations_seed_hearth_through_oration() -> None:
+def test_default_innovations_seed_hearth_through_remedy() -> None:
     """Canonical set has active hearth and inactive later adoptions."""
     assert default_innovations() == (
         CAMP_FIRE_HEARTH,
@@ -72,6 +74,7 @@ def test_default_innovations_seed_hearth_through_oration() -> None:
         CAMP_DIALECTIC,
         CAMP_SYLLOGISM,
         CAMP_ORATION,
+        CAMP_REMEDY,
     )
     assert CAMP_FIRE_HEARTH.kind is InnovationKind.FIRE_HEARTH
     assert CAMP_FIRE_HEARTH.active is True
@@ -93,6 +96,8 @@ def test_default_innovations_seed_hearth_through_oration() -> None:
     assert CAMP_SYLLOGISM.active is False
     assert CAMP_ORATION.kind is InnovationKind.ORATION
     assert CAMP_ORATION.active is False
+    assert CAMP_REMEDY.kind is InnovationKind.REMEDY
+    assert CAMP_REMEDY.active is False
 
 
 def test_activate_due_innovations_after_discovery() -> None:
@@ -187,6 +192,15 @@ def test_activate_due_innovations_after_discovery() -> None:
     assert innovation_by_id(world, 9).active is True
     assert innovation_for_technology(world, 9) is not None
 
+    discovered = discover_technology(world, CAMP_MEDICINE.technology_id)
+    assert discovered is not None
+    world, activations = activate_due_innovations(discovered)
+    assert len(activations) == 1
+    assert activations[0].kind is InnovationKind.REMEDY
+    assert innovation_by_id(world, 10) is not None
+    assert innovation_by_id(world, 10).active is True
+    assert innovation_for_technology(world, 10) is not None
+
 
 def test_activate_innovation_requires_discovered_technology() -> None:
     """Manual activate fails while the linked technology is unknown."""
@@ -224,9 +238,9 @@ def test_census_innovations_counts() -> None:
         innovations=default_innovations(),
     )
     snap = census_innovations(world)
-    assert snap.innovation_count == 10
+    assert snap.innovation_count == 11
     assert snap.active_count == 1
-    assert snap.inactive_count == 9
+    assert snap.inactive_count == 10
     assert snap.active_fire_hearth_count == 1
     assert snap.active_pottery_craft_count == 0
     assert snap.active_irrigation_canal_count == 0
@@ -237,6 +251,7 @@ def test_census_innovations_counts() -> None:
     assert snap.active_dialectic_count == 0
     assert snap.active_syllogism_count == 0
     assert snap.active_oration_count == 0
+    assert snap.active_remedy_count == 0
     assert census_innovations(world) == snap
 
 

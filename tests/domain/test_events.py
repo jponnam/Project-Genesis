@@ -986,9 +986,9 @@ def test_technology_created_and_observed_round_trips() -> None:
     observed = TechnologiesObserved(
         sequence=28,
         tick=Tick(value=8),
-        technology_count=10,
+        technology_count=11,
         discovered_count=1,
-        undiscovered_count=9,
+        undiscovered_count=10,
         discovered_fire_count=1,
         discovered_pottery_count=0,
         discovered_irrigation_count=0,
@@ -999,7 +999,8 @@ def test_technology_created_and_observed_round_trips() -> None:
         discovered_philosophy_count=0,
         discovered_logic_count=0,
         discovered_rhetoric_count=0,
-        locked_count=8,
+        discovered_medicine_count=0,
+        locked_count=9,
         researchable_count=1,
     )
     restored = event_from_record(observed.to_record())
@@ -1013,6 +1014,7 @@ def test_technology_created_and_observed_round_trips() -> None:
     assert restored.discovered_philosophy_count == 0
     assert restored.discovered_logic_count == 0
     assert restored.discovered_rhetoric_count == 0
+    assert restored.discovered_medicine_count == 0
     assert restored.researchable_count == 1
 
 
@@ -1085,9 +1087,9 @@ def test_innovation_events_round_trip() -> None:
     observed = InnovationsObserved(
         sequence=34,
         tick=Tick(value=8),
-        innovation_count=10,
+        innovation_count=11,
         active_count=1,
-        inactive_count=9,
+        inactive_count=10,
         active_fire_hearth_count=1,
         active_pottery_craft_count=0,
         active_irrigation_canal_count=0,
@@ -1098,6 +1100,7 @@ def test_innovation_events_round_trip() -> None:
         active_dialectic_count=0,
         active_syllogism_count=0,
         active_oration_count=0,
+        active_remedy_count=0,
     )
     restored_observed = event_from_record(observed.to_record())
     assert isinstance(restored_observed, InnovationsObserved)
@@ -1110,6 +1113,7 @@ def test_innovation_events_round_trip() -> None:
     assert restored_observed.active_dialectic_count == 0
     assert restored_observed.active_syllogism_count == 0
     assert restored_observed.active_oration_count == 0
+    assert restored_observed.active_remedy_count == 0
 
 
 def test_knowledge_events_round_trip() -> None:
@@ -1155,6 +1159,7 @@ def test_knowledge_events_round_trip() -> None:
         philosophy_knower_count=0,
         logic_knower_count=0,
         rhetoric_knower_count=0,
+        medicine_knower_count=0,
         total_fact_instances=3,
         coverage_bps=10_000,
     )
@@ -1168,6 +1173,7 @@ def test_knowledge_events_round_trip() -> None:
     assert restored_observed.philosophy_knower_count == 0
     assert restored_observed.logic_knower_count == 0
     assert restored_observed.rhetoric_knower_count == 0
+    assert restored_observed.medicine_knower_count == 0
     assert restored_observed.coverage_bps == 10_000
 
 
