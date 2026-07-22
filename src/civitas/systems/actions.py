@@ -1,10 +1,11 @@
 """Action executor: apply selected actions to world state.
 
 The executor mutates the world only through immutable ``World`` updates.
-It does not call the needs, movement, gathering, food, water, energy, or
-policy systems; shared catalogs and domain helpers apply effects. Events
-include ``ActionCompleted`` and, when applicable, ``NeedDecayed``,
-``ResourceConsumed``, ``ResourceGathered``, or ``AgentMoved``.
+It does not call the needs, movement, gathering, food, water, energy,
+production, or policy systems; shared catalogs and domain helpers apply
+effects. Events include ``ActionCompleted`` and, when applicable,
+``NeedDecayed``, ``ResourceConsumed``, ``ResourceGathered``,
+``ResourceProduced``, ``ResourceTraded``, or ``AgentMoved``.
 """
 
 from __future__ import annotations
@@ -30,13 +31,16 @@ from civitas.domain import (
     NeedDecayed,
     ResourceConsumed,
     ResourceGathered,
+    ResourceProduced,
     ResourceTraded,
     TradeTerms,
     apply_drink,
     apply_eat,
     apply_gather,
+    apply_produce,
     apply_rest,
     apply_trade,
+    recipe_by_id,
     relocate,
 )
 from civitas.domain.actions import ACTION_NEED_TARGET, ACTION_RESOURCE
@@ -164,7 +168,7 @@ class ActionExecutor:
         world: World,
         bus: EventBus | None,
     ) -> tuple[Agent, bool]:
-        """Apply non-GATHER ``choice`` effects; return (agent, success)."""
+        """Apply non-GATHER/TRADE ``choice`` effects; return (agent, success)."""
         action = choice.action
         if action is ActionKind.IDLE:
             return agent, True
@@ -176,6 +180,8 @@ class ActionExecutor:
             return self._apply_drink(agent, world, bus)
         if action is ActionKind.REST:
             return self._apply_rest(agent, world, bus)
+        if action is ActionKind.PRODUCE:
+            return self._apply_produce(agent, choice, world, bus)
 
         need_name = ACTION_NEED_TARGET[action]
         if need_name is None:
@@ -313,6 +319,46 @@ class ActionExecutor:
                     current=updated.needs.energy,
                 )
             )
+        return updated, True
+
+    def _apply_produce(
+        self,
+        agent: Agent,
+        choice: ActionChoice,
+        world: World,
+        bus: EventBus | None,
+    ) -> tuple[Agent, bool]:
+        """Apply PRODUCE via domain helper; emit ResourceProduced on success."""
+        if choice.target_resource is None:
+            return agent, False
+
+        recipe = recipe_by_id(choice.target_resource)
+        previous_energy = agent.needs.energy
+        updated = apply_produce(agent, choice.target_resource)
+        if updated is None or recipe is None:
+            return agent, False
+
+        if bus is not None:
+            bus.publish(
+                ResourceProduced(
+                    tick=world.tick,
+                    agent_id=agent.agent_id,
+                    recipe_id=recipe.recipe_id,
+                    outputs=tuple(
+                        (stack.resource, stack.quantity) for stack in recipe.outputs
+                    ),
+                )
+            )
+            if updated.needs.energy != previous_energy:
+                bus.publish(
+                    NeedDecayed(
+                        tick=world.tick,
+                        agent_id=agent.agent_id,
+                        need="energy",
+                        previous=previous_energy,
+                        current=updated.needs.energy,
+                    )
+                )
         return updated, True
 
     def _apply_move(

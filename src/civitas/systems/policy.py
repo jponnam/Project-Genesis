@@ -31,6 +31,8 @@ from civitas.domain import (
     enterable_neighbors,
     gatherable_resources,
     occupancy,
+    producible_recipes,
+    recipe_by_id,
 )
 from civitas.domain.trading import DEFAULT_TRADE_PRICE, DEFAULT_TRADE_QUANTITY
 from civitas.domain.types import NonNegativeInt, PositiveInt, UnitInterval
@@ -49,6 +51,7 @@ class PolicyConfig(BaseModel):
         move_weight: Scales exploratory MOVE utility.
         gather_weight: Scales GATHER utility from need/inventory pressure.
         trade_weight: Scales TRADE utility from need/inventory pressure.
+        produce_weight: Scales PRODUCE utility from output scarcity.
         resource_seek_weight: Bonus for MOVE toward resource-bearing cells.
         move_energy_cost: Minimum energy required to consider MOVE.
         trade_quantity: Units purchased by a selected TRADE.
@@ -63,6 +66,7 @@ class PolicyConfig(BaseModel):
     move_weight: UnitInterval = 0.35
     gather_weight: UnitInterval = 0.55
     trade_weight: UnitInterval = 0.60
+    produce_weight: UnitInterval = 0.50
     resource_seek_weight: UnitInterval = 0.45
     move_energy_cost: UnitInterval = DEFAULT_MOVE_ENERGY_COST
     trade_quantity: PositiveInt = DEFAULT_TRADE_QUANTITY
@@ -89,9 +93,10 @@ class UtilityPolicy:
     ) -> float:
         """Compute utility of ``action`` for ``agent``.
 
-        MOVE / GATHER / TRADE score their best legal target when ``world``
-        is set; otherwise they score 0.0. EAT/DRINK score 0.0 without
-        inventory food/water. REST scores 0.0 when energy is already full.
+        MOVE / GATHER / TRADE / PRODUCE score their best legal target when
+        ``world`` is set (PRODUCE only needs the agent). EAT/DRINK score
+        0.0 without inventory food/water. REST scores 0.0 when energy is
+        already full.
         """
         kind = ActionKind(action)
         if kind is ActionKind.MOVE:
@@ -102,6 +107,9 @@ class UtilityPolicy:
             return utility
         if kind is ActionKind.TRADE:
             utility, _seller, _resource = self._best_trade(agent, world)
+            return utility
+        if kind is ActionKind.PRODUCE:
+            utility, _recipe = self._best_produce(agent)
             return utility
         if kind is ActionKind.EAT and not self._has_food(agent):
             return 0.0
@@ -154,6 +162,12 @@ class UtilityPolicy:
                 if target_agent is None or target_resource is None:
                     continue
                 target_location = None
+            elif action is ActionKind.PRODUCE:
+                utility, target_resource = self._best_produce(agent)
+                if target_resource is None:
+                    continue
+                target_location = None
+                target_agent = None
             elif self._action_unavailable(action, agent):
                 continue
             else:
@@ -346,6 +360,47 @@ class UtilityPolicy:
         goal_component = self._trade_goal_bonus(agent, resource)
         return round((need_component * personality_component) + goal_component, 6)
 
+    def _best_produce(self, agent: Agent) -> tuple[float, str | None]:
+        """Return (utility, recipe_id) for the best legal PRODUCE, if any."""
+        recipes = producible_recipes(agent)
+        if not recipes:
+            return 0.0, None
+
+        best_recipe: str | None = None
+        best_utility = float("-inf")
+        for recipe in recipes:
+            utility = self._produce_utility(agent, recipe.recipe_id)
+            if utility > best_utility or (
+                utility == best_utility
+                and (best_recipe is None or recipe.recipe_id < best_recipe)
+            ):
+                best_utility = utility
+                best_recipe = recipe.recipe_id
+        return best_utility, best_recipe
+
+    def _produce_utility(self, agent: Agent, recipe_id: str) -> float:
+        """Score crafting ``recipe_id`` from output scarcity and needs."""
+        recipe = recipe_by_id(recipe_id)
+        if recipe is None:
+            return 0.0
+        scarcity_total = 0.0
+        for stack in recipe.outputs:
+            inventory_qty = agent.inventory.quantity(stack.resource)
+            scarcity = 1.0 / (1.0 + inventory_qty)
+            need_name = RESOURCE_NEED.get(stack.resource)
+            if need_name is None:
+                scarcity_total += 0.35 * scarcity
+            else:
+                urgency = 1.0 - agent.needs.as_mapping()[need_name]
+                scarcity_total += urgency * scarcity
+        need_component = round(
+            self._config.produce_weight * scarcity_total / max(len(recipe.outputs), 1),
+            6,
+        )
+        personality_component = self._personality_multiplier(agent, ActionKind.PRODUCE)
+        goal_component = self._produce_goal_bonus(agent, recipe_id)
+        return round((need_component * personality_component) + goal_component, 6)
+
     def _gather_utility(self, agent: Agent, resource: str) -> float:
         """Score gathering ``resource`` from need urgency and inventory gap.
 
@@ -431,6 +486,7 @@ class UtilityPolicy:
             ActionKind.DRINK,
             ActionKind.REST,
             ActionKind.GATHER,
+            ActionKind.PRODUCE,
         }:
             trait = personality.conscientiousness
         elif action is ActionKind.TRADE:
@@ -472,6 +528,19 @@ class UtilityPolicy:
                 ActionKind.TRADE.value,
                 f"buy_{resource}",
                 f"trade_{resource}",
+            }
+            if matches:
+                best = max(best, goal.priority * self._config.goal_weight)
+        return round(best, 6)
+
+    def _produce_goal_bonus(self, agent: Agent, recipe_id: str) -> float:
+        """Goal bonus for crafting a specific recipe."""
+        best = 0.0
+        for goal in agent.goals.goals:
+            matches = goal.kind in {
+                ActionKind.PRODUCE.value,
+                f"produce_{recipe_id}",
+                f"craft_{recipe_id}",
             }
             if matches:
                 best = max(best, goal.priority * self._config.goal_weight)

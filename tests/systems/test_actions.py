@@ -22,6 +22,7 @@ from civitas.domain import (
     Needs,
     ResourceConsumed,
     ResourceGathered,
+    ResourceProduced,
     ResourceStack,
     ResourceTraded,
     SimulationConfig,
@@ -437,6 +438,65 @@ def test_trade_fails_when_seller_lacks_stock() -> None:
         utility=1.0,
         target_resource="food",
         target_agent_id=AgentId(value=1),
+    )
+    bus = EventBus()
+    updated = ActionExecutor().execute(world, choice, bus=bus)
+    assert updated == world
+    completed = [event for event in bus.history if isinstance(event, ActionCompleted)]
+    assert completed[0].success is False
+
+
+def test_produce_crafts_recipe_and_emits_resource_produced() -> None:
+    """PRODUCE consumes inputs, adds outputs, and emits ResourceProduced."""
+    agent = Agent.create(agent_id=0, name="A").model_copy(
+        update={
+            "inventory": Inventory(
+                stacks=(
+                    ResourceStack(resource="food", quantity=2),
+                    ResourceStack(resource="water", quantity=1),
+                )
+            ),
+            "needs": Needs(food=1.0, water=1.0, energy=0.5, social=1.0, safety=1.0),
+        }
+    )
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        agents=(agent,),
+    )
+    choice = ActionChoice(
+        agent_id=AgentId(value=0),
+        action=ActionKind.PRODUCE,
+        utility=1.0,
+        target_resource="rations",
+    )
+    bus = EventBus()
+    updated = ActionExecutor().execute(world, choice, bus=bus)
+    crafted = updated.agents[0]
+    assert crafted.inventory.quantity("rations") == 1
+    assert crafted.inventory.quantity("food") == 0
+    assert crafted.needs.energy == 0.45
+    assert any(isinstance(event, ResourceProduced) for event in bus.history)
+    assert any(
+        isinstance(event, NeedDecayed) and event.need == "energy"
+        for event in bus.history
+    )
+    completed = [event for event in bus.history if isinstance(event, ActionCompleted)]
+    assert completed[0].success is True
+
+
+def test_produce_fails_without_inputs() -> None:
+    """PRODUCE fails cleanly when recipe inputs are missing."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    choice = ActionChoice(
+        agent_id=AgentId(value=0),
+        action=ActionKind.PRODUCE,
+        utility=1.0,
+        target_resource="tools",
     )
     bus = EventBus()
     updated = ActionExecutor().execute(world, choice, bus=bus)
