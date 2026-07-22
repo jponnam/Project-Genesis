@@ -79,6 +79,7 @@ class LawSystem:
                     active_customs_count=snap.active_customs_count,
                     active_land_tenure_count=snap.active_land_tenure_count,
                     active_conservation_count=snap.active_conservation_count,
+                    active_labor_count=snap.active_labor_count,
                 )
             )
         return world
