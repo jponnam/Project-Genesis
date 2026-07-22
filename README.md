@@ -130,16 +130,16 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 18 Milestone 8: Carver institutions**
+**Phase 18 Milestone 9: Sawpit infrastructure**
 
-``InstitutionKind.CARVER`` is a gov-attached teaching institution seated
-inside its government's jurisdiction. An active carver grants a
-teachings-per-knower bonus at its seat location that stacks with the
-scribe and dialectic society-wide bonuses and the scriptorium, stoa,
-academy, forum, school, collegium, architect, cartographer, agronomist,
-tailor, smith, and curriculum bonuses. Carvers are not seeded; the
-institution census and ``InstitutionsObserved`` event report the active
-carver count.
+``InfrastructureKind.SAWPIT`` is a city-seated infrastructure piece built
+inside its government's jurisdiction. An active sawpit grants a
+produce-energy discount at its seat location that stacks with the guild,
+workshop, weaver, smelter, joiner, foundry, fulling mill, forge works,
+mill town, ironworks, tannery, bellows, lathe, plane, abacus, pulley,
+customs, labor, safety codes, and loom produce discounts. Sawpits are not
+seeded; the infrastructure census and ``InfrastructuresObserved`` event
+report the active sawpit count.
 
 ### Completed
 
@@ -335,6 +335,7 @@ JSONL storage → `civitas run`
 - Milestone 6: Joiner institutions
 - Milestone 7: Joinery technology
 - Milestone 8: Carver institutions
+- Milestone 9: Sawpit infrastructure
 
 ## License
 

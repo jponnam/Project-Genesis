@@ -200,7 +200,11 @@ bellows, lathe, abacus, pulley, customs, labor, safety codes, and loom).
 Phase 18 Milestone 8 adds CARVER teachings-per-knower bonuses at the
 institution seat (stacking with
 scribe/dialectic/scriptorium/academy/forum/school/stoa/collegium/
-architect/cartographer/agronomist/tailor/smith/curriculum).
+architect/cartographer/agronomist/tailor/smith/curriculum). Phase 18
+Milestone 9 adds SAWPIT produce-energy discounts at the infrastructure
+seat (stacking with guild, workshop, weaver, smelter, joiner, foundry,
+fulling mill, forge works, mill town, ironworks, tannery, bellows, lathe,
+plane, abacus, pulley, customs, labor, safety codes, and loom).
 The action
 executor,
 retrieval
@@ -325,6 +329,7 @@ WEAVER_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 SMELTER_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 FULLING_MILL_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 FORGE_WORKS_PRODUCE_ENERGY_DISCOUNT: float = 0.02
+SAWPIT_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 FOUNDRY_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 MILL_TOWN_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 IRONWORKS_PRODUCE_ENERGY_DISCOUNT: float = 0.02
@@ -525,6 +530,22 @@ def location_has_active_forge_works(
     )
     return any(
         item.kind is InfrastructureKind.FORGE_WORKS and item.location_id == target
+        for item in active_infrastructure(world)
+    )
+
+
+def location_has_active_sawpit(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active SAWPIT stands at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InfrastructureKind.SAWPIT and item.location_id == target
         for item in active_infrastructure(world)
     )
 
@@ -1572,7 +1593,8 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
     FULLING_MILL at the
     agent's location contributes ``FULLING_MILL_PRODUCE_ENERGY_DISCOUNT``.
     An active FORGE_WORKS at the agent's location contributes
-    ``FORGE_WORKS_PRODUCE_ENERGY_DISCOUNT``.
+    ``FORGE_WORKS_PRODUCE_ENERGY_DISCOUNT``. An active SAWPIT at the
+    agent's location contributes ``SAWPIT_PRODUCE_ENERGY_DISCOUNT``.
     An active FOUNDRY city at the
     agent's location contributes ``FOUNDRY_PRODUCE_ENERGY_DISCOUNT``. An
     active MILL_TOWN city at the agent's location contributes
@@ -1608,6 +1630,8 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
         discount += FULLING_MILL_PRODUCE_ENERGY_DISCOUNT
     if location_has_active_forge_works(world, agent.location_id):
         discount += FORGE_WORKS_PRODUCE_ENERGY_DISCOUNT
+    if location_has_active_sawpit(world, agent.location_id):
+        discount += SAWPIT_PRODUCE_ENERGY_DISCOUNT
     if location_has_active_foundry(world, agent.location_id):
         discount += FOUNDRY_PRODUCE_ENERGY_DISCOUNT
     if location_has_active_mill_town(world, agent.location_id):
@@ -1988,6 +2012,11 @@ def census_effects(world: World) -> EffectsCensus:
         for item in active_infrastructure(world)
         if item.kind is InfrastructureKind.FORGE_WORKS
     )
+    sawpits = tuple(
+        item
+        for item in active_infrastructure(world)
+        if item.kind is InfrastructureKind.SAWPIT
+    )
     foundries = tuple(
         city for city in active_cities(world) if city.kind is CityKind.FOUNDRY
     )
@@ -2064,6 +2093,8 @@ def census_effects(world: World) -> EffectsCensus:
         produce_discount += FULLING_MILL_PRODUCE_ENERGY_DISCOUNT
     if forge_works:
         produce_discount += FORGE_WORKS_PRODUCE_ENERGY_DISCOUNT
+    if sawpits:
+        produce_discount += SAWPIT_PRODUCE_ENERGY_DISCOUNT
     if foundries:
         produce_discount += FOUNDRY_PRODUCE_ENERGY_DISCOUNT
     if mill_towns:

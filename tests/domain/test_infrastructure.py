@@ -21,6 +21,7 @@ from civitas.domain import (
     DEFAULT_MINESHAFT_BUILD_COST,
     DEFAULT_OBSERVATORY_BUILD_COST,
     DEFAULT_ROAD_BUILD_COST,
+    DEFAULT_SAWPIT_BUILD_COST,
     DEFAULT_SCAFFOLD_BUILD_COST,
     DEFAULT_SCRIPTORIUM_BUILD_COST,
     DEFAULT_SHRINE_BUILD_COST,
@@ -220,6 +221,7 @@ def test_census_infrastructure_counts() -> None:
     assert snap.active_mineshaft_count == 0
     assert snap.active_forge_works_count == 0
     assert snap.active_lumber_yard_count == 0
+    assert snap.active_sawpit_count == 0
     assert census_infrastructure(world) == snap
 
 
@@ -951,6 +953,46 @@ def test_create_and_build_lumber_yard() -> None:
     )
     assert built is not None
     assert built.governments[0].treasury == 20 - DEFAULT_LUMBER_YARD_BUILD_COST
+
+
+def test_create_and_build_sawpit() -> None:
+    """SAWPIT is a distinct kind with its own catalog build cost."""
+    assert (
+        build_cost_for(InfrastructureKind.SAWPIT)
+        == DEFAULT_SAWPIT_BUILD_COST
+    )
+    world = _world(
+        Agent.create(agent_id=0, name="A"),
+        governments=(Government.create(0, "Camp", 0, (0,), treasury=20),),
+        infrastructure=(
+            Infrastructure.create(0, 0, 0, 0, "Well", InfrastructureKind.WELL),
+        ),
+    )
+    # Sawpit may coexist with a well at the same seat.
+    created = create_infrastructure(
+        world,
+        Infrastructure.create(
+            1, 0, 0, 0, "Sawpit", InfrastructureKind.SAWPIT
+        ),
+    )
+    assert created is not None
+    assert created.infrastructure[1].kind is InfrastructureKind.SAWPIT
+    snap = census_infrastructure(created)
+    assert snap.active_well_count == 1
+    assert snap.active_sawpit_count == 1
+
+    empty = _world(
+        Agent.create(agent_id=0, name="A"),
+        governments=(Government.create(0, "Camp", 0, (0,), treasury=20),),
+    )
+    built = build_infrastructure(
+        empty,
+        Infrastructure.create(
+            0, 0, 0, 0, "Paid Sawpit", InfrastructureKind.SAWPIT
+        ),
+    )
+    assert built is not None
+    assert built.governments[0].treasury == 20 - DEFAULT_SAWPIT_BUILD_COST
 
 
 def test_world_rejects_city_location_mismatch() -> None:
