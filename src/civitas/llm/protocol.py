@@ -9,8 +9,9 @@ from pydantic import BaseModel, ConfigDict, Field
 from civitas.domain.types import NonEmptyStr, NonNegativeInt
 
 # Reflection prompts embed episode content plus need metadata; tech-tree
-# fact lists can push past the shared NonEmptyStr 128-char bound.
-PromptStr = Annotated[str, Field(min_length=1, max_length=256)]
+# fact lists can push past the shared NonEmptyStr 128-char bound and the
+# earlier 256-char prompt ceiling once seafaring joins the catalog.
+PromptStr = Annotated[str, Field(min_length=1, max_length=384)]
 
 
 class LanguageModelRequest(BaseModel):

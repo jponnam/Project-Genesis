@@ -126,11 +126,12 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 14 Milestone 9: Beacon infrastructure**
+**Phase 14 Milestone 10: Seafaring technology**
 
-``InfrastructureKind.BEACON`` (build cost 9) grants a seat-scoped retrieval
-limit bonus that stacks with archive, library, observatory, lyceum, star
-chart, plumb line, map, and calendar.
+``TechnologyKind.SEAFARING`` (id 18) requires cartography. Research
+threshold 10. ``InnovationKind.SAIL`` raises water gather by 1
+society-wide when active, stacking with pottery craft and irrigation
+canal.
 
 ### Completed
 
@@ -271,6 +272,7 @@ JSONL storage → `civitas run`
 - Milestone 7: Cartography technology
 - Milestone 8: Cartographer institutions
 - Milestone 9: Beacon infrastructure
+- Milestone 10: Seafaring technology
 
 ## License
 

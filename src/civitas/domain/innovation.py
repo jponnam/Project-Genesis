@@ -33,6 +33,7 @@ from civitas.domain.technology import (
     CAMP_PHILOSOPHY,
     CAMP_POTTERY,
     CAMP_RHETORIC,
+    CAMP_SEAFARING,
     CAMP_SURVEYING,
     CAMP_WRITING,
     technology_by_id,
@@ -65,6 +66,7 @@ class InnovationKind(StrEnum):
     PLUMB_LINE = "plumb_line"
     COMPASS = "compass"
     MAP = "map"
+    SAIL = "sail"
 
 
 class Innovation(BaseModel):
@@ -242,6 +244,14 @@ CAMP_MAP: Innovation = Innovation.create(
     active=False,
 )
 
+CAMP_SAIL: Innovation = Innovation.create(
+    18,
+    CAMP_SEAFARING.technology_id.value,
+    "Camp Sail",
+    InnovationKind.SAIL,
+    active=False,
+)
+
 
 def default_innovations() -> tuple[Innovation, ...]:
     """Return the canonical initial innovation set."""
@@ -264,6 +274,7 @@ def default_innovations() -> tuple[Innovation, ...]:
         CAMP_PLUMB_LINE,
         CAMP_COMPASS,
         CAMP_MAP,
+        CAMP_SAIL,
     )
 
 
@@ -294,6 +305,7 @@ class InnovationCensus(BaseModel):
     active_plumb_line_count: NonNegativeInt = 0
     active_compass_count: NonNegativeInt = 0
     active_map_count: NonNegativeInt = 0
+    active_sail_count: NonNegativeInt = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -459,6 +471,7 @@ def census_innovations(world: World) -> InnovationCensus:
     plumb_line = sum(1 for item in active if item.kind is InnovationKind.PLUMB_LINE)
     compass = sum(1 for item in active if item.kind is InnovationKind.COMPASS)
     camp_map = sum(1 for item in active if item.kind is InnovationKind.MAP)
+    sail = sum(1 for item in active if item.kind is InnovationKind.SAIL)
     return InnovationCensus(
         tick=world.tick,
         innovation_count=len(innovations),
@@ -482,4 +495,5 @@ def census_innovations(world: World) -> InnovationCensus:
         active_plumb_line_count=plumb_line,
         active_compass_count=compass,
         active_map_count=camp_map,
+        active_sail_count=sail,
     )
