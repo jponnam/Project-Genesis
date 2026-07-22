@@ -189,6 +189,10 @@ the pastoral city seat). Phase 18 Milestone 5 adds a TIMBER_TOWN city
 wood-gather bonus at the city seat (stacking with the sawmill and coppice
 society-wide bonuses, the scaffold seat, the woodcutter seat, the lumber
 yard seat, the timber rights subject bonus, and the pastoral city seat).
+Phase 18 Milestone 6 adds JOINER produce-energy discounts at the
+institution seat (stacking with guild, workshop, weaver, smelter,
+foundry, fulling mill, forge works, mill town, ironworks, tannery,
+bellows, lathe, abacus, pulley, customs, labor, safety codes, and loom).
 The action
 executor,
 retrieval
@@ -315,6 +319,7 @@ FORGE_WORKS_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 FOUNDRY_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 MILL_TOWN_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 IRONWORKS_PRODUCE_ENERGY_DISCOUNT: float = 0.02
+JOINER_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 MATHEMATICS_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 ENGINEERING_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 TEXTILES_PRODUCE_ENERGY_DISCOUNT: float = 0.02
@@ -814,6 +819,22 @@ def location_has_active_woodcutter(
     )
     return any(
         item.kind is InstitutionKind.WOODCUTTER and item.location_id == target
+        for item in active_institutions(world)
+    )
+
+
+def location_has_active_joiner(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active JOINER is seated at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InstitutionKind.JOINER and item.location_id == target
         for item in active_institutions(world)
     )
 
@@ -1531,7 +1552,9 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
     active MILL_TOWN city at the agent's location contributes
     ``MILL_TOWN_PRODUCE_ENERGY_DISCOUNT``. An active IRONWORKS city at the
     agent's location contributes ``IRONWORKS_PRODUCE_ENERGY_DISCOUNT``. An
-    active ``CUSTOMS`` statute contributes its subject discount. An active
+    active JOINER at the agent's location contributes
+    ``JOINER_PRODUCE_ENERGY_DISCOUNT``. An active ``CUSTOMS`` statute
+    contributes its subject discount. An active
     ABACUS innovation contributes ``MATHEMATICS_PRODUCE_ENERGY_DISCOUNT``
     society-wide. An active PULLEY innovation contributes
     ``ENGINEERING_PRODUCE_ENERGY_DISCOUNT`` society-wide. An active LOOM
@@ -1564,6 +1587,8 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
         discount += MILL_TOWN_PRODUCE_ENERGY_DISCOUNT
     if location_has_active_ironworks(world, agent.location_id):
         discount += IRONWORKS_PRODUCE_ENERGY_DISCOUNT
+    if location_has_active_joiner(world, agent.location_id):
+        discount += JOINER_PRODUCE_ENERGY_DISCOUNT
     discount += customs_produce_discount_for(world, agent)
     discount += labor_produce_discount_for(world, agent)
     discount += safety_codes_produce_discount_for(world, agent)
@@ -1917,6 +1942,11 @@ def census_effects(world: World) -> EffectsCensus:
         for item in active_institutions(world)
         if item.kind is InstitutionKind.SMELTER
     )
+    joiners = tuple(
+        item
+        for item in active_institutions(world)
+        if item.kind is InstitutionKind.JOINER
+    )
     fulling_mills = tuple(
         item
         for item in active_infrastructure(world)
@@ -1997,6 +2027,8 @@ def census_effects(world: World) -> EffectsCensus:
         produce_discount += WEAVER_PRODUCE_ENERGY_DISCOUNT
     if smelters:
         produce_discount += SMELTER_PRODUCE_ENERGY_DISCOUNT
+    if joiners:
+        produce_discount += JOINER_PRODUCE_ENERGY_DISCOUNT
     if fulling_mills:
         produce_discount += FULLING_MILL_PRODUCE_ENERGY_DISCOUNT
     if forge_works:
