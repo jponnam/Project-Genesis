@@ -16,6 +16,7 @@ from civitas.domain import (
     ETHICS_MIN_TEACH_TRUST_DELTA,
     LABOR_PRODUCE_ENERGY_DISCOUNT,
     LAND_TENURE_EAT_RESTORE_BONUS,
+    MINERAL_RIGHTS_STONE_GATHER_BONUS,
     PASSAGE_MOVE_ENERGY_DISCOUNT,
     QUARANTINE_REST_RESTORE_BONUS,
     SANITATION_DRINK_RESTORE_BONUS,
@@ -38,6 +39,7 @@ from civitas.domain import (
     active_labor_law,
     active_land_tenure_law,
     active_market_fee_law,
+    active_mineral_rights_law,
     active_passage_law,
     active_quarantine_law,
     active_sanitation_law,
@@ -58,6 +60,7 @@ from civitas.domain import (
     land_tenure_eat_bonus_for,
     levy_taxes,
     market_fee_for,
+    mineral_rights_stone_bonus_for,
     passage_move_discount_for,
     quarantine_rest_bonus_for,
     repeal_law,
@@ -1061,6 +1064,52 @@ def test_conservation_bonus_requires_living_subject() -> None:
     assert conservation_wood_bonus_for(bare, bare.agents[0]) == 0
 
 
+def test_enact_mineral_rights_and_uniqueness() -> None:
+    """MINERAL_RIGHTS enacts once per government; kind alone enables stone bonus."""
+    world = _world(Agent.create(agent_id=0, name="A"))
+    mineral_rights = Law.create(0, 0, "Camp Mineral Rights", LawKind.MINERAL_RIGHTS)
+    enacted = enact_law(world, mineral_rights)
+    assert enacted is not None
+    assert active_mineral_rights_law(enacted, 0) == mineral_rights
+    assert mineral_rights_stone_bonus_for(enacted, enacted.agents[0]) == (
+        MINERAL_RIGHTS_STONE_GATHER_BONUS
+    )
+    assert MINERAL_RIGHTS_STONE_GATHER_BONUS == 1
+    duplicate = Law.create(1, 0, "Other Mineral Rights", LawKind.MINERAL_RIGHTS)
+    assert enact_law(enacted, duplicate) is None
+    # Other unique kinds may coexist with MINERAL_RIGHTS.
+    conservation = Law.create(1, 0, "Camp Conservation", LawKind.CONSERVATION)
+    with_conservation = enact_law(enacted, conservation)
+    assert with_conservation is not None
+    assert active_mineral_rights_law(with_conservation, 0) == mineral_rights
+
+
+def test_mineral_rights_bonus_requires_living_subject() -> None:
+    """Only living agents under MINERAL_RIGHTS receive the stone gather bonus."""
+    mineral_rights = Law.create(0, 0, "Camp Mineral Rights", LawKind.MINERAL_RIGHTS)
+    world = _world(Agent.create(agent_id=0, name="A"), laws=(mineral_rights,))
+    assert mineral_rights_stone_bonus_for(world, world.agents[0]) == (
+        MINERAL_RIGHTS_STONE_GATHER_BONUS
+    )
+    dead = world.agents[0].model_copy(
+        update={
+            "status": AgentStatus.DEAD,
+            "health": world.agents[0].health.model_copy(update={"vitality": 0.0}),
+        }
+    )
+    assert mineral_rights_stone_bonus_for(world, dead) == 0
+    ungoverned = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(),
+        laws=(),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert mineral_rights_stone_bonus_for(ungoverned, ungoverned.agents[0]) == 0
+    bare = _world(Agent.create(agent_id=0, name="A"))
+    assert mineral_rights_stone_bonus_for(bare, bare.agents[0]) == 0
+
+
 def test_enact_labor_and_uniqueness() -> None:
     """LABOR enacts once per government; kind alone enables discount."""
     world = _world(Agent.create(agent_id=0, name="A"))
@@ -1199,6 +1248,9 @@ def test_census_laws_counts() -> None:
     conservation = Law.create(14, 0, "Conservation", LawKind.CONSERVATION, active=True)
     labor = Law.create(15, 0, "Labor", LawKind.LABOR, active=True)
     sumptuary = Law.create(16, 0, "Sumptuary", LawKind.SUMPTUARY, active=True)
+    mineral_rights = Law.create(
+        17, 0, "Mineral Rights", LawKind.MINERAL_RIGHTS, active=True
+    )
     world = _world(
         Agent.create(agent_id=0, name="A"),
         laws=(
@@ -1219,11 +1271,12 @@ def test_census_laws_counts() -> None:
             conservation,
             labor,
             sumptuary,
+            mineral_rights,
         ),
     )
     snap = census_laws(world)
-    assert snap.law_count == 17
-    assert snap.active_count == 16
+    assert snap.law_count == 18
+    assert snap.active_count == 17
     assert snap.inactive_count == 1
     assert snap.governments_with_active_laws == 1
     assert snap.active_tax_schedule_count == 1
@@ -1242,6 +1295,7 @@ def test_census_laws_counts() -> None:
     assert snap.active_conservation_count == 1
     assert snap.active_labor_count == 1
     assert snap.active_sumptuary_count == 1
+    assert snap.active_mineral_rights_count == 1
     assert census_laws(world) == snap
 
 

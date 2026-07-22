@@ -534,6 +534,7 @@ class LawsObserved(DomainEvent):
     active_conservation_count: NonNegativeInt = 0
     active_labor_count: NonNegativeInt = 0
     active_sumptuary_count: NonNegativeInt = 0
+    active_mineral_rights_count: NonNegativeInt = 0
 
 
 class ElectionResolved(DomainEvent):
