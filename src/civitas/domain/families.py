@@ -1,8 +1,8 @@
 """Kinship helpers and family-lineage census over birth parentage.
 
 Families are observe-time analytics over ``AgentIdentity.parent_id``.
-They do not mutate agents or relationships. Social-network clustering over
-affinity bonds is a later Phase 4 milestone.
+They do not mutate agents or relationships. Social-network analytics over
+affinity bonds live in the networks module.
 """
 
 from __future__ import annotations

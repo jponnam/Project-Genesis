@@ -349,6 +349,29 @@ class FamiliesObserved(DomainEvent):
     max_living_children: NonNegativeInt
 
 
+class NetworksObserved(DomainEvent):
+    """Emitted when a social-network census is taken."""
+
+    living_agent_count: NonNegativeInt
+    directed_edge_count: NonNegativeInt
+    undirected_edge_count: NonNegativeInt
+    reciprocal_pair_count: NonNegativeInt
+    reciprocity_rate: float
+    reciprocity_bps: NonNegativeInt
+    mean_degree: float
+    max_degree: NonNegativeInt
+    max_degree_agent_id: AgentId | None = None
+    isolated_count: NonNegativeInt
+    component_count: NonNegativeInt
+    largest_component_size: NonNegativeInt
+    mean_component_size: float
+    density: float
+    density_bps: NonNegativeInt
+    strongest_from_id: AgentId | None = None
+    strongest_to_id: AgentId | None = None
+    strongest_strength: UnitInterval | None = None
+
+
 CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     SimulationStarted,
     SimulationCompleted,
@@ -380,6 +403,7 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     RelationshipsObserved,
     ReputationObserved,
     FamiliesObserved,
+    NetworksObserved,
 )
 
 EVENT_TYPE_REGISTRY: dict[str, type[DomainEvent]] = {

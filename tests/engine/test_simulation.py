@@ -14,6 +14,7 @@ from civitas.domain import (
     MarketCreated,
     MarketObserved,
     NeedDecayed,
+    NetworksObserved,
     PopulationObserved,
     PriceObserved,
     RelationshipsObserved,
@@ -382,3 +383,25 @@ def test_families_observed_each_tick_including_start() -> None:
         if isinstance(event, FamiliesObserved)
     ]
     assert all(fam > rep for rep, fam in zip(rep_indexes, fam_indexes, strict=True))
+
+
+def test_networks_observed_each_tick_including_start() -> None:
+    """Engine emits an initial network census plus one per executed tick."""
+    result = SimulationEngine().run(SimulationConfig(seed=42, ticks=3, agent_count=4))
+    observed = [event for event in result.events if isinstance(event, NetworksObserved)]
+    assert len(observed) == 4  # tick 0 + ticks 1..3
+    assert observed[0].tick.value == 0
+    assert observed[-1].tick.value == 3
+    assert all(event.component_count == event.living_agent_count for event in observed)
+    # Networks follow families in the observe chain.
+    fam_indexes = [
+        i
+        for i, event in enumerate(result.events)
+        if isinstance(event, FamiliesObserved)
+    ]
+    net_indexes = [
+        i
+        for i, event in enumerate(result.events)
+        if isinstance(event, NetworksObserved)
+    ]
+    assert all(net > fam for fam, net in zip(fam_indexes, net_indexes, strict=True))
