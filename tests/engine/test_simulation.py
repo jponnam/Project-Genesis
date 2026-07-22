@@ -11,6 +11,7 @@ from civitas.domain import (
     AgentSpawned,
     CitiesObserved,
     CityCreated,
+    CognitionObserved,
     ElectionsObserved,
     FamiliesObserved,
     GovernmentCreated,
@@ -705,5 +706,34 @@ def test_knowledge_observed_each_tick_including_start() -> None:
         knowledge > innovation
         for innovation, knowledge in zip(
             innovation_indexes, knowledge_indexes, strict=True
+        )
+    )
+
+
+def test_cognition_observed_each_tick_including_start() -> None:
+    """Engine emits an initial cognition census plus one per executed tick."""
+    result = SimulationEngine().run(SimulationConfig(seed=42, ticks=3, agent_count=4))
+    observed = [
+        event for event in result.events if isinstance(event, CognitionObserved)
+    ]
+    assert len(observed) == 4
+    assert observed[0].tick.value == 0
+    assert observed[0].total_records == 0
+    assert observed[-1].tick.value == 3
+    assert observed[-1].total_records == 12
+    knowledge_indexes = [
+        i
+        for i, event in enumerate(result.events)
+        if isinstance(event, KnowledgeObserved)
+    ]
+    cognition_indexes = [
+        i
+        for i, event in enumerate(result.events)
+        if isinstance(event, CognitionObserved)
+    ]
+    assert all(
+        cognition > knowledge
+        for knowledge, cognition in zip(
+            knowledge_indexes, cognition_indexes, strict=True
         )
     )
