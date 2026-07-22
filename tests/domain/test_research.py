@@ -50,6 +50,8 @@ from civitas.domain import (
     CAMP_RHETORIC_RESEARCH,
     CAMP_SEAFARING,
     CAMP_SEAFARING_RESEARCH,
+    CAMP_SMITHING,
+    CAMP_SMITHING_RESEARCH,
     CAMP_SURVEYING,
     CAMP_SURVEYING_RESEARCH,
     CAMP_SYLLOGISM,
@@ -92,7 +94,7 @@ def _world(
     )
 
 
-def test_default_research_progress_seeds_pottery_through_mining() -> None:
+def test_default_research_progress_seeds_pottery_through_smithing() -> None:
     """Canonical research tracks undiscovered technologies at zero points."""
     assert default_research_progress() == (
         CAMP_POTTERY_RESEARCH,
@@ -120,6 +122,7 @@ def test_default_research_progress_seeds_pottery_through_mining() -> None:
         CAMP_DYEING_RESEARCH,
         CAMP_TANNING_RESEARCH,
         CAMP_MINING_RESEARCH,
+        CAMP_SMITHING_RESEARCH,
     )
     assert CAMP_POTTERY_RESEARCH.technology_id == CAMP_POTTERY.technology_id
     assert CAMP_POTTERY_RESEARCH.points == 0
@@ -196,6 +199,9 @@ def test_default_research_progress_seeds_pottery_through_mining() -> None:
     assert CAMP_MINING_RESEARCH.technology_id == CAMP_MINING.technology_id
     assert CAMP_MINING_RESEARCH.points == 0
     assert CAMP_MINING_RESEARCH.threshold == 10
+    assert CAMP_SMITHING_RESEARCH.technology_id == CAMP_SMITHING.technology_id
+    assert CAMP_SMITHING_RESEARCH.points == 0
+    assert CAMP_SMITHING_RESEARCH.threshold == 10
 
 
 def test_advance_research_increments_and_discovers() -> None:
@@ -239,6 +245,7 @@ def test_advance_research_increments_and_discovers() -> None:
         CAMP_DYEING_RESEARCH,
         CAMP_TANNING_RESEARCH,
         CAMP_MINING_RESEARCH,
+        CAMP_SMITHING_RESEARCH,
     )
     assert world.technologies[1].discovered is True
     assert world.technologies[1].kind is TechnologyKind.POTTERY
@@ -278,6 +285,7 @@ def test_advance_research_large_step_discovers_immediately() -> None:
         CAMP_DYEING_RESEARCH,
         CAMP_TANNING_RESEARCH,
         CAMP_MINING_RESEARCH,
+        CAMP_SMITHING_RESEARCH,
     )
     assert world.technologies[1].discovered is True
 
@@ -741,6 +749,7 @@ def test_active_syllogism_adds_research_point_per_tick() -> None:
             CAMP_DYEING,
             CAMP_TANNING,
             CAMP_MINING,
+            CAMP_SMITHING,
         ),
         research_progress=(CAMP_POTTERY_RESEARCH,),
         innovations=tuple(
