@@ -32,8 +32,11 @@ fee at the enacting government's markets by 1 (Phase 16 M11), stacking
 with bureaucracy, harbor, merchant, dyer, warehouse, and mordant.
 Active ``MINERAL_RIGHTS`` statutes grant living subjects +1 STONE gather
 (Phase 17 M2), stacking with pickaxe and forge society-wide, the mason
-seat, and the quarry city. Elections (voting) are a separate Phase 5
-aggregate, as are institutions.
+seat, and the quarry city. Active ``SAFETY_CODES`` statutes grant living
+subjects -0.02 PRODUCE energy cost (Phase 17 M11), stacking with guild,
+workshop, weaver, smelter, foundry, fulling mill, forge works, mill
+town, tannery, bellows, lathe, abacus, pulley, customs, labor, and loom.
+Elections (voting) are a separate Phase 5 aggregate, as are institutions.
 """
 
 from __future__ import annotations
@@ -73,6 +76,7 @@ class LawKind(StrEnum):
     LABOR = "labor"
     SUMPTUARY = "sumptuary"
     MINERAL_RIGHTS = "mineral_rights"
+    SAFETY_CODES = "safety_codes"
 
 
 # Statute kinds that allow at most one active law per government.
@@ -95,6 +99,7 @@ _UNIQUE_ACTIVE_KINDS: frozenset[LawKind] = frozenset(
         LawKind.LABOR,
         LawKind.SUMPTUARY,
         LawKind.MINERAL_RIGHTS,
+        LawKind.SAFETY_CODES,
     }
 )
 
@@ -143,6 +148,9 @@ SUMPTUARY_MARKET_FEE_DISCOUNT: int = 1
 # Kind-only STONE gather bonus for living subjects under active MINERAL_RIGHTS.
 MINERAL_RIGHTS_STONE_GATHER_BONUS: int = 1
 
+# Kind-only PRODUCE energy discount for living subjects under SAFETY_CODES.
+SAFETY_CODES_PRODUCE_ENERGY_DISCOUNT: float = 0.02
+
 
 class Law(BaseModel):
     """One statute enacted by a government."""
@@ -161,7 +169,7 @@ class Law(BaseModel):
             "ignored by CURRICULUM, CALENDAR, ETHICS, ASSEMBLY, SANITATION, "
             "QUARANTINE, BUILDING_CODES, ZONING, PASSAGE, CUSTOMS, "
             "LAND_TENURE, CONSERVATION, LABOR, SUMPTUARY, MINERAL_RIGHTS, "
-            "and other kinds."
+            "SAFETY_CODES, and other kinds."
         ),
     )
     rate_bps: NonNegativeInt = Field(
@@ -237,6 +245,7 @@ class LawCensus(BaseModel):
     active_labor_count: NonNegativeInt = 0
     active_sumptuary_count: NonNegativeInt = 0
     active_mineral_rights_count: NonNegativeInt = 0
+    active_safety_codes_count: NonNegativeInt = 0
 
 
 def law_by_id(world: World, law_id: LawId | int) -> Law | None:
@@ -778,6 +787,36 @@ def mineral_rights_stone_bonus_for(world: World, agent: Agent) -> int:
     return MINERAL_RIGHTS_STONE_GATHER_BONUS
 
 
+def active_safety_codes_law(
+    world: World,
+    government_id: GovernmentId | int,
+) -> Law | None:
+    """Return the active safety-codes statute for ``government_id``, if any.
+
+    When multiple active ``SAFETY_CODES`` laws exist (should not under
+    uniqueness rules), the lowest ``law_id`` wins.
+    """
+    for law in active_laws(world, government_id):
+        if law.kind == LawKind.SAFETY_CODES:
+            return law
+    return None
+
+
+def safety_codes_produce_discount_for(world: World, agent: Agent) -> float:
+    """Return -0.02 PRODUCE cost when ``agent`` is under active SAFETY_CODES.
+
+    The statute kind alone enables the discount; ``flat_amount`` is ignored.
+    """
+    if not agent.is_alive():
+        return 0.0
+    government = government_at(world, agent.location_id)
+    if government is None:
+        return 0.0
+    if active_safety_codes_law(world, government.government_id) is None:
+        return 0.0
+    return SAFETY_CODES_PRODUCE_ENERGY_DISCOUNT
+
+
 def _has_active_kind(
     world: World,
     government_id: GovernmentId,
@@ -868,6 +907,9 @@ def census_laws(world: World) -> LawCensus:
     active_mineral_rights = sum(
         1 for law in active if law.kind == LawKind.MINERAL_RIGHTS
     )
+    active_safety_codes = sum(
+        1 for law in active if law.kind == LawKind.SAFETY_CODES
+    )
     return LawCensus(
         tick=world.tick,
         law_count=len(laws),
@@ -891,6 +933,7 @@ def census_laws(world: World) -> LawCensus:
         active_labor_count=active_labor,
         active_sumptuary_count=active_sumptuary,
         active_mineral_rights_count=active_mineral_rights,
+        active_safety_codes_count=active_safety_codes,
     )
 
 
@@ -908,6 +951,7 @@ __all__ = [
     "MINERAL_RIGHTS_STONE_GATHER_BONUS",
     "PASSAGE_MOVE_ENERGY_DISCOUNT",
     "QUARANTINE_REST_RESTORE_BONUS",
+    "SAFETY_CODES_PRODUCE_ENERGY_DISCOUNT",
     "SANITATION_DRINK_RESTORE_BONUS",
     "SUMPTUARY_MARKET_FEE_DISCOUNT",
     "ZONING_EAT_RESTORE_BONUS",
@@ -928,6 +972,7 @@ __all__ = [
     "active_mineral_rights_law",
     "active_passage_law",
     "active_quarantine_law",
+    "active_safety_codes_law",
     "active_sanitation_law",
     "active_sumptuary_law",
     "active_tax_schedule",
@@ -951,6 +996,7 @@ __all__ = [
     "passage_move_discount_for",
     "quarantine_rest_bonus_for",
     "repeal_law",
+    "safety_codes_produce_discount_for",
     "sanitation_drink_bonus_for",
     "set_law_active",
     "sumptuary_market_discount_for",
