@@ -128,12 +128,13 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 16 Milestone 7: Dyeing technology**
+**Phase 16 Milestone 8: Tailor institutions**
 
-``TechnologyKind.DYEING`` is an undiscovered technology gated behind
-textiles. Its ``MORDANT`` innovation, once active, grants a society-wide
-market-fee discount that stacks with bureaucracy, harbor, merchant, and
-dyer.
+``InstitutionKind.TAILOR`` is a gov-attached institution whose active
+seat grants a teachings-per-knower bonus at its location. The bonus
+stacks with scribe, dialectic, scriptorium, academy, forum, school,
+stoa, collegium, architect, cartographer, agronomist, and the
+curriculum law. Tailors are not seeded.
 
 ### Completed
 
@@ -300,6 +301,7 @@ JSONL storage → `civitas run`
 - Milestone 5: Mill town cities
 - Milestone 6: Dyer institutions
 - Milestone 7: Dyeing technology
+- Milestone 8: Tailor institutions
 
 ## License
 
