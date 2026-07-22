@@ -3,7 +3,8 @@
 Phase 5 Milestone 6. Infrastructure pieces attach to a city seat inside a
 government jurisdiction. This milestone seeds a single ``WELL`` kind as
 declarative water capacity. Tech trees, build costs, roads, storehouses,
-and effect wiring remain later milestones.
+and build costs remain later milestones. Effect wiring (Phase 8) applies
+WELL drink-restore bonuses for colocated agents.
 """
 
 from __future__ import annotations

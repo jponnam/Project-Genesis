@@ -1,7 +1,7 @@
-"""Effects system: observe society modifiers from active innovations.
+"""Effects system: observe society modifiers from tech and infrastructure.
 
 Owns observe-time ``EffectsObserved``. Does not apply world mutations;
-the action executor reads domain effect helpers when REST/GATHER run.
+the action executor reads domain effect helpers when REST/GATHER/DRINK run.
 """
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ class EffectsConfig(BaseModel):
 
 
 class EffectsSystem:
-    """Observe society effect coverage from active innovations."""
+    """Observe society effect coverage from innovations and infrastructure."""
 
     def __init__(self, config: EffectsConfig | None = None) -> None:
         self._config = config if config is not None else EffectsConfig()
@@ -59,6 +59,8 @@ class EffectsSystem:
                     pottery_craft_active=snap.pottery_craft_active,
                     rest_restore_bps=snap.rest_restore_bps,
                     water_gather_amount=snap.water_gather_amount,
+                    active_well_count=snap.active_well_count,
+                    drink_restore_bps=snap.drink_restore_bps,
                 )
             )
         return world

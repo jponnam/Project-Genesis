@@ -10,19 +10,25 @@ from civitas.domain import (
     CAMP_LOCATION,
     CAMP_POTTERY,
     CAMP_POTTERY_CRAFT,
+    DEFAULT_DRINK_RESTORE,
     DEFAULT_GATHER_AMOUNT,
     DEFAULT_REST_RESTORE,
     FIRE_HEARTH_REST_BONUS,
     POTTERY_WATER_GATHER_BONUS,
+    WELL_DRINK_RESTORE_BONUS,
     Agent,
     SimulationConfig,
     World,
     census_effects,
+    drink_restore_bonus,
+    effective_drink_restore,
     effective_gather_amount,
     effective_rest_restore,
     gather_amount_bonus,
+    location_has_active_well,
     rest_restore_bonus,
 )
+from civitas.engine import WorldFactory
 
 
 def _world(*, innovations: tuple = ()) -> World:
@@ -73,3 +79,19 @@ def test_census_effects_reports_active_bonuses() -> None:
     assert snap.pottery_craft_active == 0
     assert snap.rest_restore_bps == 2500
     assert snap.water_gather_amount == 1
+    assert snap.active_well_count == 0
+    assert snap.drink_restore_bps == 3000
+
+
+def test_well_boosts_drink_restore_for_colocated_agents() -> None:
+    """Active wells add a DRINK restore bonus at their seat location."""
+    world = WorldFactory().create(SimulationConfig(seed=1, agent_count=1))
+    agent = world.agents[0]
+    assert location_has_active_well(world, agent.location_id) is True
+    assert drink_restore_bonus(world, agent) == WELL_DRINK_RESTORE_BONUS
+    assert effective_drink_restore(world, agent) == pytest.approx(
+        DEFAULT_DRINK_RESTORE + WELL_DRINK_RESTORE_BONUS
+    )
+    snap = census_effects(world)
+    assert snap.active_well_count == 1
+    assert snap.drink_restore_bps == 3500
