@@ -101,6 +101,8 @@ city food-gather bonuses at the city seat (stacking with plow,
 storehouse, waystation, entrepot, and granary). Phase 15 Milestone 6
 adds HUSBANDMAN food-gather bonuses at the institution seat (stacking
 with plow, storehouse, waystation, entrepot, granary, and farmstead).
+Phase 15 Milestone 7 adds a global FALLOW EAT restore bonus (stacking
+with zoning and land tenure for subjects).
 The action executor, retrieval path, market fills, knowledge diffusion,
 and research progression read these helpers; ``EffectsSystem`` only
 observes coverage. Systems never call each other.
@@ -187,6 +189,7 @@ FARMSTEAD_FOOD_GATHER_BONUS: int = 1
 GRANARY_FOOD_GATHER_BONUS: int = 1
 HUSBANDMAN_FOOD_GATHER_BONUS: int = 1
 AGRICULTURE_FOOD_GATHER_BONUS: int = 1
+CROP_ROTATION_EAT_RESTORE_BONUS: float = 0.05
 SCAFFOLD_WOOD_GATHER_BONUS: int = 1
 MASON_STONE_GATHER_BONUS: int = 1
 QUARRY_STONE_GATHER_BONUS: int = 1
@@ -1034,12 +1037,19 @@ def drink_restore_bonus(world: World, agent: Agent) -> float:
 
 
 def eat_restore_bonus(world: World, agent: Agent) -> float:
-    """Return the EAT restore bonus from zoning and land-tenure laws.
+    """Return the EAT restore bonus from fallow, zoning, and land tenure.
 
-    An active ``ZONING`` statute and an active ``LAND_TENURE`` statute
-    each contribute for living subjects and stack when both are present.
+    An active FALLOW innovation contributes
+    ``CROP_ROTATION_EAT_RESTORE_BONUS`` society-wide. An active ``ZONING``
+    statute and an active ``LAND_TENURE`` statute each contribute for
+    living subjects. All stack when present.
     """
-    return zoning_eat_bonus_for(world, agent) + land_tenure_eat_bonus_for(world, agent)
+    bonus = 0.0
+    if innovation_kind_is_active(world, InnovationKind.FALLOW):
+        bonus += CROP_ROTATION_EAT_RESTORE_BONUS
+    bonus += zoning_eat_bonus_for(world, agent)
+    bonus += land_tenure_eat_bonus_for(world, agent)
+    return bonus
 
 
 def move_energy_discount(world: World, agent: Agent) -> float:
@@ -1289,9 +1299,11 @@ def effective_eat_restore(
     *,
     base: float = DEFAULT_EAT_RESTORE,
 ) -> float:
-    """Return EAT restore amount including zoning law bonuses.
+    """Return EAT restore amount including fallow, zoning, and land tenure.
 
-    ``effective_eat_restore = clamp_unit(base + eat_restore_bonus(...))``.
+    Fallow is society-wide. Zoning and land tenure apply for living
+    subjects. ``effective_eat_restore = clamp_unit(base +
+    eat_restore_bonus(...))``.
     """
     return clamp_unit(base + eat_restore_bonus(world, agent))
 

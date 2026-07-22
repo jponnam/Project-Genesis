@@ -42,6 +42,7 @@ def test_observe_emits_without_mutating_world() -> None:
     assert events[0].cartography_knower_count == 0
     assert events[0].seafaring_knower_count == 0
     assert events[0].agriculture_knower_count == 0
+    assert events[0].crop_rotation_knower_count == 0
     assert events[0].coverage_bps == 10_000
 
 

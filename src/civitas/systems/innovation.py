@@ -114,6 +114,7 @@ class InnovationSystem:
                     active_map_count=snap.active_map_count,
                     active_sail_count=snap.active_sail_count,
                     active_plow_count=snap.active_plow_count,
+                    active_fallow_count=snap.active_fallow_count,
                 )
             )
         return world

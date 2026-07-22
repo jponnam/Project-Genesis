@@ -54,6 +54,7 @@ NAVIGATION_FACT: str = TechnologyKind.NAVIGATION.value
 CARTOGRAPHY_FACT: str = TechnologyKind.CARTOGRAPHY.value
 SEAFARING_FACT: str = TechnologyKind.SEAFARING.value
 AGRICULTURE_FACT: str = TechnologyKind.AGRICULTURE.value
+CROP_ROTATION_FACT: str = TechnologyKind.CROP_ROTATION.value
 
 
 class KnowledgeSource(StrEnum):
@@ -92,6 +93,7 @@ class KnowledgeCensus(BaseModel):
     cartography_knower_count: NonNegativeInt = 0
     seafaring_knower_count: NonNegativeInt = 0
     agriculture_knower_count: NonNegativeInt = 0
+    crop_rotation_knower_count: NonNegativeInt = 0
     total_fact_instances: NonNegativeInt
     coverage_bps: NonNegativeInt
 
@@ -355,6 +357,9 @@ def census_knowledge(world: World) -> KnowledgeCensus:
     agriculture_knowers = sum(
         1 for agent in living if agent.knowledge.knows(AGRICULTURE_FACT)
     )
+    crop_rotation_knowers = sum(
+        1 for agent in living if agent.knowledge.knows(CROP_ROTATION_FACT)
+    )
     total_fact_instances = 0
     for agent in living:
         total_fact_instances += sum(
@@ -392,6 +397,7 @@ def census_knowledge(world: World) -> KnowledgeCensus:
         cartography_knower_count=cartography_knowers,
         seafaring_knower_count=seafaring_knowers,
         agriculture_knower_count=agriculture_knowers,
+        crop_rotation_knower_count=crop_rotation_knowers,
         total_fact_instances=total_fact_instances,
         coverage_bps=coverage_bps,
     )

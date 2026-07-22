@@ -30,9 +30,11 @@ from civitas.domain import (
     CAMP_BLUEPRINT,
     CAMP_CARTOGRAPHY,
     CAMP_COMPASS,
+    CAMP_CROP_ROTATION,
     CAMP_DIALECTIC,
     CAMP_DISSECTION,
     CAMP_ENGINEERING,
+    CAMP_FALLOW,
     CAMP_FIRE,
     CAMP_FIRE_HEARTH,
     CAMP_FORGE,
@@ -67,6 +69,7 @@ from civitas.domain import (
     CARTOGRAPHY_RETRIEVAL_LIMIT_BONUS,
     CLINIC_DRINK_RESTORE_BONUS,
     COLLEGIUM_TEACHINGS_PER_KNOWER_BONUS,
+    CROP_ROTATION_EAT_RESTORE_BONUS,
     CURRICULUM_TEACHINGS_PER_KNOWER_BONUS,
     CUSTOMS_PRODUCE_ENERGY_DISCOUNT,
     DEFAULT_DRINK_RESTORE,
@@ -846,6 +849,77 @@ def test_zoning_and_land_tenure_stack_eat_restore() -> None:
     expected = ZONING_EAT_RESTORE_BONUS + LAND_TENURE_EAT_RESTORE_BONUS
     assert zoning_eat_bonus_for(world, agent) == ZONING_EAT_RESTORE_BONUS
     assert land_tenure_eat_bonus_for(world, agent) == LAND_TENURE_EAT_RESTORE_BONUS
+    assert eat_restore_bonus(world, agent) == pytest.approx(expected)
+    assert effective_eat_restore(world, agent) == pytest.approx(
+        DEFAULT_EAT_RESTORE + expected
+    )
+
+
+def test_fallow_boosts_eat_restore_society_wide() -> None:
+    """Active fallow adds a deterministic society-wide EAT restore bonus."""
+    discovered_crop_rotation = CAMP_CROP_ROTATION.model_copy(
+        update={"discovered": True}
+    )
+    active_fallow = CAMP_FALLOW.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        technologies=tuple(
+            discovered_crop_rotation
+            if item.technology_id == CAMP_CROP_ROTATION.technology_id
+            else item
+            for item in default_technologies()
+        ),
+        innovations=tuple(
+            active_fallow if item.innovation_id == CAMP_FALLOW.innovation_id else item
+            for item in default_innovations()
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert eat_restore_bonus(world, agent) == CROP_ROTATION_EAT_RESTORE_BONUS
+    assert effective_eat_restore(world, agent) == pytest.approx(
+        DEFAULT_EAT_RESTORE + CROP_ROTATION_EAT_RESTORE_BONUS
+    )
+    bare = _world()
+    assert eat_restore_bonus(bare, bare.agents[0]) == 0.0
+    assert effective_eat_restore(bare, bare.agents[0]) == pytest.approx(
+        DEFAULT_EAT_RESTORE
+    )
+
+
+def test_fallow_stacks_with_zoning_and_land_tenure_eat_restore() -> None:
+    """Active fallow stacks with zoning and land tenure for EAT restore."""
+    discovered_crop_rotation = CAMP_CROP_ROTATION.model_copy(
+        update={"discovered": True}
+    )
+    active_fallow = CAMP_FALLOW.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(
+            Law.create(0, 0, "Camp Zoning", LawKind.ZONING),
+            Law.create(1, 0, "Camp Land Tenure", LawKind.LAND_TENURE),
+        ),
+        technologies=tuple(
+            discovered_crop_rotation
+            if item.technology_id == CAMP_CROP_ROTATION.technology_id
+            else item
+            for item in default_technologies()
+        ),
+        innovations=tuple(
+            active_fallow if item.innovation_id == CAMP_FALLOW.innovation_id else item
+            for item in default_innovations()
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    expected = (
+        CROP_ROTATION_EAT_RESTORE_BONUS
+        + ZONING_EAT_RESTORE_BONUS
+        + LAND_TENURE_EAT_RESTORE_BONUS
+    )
     assert eat_restore_bonus(world, agent) == pytest.approx(expected)
     assert effective_eat_restore(world, agent) == pytest.approx(
         DEFAULT_EAT_RESTORE + expected

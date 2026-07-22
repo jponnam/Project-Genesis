@@ -22,6 +22,7 @@ from civitas.domain.technology import (
     CAMP_ARCHITECTURE,
     CAMP_ASTRONOMY,
     CAMP_CARTOGRAPHY,
+    CAMP_CROP_ROTATION,
     CAMP_ENGINEERING,
     CAMP_FIRE,
     CAMP_HYGIENE,
@@ -69,6 +70,7 @@ class InnovationKind(StrEnum):
     MAP = "map"
     SAIL = "sail"
     PLOW = "plow"
+    FALLOW = "fallow"
 
 
 class Innovation(BaseModel):
@@ -262,6 +264,14 @@ CAMP_PLOW: Innovation = Innovation.create(
     active=False,
 )
 
+CAMP_FALLOW: Innovation = Innovation.create(
+    20,
+    CAMP_CROP_ROTATION.technology_id.value,
+    "Camp Fallow",
+    InnovationKind.FALLOW,
+    active=False,
+)
+
 
 def default_innovations() -> tuple[Innovation, ...]:
     """Return the canonical initial innovation set."""
@@ -286,6 +296,7 @@ def default_innovations() -> tuple[Innovation, ...]:
         CAMP_MAP,
         CAMP_SAIL,
         CAMP_PLOW,
+        CAMP_FALLOW,
     )
 
 
@@ -318,6 +329,7 @@ class InnovationCensus(BaseModel):
     active_map_count: NonNegativeInt = 0
     active_sail_count: NonNegativeInt = 0
     active_plow_count: NonNegativeInt = 0
+    active_fallow_count: NonNegativeInt = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -485,6 +497,7 @@ def census_innovations(world: World) -> InnovationCensus:
     camp_map = sum(1 for item in active if item.kind is InnovationKind.MAP)
     sail = sum(1 for item in active if item.kind is InnovationKind.SAIL)
     plow = sum(1 for item in active if item.kind is InnovationKind.PLOW)
+    fallow = sum(1 for item in active if item.kind is InnovationKind.FALLOW)
     return InnovationCensus(
         tick=world.tick,
         innovation_count=len(innovations),
@@ -510,4 +523,5 @@ def census_innovations(world: World) -> InnovationCensus:
         active_map_count=camp_map,
         active_sail_count=sail,
         active_plow_count=plow,
+        active_fallow_count=fallow,
     )

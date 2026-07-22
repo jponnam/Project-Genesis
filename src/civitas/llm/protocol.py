@@ -10,7 +10,7 @@ from civitas.domain.types import NonEmptyStr, NonNegativeInt
 
 # Reflection prompts embed episode content plus need metadata; tech-tree
 # fact lists can push past the shared NonEmptyStr 128-char bound and the
-# earlier 256-char prompt ceiling once seafaring joins the catalog.
+# earlier 256-char prompt ceiling once seafaring and later techs join.
 PromptStr = Annotated[str, Field(min_length=1, max_length=384)]
 
 
