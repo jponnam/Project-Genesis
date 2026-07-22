@@ -125,10 +125,10 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 13 Milestone 2: Building codes laws**
+**Phase 13 Milestone 3: Workshop institutions**
 
-``LawKind.BUILDING_CODES`` grants living subjects a MOVE energy discount that
-stacks with road infrastructure.
+``InstitutionKind.WORKSHOP`` grants a seat-scoped PRODUCE energy discount that
+stacks with guild, abacus, and pulley.
 
 ### Completed
 
@@ -248,6 +248,7 @@ JSONL storage → `civitas run`
 **Phase 13:**
 - Milestone 1: Engineering technology
 - Milestone 2: Building codes laws
+- Milestone 3: Workshop institutions
 
 ## License
 
