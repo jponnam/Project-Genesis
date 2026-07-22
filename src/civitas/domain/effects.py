@@ -3,11 +3,11 @@
 Phase 8 wired active innovations into REST/GATHER outcomes and WELL
 drink-restore bonuses. Phase 9 adds location-scoped STOREHOUSE food-gather
 bonuses, ROAD move-energy discounts, and GUILD produce-energy discounts.
-Phase 10 adds ARCHIVE retrieval-limit bonuses and SCRIPTORIUM
-teachings-per-knower bonuses (stacking with the global scribe innovation).
-The action executor, retrieval path, and knowledge diffusion read these
-helpers; ``EffectsSystem`` only observes coverage. Systems never call
-each other.
+Phase 10 adds ARCHIVE retrieval-limit bonuses, SCRIPTORIUM
+teachings-per-knower bonuses, and CURRICULUM law teachings bonuses
+(stacking with the global scribe innovation). The action executor,
+retrieval path, and knowledge diffusion read these helpers;
+``EffectsSystem`` only observes coverage. Systems never call each other.
 """
 
 from __future__ import annotations
@@ -23,6 +23,7 @@ from civitas.domain.ids import LocationId
 from civitas.domain.infrastructure import InfrastructureKind, active_infrastructure
 from civitas.domain.innovation import InnovationKind, active_innovations
 from civitas.domain.institutions import InstitutionKind, active_institutions
+from civitas.domain.laws import curriculum_teachings_bonus_for
 from civitas.domain.numeric import clamp_unit
 from civitas.domain.production import DEFAULT_PRODUCE_ENERGY_COST
 from civitas.domain.resources import DEFAULT_GATHER_AMOUNT, ResourceKind
@@ -257,11 +258,13 @@ def effective_teachings_per_knower(
     location_id: LocationId | int | None = None,
     agent: Agent | None = None,
 ) -> int:
-    """Return teachings-per-knower including scribe and scriptorium bonuses.
+    """Return teachings-per-knower including scribe, scriptorium, curriculum.
 
     The scribe innovation bonus is society-wide. The scriptorium bonus
     applies only when ``location_id`` or ``agent`` places the knower at an
-    active SCRIPTORIUM seat.
+    active SCRIPTORIUM seat. The curriculum law bonus applies when
+    ``agent`` is a living subject of a government with an active
+    ``CURRICULUM`` statute.
     """
     if base < 0:
         return 0
@@ -273,6 +276,8 @@ def effective_teachings_per_knower(
     bonus = teachings_per_knower_bonus(world)
     if seat is not None and location_has_active_scriptorium(world, seat):
         bonus += SCRIPTORIUM_TEACHINGS_PER_KNOWER_BONUS
+    if agent is not None:
+        bonus += curriculum_teachings_bonus_for(world, agent)
     return base + bonus
 
 

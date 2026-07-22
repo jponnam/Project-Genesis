@@ -705,6 +705,7 @@ def test_law_created_and_observed_round_trips() -> None:
         governments_with_active_laws=1,
         active_tax_schedule_count=1,
         active_market_fee_count=0,
+        active_curriculum_count=0,
     )
     restored = event_from_record(observed.to_record())
     assert isinstance(restored, LawsObserved)
@@ -712,6 +713,7 @@ def test_law_created_and_observed_round_trips() -> None:
     assert restored.active_count == 1
     assert restored.active_tax_schedule_count == 1
     assert restored.active_market_fee_count == 0
+    assert restored.active_curriculum_count == 0
 
 
 def test_election_resolved_and_observed_round_trips() -> None:

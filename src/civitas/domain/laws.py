@@ -1,11 +1,13 @@
 """Laws: statutes attached to governments with optional fiscal effects.
 
 Laws are first-class world aggregates. Domain helpers own enactment,
-repeal, tax-schedule lookup, and market-fee lookup. Active
-``TAX_SCHEDULE`` statutes override fallback levy parameters when
-collecting taxes. Active ``MARKET_FEE`` statutes charge a flat buyer fee
-on market listing fills (Phase 9 M10). Elections (voting) are a separate
-Phase 5 aggregate, as are institutions.
+repeal, tax-schedule lookup, market-fee lookup, and curriculum teaching
+bonuses. Active ``TAX_SCHEDULE`` statutes override fallback levy
+parameters when collecting taxes. Active ``MARKET_FEE`` statutes charge a
+flat buyer fee on market listing fills (Phase 9 M10). Active
+``CURRICULUM`` statutes grant living subjects +1 teachings-per-knower
+(Phase 10 M4). Elections (voting) are a separate Phase 5 aggregate, as
+are institutions.
 """
 
 from __future__ import annotations
@@ -30,6 +32,7 @@ class LawKind(StrEnum):
 
     TAX_SCHEDULE = "tax_schedule"
     MARKET_FEE = "market_fee"
+    CURRICULUM = "curriculum"
 
 
 # Statute kinds that allow at most one active law per government.
@@ -37,8 +40,12 @@ _UNIQUE_ACTIVE_KINDS: frozenset[LawKind] = frozenset(
     {
         LawKind.TAX_SCHEDULE,
         LawKind.MARKET_FEE,
+        LawKind.CURRICULUM,
     }
 )
+
+# Kind-only teachings bonus for living subjects under an active CURRICULUM.
+CURRICULUM_TEACHINGS_PER_KNOWER_BONUS: int = 1
 
 
 class Law(BaseModel):
@@ -55,7 +62,7 @@ class Law(BaseModel):
         default=0,
         description=(
             "TAX_SCHEDULE flat poll amount, or MARKET_FEE flat fill fee; "
-            "ignored by other kinds."
+            "ignored by CURRICULUM and other kinds."
         ),
     )
     rate_bps: NonNegativeInt = Field(
@@ -116,6 +123,7 @@ class LawCensus(BaseModel):
     governments_with_active_laws: NonNegativeInt
     active_tax_schedule_count: NonNegativeInt
     active_market_fee_count: NonNegativeInt
+    active_curriculum_count: NonNegativeInt
 
 
 def law_by_id(world: World, law_id: LawId | int) -> Law | None:
@@ -203,6 +211,36 @@ def market_fee_for(world: World, location_id: LocationId | int) -> int:
     return law.flat_amount
 
 
+def active_curriculum_law(
+    world: World,
+    government_id: GovernmentId | int,
+) -> Law | None:
+    """Return the active curriculum statute for ``government_id``, if any.
+
+    When multiple active ``CURRICULUM`` laws exist (should not under
+    uniqueness rules), the lowest ``law_id`` wins.
+    """
+    for law in active_laws(world, government_id):
+        if law.kind == LawKind.CURRICULUM:
+            return law
+    return None
+
+
+def curriculum_teachings_bonus_for(world: World, agent: Agent) -> int:
+    """Return +1 when ``agent`` is a living subject under active CURRICULUM.
+
+    The statute kind alone enables the bonus; ``flat_amount`` is ignored.
+    """
+    if not agent.is_alive():
+        return 0
+    government = government_at(world, agent.location_id)
+    if government is None:
+        return 0
+    if active_curriculum_law(world, government.government_id) is None:
+        return 0
+    return CURRICULUM_TEACHINGS_PER_KNOWER_BONUS
+
+
 def _has_active_kind(
     world: World,
     government_id: GovernmentId,
@@ -272,6 +310,7 @@ def census_laws(world: World) -> LawCensus:
     governments_with_active = {law.government_id.value for law in active}
     active_tax = sum(1 for law in active if law.kind == LawKind.TAX_SCHEDULE)
     active_fee = sum(1 for law in active if law.kind == LawKind.MARKET_FEE)
+    active_curriculum = sum(1 for law in active if law.kind == LawKind.CURRICULUM)
     return LawCensus(
         tick=world.tick,
         law_count=len(laws),
@@ -280,18 +319,22 @@ def census_laws(world: World) -> LawCensus:
         governments_with_active_laws=len(governments_with_active),
         active_tax_schedule_count=active_tax,
         active_market_fee_count=active_fee,
+        active_curriculum_count=active_curriculum,
     )
 
 
 __all__ = [
     "CAMP_POLL_TAX_LAW",
+    "CURRICULUM_TEACHINGS_PER_KNOWER_BONUS",
     "Law",
     "LawCensus",
     "LawKind",
+    "active_curriculum_law",
     "active_laws",
     "active_market_fee_law",
     "active_tax_schedule",
     "census_laws",
+    "curriculum_teachings_bonus_for",
     "default_laws",
     "enact_law",
     "law_by_id",

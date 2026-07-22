@@ -17,6 +17,7 @@ from civitas.domain import (
     CAMP_POTTERY_CRAFT,
     CAMP_SCRIBE,
     CAMP_WRITING,
+    CURRICULUM_TEACHINGS_PER_KNOWER_BONUS,
     DEFAULT_DRINK_RESTORE,
     DEFAULT_GATHER_AMOUNT,
     DEFAULT_MOVE_ENERGY_COST,
@@ -42,6 +43,8 @@ from civitas.domain import (
     InfrastructureKind,
     Institution,
     InstitutionKind,
+    Law,
+    LawKind,
     SimulationConfig,
     World,
     census_effects,
@@ -264,6 +267,73 @@ def test_scriptorium_boosts_teachings_and_stacks_with_scribe() -> None:
             bare, base=DEFAULT_TEACHINGS_PER_KNOWER, agent=bare.agents[0]
         )
         == DEFAULT_TEACHINGS_PER_KNOWER + SCRIPTORIUM_TEACHINGS_PER_KNOWER_BONUS
+    )
+
+
+def test_curriculum_boosts_teachings_and_stacks_with_scribe_scriptorium() -> None:
+    """Active CURRICULUM stacks with scribe and scriptorium for subjects."""
+    discovered_pottery = CAMP_POTTERY.model_copy(update={"discovered": True})
+    discovered_irrigation = CAMP_IRRIGATION.model_copy(update={"discovered": True})
+    discovered_metallurgy = CAMP_METALLURGY.model_copy(update={"discovered": True})
+    discovered_writing = CAMP_WRITING.model_copy(update={"discovered": True})
+    active_scribe = CAMP_SCRIBE.model_copy(update={"active": True})
+    curriculum = Law.create(0, 0, "Camp Schools", LawKind.CURRICULUM)
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(curriculum,),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        technologies=(
+            CAMP_FIRE,
+            discovered_pottery,
+            discovered_irrigation,
+            discovered_metallurgy,
+            discovered_writing,
+        ),
+        innovations=(
+            CAMP_FIRE_HEARTH,
+            CAMP_POTTERY_CRAFT,
+            CAMP_IRRIGATION_CANAL,
+            CAMP_FORGE,
+            active_scribe,
+        ),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 0, 0, "Camp Scriptorium", InfrastructureKind.SCRIPTORIUM
+            ),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert (
+        effective_teachings_per_knower(
+            world, base=DEFAULT_TEACHINGS_PER_KNOWER, agent=agent
+        )
+        == DEFAULT_TEACHINGS_PER_KNOWER
+        + WRITING_TEACHINGS_PER_KNOWER_BONUS
+        + SCRIPTORIUM_TEACHINGS_PER_KNOWER_BONUS
+        + CURRICULUM_TEACHINGS_PER_KNOWER_BONUS
+    )
+    # Without agent, curriculum does not apply (subject-scoped).
+    assert (
+        effective_teachings_per_knower(world, base=DEFAULT_TEACHINGS_PER_KNOWER)
+        == DEFAULT_TEACHINGS_PER_KNOWER + WRITING_TEACHINGS_PER_KNOWER_BONUS
+    )
+    curriculum_only = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(curriculum,),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert (
+        effective_teachings_per_knower(
+            curriculum_only,
+            base=DEFAULT_TEACHINGS_PER_KNOWER,
+            agent=curriculum_only.agents[0],
+        )
+        == DEFAULT_TEACHINGS_PER_KNOWER + CURRICULUM_TEACHINGS_PER_KNOWER_BONUS
     )
 
 
