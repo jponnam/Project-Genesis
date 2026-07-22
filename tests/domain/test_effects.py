@@ -61,6 +61,7 @@ from civitas.domain import (
     RHETORIC_SOCIALIZE_RESTORE_BONUS,
     ROAD_MOVE_ENERGY_DISCOUNT,
     SANCTUARY_REST_RESTORE_BONUS,
+    SANITATION_DRINK_RESTORE_BONUS,
     SCHOOL_TEACHINGS_PER_KNOWER_BONUS,
     SCRIPTORIUM_TEACHINGS_PER_KNOWER_BONUS,
     SHRINE_DRINK_RESTORE_BONUS,
@@ -119,6 +120,7 @@ from civitas.domain import (
     market_fee_for,
     research_points_bonus,
     rest_restore_bonus,
+    sanitation_drink_bonus_for,
     socialize_restore_bonus,
     teachings_per_knower_bonus,
 )
@@ -1084,6 +1086,54 @@ def test_well_and_shrine_drink_restore_bonuses_stack() -> None:
     )
     assert effective_drink_restore(world, agent) == pytest.approx(
         DEFAULT_DRINK_RESTORE + WELL_DRINK_RESTORE_BONUS + SHRINE_DRINK_RESTORE_BONUS
+    )
+
+
+def test_sanitation_boosts_drink_restore_for_subjects() -> None:
+    """Active SANITATION raises DRINK restore for living subjects only."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(Law.create(0, 0, "Camp Sanitation", LawKind.SANITATION),),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert sanitation_drink_bonus_for(world, agent) == SANITATION_DRINK_RESTORE_BONUS
+    assert drink_restore_bonus(world, agent) == SANITATION_DRINK_RESTORE_BONUS
+    assert effective_drink_restore(world, agent) == pytest.approx(
+        DEFAULT_DRINK_RESTORE + SANITATION_DRINK_RESTORE_BONUS
+    )
+    bare = _world()
+    assert sanitation_drink_bonus_for(bare, bare.agents[0]) == 0.0
+    assert effective_drink_restore(bare, bare.agents[0]) == DEFAULT_DRINK_RESTORE
+
+
+def test_sanitation_stacks_with_well_and_shrine_drink_restore() -> None:
+    """Sanitation subject bonus stacks with colocated well and shrine."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        infrastructure=(
+            Infrastructure.create(0, 0, 0, 0, "Camp Well", InfrastructureKind.WELL),
+            Infrastructure.create(1, 0, 0, 0, "Camp Shrine", InfrastructureKind.SHRINE),
+        ),
+        laws=(Law.create(0, 0, "Camp Sanitation", LawKind.SANITATION),),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert drink_restore_bonus(world, agent) == pytest.approx(
+        WELL_DRINK_RESTORE_BONUS
+        + SHRINE_DRINK_RESTORE_BONUS
+        + SANITATION_DRINK_RESTORE_BONUS
+    )
+    assert effective_drink_restore(world, agent) == pytest.approx(
+        DEFAULT_DRINK_RESTORE
+        + WELL_DRINK_RESTORE_BONUS
+        + SHRINE_DRINK_RESTORE_BONUS
+        + SANITATION_DRINK_RESTORE_BONUS
     )
 
 

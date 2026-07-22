@@ -524,6 +524,7 @@ class LawsObserved(DomainEvent):
     active_calendar_count: NonNegativeInt
     active_ethics_count: NonNegativeInt
     active_assembly_count: NonNegativeInt
+    active_sanitation_count: NonNegativeInt = 0
 
 
 class ElectionResolved(DomainEvent):

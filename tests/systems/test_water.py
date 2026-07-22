@@ -7,7 +7,10 @@ import pytest
 from civitas.domain import (
     CAMP_LOCATION,
     Agent,
+    Government,
     Inventory,
+    Law,
+    LawKind,
     NeedDecayed,
     Needs,
     ResourceConsumed,
@@ -53,6 +56,18 @@ def test_drink_emits_consume_and_need_events() -> None:
         isinstance(event, NeedDecayed) and event.need == "water"
         for event in bus.history
     )
+
+
+def test_drink_uses_sanitation_bonus() -> None:
+    """WaterSystem drink restore includes SANITATION law bonuses."""
+    world = _world_with_water(quantity=1).model_copy(
+        update={
+            "governments": (Government.create(0, "Camp", 0, (0,)),),
+            "laws": (Law.create(0, 0, "Camp Sanitation", LawKind.SANITATION),),
+        }
+    )
+    updated = WaterSystem().drink(world, 0)
+    assert updated.agents[0].needs.water == pytest.approx(0.85)
 
 
 def test_drink_without_water_is_noop() -> None:
