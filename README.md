@@ -121,12 +121,12 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 9 — Milestone 10: Market fee laws**
+**Phase 9 — Milestone 11: Outpost cities**
 
-``LawKind.MARKET_FEE`` is an opt-in statute that charges a flat buyer fee
-once per market listing fill, credited to the governing polity treasury at
-the market location (or ``world.treasury`` when ungoverned). Camp poll tax
-remains the only seeded law; market fees are not seeded by default.
+``CityKind.OUTPOST`` is a second city kind for non-capital secondary seats.
+Outposts may share a government with the capital settlement but must occupy
+their own location and cannot be flagged as capital. Camp City remains the
+only seeded city (an active settlement capital).
 
 ### Completed
 
@@ -198,6 +198,7 @@ JSONL storage → `civitas run`
 - Milestone 8: Institution-funded infrastructure construction
 - Milestone 9: Guild institutions
 - Milestone 10: Market fee laws
+- Milestone 11: Outpost cities
 
 ## License
 

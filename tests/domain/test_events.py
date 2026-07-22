@@ -821,6 +821,27 @@ def test_city_created_and_observed_round_trips() -> None:
     observed = CitiesObserved(
         sequence=24,
         tick=Tick(value=6),
+        city_count=2,
+        active_count=2,
+        inactive_count=0,
+        governments_with_cities=1,
+        capital_count=1,
+        total_residents=4,
+        mean_residents=2.0,
+        max_residents=3,
+        max_residents_city_id=CityId(value=0),
+        active_settlement_count=1,
+        active_outpost_count=1,
+    )
+    restored = event_from_record(observed.to_record())
+    assert isinstance(restored, CitiesObserved)
+    assert restored.city_count == 2
+    assert restored.total_residents == 4
+    assert restored.active_outpost_count == 1
+
+    legacy = CitiesObserved(
+        sequence=25,
+        tick=Tick(value=6),
         city_count=1,
         active_count=1,
         inactive_count=0,
@@ -832,10 +853,7 @@ def test_city_created_and_observed_round_trips() -> None:
         max_residents_city_id=CityId(value=0),
         active_settlement_count=1,
     )
-    restored = event_from_record(observed.to_record())
-    assert isinstance(restored, CitiesObserved)
-    assert restored.city_count == 1
-    assert restored.total_residents == 4
+    assert legacy.active_outpost_count == 0
 
 
 def test_infrastructure_created_and_observed_round_trips() -> None:
