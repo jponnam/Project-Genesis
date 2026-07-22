@@ -77,6 +77,7 @@ from civitas.domain import (
     DEFAULT_SOCIALIZE_RESTORE,
     DEFAULT_TEACHINGS_PER_KNOWER,
     ENGINEERING_PRODUCE_ENERGY_DISCOUNT,
+    ENTREPOT_FOOD_GATHER_BONUS,
     FIRE_HEARTH_REST_BONUS,
     FORUM_TEACHINGS_PER_KNOWER_BONUS,
     FOUNDRY_PRODUCE_ENERGY_DISCOUNT,
@@ -166,6 +167,7 @@ from civitas.domain import (
     location_has_active_cartographer,
     location_has_active_clinic,
     location_has_active_collegium,
+    location_has_active_entrepot,
     location_has_active_forum,
     location_has_active_foundry,
     location_has_active_guild,
@@ -2375,6 +2377,66 @@ def test_waystation_stacks_with_storehouse_food_gather() -> None:
         DEFAULT_GATHER_AMOUNT
         + STOREHOUSE_FOOD_GATHER_BONUS
         + WAYSTATION_FOOD_GATHER_BONUS
+    )
+
+
+def test_entrepot_boosts_food_gather_for_residents() -> None:
+    """Active entrepot cities add a food gather bonus at their seat."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Entrepot", CityKind.ENTREPOT),
+        ),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_entrepot(world, agent.location_id) is True
+    assert gather_amount_bonus(world, "food", location_id=agent.location_id) == (
+        ENTREPOT_FOOD_GATHER_BONUS
+    )
+    assert gather_amount_bonus(world, "food") == 0
+    assert effective_gather_amount(world, "food", agent=agent) == (
+        DEFAULT_GATHER_AMOUNT + ENTREPOT_FOOD_GATHER_BONUS
+    )
+
+
+def test_entrepot_stacks_with_storehouse_and_waystation_food_gather() -> None:
+    """Entrepot food bonus stacks with storehouse and waystation at the seat."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Entrepot", CityKind.ENTREPOT),
+        ),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 1, 1, "Entrepot Storehouse", InfrastructureKind.STOREHOUSE
+            ),
+            Infrastructure.create(
+                1, 0, 1, 1, "Entrepot Waystation", InfrastructureKind.WAYSTATION
+            ),
+        ),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    agent = world.agents[0]
+    expected = (
+        STOREHOUSE_FOOD_GATHER_BONUS
+        + WAYSTATION_FOOD_GATHER_BONUS
+        + ENTREPOT_FOOD_GATHER_BONUS
+    )
+    assert location_has_active_entrepot(world, agent.location_id) is True
+    assert location_has_active_storehouse(world, agent.location_id) is True
+    assert location_has_active_waystation(world, agent.location_id) is True
+    assert gather_amount_bonus(world, "food", location_id=agent.location_id) == (
+        expected
+    )
+    assert effective_gather_amount(world, "food", agent=agent) == (
+        DEFAULT_GATHER_AMOUNT + expected
     )
 
 

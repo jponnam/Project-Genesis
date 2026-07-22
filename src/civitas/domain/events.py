@@ -604,6 +604,7 @@ class CitiesObserved(DomainEvent):
     active_foundry_count: NonNegativeInt = 0
     active_quarry_count: NonNegativeInt = 0
     active_harbor_count: NonNegativeInt = 0
+    active_entrepot_count: NonNegativeInt = 0
 
 
 class InfrastructuresObserved(DomainEvent):
