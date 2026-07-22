@@ -127,11 +127,12 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 15 Milestone 6: Husbandman institutions**
+**Phase 15 Milestone 7: Crop rotation technology**
 
-``InstitutionKind.HUSBANDMAN`` seats add +1 FOOD gather at the institution
-location, stacking with plow, storehouse, waystation, entrepot, granary,
-and farmstead. Not seeded in ``default_institutions()``.
+``TechnologyKind.CROP_ROTATION`` (id 20) requires agriculture. Research
+threshold 10. ``InnovationKind.FALLOW`` raises EAT restore by 0.05
+society-wide when active, stacking with zoning and land tenure for
+subjects.
 
 ### Completed
 
@@ -283,6 +284,7 @@ JSONL storage → `civitas run`
 - Milestone 4: Ditch infrastructure
 - Milestone 5: Farmstead cities
 - Milestone 6: Husbandman institutions
+- Milestone 7: Crop rotation technology
 
 ## License
 
