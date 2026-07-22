@@ -15,6 +15,7 @@ from civitas.domain import (
     ASSEMBLY_SOCIALIZE_RESTORE_BONUS,
     ASTRONOMY_RETRIEVAL_LIMIT_BONUS,
     BATHHOUSE_REST_RESTORE_BONUS,
+    BEACON_RETRIEVAL_LIMIT_BONUS,
     BRIDGE_MOVE_ENERGY_DISCOUNT,
     BUILDING_CODES_MOVE_ENERGY_DISCOUNT,
     BUREAUCRACY_MARKET_FEE_DISCOUNT,
@@ -153,6 +154,7 @@ from civitas.domain import (
     location_has_active_architect,
     location_has_active_archive,
     location_has_active_bathhouse,
+    location_has_active_beacon,
     location_has_active_bridge,
     location_has_active_bureaucracy,
     location_has_active_caravan,
@@ -3214,6 +3216,33 @@ def test_observatory_raises_retrieval_limit_for_colocated_agents() -> None:
     assert effective_retrieval_limit(bare, bare.agents[0]) == DEFAULT_RETRIEVAL_LIMIT
 
 
+def test_beacon_raises_retrieval_limit_for_colocated_agents() -> None:
+    """Active beacons raise the memory retrieval limit at their seat."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        infrastructure=(
+            Infrastructure.create(0, 0, 0, 0, "Camp Beacon", InfrastructureKind.BEACON),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_beacon(world, agent.location_id) is True
+    assert effective_retrieval_limit(world, agent) == (
+        DEFAULT_RETRIEVAL_LIMIT + BEACON_RETRIEVAL_LIMIT_BONUS
+    )
+    bare = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_beacon(bare, bare.agents[0].location_id) is False
+    assert effective_retrieval_limit(bare, bare.agents[0]) == DEFAULT_RETRIEVAL_LIMIT
+
+
 def test_lyceum_raises_retrieval_limit_for_colocated_agents() -> None:
     """Active lyceums raise the memory retrieval limit at their seat."""
     world = World(
@@ -3479,6 +3508,9 @@ def test_map_stacks_with_star_chart_plumb_line_seats_and_calendar() -> None:
             Infrastructure.create(
                 0, 0, 1, 1, "Library Observatory", InfrastructureKind.OBSERVATORY
             ),
+            Infrastructure.create(
+                1, 0, 1, 1, "Library Beacon", InfrastructureKind.BEACON
+            ),
         ),
         laws=(Law.create(0, 0, "Camp Calendar", LawKind.CALENDAR),),
         technologies=(
@@ -3524,11 +3556,13 @@ def test_map_stacks_with_star_chart_plumb_line_seats_and_calendar() -> None:
         agents=(Agent.create(agent_id=0, name="A", location_id=1),),
     )
     agent = world.agents[0]
+    assert location_has_active_beacon(world, agent.location_id) is True
     assert effective_retrieval_limit(world, agent) == (
         DEFAULT_RETRIEVAL_LIMIT
         + ARCHIVE_RETRIEVAL_LIMIT_BONUS
         + LIBRARY_RETRIEVAL_LIMIT_BONUS
         + OBSERVATORY_RETRIEVAL_LIMIT_BONUS
+        + BEACON_RETRIEVAL_LIMIT_BONUS
         + LYCEUM_RETRIEVAL_LIMIT_BONUS
         + ASTRONOMY_RETRIEVAL_LIMIT_BONUS
         + SURVEYING_RETRIEVAL_LIMIT_BONUS
