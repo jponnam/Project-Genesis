@@ -81,6 +81,7 @@ class InstitutionSystem:
                     active_council_count=snap.active_council_count,
                     active_guild_count=snap.active_guild_count,
                     active_archive_count=snap.active_archive_count,
+                    active_bureaucracy_count=snap.active_bureaucracy_count,
                     total_budget=snap.total_budget,
                     funded_count=snap.funded_count,
                 )

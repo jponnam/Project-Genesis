@@ -24,10 +24,10 @@ from civitas.domain import (
     can_post_listing,
     cancel_listing,
     census_markets,
+    effective_market_fee,
     fill_listing,
     government_at,
     market_by_id,
-    market_fee_for,
     post_listing,
 )
 from civitas.domain.market import DEFAULT_LISTING_QUANTITY, DEFAULT_UNIT_PRICE
@@ -147,7 +147,7 @@ class MarketSystem:
             return world
         if not can_fill_listing(world, market_id, listing_id, buyer_id, qty):
             return world
-        fee = market_fee_for(world, market.location_id)
+        fee = effective_market_fee(world, market.location_id)
         government = government_at(world, market.location_id)
         updated = fill_listing(world, market_id, listing_id, buyer_id, quantity=qty)
         if updated is None:

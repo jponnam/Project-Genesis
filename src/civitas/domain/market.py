@@ -3,10 +3,11 @@
 A market is anchored to a location. Sellers post listings that escrow
 inventory onto the book; buyers fill listings by paying integer money.
 Active ``MARKET_FEE`` laws may charge a flat buyer fee once per fill,
-credited to the governing polity treasury (or ``world.treasury``). Filled
-trades update per-resource last-trade prices used by the prices layer.
-Domain helpers keep the market system aligned without systems calling
-each other.
+credited to the governing polity treasury (or ``world.treasury``). An
+active bureaucracy at the market location reduces that fee by 1 (floor
+at 0). Filled trades update per-resource last-trade prices used by the
+prices layer. Domain helpers keep the market system aligned without
+systems calling each other.
 """
 
 from __future__ import annotations
@@ -16,9 +17,9 @@ from typing import TYPE_CHECKING, Self
 from pydantic import BaseModel, ConfigDict, model_validator
 
 from civitas.domain.economy import can_afford, credit_money, debit_money
+from civitas.domain.effects import effective_market_fee
 from civitas.domain.governments import credit_government_treasury, government_at
 from civitas.domain.ids import AgentId, ListingId, LocationId, MarketId
-from civitas.domain.laws import market_fee_for
 from civitas.domain.location import CAMP_LOCATION
 from civitas.domain.time import Tick
 from civitas.domain.types import NonEmptyStr, NonNegativeInt, PositiveInt
@@ -296,7 +297,7 @@ def can_fill_listing(
     if seller is None or not seller.is_alive():
         return False
     total_price = listing.unit_price * quantity
-    fee = market_fee_for(world, market.location_id)
+    fee = effective_market_fee(world, market.location_id)
     return can_afford(buyer, total_price + fee)
 
 
@@ -311,7 +312,9 @@ def fill_listing(
 
     When an active ``MARKET_FEE`` applies at the market location, the buyer
     also pays a flat fee once per fill into the governing treasury (or
-    ``world.treasury`` when ungoverned).
+    ``world.treasury`` when ungoverned). An active bureaucracy at the
+    market location reduces that fee by 1 (floor at 0); the credited
+    amount matches the discounted fee so money is conserved.
     """
     if not can_fill_listing(world, market_id, listing_id, buyer_id, quantity):
         return None
@@ -327,7 +330,7 @@ def fill_listing(
         return None
 
     total_price = listing.unit_price * quantity
-    fee = market_fee_for(world, market.location_id)
+    fee = effective_market_fee(world, market.location_id)
     paid_buyer = debit_money(buyer, total_price + fee)
     if paid_buyer is None:
         return None
