@@ -128,14 +128,16 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 16 Milestone 11: Sumptuary laws**
+**Phase 16 Milestone 12: Emporium cities**
 
-``LawKind.SUMPTUARY`` is a government statute that lowers the flat market
-fill fee at the enacting government's markets by 1. The discount is
-resolved at the market location (``government_at(location)``) and stacks
-with the bureaucracy, harbor, merchant, dyer, warehouse, and mordant
-market-fee discounts, flooring the effective fee at zero. At most one
-active sumptuary law is allowed per government; it is not seeded.
+``CityKind.EMPORIUM`` is a non-capital specialized city seat for trade.
+An active emporium at a market location lowers the flat market fill fee by
+1. The discount is resolved at the market location and stacks with the
+bureaucracy, harbor, merchant, dyer, warehouse, mordant, and sumptuary
+market-fee discounts, flooring the effective fee at zero. Like other
+non-capital city kinds, emporiums can never be capitals and each occupies
+its own seat location inside its government's jurisdiction; they are not
+seeded.
 
 ### Completed
 
@@ -306,6 +308,7 @@ JSONL storage → `civitas run`
 - Milestone 9: Warehouse infrastructure
 - Milestone 10: Tanning technology
 - Milestone 11: Sumptuary laws
+- Milestone 12: Emporium cities
 
 ## License
 

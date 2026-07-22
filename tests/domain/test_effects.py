@@ -95,6 +95,7 @@ from civitas.domain import (
     DITCH_WATER_GATHER_BONUS,
     DYEING_MARKET_FEE_DISCOUNT,
     DYER_MARKET_FEE_DISCOUNT,
+    EMPORIUM_MARKET_FEE_DISCOUNT,
     ENGINEERING_PRODUCE_ENERGY_DISCOUNT,
     ENTREPOT_FOOD_GATHER_BONUS,
     FARMSTEAD_FOOD_GATHER_BONUS,
@@ -208,6 +209,7 @@ from civitas.domain import (
     location_has_active_collegium,
     location_has_active_ditch,
     location_has_active_dyer,
+    location_has_active_emporium,
     location_has_active_entrepot,
     location_has_active_farmstead,
     location_has_active_forum,
@@ -6292,5 +6294,99 @@ def test_sumptuary_stacks_with_all_market_fee_discounts() -> None:
         - DYER_MARKET_FEE_DISCOUNT
         - DYEING_MARKET_FEE_DISCOUNT
         - WAREHOUSE_MARKET_FEE_DISCOUNT
+        - SUMPTUARY_MARKET_FEE_DISCOUNT
+    )
+
+
+def test_emporium_discounts_market_fee_at_seat() -> None:
+    """Active emporium cities reduce market fee by 1 at their seat (floor 0)."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp Emporium", CityKind.EMPORIUM),),
+        laws=(Law.create(0, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=2),),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_emporium(world, 0) is True
+    assert market_fee_for(world, 0) == 2
+    assert effective_market_fee(world, 0) == 2 - EMPORIUM_MARKET_FEE_DISCOUNT
+    floored = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp Emporium", CityKind.EMPORIUM),),
+        laws=(Law.create(0, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=1),),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert effective_market_fee(floored, 0) == 0
+    bare = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(Law.create(0, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=2),),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_emporium(bare, 0) is False
+    assert effective_market_fee(bare, 0) == 2
+
+
+def test_emporium_stacks_with_all_market_fee_discounts() -> None:
+    """Emporium stacks with bureaucracy, merchant, dyer, mordant, warehouse, sumptuary.
+
+    An emporium occupies the seat's single city slot, so a harbor cannot
+    also stand there; every other market-fee discount still stacks.
+    """
+    discovered_dyeing = CAMP_DYEING.model_copy(update={"discovered": True})
+    active_mordant = CAMP_MORDANT.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp Emporium", CityKind.EMPORIUM),),
+        laws=(
+            Law.create(0, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=9),
+            Law.create(1, 0, "Camp Sumptuary", LawKind.SUMPTUARY),
+        ),
+        institutions=(
+            Institution.create(
+                0, 0, 0, "Camp Bureaucracy", InstitutionKind.BUREAUCRACY
+            ),
+            Institution.create(1, 0, 0, "Camp Merchant", InstitutionKind.MERCHANT),
+            Institution.create(2, 0, 0, "Camp Dyer", InstitutionKind.DYER),
+        ),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 0, 0, "Camp Warehouse", InfrastructureKind.WAREHOUSE
+            ),
+        ),
+        technologies=tuple(
+            discovered_dyeing
+            if item.technology_id == CAMP_DYEING.technology_id
+            else item
+            for item in default_technologies()
+        ),
+        innovations=tuple(
+            active_mordant
+            if item.innovation_id == CAMP_MORDANT.innovation_id
+            else item
+            for item in default_innovations()
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_emporium(world, 0) is True
+    assert location_has_active_bureaucracy(world, 0) is True
+    assert location_has_active_merchant(world, 0) is True
+    assert location_has_active_dyer(world, 0) is True
+    assert location_has_active_warehouse(world, 0) is True
+    assert market_fee_for(world, 0) == 9
+    assert effective_market_fee(world, 0) == (
+        9
+        - BUREAUCRACY_MARKET_FEE_DISCOUNT
+        - MERCHANT_MARKET_FEE_DISCOUNT
+        - DYER_MARKET_FEE_DISCOUNT
+        - DYEING_MARKET_FEE_DISCOUNT
+        - WAREHOUSE_MARKET_FEE_DISCOUNT
+        - EMPORIUM_MARKET_FEE_DISCOUNT
         - SUMPTUARY_MARKET_FEE_DISCOUNT
     )

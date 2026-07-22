@@ -618,6 +618,7 @@ class CitiesObserved(DomainEvent):
     active_farmstead_count: NonNegativeInt = 0
     active_pastoral_count: NonNegativeInt = 0
     active_mill_town_count: NonNegativeInt = 0
+    active_emporium_count: NonNegativeInt = 0
 
 
 class InfrastructuresObserved(DomainEvent):
