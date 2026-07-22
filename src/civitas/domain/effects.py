@@ -52,10 +52,11 @@ law MOVE energy discounts for living subjects (stacking with ROAD seats).
 Phase 13 Milestone 3 adds WORKSHOP produce-energy discounts at the
 institution seat (stacking with guild, abacus, and pulley). Phase 13
 Milestone 4 adds BRIDGE MOVE energy discounts at the infrastructure seat
-(stacking with ROAD and BUILDING_CODES). The action executor, retrieval
-path, market fills, knowledge diffusion, and research progression read
-these helpers; ``EffectsSystem`` only observes coverage. Systems never
-call each other.
+(stacking with ROAD and BUILDING_CODES). Phase 13 Milestone 5 adds FOUNDRY
+city PRODUCE energy discounts at the city seat (stacking with guild,
+workshop, abacus, and pulley). The action executor, retrieval path, market
+fills, knowledge diffusion, and research progression read these helpers;
+``EffectsSystem`` only observes coverage. Systems never call each other.
 """
 
 from __future__ import annotations
@@ -64,7 +65,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
-from civitas.domain.cities import CityKind, city_at
+from civitas.domain.cities import CityKind, active_cities, city_at
 from civitas.domain.energy import DEFAULT_REST_RESTORE
 from civitas.domain.food import FOOD_RESOURCE
 from civitas.domain.geography import DEFAULT_MOVE_ENERGY_COST
@@ -128,6 +129,7 @@ ROAD_MOVE_ENERGY_DISCOUNT: float = 0.02
 BRIDGE_MOVE_ENERGY_DISCOUNT: float = 0.02
 GUILD_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 WORKSHOP_PRODUCE_ENERGY_DISCOUNT: float = 0.02
+FOUNDRY_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 MATHEMATICS_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 ENGINEERING_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 ARCHIVE_RETRIEVAL_LIMIT_BONUS: int = 1
@@ -557,6 +559,15 @@ def location_has_active_lazaretto(
     return city is not None and city.active and city.kind is CityKind.LAZARETTO
 
 
+def location_has_active_foundry(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active FOUNDRY city is seated at ``location_id``."""
+    city = city_at(world, location_id)
+    return city is not None and city.active and city.kind is CityKind.FOUNDRY
+
+
 def rest_restore_bonus(
     world: World,
     *,
@@ -720,13 +731,15 @@ def move_energy_discount(world: World, agent: Agent) -> float:
 
 
 def produce_energy_discount(world: World, agent: Agent) -> float:
-    """Return PRODUCE energy discount from guild, workshop, abacus, and pulley.
+    """Return PRODUCE energy discount from craft seats, abacus, and pulley.
 
     An active GUILD at the agent's location contributes
     ``GUILD_PRODUCE_ENERGY_DISCOUNT``. An active WORKSHOP at the agent's
     location contributes ``WORKSHOP_PRODUCE_ENERGY_DISCOUNT``. An active
-    ABACUS innovation contributes ``MATHEMATICS_PRODUCE_ENERGY_DISCOUNT``
-    society-wide. An active PULLEY innovation contributes
+    FOUNDRY city at the agent's location contributes
+    ``FOUNDRY_PRODUCE_ENERGY_DISCOUNT``. An active ABACUS innovation
+    contributes ``MATHEMATICS_PRODUCE_ENERGY_DISCOUNT`` society-wide. An
+    active PULLEY innovation contributes
     ``ENGINEERING_PRODUCE_ENERGY_DISCOUNT`` society-wide. All stack when
     present.
     """
@@ -735,6 +748,8 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
         discount += GUILD_PRODUCE_ENERGY_DISCOUNT
     if location_has_active_workshop(world, agent.location_id):
         discount += WORKSHOP_PRODUCE_ENERGY_DISCOUNT
+    if location_has_active_foundry(world, agent.location_id):
+        discount += FOUNDRY_PRODUCE_ENERGY_DISCOUNT
     if innovation_kind_is_active(world, InnovationKind.ABACUS):
         discount += MATHEMATICS_PRODUCE_ENERGY_DISCOUNT
     if innovation_kind_is_active(world, InnovationKind.PULLEY):
@@ -967,6 +982,9 @@ def census_effects(world: World) -> EffectsCensus:
         for item in active_institutions(world)
         if item.kind is InstitutionKind.WORKSHOP
     )
+    foundries = tuple(
+        city for city in active_cities(world) if city.kind is CityKind.FOUNDRY
+    )
     # Society drink potential at a well seat (bonus available when colocated).
     drink_bonus = WELL_DRINK_RESTORE_BONUS if wells else 0.0
     if innovation_kind_is_active(world, InnovationKind.ASEPSIS):
@@ -993,10 +1011,12 @@ def census_effects(world: World) -> EffectsCensus:
             DEFAULT_MOVE_ENERGY_COST - move_discount,
         )
     )
-    # Produce cost potential at guild/workshop seats, plus society-wide discounts.
+    # Produce cost potential at craft seats, plus society-wide discounts.
     produce_discount = GUILD_PRODUCE_ENERGY_DISCOUNT if guilds else 0.0
     if workshops:
         produce_discount += WORKSHOP_PRODUCE_ENERGY_DISCOUNT
+    if foundries:
+        produce_discount += FOUNDRY_PRODUCE_ENERGY_DISCOUNT
     if innovation_kind_is_active(world, InnovationKind.ABACUS):
         produce_discount += MATHEMATICS_PRODUCE_ENERGY_DISCOUNT
     if innovation_kind_is_active(world, InnovationKind.PULLEY):

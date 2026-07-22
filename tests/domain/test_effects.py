@@ -61,6 +61,7 @@ from civitas.domain import (
     ENGINEERING_PRODUCE_ENERGY_DISCOUNT,
     FIRE_HEARTH_REST_BONUS,
     FORUM_TEACHINGS_PER_KNOWER_BONUS,
+    FOUNDRY_PRODUCE_ENERGY_DISCOUNT,
     GUILD_PRODUCE_ENERGY_DISCOUNT,
     HOSPITAL_REST_RESTORE_BONUS,
     HYGIENE_DRINK_RESTORE_BONUS,
@@ -130,6 +131,7 @@ from civitas.domain import (
     location_has_active_clinic,
     location_has_active_collegium,
     location_has_active_forum,
+    location_has_active_foundry,
     location_has_active_guild,
     location_has_active_hospital,
     location_has_active_infirmary,
@@ -2238,6 +2240,111 @@ def test_workshop_stacks_with_guild_abacus_and_pulley() -> None:
         base=DEFAULT_PRODUCE_ENERGY_COST,
     ) == pytest.approx(expected)
     assert census_effects(world).produce_energy_cost_bps == round(expected * 10_000)
+
+
+def test_foundry_reduces_produce_energy_for_residents() -> None:
+    """Active foundry cities discount PRODUCE energy for residents at the seat."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Foundry", CityKind.FOUNDRY),
+        ),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_foundry(world, agent.location_id) is True
+    assert effective_produce_energy_cost(
+        world,
+        agent,
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(DEFAULT_PRODUCE_ENERGY_COST - FOUNDRY_PRODUCE_ENERGY_DISCOUNT)
+    assert census_effects(world).produce_energy_cost_bps == round(
+        (DEFAULT_PRODUCE_ENERGY_COST - FOUNDRY_PRODUCE_ENERGY_DISCOUNT) * 10_000
+    )
+
+
+def test_foundry_stacks_with_guild_workshop_abacus_and_pulley() -> None:
+    """Foundry seat discount stacks with guild, workshop, abacus, and pulley."""
+    discovered_pottery = CAMP_POTTERY.model_copy(update={"discovered": True})
+    discovered_irrigation = CAMP_IRRIGATION.model_copy(update={"discovered": True})
+    discovered_metallurgy = CAMP_METALLURGY.model_copy(update={"discovered": True})
+    discovered_writing = CAMP_WRITING.model_copy(update={"discovered": True})
+    discovered_math = CAMP_MATHEMATICS.model_copy(update={"discovered": True})
+    discovered_astronomy = CAMP_ASTRONOMY.model_copy(update={"discovered": True})
+    discovered_philosophy = CAMP_PHILOSOPHY.model_copy(update={"discovered": True})
+    discovered_logic = CAMP_LOGIC.model_copy(update={"discovered": True})
+    discovered_rhetoric = CAMP_RHETORIC.model_copy(update={"discovered": True})
+    discovered_medicine = CAMP_MEDICINE.model_copy(update={"discovered": True})
+    discovered_anatomy = CAMP_ANATOMY.model_copy(update={"discovered": True})
+    discovered_hygiene = CAMP_HYGIENE.model_copy(update={"discovered": True})
+    discovered_engineering = CAMP_ENGINEERING.model_copy(update={"discovered": True})
+    active_abacus = CAMP_ABACUS.model_copy(update={"active": True})
+    active_pulley = CAMP_PULLEY.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Foundry", CityKind.FOUNDRY),
+        ),
+        institutions=(
+            Institution.create(0, 0, 1, "Camp Guild", InstitutionKind.GUILD),
+            Institution.create(1, 0, 1, "Camp Workshop", InstitutionKind.WORKSHOP),
+        ),
+        technologies=(
+            CAMP_FIRE,
+            discovered_pottery,
+            discovered_irrigation,
+            discovered_metallurgy,
+            discovered_writing,
+            discovered_math,
+            discovered_astronomy,
+            discovered_philosophy,
+            discovered_logic,
+            discovered_rhetoric,
+            discovered_medicine,
+            discovered_anatomy,
+            discovered_hygiene,
+            discovered_engineering,
+        ),
+        innovations=(
+            CAMP_FIRE_HEARTH,
+            CAMP_POTTERY_CRAFT,
+            CAMP_IRRIGATION_CANAL,
+            CAMP_FORGE,
+            CAMP_SCRIBE,
+            active_abacus,
+            CAMP_STAR_CHART,
+            CAMP_DIALECTIC,
+            CAMP_SYLLOGISM,
+            CAMP_ORATION,
+            CAMP_REMEDY,
+            CAMP_DISSECTION,
+            CAMP_ASEPSIS,
+            active_pulley,
+        ),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    agent = world.agents[0]
+    expected_discount = (
+        GUILD_PRODUCE_ENERGY_DISCOUNT
+        + WORKSHOP_PRODUCE_ENERGY_DISCOUNT
+        + FOUNDRY_PRODUCE_ENERGY_DISCOUNT
+        + MATHEMATICS_PRODUCE_ENERGY_DISCOUNT
+        + ENGINEERING_PRODUCE_ENERGY_DISCOUNT
+    )
+    assert location_has_active_foundry(world, agent.location_id) is True
+    assert effective_produce_energy_cost(
+        world,
+        agent,
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(0.0)
+    assert census_effects(world).produce_energy_cost_bps == 0
+    assert expected_discount == pytest.approx(DEFAULT_PRODUCE_ENERGY_COST)
 
 
 def test_archive_raises_retrieval_limit_for_colocated_agents() -> None:
