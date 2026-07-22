@@ -17,12 +17,20 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from civitas.domain.agent import Agent
 from civitas.domain.config import SimulationConfig
 from civitas.domain.governments import Government
-from civitas.domain.ids import AgentId, GovernmentId, LawId, LocationId, MarketId
+from civitas.domain.ids import (
+    AgentId,
+    ElectionId,
+    GovernmentId,
+    LawId,
+    LocationId,
+    MarketId,
+)
 from civitas.domain.laws import Law, LawKind
 from civitas.domain.location import Location
 from civitas.domain.market import Market
 from civitas.domain.time import Tick
 from civitas.domain.types import NonNegativeInt
+from civitas.domain.voting import Election
 
 
 class World(BaseModel):
@@ -35,6 +43,7 @@ class World(BaseModel):
         markets: Market venues, ordered by ascending ``market_id``.
         governments: Polities, ordered by ascending ``government_id``.
         laws: Statutes, ordered by ascending ``law_id``.
+        elections: Archived elections, ordered by ascending ``election_id``.
         agents: Agents ordered by ascending ``agent_id``.
         treasury: Public money balance collected from taxes.
     """
@@ -47,12 +56,13 @@ class World(BaseModel):
     markets: tuple[Market, ...] = ()
     governments: tuple[Government, ...] = ()
     laws: tuple[Law, ...] = ()
+    elections: tuple[Election, ...] = ()
     agents: tuple[Agent, ...] = ()
     treasury: NonNegativeInt = 0
 
     @model_validator(mode="after")
     def world_must_be_consistent(self) -> Self:
-        """Enforce agent/location/market/government/law integrity constraints."""
+        """Enforce agent/location/market/government/law/election integrity."""
         agent_ids = [agent.agent_id.value for agent in self.agents]
         if len(agent_ids) != len(set(agent_ids)):
             msg = "agent ids must be unique"
@@ -163,6 +173,38 @@ class World(BaseModel):
                     raise ValueError(msg)
                 active_tax_govs.add(gov_value)
 
+        election_ids = [election.election_id.value for election in self.elections]
+        if len(election_ids) != len(set(election_ids)):
+            msg = "election ids must be unique"
+            raise ValueError(msg)
+        if election_ids != sorted(election_ids):
+            msg = "elections must be ordered by ascending election_id"
+            raise ValueError(msg)
+        known_agents = set(agent_ids)
+        for election in self.elections:
+            if election.government_id.value not in known_governments:
+                msg = (
+                    f"election {election.election_id.value} references unknown "
+                    f"government {election.government_id.value}"
+                )
+                raise ValueError(msg)
+            for agent_ref in (*election.franchise, *election.candidates):
+                if agent_ref.value not in known_agents:
+                    msg = (
+                        f"election {election.election_id.value} references "
+                        f"unknown agent {agent_ref.value}"
+                    )
+                    raise ValueError(msg)
+            if (
+                election.winner_id is not None
+                and election.winner_id.value not in known_agents
+            ):
+                msg = (
+                    f"election {election.election_id.value} references unknown "
+                    f"winner {election.winner_id.value}"
+                )
+                raise ValueError(msg)
+
         return self
 
     @property
@@ -223,6 +265,18 @@ class World(BaseModel):
                 return law
         return None
 
+    def election_by_id(self, election_id: ElectionId | int) -> Election | None:
+        """Return the election with ``election_id``, or ``None`` if absent."""
+        target = (
+            election_id
+            if isinstance(election_id, ElectionId)
+            else ElectionId(value=election_id)
+        )
+        for election in self.elections:
+            if election.election_id == target:
+                return election
+        return None
+
     def agents_at(self, location_id: LocationId | int) -> tuple[Agent, ...]:
         """Return agents occupying ``location_id`` in stable id order."""
         target = (
@@ -271,6 +325,7 @@ class World(BaseModel):
             markets=self.markets,
             governments=self.governments,
             laws=self.laws,
+            elections=self.elections,
             agents=agents,
             treasury=self.treasury,
         )
@@ -361,3 +416,21 @@ class World(BaseModel):
             msg = f"law id {law.law_id.value} not found in world"
             raise ValueError(msg)
         return self.model_copy(update={"laws": tuple(updated)})
+
+    def with_election(self, election: Election) -> World:
+        """Return a copy replacing or inserting ``election`` by ``election_id``.
+
+        New elections are inserted so the archive remains ascending by id.
+        """
+        updated: list[Election] = []
+        found = False
+        for existing in self.elections:
+            if existing.election_id == election.election_id:
+                updated.append(election)
+                found = True
+            else:
+                updated.append(existing)
+        if not found:
+            updated.append(election)
+            updated.sort(key=lambda item: item.election_id.value)
+        return self.model_copy(update={"elections": tuple(updated)})

@@ -31,6 +31,7 @@ from civitas.systems import (
     ReputationSystem,
     TaxSystem,
     UtilityPolicy,
+    VoteSystem,
 )
 
 if TYPE_CHECKING:
@@ -78,11 +79,12 @@ class SimulationEngine:
     17. ``NetworkSystem.observe``
     18. ``GovernmentSystem.observe``
     19. ``LawSystem.observe``
+    20. ``VoteSystem.observe``
 
     Initial population, wealth, market, price, relationship, reputation,
-    family, network, government, and law censuses are also observed at
-    tick 0 immediately after world creation. Death runs after actions
-    (recovery chance) and before birth so newly dead parents cannot
+    family, network, government, law, and election censuses are also
+    observed at tick 0 immediately after world creation. Death runs after
+    actions (recovery chance) and before birth so newly dead parents cannot
     reproduce. Birth and death both complete before taxes so the levy sees
     the settled roster. Taxes complete before ``TickCompleted`` so wealth
     censuses reflect post-levy balances. Taxes are disabled by default;
@@ -94,7 +96,9 @@ class SimulationEngine:
     agents. Network observation follows families and measures the living
     bond graph. Government observation follows networks and reports polity
     coverage, treasuries, and subjects without mutating agents. Law
-    observation follows governments and reports statute activity.
+    observation follows governments and reports statute activity. Election
+    observation follows laws and reports the archived vote history;
+    elections are not auto-conducted each tick.
     """
 
     def __init__(
@@ -117,6 +121,7 @@ class SimulationEngine:
         network_system: NetworkSystem | None = None,
         government_system: GovernmentSystem | None = None,
         law_system: LawSystem | None = None,
+        vote_system: VoteSystem | None = None,
     ) -> None:
         self._world_factory = (
             world_factory if world_factory is not None else WorldFactory()
@@ -155,6 +160,7 @@ class SimulationEngine:
             government_system if government_system is not None else GovernmentSystem()
         )
         self._law_system = law_system if law_system is not None else LawSystem()
+        self._vote_system = vote_system if vote_system is not None else VoteSystem()
 
     def run(
         self,
@@ -178,6 +184,7 @@ class SimulationEngine:
         world = self._network_system.observe(world, bus=event_bus)
         world = self._government_system.observe(world, bus=event_bus)
         world = self._law_system.observe(world, bus=event_bus)
+        world = self._vote_system.observe(world, bus=event_bus)
 
         for tick in clock.run():
             world = world.with_tick(tick)
@@ -199,6 +206,7 @@ class SimulationEngine:
             world = self._network_system.observe(world, bus=event_bus)
             world = self._government_system.observe(world, bus=event_bus)
             world = self._law_system.observe(world, bus=event_bus)
+            world = self._vote_system.observe(world, bus=event_bus)
 
         event_bus.publish(
             SimulationCompleted(

@@ -2,8 +2,9 @@
 
 Owns observe-time government censuses that emit ``GovernmentsObserved``.
 Leader appointment and treasury helpers live in domain so other layers can
-reason about polities without calling this system. Laws, voting, and tax
-redirection remain later Phase 5 milestones.
+reason about polities without calling this system. Elections may appoint
+leaders via ``VoteSystem.conduct``; tax redirection remains a later
+Phase 5 milestone.
 """
 
 from __future__ import annotations

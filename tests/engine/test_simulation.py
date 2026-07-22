@@ -9,6 +9,7 @@ from civitas.domain import (
     AgentDied,
     AgentMoved,
     AgentSpawned,
+    ElectionsObserved,
     FamiliesObserved,
     GovernmentCreated,
     GovernmentsObserved,
@@ -103,6 +104,7 @@ def test_run_emits_lifecycle_and_tick_events() -> None:
     assert len(result.world.markets) == 1
     assert len(result.world.governments) == 1
     assert len(result.world.laws) == 1
+    assert result.world.elections == ()
 
 
 def test_each_tick_selects_and_executes_actions() -> None:
@@ -461,3 +463,25 @@ def test_laws_observed_each_tick_including_start() -> None:
         i for i, event in enumerate(result.events) if isinstance(event, LawsObserved)
     ]
     assert all(law > gov for gov, law in zip(gov_indexes, law_indexes, strict=True))
+
+
+def test_elections_observed_each_tick_including_start() -> None:
+    """Engine emits an initial election census plus one per executed tick."""
+    result = SimulationEngine().run(SimulationConfig(seed=42, ticks=3, agent_count=4))
+    observed = [
+        event for event in result.events if isinstance(event, ElectionsObserved)
+    ]
+    assert len(observed) == 4  # tick 0 + ticks 1..3
+    assert observed[0].tick.value == 0
+    assert observed[-1].tick.value == 3
+    assert all(event.election_count == 0 for event in observed)
+    # Elections follow laws in the observe chain.
+    law_indexes = [
+        i for i, event in enumerate(result.events) if isinstance(event, LawsObserved)
+    ]
+    vote_indexes = [
+        i
+        for i, event in enumerate(result.events)
+        if isinstance(event, ElectionsObserved)
+    ]
+    assert all(vote > law for law, vote in zip(law_indexes, vote_indexes, strict=True))

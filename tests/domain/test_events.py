@@ -14,6 +14,9 @@ from civitas.domain import (
     AgentMoved,
     AgentSpawned,
     DomainEvent,
+    ElectionId,
+    ElectionResolved,
+    ElectionsObserved,
     FamiliesObserved,
     GovernmentCreated,
     GovernmentId,
@@ -652,3 +655,33 @@ def test_law_created_and_observed_round_trips() -> None:
     assert restored.law_count == 2
     assert restored.active_count == 1
     assert restored.active_tax_schedule_count == 1
+
+
+def test_election_resolved_and_observed_round_trips() -> None:
+    """Election resolve/observe events serialize losslessly."""
+    resolved = ElectionResolved(
+        sequence=19,
+        tick=Tick(value=4),
+        election_id=ElectionId(value=0),
+        government_id=GovernmentId(value=0),
+        winner_id=AgentId(value=1),
+        franchise_count=3,
+        ballot_count=3,
+    )
+    restored_resolved = event_from_record(resolved.to_record())
+    assert isinstance(restored_resolved, ElectionResolved)
+    assert restored_resolved.winner_id == AgentId(value=1)
+    assert restored_resolved.franchise_count == 3
+
+    observed = ElectionsObserved(
+        sequence=20,
+        tick=Tick(value=4),
+        election_count=1,
+        closed_count=1,
+        open_count=0,
+        governments_with_elections=1,
+    )
+    restored = event_from_record(observed.to_record())
+    assert isinstance(restored, ElectionsObserved)
+    assert restored.election_count == 1
+    assert restored.closed_count == 1

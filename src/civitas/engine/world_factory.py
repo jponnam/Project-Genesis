@@ -24,6 +24,7 @@ from civitas.domain import (
     SimulationStarted,
     Tick,
     World,
+    default_elections,
     default_governments,
     default_laws,
     default_markets,
@@ -72,6 +73,7 @@ class WorldFactory:
         markets = default_markets()
         governments = default_governments()
         laws = default_laws()
+        elections = default_elections()
         agents: list[Agent] = []
 
         if bus is not None:
@@ -151,6 +153,7 @@ class WorldFactory:
             markets=markets,
             governments=governments,
             laws=laws,
+            elections=elections,
             agents=tuple(agents),
         )
 
