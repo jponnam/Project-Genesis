@@ -31,6 +31,7 @@ from civitas.domain import (
     CAMP_BLUEPRINT,
     CAMP_CARTOGRAPHY,
     CAMP_COMPASS,
+    CAMP_COPPICE,
     CAMP_CROP_ROTATION,
     CAMP_DIALECTIC,
     CAMP_DISSECTION,
@@ -38,6 +39,7 @@ from civitas.domain import (
     CAMP_FALLOW,
     CAMP_FIRE,
     CAMP_FIRE_HEARTH,
+    CAMP_FORESTRY,
     CAMP_FORGE,
     CAMP_HYGIENE,
     CAMP_IRRIGATION,
@@ -88,6 +90,7 @@ from civitas.domain import (
     ENTREPOT_FOOD_GATHER_BONUS,
     FARMSTEAD_FOOD_GATHER_BONUS,
     FIRE_HEARTH_REST_BONUS,
+    FORESTRY_WOOD_GATHER_BONUS,
     FORUM_TEACHINGS_PER_KNOWER_BONUS,
     FOUNDRY_PRODUCE_ENERGY_DISCOUNT,
     GRANARY_FOOD_GATHER_BONUS,
@@ -1042,6 +1045,79 @@ def test_sail_stacks_with_pottery_and_irrigation_water_gather() -> None:
     assert gather_amount_bonus(world, "water") == water_bonus
     assert effective_gather_amount(world, "water") == (
         DEFAULT_GATHER_AMOUNT + water_bonus
+    )
+
+
+def test_coppice_raises_wood_gather_society_wide() -> None:
+    """Active coppice raises wood gather amount for every agent."""
+    discovered_forestry = CAMP_FORESTRY.model_copy(update={"discovered": True})
+    active_coppice = CAMP_COPPICE.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        technologies=tuple(
+            discovered_forestry
+            if item.technology_id == CAMP_FORESTRY.technology_id
+            else item
+            for item in default_technologies()
+        ),
+        innovations=tuple(
+            active_coppice
+            if item.innovation_id == CAMP_COPPICE.innovation_id
+            else item
+            for item in default_innovations()
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert gather_amount_bonus(world, "wood") == FORESTRY_WOOD_GATHER_BONUS
+    assert gather_amount_bonus(world, "food") == 0
+    assert gather_amount_bonus(world, "water") == 0
+    assert gather_amount_bonus(world, "stone") == 0
+    assert effective_gather_amount(world, "wood") == (
+        DEFAULT_GATHER_AMOUNT + FORESTRY_WOOD_GATHER_BONUS
+    )
+    bare = _world()
+    assert gather_amount_bonus(bare, "wood") == 0
+    assert effective_gather_amount(bare, "wood") == DEFAULT_GATHER_AMOUNT
+
+
+def test_coppice_stacks_with_scaffold_wood_gather() -> None:
+    """Coppice wood gather bonus stacks with the scaffold seat bonus."""
+    discovered_forestry = CAMP_FORESTRY.model_copy(update={"discovered": True})
+    active_coppice = CAMP_COPPICE.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 0, 0, "Camp Scaffold", InfrastructureKind.SCAFFOLD
+            ),
+        ),
+        technologies=tuple(
+            discovered_forestry
+            if item.technology_id == CAMP_FORESTRY.technology_id
+            else item
+            for item in default_technologies()
+        ),
+        innovations=tuple(
+            active_coppice
+            if item.innovation_id == CAMP_COPPICE.innovation_id
+            else item
+            for item in default_innovations()
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_scaffold(world, agent.location_id) is True
+    wood_bonus = FORESTRY_WOOD_GATHER_BONUS + SCAFFOLD_WOOD_GATHER_BONUS
+    assert gather_amount_bonus(world, "wood") == FORESTRY_WOOD_GATHER_BONUS
+    assert (
+        gather_amount_bonus(world, "wood", location_id=agent.location_id) == wood_bonus
+    )
+    assert effective_gather_amount(world, "wood", agent=agent) == (
+        DEFAULT_GATHER_AMOUNT + wood_bonus
     )
 
 
