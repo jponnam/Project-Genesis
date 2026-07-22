@@ -62,7 +62,7 @@ class World(BaseModel):
         research_progress: Open research rows, ordered by ascending technology_id.
         innovations: Society adoptions, ordered by ascending ``innovation_id``.
         agents: Agents ordered by ascending ``agent_id``.
-        treasury: Public money balance collected from taxes.
+        treasury: Global public money balance for collections without a government.
     """
 
     model_config = ConfigDict(frozen=True, extra="forbid", validate_default=True)

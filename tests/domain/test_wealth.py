@@ -8,6 +8,7 @@ from civitas.domain import (
     CAMP_LOCATION,
     Agent,
     AgentStatus,
+    Government,
     Health,
     SimulationConfig,
     World,
@@ -21,10 +22,15 @@ from civitas.domain import (
 )
 
 
-def _world(*agents: Agent, treasury: int = 0) -> World:
+def _world(
+    *agents: Agent,
+    treasury: int = 0,
+    governments: tuple[Government, ...] = (),
+) -> World:
     return World(
         config=SimulationConfig(agent_count=len(agents), seed=1),
         locations=(CAMP_LOCATION,),
+        governments=governments,
         agents=agents,
         treasury=treasury,
     )
@@ -66,14 +72,21 @@ def test_census_wealth_includes_treasury_and_inequality() -> None:
     dead = Agent.create(agent_id=2, name="C", money=4).model_copy(
         update={"status": AgentStatus.DEAD, "health": Health(vitality=0.0)}
     )
-    world = _world(living_a, living_b, dead, treasury=6)
+    world = _world(
+        living_a,
+        living_b,
+        dead,
+        treasury=6,
+        governments=(Government.create(0, "Camp", 0, (0,), treasury=4),),
+    )
     snap = census_wealth(world)
     assert snap.total == 14
     assert snap.alive_total == 10
     assert snap.dead_total == 4
     assert snap.treasury == 6
-    assert snap.society_total == 20
-    assert snap.treasury_share_bps == 3000
+    assert snap.government_treasury == 4
+    assert snap.society_total == 24
+    assert snap.treasury_share_bps == 4166
     assert snap.median_alive == 5
     assert snap.min_alive == 0
     assert snap.max_alive == 10
@@ -81,7 +94,7 @@ def test_census_wealth_includes_treasury_and_inequality() -> None:
     assert snap.top1_share_bps == 10000
     assert snap.gini_bps == gini_bps((0, 10))
     assert wealth_alive_total(world) == 10
-    assert society_money_total(world) == 20
+    assert society_money_total(world) == 24
 
 
 def test_census_wealth_empty_living() -> None:
@@ -92,6 +105,7 @@ def test_census_wealth_empty_living() -> None:
     world = _world(dead, treasury=2)
     snap = census_wealth(world)
     assert snap.alive_count == 0
+    assert snap.government_treasury == 0
     assert snap.median_alive is None
     assert snap.gini_bps == 0
     assert snap.top1_share_bps == 0

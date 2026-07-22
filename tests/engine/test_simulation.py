@@ -52,6 +52,7 @@ from civitas.domain import (
     TickCompleted,
     TickStarted,
     WealthObserved,
+    society_money_total,
     wealth_total,
 )
 from civitas.engine import EventBus, SimulationEngine, WorldFactory
@@ -340,6 +341,7 @@ def test_default_engine_does_not_collect_taxes() -> None:
     """Taxes stay disabled unless an enabled TaxSystem is injected."""
     result = SimulationEngine().run(SimulationConfig(seed=42, ticks=3, agent_count=4))
     assert result.world.treasury == 0
+    assert sum(government.treasury for government in result.world.governments) == 0
     assert not any(isinstance(event, TaxCollected) for event in result.events)
 
 
@@ -354,14 +356,19 @@ def test_enabled_taxes_collect_after_births_each_tick() -> None:
     result = engine.run(config)
     taxes = [event for event in result.events if isinstance(event, TaxCollected)]
     assert len(taxes) >= 1
-    assert result.world.treasury == len(taxes)
-    assert wealth_total(result.world) + result.world.treasury == initial_money
+    tax_total = sum(event.amount for event in taxes)
+    assert result.world.treasury == 0
+    assert (
+        sum(government.treasury for government in result.world.governments) == tax_total
+    )
+    assert society_money_total(result.world) == initial_money
+    assert all(event.government_id is not None for event in taxes)
     # No taxes at tick 0 observe; first levy is on tick 1.
     assert taxes[0].tick.value == 1
 
 
 def test_wealth_observed_reports_treasury_after_enabled_taxes() -> None:
-    """Post-levy WealthObserved society_total matches agents plus treasury."""
+    """Post-levy WealthObserved society_total matches all money holders."""
     engine = SimulationEngine(
         tax_system=TaxSystem(TaxConfig(enabled=True, flat_amount=1, rate_bps=0)),
         birth_system=BirthSystem(BirthConfig(enabled=False)),
@@ -370,8 +377,13 @@ def test_wealth_observed_reports_treasury_after_enabled_taxes() -> None:
     observed = [event for event in result.events if isinstance(event, WealthObserved)]
     final = observed[-1]
     assert final.treasury == result.world.treasury
-    assert final.society_total == wealth_total(result.world) + result.world.treasury
-    assert final.treasury == final.society_total - final.total
+    assert final.government_treasury == sum(
+        government.treasury for government in result.world.governments
+    )
+    assert final.society_total == society_money_total(result.world)
+    assert (
+        final.treasury + final.government_treasury == final.society_total - final.total
+    )
 
 
 def test_relationships_observed_each_tick_including_start() -> None:

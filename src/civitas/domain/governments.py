@@ -3,8 +3,8 @@
 A government is a location-anchored public authority. Domain helpers own
 lookups, treasury mutations, leader appointment, and censuses. Laws attach
 to governments separately. Leaders may be appointed via ``set_leader`` or
-filled by ``conduct_election`` (voting). Tax redirection to government
-treasuries remains a later Phase 5 milestone.
+filled by ``conduct_election`` (voting). Phase 9 tax redirection now credits
+collections from governed locations into the matching government treasury.
 """
 
 from __future__ import annotations

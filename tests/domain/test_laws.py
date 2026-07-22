@@ -87,13 +87,18 @@ def test_tax_schedule_overrides_levy_fallback() -> None:
     world = _world(Agent.create(agent_id=0, name="A", money=5), laws=(law,))
     assert tax_schedule_for_agent(world, world.agents[0]) == (2, 0)
     updated, collections = levy_taxes(world, flat_amount=1, rate_bps=0)
-    assert collections == ((world.agents[0].agent_id, 2, 2),)
+    assert collections == (
+        (world.agents[0].agent_id, 2, 2, world.governments[0].government_id),
+    )
     assert updated.agent_by_id(0).money == 3  # type: ignore[union-attr]
+    assert updated.government_by_id(0).treasury == 2  # type: ignore[union-attr]
 
     repealed = repeal_law(world, 0)
     assert repealed is not None
     _, after = levy_taxes(repealed, flat_amount=1, rate_bps=0)
-    assert after == ((world.agents[0].agent_id, 1, 1),)
+    assert after == (
+        (world.agents[0].agent_id, 1, 1, world.governments[0].government_id),
+    )
 
 
 def test_census_laws_counts() -> None:
