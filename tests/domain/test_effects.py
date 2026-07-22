@@ -123,6 +123,7 @@ from civitas.domain import (
     INFIRMARY_REST_RESTORE_BONUS,
     IRONWORKS_PRODUCE_ENERGY_DISCOUNT,
     IRRIGATION_WATER_GATHER_BONUS,
+    JOINER_PRODUCE_ENERGY_DISCOUNT,
     LABOR_PRODUCE_ENERGY_DISCOUNT,
     LAND_TENURE_EAT_RESTORE_BONUS,
     LAZARETTO_DRINK_RESTORE_BONUS,
@@ -248,6 +249,7 @@ from civitas.domain import (
     location_has_active_husbandman,
     location_has_active_infirmary,
     location_has_active_ironworks,
+    location_has_active_joiner,
     location_has_active_lazaretto,
     location_has_active_library,
     location_has_active_lumber_yard,
@@ -5774,6 +5776,113 @@ def test_smelter_stacks_with_guild_workshop_abacus_and_pulley() -> None:
         - ENGINEERING_PRODUCE_ENERGY_DISCOUNT
     )
     assert location_has_active_smelter(world, agent.location_id) is True
+    assert effective_produce_energy_cost(
+        world,
+        agent,
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(expected)
+    assert census_effects(world).produce_energy_cost_bps == round(expected * 10_000)
+
+
+def test_joiner_reduces_produce_energy_for_colocated_agents() -> None:
+    """Active joiners discount PRODUCE energy at their seat location."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        institutions=(
+            Institution.create(0, 0, 0, "Camp Joiner", InstitutionKind.JOINER),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_joiner(world, agent.location_id) is True
+    assert effective_produce_energy_cost(
+        world,
+        agent,
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(DEFAULT_PRODUCE_ENERGY_COST - JOINER_PRODUCE_ENERGY_DISCOUNT)
+    assert census_effects(world).produce_energy_cost_bps == round(
+        (DEFAULT_PRODUCE_ENERGY_COST - JOINER_PRODUCE_ENERGY_DISCOUNT) * 10_000
+    )
+    bare = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_joiner(bare, bare.agents[0].location_id) is False
+
+
+def test_joiner_stacks_with_guild_workshop_abacus_and_pulley() -> None:
+    """Joiner seat discount stacks with guild, workshop, abacus, and pulley."""
+    discovered_pottery = CAMP_POTTERY.model_copy(update={"discovered": True})
+    discovered_irrigation = CAMP_IRRIGATION.model_copy(update={"discovered": True})
+    discovered_metallurgy = CAMP_METALLURGY.model_copy(update={"discovered": True})
+    discovered_writing = CAMP_WRITING.model_copy(update={"discovered": True})
+    discovered_math = CAMP_MATHEMATICS.model_copy(update={"discovered": True})
+    discovered_astronomy = CAMP_ASTRONOMY.model_copy(update={"discovered": True})
+    discovered_philosophy = CAMP_PHILOSOPHY.model_copy(update={"discovered": True})
+    discovered_logic = CAMP_LOGIC.model_copy(update={"discovered": True})
+    discovered_rhetoric = CAMP_RHETORIC.model_copy(update={"discovered": True})
+    discovered_medicine = CAMP_MEDICINE.model_copy(update={"discovered": True})
+    discovered_anatomy = CAMP_ANATOMY.model_copy(update={"discovered": True})
+    discovered_hygiene = CAMP_HYGIENE.model_copy(update={"discovered": True})
+    discovered_engineering = CAMP_ENGINEERING.model_copy(update={"discovered": True})
+    active_abacus = CAMP_ABACUS.model_copy(update={"active": True})
+    active_pulley = CAMP_PULLEY.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        institutions=(
+            Institution.create(0, 0, 0, "Camp Guild", InstitutionKind.GUILD),
+            Institution.create(1, 0, 0, "Camp Workshop", InstitutionKind.WORKSHOP),
+            Institution.create(2, 0, 0, "Camp Joiner", InstitutionKind.JOINER),
+        ),
+        technologies=(
+            CAMP_FIRE,
+            discovered_pottery,
+            discovered_irrigation,
+            discovered_metallurgy,
+            discovered_writing,
+            discovered_math,
+            discovered_astronomy,
+            discovered_philosophy,
+            discovered_logic,
+            discovered_rhetoric,
+            discovered_medicine,
+            discovered_anatomy,
+            discovered_hygiene,
+            discovered_engineering,
+        ),
+        innovations=(
+            CAMP_FIRE_HEARTH,
+            CAMP_POTTERY_CRAFT,
+            CAMP_IRRIGATION_CANAL,
+            CAMP_FORGE,
+            CAMP_SCRIBE,
+            active_abacus,
+            CAMP_STAR_CHART,
+            CAMP_DIALECTIC,
+            CAMP_SYLLOGISM,
+            CAMP_ORATION,
+            CAMP_REMEDY,
+            CAMP_DISSECTION,
+            CAMP_ASEPSIS,
+            active_pulley,
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    expected = (
+        DEFAULT_PRODUCE_ENERGY_COST
+        - GUILD_PRODUCE_ENERGY_DISCOUNT
+        - WORKSHOP_PRODUCE_ENERGY_DISCOUNT
+        - JOINER_PRODUCE_ENERGY_DISCOUNT
+        - MATHEMATICS_PRODUCE_ENERGY_DISCOUNT
+        - ENGINEERING_PRODUCE_ENERGY_DISCOUNT
+    )
+    assert location_has_active_joiner(world, agent.location_id) is True
     assert effective_produce_energy_cost(
         world,
         agent,

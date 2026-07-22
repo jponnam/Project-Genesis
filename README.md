@@ -130,15 +130,14 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 18 Milestone 5: Timber town cities**
+**Phase 18 Milestone 6: Joiner institutions**
 
-``CityKind.TIMBER_TOWN`` non-capital city seats grant +1 WOOD gather at
-the city's seat location. The seat bonus stacks additively with the sawmill
-society-wide bonus, the coppice society-wide bonus, the scaffold seat, the
-woodcutter seat, the lumber yard seat, the timber rights subject bonus, and
-the pastoral city seat. Timber towns share a government with the capital but
-must occupy their own seat location and can never be flagged as capital.
-Timber towns are not seeded.
+``InstitutionKind.JOINER`` institutions grant a PRODUCE energy discount to
+agents producing at the joiner's seat location. The seat discount stacks
+additively with the guild, workshop, weaver, smelter, foundry, fulling mill,
+forge works, mill town, ironworks, tannery, bellows, lathe, abacus, pulley,
+customs, labor, safety codes, and loom discounts. Joiners are gov-attached
+institutions seated inside the government's jurisdiction and are not seeded.
 
 ### Completed
 
@@ -331,6 +330,7 @@ JSONL storage → `civitas run`
 - Milestone 3: Woodcutter institutions
 - Milestone 4: Lumber yard infrastructure
 - Milestone 5: Timber town cities
+- Milestone 6: Joiner institutions
 
 ## License
 
