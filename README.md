@@ -123,14 +123,14 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 11 — Milestone 5: Sanctuary cities**
+**Phase 11 — Milestone 6: School institutions**
 
-``CityKind.SANCTUARY`` is a non-capital specialized seat for reflective
-culture. An active sanctuary at an agent's location grants ``+0.05``
-REST restore (``SANCTUARY_REST_RESTORE_BONUS``), stacking with fire hearth
-and temple via ``effective_rest_restore``. Census tracks
-``active_sanctuary_count`` on ``CitiesObserved``. No sanctuary is seeded
-by default.
+``InstitutionKind.SCHOOL`` is a gov-attached civic organization like
+academies and temples. An active school at a knower's seat grants ``+1``
+teachings-per-knower (``SCHOOL_TEACHINGS_PER_KNOWER_BONUS``), stacking
+with scribe, dialectic, scriptorium, academy, forum, and curriculum via
+``effective_teachings_per_knower``. Census tracks ``active_school_count``
+on ``InstitutionsObserved``. No school is seeded by default.
 
 ### Completed
 
@@ -225,6 +225,7 @@ JSONL storage → `civitas run`
 - Milestone 3: Temple institutions
 - Milestone 4: Shrine infrastructure
 - Milestone 5: Sanctuary cities
+- Milestone 6: School institutions
 
 ## License
 
