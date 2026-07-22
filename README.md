@@ -125,9 +125,10 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 13 Milestone 11: Zoning laws**
+**Phase 13 Milestone 12: Quarry cities**
 
-``LawKind.ZONING`` grants living subjects ``+0.05`` EAT restore.
+``CityKind.QUARRY`` is a non-capital specialized seat. Gatherers at an
+active quarry gain ``+1`` stone gather (stacks with forge and mason).
 
 ### Completed
 
@@ -256,6 +257,7 @@ JSONL storage → `civitas run`
 - Milestone 9: Scaffold infrastructure
 - Milestone 10: Surveying technology
 - Milestone 11: Zoning laws
+- Milestone 12: Quarry cities
 
 ## License
 

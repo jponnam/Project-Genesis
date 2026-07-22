@@ -18,10 +18,13 @@ Milestone 12 adds ``CityKind.LAZARETTO`` as a non-capital specialized
 seat for quarantine care (living residents gain a DRINK restore bonus).
 Phase 13 Milestone 5 adds ``CityKind.FOUNDRY`` as a non-capital
 specialized seat for industrial production (living residents gain a
-PRODUCE energy discount). Resident counts are derived from living agents
-at the seat. Infrastructure remains a separate aggregate. Camp City stays
-the only seeded settlement capital; libraries, forums, sanctuaries,
-agoras, infirmaries, lazarettos, and foundries are not seeded.
+PRODUCE energy discount). Phase 13 Milestone 12 adds ``CityKind.QUARRY``
+as a non-capital specialized seat for stone extraction (gatherers at the
+seat gain a stone gather bonus). Resident counts are derived from living
+agents at the seat. Infrastructure remains a separate aggregate. Camp
+City stays the only seeded settlement capital; libraries, forums,
+sanctuaries, agoras, infirmaries, lazarettos, foundries, and quarries are
+not seeded.
 """
 
 from __future__ import annotations
@@ -55,6 +58,7 @@ class CityKind(StrEnum):
     INFIRMARY = "infirmary"
     LAZARETTO = "lazaretto"
     FOUNDRY = "foundry"
+    QUARRY = "quarry"
 
 
 # City kinds that may never be flagged as capital.
@@ -68,6 +72,7 @@ _NON_CAPITAL_KINDS: frozenset[CityKind] = frozenset(
         CityKind.INFIRMARY,
         CityKind.LAZARETTO,
         CityKind.FOUNDRY,
+        CityKind.QUARRY,
     }
 )
 
@@ -149,6 +154,7 @@ class CityCensus(BaseModel):
     active_infirmary_count: NonNegativeInt = 0
     active_lazaretto_count: NonNegativeInt = 0
     active_foundry_count: NonNegativeInt = 0
+    active_quarry_count: NonNegativeInt = 0
 
 
 def city_by_id(world: World, city_id: CityId | int) -> City | None:
@@ -262,6 +268,18 @@ def foundries_for(
         city
         for city in cities_for(world, government_id)
         if city.kind is CityKind.FOUNDRY
+    )
+
+
+def quarries_for(
+    world: World,
+    government_id: GovernmentId | int,
+) -> tuple[City, ...]:
+    """Return quarry cities for ``government_id`` in ascending id order."""
+    return tuple(
+        city
+        for city in cities_for(world, government_id)
+        if city.kind is CityKind.QUARRY
     )
 
 
@@ -460,6 +478,7 @@ def census_cities(world: World) -> CityCensus:
     active_infirmaries = sum(1 for city in active if city.kind is CityKind.INFIRMARY)
     active_lazarettos = sum(1 for city in active if city.kind is CityKind.LAZARETTO)
     active_foundries = sum(1 for city in active if city.kind is CityKind.FOUNDRY)
+    active_quarries = sum(1 for city in active if city.kind is CityKind.QUARRY)
     return CityCensus(
         tick=world.tick,
         city_count=len(cities),
@@ -480,4 +499,5 @@ def census_cities(world: World) -> CityCensus:
         active_infirmary_count=active_infirmaries,
         active_lazaretto_count=active_lazarettos,
         active_foundry_count=active_foundries,
+        active_quarry_count=active_quarries,
     )

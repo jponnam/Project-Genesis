@@ -64,9 +64,11 @@ Phase 13 Milestone 9 adds SCAFFOLD wood-gather bonuses at the infrastructure
 seat. Phase 13 Milestone 10 adds a global PLUMB_LINE retrieval-limit bonus
 (stacking with star chart, archive, library, observatory, lyceum, and
 calendar). Phase 13 Milestone 11 adds ZONING law EAT restore bonuses for
-living subjects. The action executor, retrieval path, market fills,
-knowledge diffusion, and research progression read these helpers;
-``EffectsSystem`` only observes coverage. Systems never call each other.
+living subjects. Phase 13 Milestone 12 adds QUARRY city stone-gather
+bonuses at the city seat (stacking with forge and mason). The action
+executor, retrieval path, market fills, knowledge diffusion, and research
+progression read these helpers; ``EffectsSystem`` only observes coverage.
+Systems never call each other.
 """
 
 from __future__ import annotations
@@ -140,6 +142,7 @@ LAZARETTO_DRINK_RESTORE_BONUS: float = 0.05
 STOREHOUSE_FOOD_GATHER_BONUS: int = 1
 SCAFFOLD_WOOD_GATHER_BONUS: int = 1
 MASON_STONE_GATHER_BONUS: int = 1
+QUARRY_STONE_GATHER_BONUS: int = 1
 ROAD_MOVE_ENERGY_DISCOUNT: float = 0.02
 BRIDGE_MOVE_ENERGY_DISCOUNT: float = 0.02
 GUILD_PRODUCE_ENERGY_DISCOUNT: float = 0.02
@@ -634,6 +637,15 @@ def location_has_active_foundry(
     return city is not None and city.active and city.kind is CityKind.FOUNDRY
 
 
+def location_has_active_quarry(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active QUARRY city is seated at ``location_id``."""
+    city = city_at(world, location_id)
+    return city is not None and city.active and city.kind is CityKind.QUARRY
+
+
 def rest_restore_bonus(
     world: World,
     *,
@@ -735,7 +747,8 @@ def gather_amount_bonus(
     """Return gather-amount bonuses for ``resource``.
 
     Water bonuses come from society innovations. Stone bonuses come from an
-    active FORGE innovation society-wide and an active MASON seat at
+    active FORGE innovation society-wide, an active MASON seat at
+    ``location_id`` when provided, and an active QUARRY city at
     ``location_id`` when provided. Food bonuses come from an active
     STOREHOUSE at ``location_id`` when provided. Wood bonuses come from an
     active SCAFFOLD at ``location_id`` when provided.
@@ -751,6 +764,8 @@ def gather_amount_bonus(
             bonus += METALLURGY_STONE_GATHER_BONUS
         if location_id is not None and location_has_active_mason(world, location_id):
             bonus += MASON_STONE_GATHER_BONUS
+        if location_id is not None and location_has_active_quarry(world, location_id):
+            bonus += QUARRY_STONE_GATHER_BONUS
     elif resource == FOOD_RESOURCE and location_id is not None:
         if location_has_active_storehouse(world, location_id):
             bonus += STOREHOUSE_FOOD_GATHER_BONUS
