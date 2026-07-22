@@ -19,10 +19,13 @@ from civitas.domain import (
     Government,
     Infrastructure,
     InfrastructureKind,
+    Institution,
+    InstitutionKind,
     SimulationConfig,
     World,
     build_cost_for,
     build_infrastructure,
+    build_infrastructure_from_institution,
     census_infrastructure,
     create_infrastructure,
     default_cities,
@@ -41,6 +44,7 @@ def _world(
     cities: tuple[City, ...] = (
         City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
     ),
+    institutions: tuple[Institution, ...] = (),
     infrastructure: tuple[Infrastructure, ...] = (),
 ) -> World:
     return World(
@@ -48,6 +52,7 @@ def _world(
         locations=(CAMP_LOCATION,),
         governments=governments,
         cities=cities,
+        institutions=institutions,
         infrastructure=infrastructure,
         agents=agents,
     )
@@ -213,6 +218,59 @@ def test_create_and_build_storehouse() -> None:
     )
     assert built is not None
     assert built.governments[0].treasury == 20 - DEFAULT_STOREHOUSE_BUILD_COST
+
+
+def test_build_infrastructure_from_institution_budget() -> None:
+    """Institution budgets can commission infrastructure of their government."""
+    world = _world(
+        Agent.create(agent_id=0, name="A", money=3),
+        governments=(Government.create(0, "Camp", 0, (0,), treasury=0),),
+        institutions=(
+            Institution.create(
+                0,
+                0,
+                0,
+                "Council",
+                InstitutionKind.COUNCIL,
+                budget=DEFAULT_WELL_BUILD_COST + 2,
+            ),
+        ),
+    )
+    initial = society_money_total(world)
+    built = build_infrastructure_from_institution(
+        world,
+        Infrastructure.create(0, 0, 0, 0, "Council Well", InfrastructureKind.WELL),
+        0,
+    )
+    assert built is not None
+    assert built.infrastructure[0].name == "Council Well"
+    assert built.institutions[0].budget == 2
+    assert built.governments[0].treasury == 0
+    assert society_money_total(built) == initial - DEFAULT_WELL_BUILD_COST
+
+    assert (
+        build_infrastructure_from_institution(
+            world,
+            Infrastructure.create(0, 0, 0, 0, "Well", InfrastructureKind.WELL),
+            0,
+            cost=0,
+        )
+        is None
+    )
+    broke = _world(
+        Agent.create(agent_id=0, name="A"),
+        institutions=(
+            Institution.create(0, 0, 0, "Council", InstitutionKind.COUNCIL, budget=1),
+        ),
+    )
+    assert (
+        build_infrastructure_from_institution(
+            broke,
+            Infrastructure.create(0, 0, 0, 0, "Well", InfrastructureKind.WELL),
+            0,
+        )
+        is None
+    )
 
 
 def test_create_and_build_road() -> None:

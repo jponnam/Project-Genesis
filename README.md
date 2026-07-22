@@ -121,12 +121,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 9 — Milestone 7: Road infrastructure**
+**Phase 9 — Milestone 8: Institution-funded infrastructure construction**
 
-``ROAD`` is a third infrastructure kind with a catalog build cost. An active
-road reduces MOVE energy cost for agents departing from its seat. The camp
-well remains the only seeded piece; roads are created or paid-built on
-demand.
+Active institutions can spend their budgets to commission infrastructure
+via opt-in helpers. This closes the fiscal loop: taxes fund government
+treasuries, treasuries fund institution budgets, and budgets fund builds.
 
 ### Completed
 
@@ -195,6 +194,7 @@ JSONL storage → `civitas run`
 - Milestone 5: Treasury-funded infrastructure construction
 - Milestone 6: Storehouse infrastructure
 - Milestone 7: Road infrastructure
+- Milestone 8: Institution-funded infrastructure construction
 
 ## License
 

@@ -11,8 +11,11 @@ from civitas.domain import (
     Government,
     Infrastructure,
     InfrastructureBuilt,
+    InfrastructureCommissioned,
     InfrastructureKind,
     InfrastructuresObserved,
+    Institution,
+    InstitutionKind,
     SimulationConfig,
     World,
 )
@@ -107,3 +110,41 @@ def test_system_build_emits_infrastructure_built() -> None:
     )
     assert unchanged == built
     assert len([e for e in bus.history if isinstance(e, InfrastructureBuilt)]) == 1
+
+
+def test_system_commission_emits_infrastructure_commissioned() -> None:
+    """commission pays from an institution budget and emits the event."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,), treasury=0),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        institutions=(
+            Institution.create(
+                0,
+                0,
+                0,
+                "Council",
+                InstitutionKind.COUNCIL,
+                budget=DEFAULT_WELL_BUILD_COST + 1,
+            ),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    bus = EventBus()
+    system = InfrastructureSystem()
+    built = system.commission(
+        world,
+        Infrastructure.create(0, 0, 0, 0, "Council Well", InfrastructureKind.WELL),
+        0,
+        bus=bus,
+    )
+    assert built.infrastructure_by_id(0) is not None
+    assert built.institutions[0].budget == 1
+    events = [
+        event for event in bus.history if isinstance(event, InfrastructureCommissioned)
+    ]
+    assert len(events) == 1
+    assert events[0].cost == DEFAULT_WELL_BUILD_COST
+    assert events[0].budget_after == 1
+    assert events[0].name == "Council Well"
