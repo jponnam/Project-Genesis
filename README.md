@@ -118,14 +118,13 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 5 — Milestone 3: Voting**
+**Phase 5 — Milestone 4: Institutions**
 
-Living subjects elect government leaders by reputation standing
-(`standing_bps`; ties → smaller agent id). `conduct_election` /
-`VoteSystem.conduct` archive a closed `Election` and call `set_leader`.
-Elections are not auto-run each tick; `VoteSystem.observe` emits
-`ElectionsObserved`. Institutions, cities, and infrastructure remain
-later Phase 5 milestones.
+Civic organizations attach to governments with a seat inside jurisdiction.
+The factory seeds active `Camp Council` (`COUNCIL`). Officers may be
+appointed via domain helpers; `InstitutionSystem.observe` emits
+`InstitutionsObserved`. Cities and infrastructure remain later Phase 5
+milestones.
 
 ### Completed
 
@@ -164,6 +163,7 @@ JSONL storage → `civitas run`
 - Milestone 1: Governments
 - Milestone 2: Laws
 - Milestone 3: Voting
+- Milestone 4: Institutions
 
 ## License
 

@@ -21,6 +21,9 @@ from civitas.domain import (
     GovernmentCreated,
     GovernmentId,
     GovernmentsObserved,
+    InstitutionCreated,
+    InstitutionId,
+    InstitutionsObserved,
     LawCreated,
     LawId,
     LawsObserved,
@@ -685,3 +688,38 @@ def test_election_resolved_and_observed_round_trips() -> None:
     assert isinstance(restored, ElectionsObserved)
     assert restored.election_count == 1
     assert restored.closed_count == 1
+
+
+def test_institution_created_and_observed_round_trips() -> None:
+    """Institution create/observe events serialize losslessly."""
+    created = InstitutionCreated(
+        sequence=21,
+        tick=Tick(value=0),
+        institution_id=InstitutionId(value=0),
+        government_id=GovernmentId(value=0),
+        location_id=LocationId(value=0),
+        name="Camp Council",
+        kind="council",
+        active=True,
+        officer_id=None,
+    )
+    restored_created = event_from_record(created.to_record())
+    assert isinstance(restored_created, InstitutionCreated)
+    assert restored_created.name == "Camp Council"
+    assert restored_created.kind == "council"
+
+    observed = InstitutionsObserved(
+        sequence=22,
+        tick=Tick(value=5),
+        institution_count=1,
+        active_count=1,
+        inactive_count=0,
+        governments_with_institutions=1,
+        staffed_count=0,
+        vacant_officer_count=1,
+        active_council_count=1,
+    )
+    restored = event_from_record(observed.to_record())
+    assert isinstance(restored, InstitutionsObserved)
+    assert restored.institution_count == 1
+    assert restored.active_council_count == 1

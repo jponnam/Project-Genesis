@@ -21,10 +21,12 @@ from civitas.domain.ids import (
     AgentId,
     ElectionId,
     GovernmentId,
+    InstitutionId,
     LawId,
     LocationId,
     MarketId,
 )
+from civitas.domain.institutions import Institution
 from civitas.domain.laws import Law, LawKind
 from civitas.domain.location import Location
 from civitas.domain.market import Market
@@ -44,6 +46,7 @@ class World(BaseModel):
         governments: Polities, ordered by ascending ``government_id``.
         laws: Statutes, ordered by ascending ``law_id``.
         elections: Archived elections, ordered by ascending ``election_id``.
+        institutions: Civic organizations, ordered by ascending ``institution_id``.
         agents: Agents ordered by ascending ``agent_id``.
         treasury: Public money balance collected from taxes.
     """
@@ -57,12 +60,13 @@ class World(BaseModel):
     governments: tuple[Government, ...] = ()
     laws: tuple[Law, ...] = ()
     elections: tuple[Election, ...] = ()
+    institutions: tuple[Institution, ...] = ()
     agents: tuple[Agent, ...] = ()
     treasury: NonNegativeInt = 0
 
     @model_validator(mode="after")
     def world_must_be_consistent(self) -> Self:
-        """Enforce agent/location/market/government/law/election integrity."""
+        """Enforce aggregate integrity across world collections."""
         agent_ids = [agent.agent_id.value for agent in self.agents]
         if len(agent_ids) != len(set(agent_ids)):
             msg = "agent ids must be unique"
@@ -205,6 +209,59 @@ class World(BaseModel):
                 )
                 raise ValueError(msg)
 
+        institution_ids = [
+            institution.institution_id.value for institution in self.institutions
+        ]
+        if len(institution_ids) != len(set(institution_ids)):
+            msg = "institution ids must be unique"
+            raise ValueError(msg)
+        if institution_ids != sorted(institution_ids):
+            msg = "institutions must be ordered by ascending institution_id"
+            raise ValueError(msg)
+
+        gov_by_id = {
+            government.government_id.value: government
+            for government in self.governments
+        }
+        active_kind_govs: set[tuple[int, str]] = set()
+        for institution in self.institutions:
+            gov_value = institution.government_id.value
+            if gov_value not in gov_by_id:
+                msg = (
+                    f"institution {institution.institution_id.value} references "
+                    f"unknown government {gov_value}"
+                )
+                raise ValueError(msg)
+            government = gov_by_id[gov_value]
+            if institution.location_id.value not in known:
+                msg = (
+                    f"institution {institution.institution_id.value} references "
+                    f"unknown location {institution.location_id.value}"
+                )
+                raise ValueError(msg)
+            jurisdiction = {location.value for location in government.jurisdiction}
+            if institution.location_id.value not in jurisdiction:
+                msg = (
+                    f"institution {institution.institution_id.value} seat must lie "
+                    f"inside government jurisdiction"
+                )
+                raise ValueError(msg)
+            if (
+                institution.officer_id is not None
+                and institution.officer_id.value not in known_agents
+            ):
+                msg = (
+                    f"institution {institution.institution_id.value} references "
+                    f"unknown officer {institution.officer_id.value}"
+                )
+                raise ValueError(msg)
+            if institution.active:
+                key = (institution.government_id.value, institution.kind.value)
+                if key in active_kind_govs:
+                    msg = "at most one active institution of each kind per government"
+                    raise ValueError(msg)
+                active_kind_govs.add(key)
+
         return self
 
     @property
@@ -277,6 +334,21 @@ class World(BaseModel):
                 return election
         return None
 
+    def institution_by_id(
+        self,
+        institution_id: InstitutionId | int,
+    ) -> Institution | None:
+        """Return the institution with ``institution_id``, or ``None`` if absent."""
+        target = (
+            institution_id
+            if isinstance(institution_id, InstitutionId)
+            else InstitutionId(value=institution_id)
+        )
+        for institution in self.institutions:
+            if institution.institution_id == target:
+                return institution
+        return None
+
     def agents_at(self, location_id: LocationId | int) -> tuple[Agent, ...]:
         """Return agents occupying ``location_id`` in stable id order."""
         target = (
@@ -326,6 +398,7 @@ class World(BaseModel):
             governments=self.governments,
             laws=self.laws,
             elections=self.elections,
+            institutions=self.institutions,
             agents=agents,
             treasury=self.treasury,
         )
@@ -434,3 +507,24 @@ class World(BaseModel):
             updated.append(election)
             updated.sort(key=lambda item: item.election_id.value)
         return self.model_copy(update={"elections": tuple(updated)})
+
+    def with_institution(self, institution: Institution) -> World:
+        """Return a copy replacing the institution that shares ``institution_id``.
+
+        Raises:
+            ValueError: If no institution with that id exists.
+        """
+        updated: list[Institution] = []
+        found = False
+        for existing in self.institutions:
+            if existing.institution_id == institution.institution_id:
+                updated.append(institution)
+                found = True
+            else:
+                updated.append(existing)
+        if not found:
+            msg = (
+                f"institution id {institution.institution_id.value} not found in world"
+            )
+            raise ValueError(msg)
+        return self.model_copy(update={"institutions": tuple(updated)})

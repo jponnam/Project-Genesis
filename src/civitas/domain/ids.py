@@ -144,3 +144,22 @@ class ElectionId(BaseModel):
         if isinstance(other, ElectionId):
             return self.value < other.value
         return NotImplemented
+
+
+class InstitutionId(BaseModel):
+    """Unique institution identifier within a simulation run."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid", validate_default=True)
+
+    value: NonNegativeInt = Field(description="Stable institution id for the run.")
+
+    def __int__(self) -> int:
+        return self.value
+
+    def __str__(self) -> str:
+        return str(self.value)
+
+    def __lt__(self, other: object) -> Any:
+        if isinstance(other, InstitutionId):
+            return self.value < other.value
+        return NotImplemented
