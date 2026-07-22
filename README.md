@@ -127,12 +127,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 15 Milestone 2: Land tenure laws**
+**Phase 15 Milestone 3: Granary institutions**
 
-``LawKind.LAND_TENURE`` is a unique-active statute kind (at most one
-active per government). Living subjects under an active land-tenure
-law gain +0.05 EAT restore, stacking with zoning. Not seeded in
-``default_laws()``.
+``InstitutionKind.GRANARY`` seats add +1 FOOD gather at the institution
+location, stacking with plow (society-wide), storehouse, waystation, and
+entrepot. Not seeded in ``default_institutions()``.
 
 ### Completed
 
@@ -280,6 +279,7 @@ JSONL storage → `civitas run`
 **Phase 15:**
 - Milestone 1: Agriculture technology
 - Milestone 2: Land tenure laws
+- Milestone 3: Granary institutions
 
 ## License
 

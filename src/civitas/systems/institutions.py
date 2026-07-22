@@ -95,6 +95,7 @@ class InstitutionSystem:
                     active_caravan_count=snap.active_caravan_count,
                     active_merchant_count=snap.active_merchant_count,
                     active_cartographer_count=snap.active_cartographer_count,
+                    active_granary_count=snap.active_granary_count,
                     total_budget=snap.total_budget,
                     funded_count=snap.funded_count,
                 )
