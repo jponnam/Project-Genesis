@@ -89,6 +89,7 @@ class InstitutionSystem:
                     active_hospital_count=snap.active_hospital_count,
                     active_apothecary_count=snap.active_apothecary_count,
                     active_collegium_count=snap.active_collegium_count,
+                    active_workshop_count=snap.active_workshop_count,
                     total_budget=snap.total_budget,
                     funded_count=snap.funded_count,
                 )

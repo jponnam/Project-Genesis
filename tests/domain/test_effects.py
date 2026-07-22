@@ -87,6 +87,7 @@ from civitas.domain import (
     STOREHOUSE_FOOD_GATHER_BONUS,
     TEMPLE_REST_RESTORE_BONUS,
     WELL_DRINK_RESTORE_BONUS,
+    WORKSHOP_PRODUCE_ENERGY_DISCOUNT,
     WRITING_TEACHINGS_PER_KNOWER_BONUS,
     Agent,
     City,
@@ -143,6 +144,7 @@ from civitas.domain import (
     location_has_active_storehouse,
     location_has_active_temple,
     location_has_active_well,
+    location_has_active_workshop,
     market_fee_for,
     move_energy_discount,
     quarantine_rest_bonus_for,
@@ -1579,9 +1581,7 @@ def test_apothecary_boosts_drink_restore_for_colocated_agents() -> None:
         locations=(CAMP_LOCATION,),
         governments=(Government.create(0, "Camp", 0, (0,)),),
         institutions=(
-            Institution.create(
-                0, 0, 0, "Camp Apothecary", InstitutionKind.APOTHECARY
-            ),
+            Institution.create(0, 0, 0, "Camp Apothecary", InstitutionKind.APOTHECARY),
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
     )
@@ -1689,9 +1689,7 @@ def test_well_shrine_clinic_apothecary_and_lazaretto_bonuses_stack() -> None:
             Infrastructure.create(2, 0, 1, 1, "Camp Clinic", InfrastructureKind.CLINIC),
         ),
         institutions=(
-            Institution.create(
-                0, 0, 1, "Camp Apothecary", InstitutionKind.APOTHECARY
-            ),
+            Institution.create(0, 0, 1, "Camp Apothecary", InstitutionKind.APOTHECARY),
         ),
         agents=(Agent.create(agent_id=0, name="A", location_id=1),),
     )
@@ -1763,9 +1761,7 @@ def test_sanitation_and_asepsis_stack_with_all_drink_restore_seats() -> None:
             Infrastructure.create(2, 0, 1, 1, "Camp Clinic", InfrastructureKind.CLINIC),
         ),
         institutions=(
-            Institution.create(
-                0, 0, 1, "Camp Apothecary", InstitutionKind.APOTHECARY
-            ),
+            Institution.create(0, 0, 1, "Camp Apothecary", InstitutionKind.APOTHECARY),
         ),
         laws=(Law.create(0, 0, "Camp Sanitation", LawKind.SANITATION),),
         agents=(Agent.create(agent_id=0, name="A", location_id=1),),
@@ -1905,6 +1901,35 @@ def test_guild_reduces_produce_energy_for_colocated_agents() -> None:
     assert snap.produce_energy_cost_bps == round(
         (DEFAULT_PRODUCE_ENERGY_COST - GUILD_PRODUCE_ENERGY_DISCOUNT) * 10_000
     )
+
+
+def test_workshop_reduces_produce_energy_for_colocated_agents() -> None:
+    """Active workshops discount PRODUCE energy at their seat location."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        institutions=(
+            Institution.create(0, 0, 0, "Camp Workshop", InstitutionKind.WORKSHOP),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_workshop(world, agent.location_id) is True
+    assert effective_produce_energy_cost(
+        world,
+        agent,
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(DEFAULT_PRODUCE_ENERGY_COST - WORKSHOP_PRODUCE_ENERGY_DISCOUNT)
+    assert census_effects(world).produce_energy_cost_bps == round(
+        (DEFAULT_PRODUCE_ENERGY_COST - WORKSHOP_PRODUCE_ENERGY_DISCOUNT) * 10_000
+    )
+    bare = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_workshop(bare, bare.agents[0].location_id) is False
 
 
 def test_abacus_reduces_produce_energy_and_stacks_with_guild() -> None:
@@ -2070,6 +2095,82 @@ def test_pulley_reduces_produce_energy_and_stacks_with_guild_and_abacus() -> Non
         - MATHEMATICS_PRODUCE_ENERGY_DISCOUNT
         - ENGINEERING_PRODUCE_ENERGY_DISCOUNT
     )
+    assert effective_produce_energy_cost(
+        world,
+        agent,
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(expected)
+    assert census_effects(world).produce_energy_cost_bps == round(expected * 10_000)
+
+
+def test_workshop_stacks_with_guild_abacus_and_pulley() -> None:
+    """Workshop seat discount stacks with guild, abacus, and pulley."""
+    discovered_pottery = CAMP_POTTERY.model_copy(update={"discovered": True})
+    discovered_irrigation = CAMP_IRRIGATION.model_copy(update={"discovered": True})
+    discovered_metallurgy = CAMP_METALLURGY.model_copy(update={"discovered": True})
+    discovered_writing = CAMP_WRITING.model_copy(update={"discovered": True})
+    discovered_math = CAMP_MATHEMATICS.model_copy(update={"discovered": True})
+    discovered_astronomy = CAMP_ASTRONOMY.model_copy(update={"discovered": True})
+    discovered_philosophy = CAMP_PHILOSOPHY.model_copy(update={"discovered": True})
+    discovered_logic = CAMP_LOGIC.model_copy(update={"discovered": True})
+    discovered_rhetoric = CAMP_RHETORIC.model_copy(update={"discovered": True})
+    discovered_medicine = CAMP_MEDICINE.model_copy(update={"discovered": True})
+    discovered_anatomy = CAMP_ANATOMY.model_copy(update={"discovered": True})
+    discovered_hygiene = CAMP_HYGIENE.model_copy(update={"discovered": True})
+    discovered_engineering = CAMP_ENGINEERING.model_copy(update={"discovered": True})
+    active_abacus = CAMP_ABACUS.model_copy(update={"active": True})
+    active_pulley = CAMP_PULLEY.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        institutions=(
+            Institution.create(0, 0, 0, "Camp Guild", InstitutionKind.GUILD),
+            Institution.create(1, 0, 0, "Camp Workshop", InstitutionKind.WORKSHOP),
+        ),
+        technologies=(
+            CAMP_FIRE,
+            discovered_pottery,
+            discovered_irrigation,
+            discovered_metallurgy,
+            discovered_writing,
+            discovered_math,
+            discovered_astronomy,
+            discovered_philosophy,
+            discovered_logic,
+            discovered_rhetoric,
+            discovered_medicine,
+            discovered_anatomy,
+            discovered_hygiene,
+            discovered_engineering,
+        ),
+        innovations=(
+            CAMP_FIRE_HEARTH,
+            CAMP_POTTERY_CRAFT,
+            CAMP_IRRIGATION_CANAL,
+            CAMP_FORGE,
+            CAMP_SCRIBE,
+            active_abacus,
+            CAMP_STAR_CHART,
+            CAMP_DIALECTIC,
+            CAMP_SYLLOGISM,
+            CAMP_ORATION,
+            CAMP_REMEDY,
+            CAMP_DISSECTION,
+            CAMP_ASEPSIS,
+            active_pulley,
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    expected = (
+        DEFAULT_PRODUCE_ENERGY_COST
+        - GUILD_PRODUCE_ENERGY_DISCOUNT
+        - WORKSHOP_PRODUCE_ENERGY_DISCOUNT
+        - MATHEMATICS_PRODUCE_ENERGY_DISCOUNT
+        - ENGINEERING_PRODUCE_ENERGY_DISCOUNT
+    )
+    assert location_has_active_workshop(world, agent.location_id) is True
     assert effective_produce_energy_cost(
         world,
         agent,

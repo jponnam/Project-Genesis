@@ -49,9 +49,11 @@ DRINK restore bonuses (stacking with every prior DRINK source). Phase 13
 Milestone 1 adds a global PULLEY produce-energy discount (stacking with
 guild seat and abacus discounts). Phase 13 Milestone 2 adds BUILDING_CODES
 law MOVE energy discounts for living subjects (stacking with ROAD seats).
-The action executor, retrieval path, market fills,
-knowledge diffusion, and research progression read these helpers;
-``EffectsSystem`` only observes coverage. Systems never call each other.
+Phase 13 Milestone 3 adds WORKSHOP produce-energy discounts at the
+institution seat (stacking with guild, abacus, and pulley). The action
+executor, retrieval path, market fills, knowledge diffusion, and research
+progression read these helpers; ``EffectsSystem`` only observes coverage.
+Systems never call each other.
 """
 
 from __future__ import annotations
@@ -122,6 +124,7 @@ LAZARETTO_DRINK_RESTORE_BONUS: float = 0.05
 STOREHOUSE_FOOD_GATHER_BONUS: int = 1
 ROAD_MOVE_ENERGY_DISCOUNT: float = 0.02
 GUILD_PRODUCE_ENERGY_DISCOUNT: float = 0.02
+WORKSHOP_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 MATHEMATICS_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 ENGINEERING_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 ARCHIVE_RETRIEVAL_LIMIT_BONUS: int = 1
@@ -317,6 +320,22 @@ def location_has_active_guild(
     )
     return any(
         item.kind is InstitutionKind.GUILD and item.location_id == target
+        for item in active_institutions(world)
+    )
+
+
+def location_has_active_workshop(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active WORKSHOP is seated at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InstitutionKind.WORKSHOP and item.location_id == target
         for item in active_institutions(world)
     )
 
@@ -673,18 +692,21 @@ def move_energy_discount(world: World, agent: Agent) -> float:
 
 
 def produce_energy_discount(world: World, agent: Agent) -> float:
-    """Return PRODUCE energy discount from guild, abacus, and pulley.
+    """Return PRODUCE energy discount from guild, workshop, abacus, and pulley.
 
     An active GUILD at the agent's location contributes
-    ``GUILD_PRODUCE_ENERGY_DISCOUNT``. An active ABACUS innovation
-    contributes ``MATHEMATICS_PRODUCE_ENERGY_DISCOUNT`` society-wide. An
-    active PULLEY innovation contributes
+    ``GUILD_PRODUCE_ENERGY_DISCOUNT``. An active WORKSHOP at the agent's
+    location contributes ``WORKSHOP_PRODUCE_ENERGY_DISCOUNT``. An active
+    ABACUS innovation contributes ``MATHEMATICS_PRODUCE_ENERGY_DISCOUNT``
+    society-wide. An active PULLEY innovation contributes
     ``ENGINEERING_PRODUCE_ENERGY_DISCOUNT`` society-wide. All stack when
     present.
     """
     discount = 0.0
     if location_has_active_guild(world, agent.location_id):
         discount += GUILD_PRODUCE_ENERGY_DISCOUNT
+    if location_has_active_workshop(world, agent.location_id):
+        discount += WORKSHOP_PRODUCE_ENERGY_DISCOUNT
     if innovation_kind_is_active(world, InnovationKind.ABACUS):
         discount += MATHEMATICS_PRODUCE_ENERGY_DISCOUNT
     if innovation_kind_is_active(world, InnovationKind.PULLEY):
@@ -912,6 +934,11 @@ def census_effects(world: World) -> EffectsCensus:
         for item in active_institutions(world)
         if item.kind is InstitutionKind.GUILD
     )
+    workshops = tuple(
+        item
+        for item in active_institutions(world)
+        if item.kind is InstitutionKind.WORKSHOP
+    )
     # Society drink potential at a well seat (bonus available when colocated).
     drink_bonus = WELL_DRINK_RESTORE_BONUS if wells else 0.0
     if innovation_kind_is_active(world, InnovationKind.ASEPSIS):
@@ -930,8 +957,10 @@ def census_effects(world: World) -> EffectsCensus:
             DEFAULT_MOVE_ENERGY_COST - (ROAD_MOVE_ENERGY_DISCOUNT if roads else 0.0),
         )
     )
-    # Produce cost potential at a guild seat, plus society-wide discounts.
+    # Produce cost potential at guild/workshop seats, plus society-wide discounts.
     produce_discount = GUILD_PRODUCE_ENERGY_DISCOUNT if guilds else 0.0
+    if workshops:
+        produce_discount += WORKSHOP_PRODUCE_ENERGY_DISCOUNT
     if innovation_kind_is_active(world, InnovationKind.ABACUS):
         produce_discount += MATHEMATICS_PRODUCE_ENERGY_DISCOUNT
     if innovation_kind_is_active(world, InnovationKind.PULLEY):
