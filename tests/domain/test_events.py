@@ -946,19 +946,21 @@ def test_technology_created_and_observed_round_trips() -> None:
     observed = TechnologiesObserved(
         sequence=28,
         tick=Tick(value=8),
-        technology_count=3,
+        technology_count=4,
         discovered_count=1,
-        undiscovered_count=2,
+        undiscovered_count=3,
         discovered_fire_count=1,
         discovered_pottery_count=0,
         discovered_irrigation_count=0,
-        locked_count=1,
+        discovered_metallurgy_count=0,
+        locked_count=2,
         researchable_count=1,
     )
     restored = event_from_record(observed.to_record())
     assert isinstance(restored, TechnologiesObserved)
     assert restored.discovered_fire_count == 1
     assert restored.discovered_irrigation_count == 0
+    assert restored.discovered_metallurgy_count == 0
     assert restored.researchable_count == 1
 
 
@@ -1031,17 +1033,19 @@ def test_innovation_events_round_trip() -> None:
     observed = InnovationsObserved(
         sequence=34,
         tick=Tick(value=8),
-        innovation_count=3,
+        innovation_count=4,
         active_count=1,
-        inactive_count=2,
+        inactive_count=3,
         active_fire_hearth_count=1,
         active_pottery_craft_count=0,
         active_irrigation_canal_count=0,
+        active_forge_count=0,
     )
     restored_observed = event_from_record(observed.to_record())
     assert isinstance(restored_observed, InnovationsObserved)
     assert restored_observed.active_fire_hearth_count == 1
     assert restored_observed.active_irrigation_canal_count == 0
+    assert restored_observed.active_forge_count == 0
 
 
 def test_knowledge_events_round_trip() -> None:
@@ -1080,12 +1084,14 @@ def test_knowledge_events_round_trip() -> None:
         fire_knower_count=3,
         pottery_knower_count=0,
         irrigation_knower_count=0,
+        metallurgy_knower_count=0,
         total_fact_instances=3,
         coverage_bps=10_000,
     )
     restored_observed = event_from_record(observed.to_record())
     assert isinstance(restored_observed, KnowledgeObserved)
     assert restored_observed.irrigation_knower_count == 0
+    assert restored_observed.metallurgy_knower_count == 0
     assert restored_observed.coverage_bps == 10_000
 
 

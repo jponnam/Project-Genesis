@@ -22,7 +22,7 @@ from civitas.domain.innovation import InnovationKind, active_innovations
 from civitas.domain.institutions import InstitutionKind, active_institutions
 from civitas.domain.numeric import clamp_unit
 from civitas.domain.production import DEFAULT_PRODUCE_ENERGY_COST
-from civitas.domain.resources import DEFAULT_GATHER_AMOUNT
+from civitas.domain.resources import DEFAULT_GATHER_AMOUNT, ResourceKind
 from civitas.domain.time import Tick
 from civitas.domain.types import NonNegativeInt
 from civitas.domain.water import DEFAULT_DRINK_RESTORE, WATER_RESOURCE
@@ -34,6 +34,7 @@ if TYPE_CHECKING:
 FIRE_HEARTH_REST_BONUS: float = 0.05
 POTTERY_WATER_GATHER_BONUS: int = 1
 IRRIGATION_WATER_GATHER_BONUS: int = 1
+METALLURGY_STONE_GATHER_BONUS: int = 1
 WELL_DRINK_RESTORE_BONUS: float = 0.05
 STOREHOUSE_FOOD_GATHER_BONUS: int = 1
 ROAD_MOVE_ENERGY_DISCOUNT: float = 0.02
@@ -148,8 +149,8 @@ def gather_amount_bonus(
 ) -> int:
     """Return gather-amount bonuses for ``resource``.
 
-    Water bonuses come from society innovations. Food bonuses come from an
-    active STOREHOUSE at ``location_id`` when provided.
+    Water and stone bonuses come from society innovations. Food bonuses come
+    from an active STOREHOUSE at ``location_id`` when provided.
     """
     bonus = 0
     if resource == WATER_RESOURCE:
@@ -157,6 +158,9 @@ def gather_amount_bonus(
             bonus += POTTERY_WATER_GATHER_BONUS
         if innovation_kind_is_active(world, InnovationKind.IRRIGATION_CANAL):
             bonus += IRRIGATION_WATER_GATHER_BONUS
+    elif resource == ResourceKind.STONE.value:
+        if innovation_kind_is_active(world, InnovationKind.FORGE):
+            bonus += METALLURGY_STONE_GATHER_BONUS
     elif resource == FOOD_RESOURCE and location_id is not None:
         if location_has_active_storehouse(world, location_id):
             bonus += STOREHOUSE_FOOD_GATHER_BONUS

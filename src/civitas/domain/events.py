@@ -602,6 +602,7 @@ class TechnologiesObserved(DomainEvent):
     discovered_fire_count: NonNegativeInt
     discovered_pottery_count: NonNegativeInt
     discovered_irrigation_count: NonNegativeInt = 0
+    discovered_metallurgy_count: NonNegativeInt = 0
     locked_count: NonNegativeInt = 0
     researchable_count: NonNegativeInt = 0
 
@@ -661,6 +662,7 @@ class InnovationsObserved(DomainEvent):
     active_fire_hearth_count: NonNegativeInt
     active_pottery_craft_count: NonNegativeInt
     active_irrigation_canal_count: NonNegativeInt = 0
+    active_forge_count: NonNegativeInt = 0
 
 
 class KnowledgeLearned(DomainEvent):
@@ -680,6 +682,7 @@ class KnowledgeObserved(DomainEvent):
     fire_knower_count: NonNegativeInt
     pottery_knower_count: NonNegativeInt
     irrigation_knower_count: NonNegativeInt = 0
+    metallurgy_knower_count: NonNegativeInt = 0
     total_fact_instances: NonNegativeInt
     coverage_bps: NonNegativeInt
 

@@ -121,12 +121,13 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 9 — Milestone 11: Outpost cities**
+**Phase 9 — Milestone 12: Metallurgy technology**
 
-``CityKind.OUTPOST`` is a second city kind for non-capital secondary seats.
-Outposts may share a government with the capital settlement but must occupy
-their own location and cannot be flagged as capital. Camp City remains the
-only seeded city (an active settlement capital).
+``TechnologyKind.METALLURGY`` deepens the prereq tree past irrigation.
+Camp Metallurgy seeds undiscovered (requires irrigation), with research
+progress locked until irrigation is known, an inactive forge innovation,
+a metallurgy knowledge fact, and a +1 stone gather bonus when the forge
+is active.
 
 ### Completed
 
@@ -199,6 +200,7 @@ JSONL storage → `civitas run`
 - Milestone 9: Guild institutions
 - Milestone 10: Market fee laws
 - Milestone 11: Outpost cities
+- Milestone 12: Metallurgy technology
 
 ## License
 

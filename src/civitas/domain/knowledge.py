@@ -34,6 +34,7 @@ DEFAULT_MIN_TEACH_TRUST: float = 0.5
 FIRE_FACT: str = TechnologyKind.FIRE.value
 POTTERY_FACT: str = TechnologyKind.POTTERY.value
 IRRIGATION_FACT: str = TechnologyKind.IRRIGATION.value
+METALLURGY_FACT: str = TechnologyKind.METALLURGY.value
 
 
 class KnowledgeSource(StrEnum):
@@ -55,6 +56,7 @@ class KnowledgeCensus(BaseModel):
     fire_knower_count: NonNegativeInt
     pottery_knower_count: NonNegativeInt
     irrigation_knower_count: NonNegativeInt
+    metallurgy_knower_count: NonNegativeInt = 0
     total_fact_instances: NonNegativeInt
     coverage_bps: NonNegativeInt
 
@@ -255,6 +257,9 @@ def census_knowledge(world: World) -> KnowledgeCensus:
     irrigation_knowers = sum(
         1 for agent in living if agent.knowledge.knows(IRRIGATION_FACT)
     )
+    metallurgy_knowers = sum(
+        1 for agent in living if agent.knowledge.knows(METALLURGY_FACT)
+    )
     total_fact_instances = 0
     for agent in living:
         total_fact_instances += sum(
@@ -275,6 +280,7 @@ def census_knowledge(world: World) -> KnowledgeCensus:
         fire_knower_count=fire_knowers,
         pottery_knower_count=pottery_knowers,
         irrigation_knower_count=irrigation_knowers,
+        metallurgy_knower_count=metallurgy_knowers,
         total_fact_instances=total_fact_instances,
         coverage_bps=coverage_bps,
     )
