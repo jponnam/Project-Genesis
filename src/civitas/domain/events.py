@@ -630,6 +630,7 @@ class InfrastructuresObserved(DomainEvent):
     active_scaffold_count: NonNegativeInt = 0
     active_waystation_count: NonNegativeInt = 0
     active_beacon_count: NonNegativeInt = 0
+    active_ditch_count: NonNegativeInt = 0
 
 
 class TechnologyCreated(DomainEvent):
