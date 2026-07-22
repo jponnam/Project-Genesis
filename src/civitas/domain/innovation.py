@@ -21,6 +21,7 @@ from civitas.domain.technology import (
     CAMP_ANATOMY,
     CAMP_ARCHITECTURE,
     CAMP_ASTRONOMY,
+    CAMP_CARPENTRY,
     CAMP_CARTOGRAPHY,
     CAMP_CROP_ROTATION,
     CAMP_DYEING,
@@ -85,6 +86,7 @@ class InnovationKind(StrEnum):
     PICKAXE = "pickaxe"
     BELLOWS = "bellows"
     LATHE = "lathe"
+    SAWMILL = "sawmill"
 
 
 class Innovation(BaseModel):
@@ -342,6 +344,14 @@ CAMP_LATHE: Innovation = Innovation.create(
     active=False,
 )
 
+CAMP_SAWMILL: Innovation = Innovation.create(
+    28,
+    CAMP_CARPENTRY.technology_id.value,
+    "Camp Sawmill",
+    InnovationKind.SAWMILL,
+    active=False,
+)
+
 
 def default_innovations() -> tuple[Innovation, ...]:
     """Return the canonical initial innovation set."""
@@ -374,6 +384,7 @@ def default_innovations() -> tuple[Innovation, ...]:
         CAMP_PICKAXE,
         CAMP_BELLOWS,
         CAMP_LATHE,
+        CAMP_SAWMILL,
     )
 
 
@@ -414,6 +425,7 @@ class InnovationCensus(BaseModel):
     active_pickaxe_count: NonNegativeInt = 0
     active_bellows_count: NonNegativeInt = 0
     active_lathe_count: NonNegativeInt = 0
+    active_sawmill_count: NonNegativeInt = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -589,6 +601,7 @@ def census_innovations(world: World) -> InnovationCensus:
     pickaxe = sum(1 for item in active if item.kind is InnovationKind.PICKAXE)
     bellows = sum(1 for item in active if item.kind is InnovationKind.BELLOWS)
     lathe = sum(1 for item in active if item.kind is InnovationKind.LATHE)
+    sawmill = sum(1 for item in active if item.kind is InnovationKind.SAWMILL)
     return InnovationCensus(
         tick=world.tick,
         innovation_count=len(innovations),
@@ -622,4 +635,5 @@ def census_innovations(world: World) -> InnovationCensus:
         active_pickaxe_count=pickaxe,
         active_bellows_count=bellows,
         active_lathe_count=lathe,
+        active_sawmill_count=sawmill,
     )

@@ -122,6 +122,7 @@ class KnowledgeSystem:
                     mining_knower_count=snap.mining_knower_count,
                     smithing_knower_count=snap.smithing_knower_count,
                     toolmaking_knower_count=snap.toolmaking_knower_count,
+                    carpentry_knower_count=snap.carpentry_knower_count,
                     total_fact_instances=snap.total_fact_instances,
                     coverage_bps=snap.coverage_bps,
                 )
