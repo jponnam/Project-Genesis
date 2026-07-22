@@ -17,7 +17,8 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from civitas.domain.agent import Agent
 from civitas.domain.config import SimulationConfig
 from civitas.domain.governments import Government
-from civitas.domain.ids import AgentId, GovernmentId, LocationId, MarketId
+from civitas.domain.ids import AgentId, GovernmentId, LawId, LocationId, MarketId
+from civitas.domain.laws import Law, LawKind
 from civitas.domain.location import Location
 from civitas.domain.market import Market
 from civitas.domain.time import Tick
@@ -33,6 +34,7 @@ class World(BaseModel):
         locations: Places on the map, ordered by ascending ``location_id``.
         markets: Market venues, ordered by ascending ``market_id``.
         governments: Polities, ordered by ascending ``government_id``.
+        laws: Statutes, ordered by ascending ``law_id``.
         agents: Agents ordered by ascending ``agent_id``.
         treasury: Public money balance collected from taxes.
     """
@@ -44,12 +46,13 @@ class World(BaseModel):
     locations: tuple[Location, ...] = ()
     markets: tuple[Market, ...] = ()
     governments: tuple[Government, ...] = ()
+    laws: tuple[Law, ...] = ()
     agents: tuple[Agent, ...] = ()
     treasury: NonNegativeInt = 0
 
     @model_validator(mode="after")
     def world_must_be_consistent(self) -> Self:
-        """Enforce agent/location/market/government integrity constraints."""
+        """Enforce agent/location/market/government/law integrity constraints."""
         agent_ids = [agent.agent_id.value for agent in self.agents]
         if len(agent_ids) != len(set(agent_ids)):
             msg = "agent ids must be unique"
@@ -136,6 +139,30 @@ class World(BaseModel):
                     )
                     raise ValueError(msg)
 
+        known_governments = set(government_ids)
+        law_ids = [law.law_id.value for law in self.laws]
+        if len(law_ids) != len(set(law_ids)):
+            msg = "law ids must be unique"
+            raise ValueError(msg)
+        if law_ids != sorted(law_ids):
+            msg = "laws must be ordered by ascending law_id"
+            raise ValueError(msg)
+
+        active_tax_govs: set[int] = set()
+        for law in self.laws:
+            if law.government_id.value not in known_governments:
+                msg = (
+                    f"law {law.law_id.value} references unknown "
+                    f"government {law.government_id.value}"
+                )
+                raise ValueError(msg)
+            if law.active and law.kind == LawKind.TAX_SCHEDULE:
+                gov_value = law.government_id.value
+                if gov_value in active_tax_govs:
+                    msg = "at most one active TAX_SCHEDULE law per government"
+                    raise ValueError(msg)
+                active_tax_govs.add(gov_value)
+
         return self
 
     @property
@@ -188,6 +215,14 @@ class World(BaseModel):
                 return government
         return None
 
+    def law_by_id(self, law_id: LawId | int) -> Law | None:
+        """Return the law with ``law_id``, or ``None`` if absent."""
+        target = law_id if isinstance(law_id, LawId) else LawId(value=law_id)
+        for law in self.laws:
+            if law.law_id == target:
+                return law
+        return None
+
     def agents_at(self, location_id: LocationId | int) -> tuple[Agent, ...]:
         """Return agents occupying ``location_id`` in stable id order."""
         target = (
@@ -235,6 +270,7 @@ class World(BaseModel):
             locations=self.locations,
             markets=self.markets,
             governments=self.governments,
+            laws=self.laws,
             agents=agents,
             treasury=self.treasury,
         )
@@ -306,3 +342,22 @@ class World(BaseModel):
             msg = f"government id {government.government_id.value} not found in world"
             raise ValueError(msg)
         return self.model_copy(update={"governments": tuple(updated)})
+
+    def with_law(self, law: Law) -> World:
+        """Return a copy replacing the law that shares ``law_id``.
+
+        Raises:
+            ValueError: If no law with that id exists.
+        """
+        updated: list[Law] = []
+        found = False
+        for existing in self.laws:
+            if existing.law_id == law.law_id:
+                updated.append(law)
+                found = True
+            else:
+                updated.append(existing)
+        if not found:
+            msg = f"law id {law.law_id.value} not found in world"
+            raise ValueError(msg)
+        return self.model_copy(update={"laws": tuple(updated)})

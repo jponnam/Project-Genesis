@@ -3,6 +3,10 @@
 Living agents pay a flat poll tax plus an optional basis-point wealth
 component each levy. Collection is capped at the agent's balance so poor
 agents pay what they can. Money math stays integer-only.
+
+When an agent lives under a government with an active ``TAX_SCHEDULE`` law,
+that statute's ``flat_amount`` / ``rate_bps`` override the fallback levy
+parameters for that agent.
 """
 
 from __future__ import annotations
@@ -11,6 +15,7 @@ from typing import TYPE_CHECKING
 
 from civitas.domain.economy import debit_money
 from civitas.domain.ids import AgentId
+from civitas.domain.laws import tax_schedule_for_agent
 
 if TYPE_CHECKING:
     from civitas.domain.agent import Agent
@@ -53,6 +58,23 @@ def collectable_tax(
     return min(due, agent.money)
 
 
+def resolve_tax_params(
+    world: World,
+    agent: Agent,
+    *,
+    flat_amount: int = DEFAULT_FLAT_AMOUNT,
+    rate_bps: int = DEFAULT_RATE_BPS,
+) -> tuple[int, int]:
+    """Return effective ``(flat_amount, rate_bps)`` for ``agent``.
+
+    Active government tax schedules override the fallback parameters.
+    """
+    schedule = tax_schedule_for_agent(world, agent)
+    if schedule is None:
+        return (flat_amount, rate_bps)
+    return schedule
+
+
 def apply_tax(world: World, agent_id: AgentId | int, amount: int) -> World | None:
     """Debit ``amount`` from ``agent_id`` into ``world.treasury``.
 
@@ -85,16 +107,23 @@ def levy_taxes(
 ) -> tuple[World, tuple[tuple[AgentId, int, int], ...]]:
     """Collect taxes from every living agent in ascending id order.
 
-    Returns the updated world and
-    ``(agent_id, amount, treasury_after)`` triples for each non-zero
-    collection.
+    Per-agent schedules come from active ``TAX_SCHEDULE`` laws when present;
+    otherwise ``flat_amount`` / ``rate_bps`` are used. Returns the updated
+    world and ``(agent_id, amount, treasury_after)`` triples for each
+    non-zero collection.
     """
     collections: list[tuple[AgentId, int, int]] = []
     for agent in world.alive_agents():
-        amount = collectable_tax(
+        effective_flat, effective_rate = resolve_tax_params(
+            world,
             agent,
             flat_amount=flat_amount,
             rate_bps=rate_bps,
+        )
+        amount = collectable_tax(
+            agent,
+            flat_amount=effective_flat,
+            rate_bps=effective_rate,
         )
         if amount == 0:
             continue

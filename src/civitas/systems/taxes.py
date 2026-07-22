@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
-from civitas.domain import TaxCollected, collectable_tax, levy_taxes
+from civitas.domain import TaxCollected, collectable_tax, levy_taxes, resolve_tax_params
 from civitas.domain.taxes import DEFAULT_FLAT_AMOUNT, DEFAULT_RATE_BPS
 from civitas.domain.types import NonNegativeInt
 
@@ -24,7 +24,8 @@ class TaxConfig(BaseModel):
     """Parameters controlling system-driven tax collection.
 
     Taxes are disabled by default so research runs stay tax-free until a
-    levy is explicitly enabled.
+    levy is explicitly enabled. When enabled, active ``TAX_SCHEDULE`` laws
+    override ``flat_amount`` / ``rate_bps`` per agent's government.
     """
 
     model_config = ConfigDict(frozen=True, extra="forbid", validate_default=True)
@@ -47,14 +48,20 @@ class TaxSystem:
         return self._config
 
     def tax_due(self, world: World, agent_id: AgentId | int) -> int:
-        """Return the collectable tax for ``agent_id`` under this config."""
+        """Return the collectable tax for ``agent_id`` under laws/config."""
         agent = world.agent_by_id(agent_id)
         if agent is None:
             return 0
-        return collectable_tax(
+        flat_amount, rate_bps = resolve_tax_params(
+            world,
             agent,
             flat_amount=self._config.flat_amount,
             rate_bps=self._config.rate_bps,
+        )
+        return collectable_tax(
+            agent,
+            flat_amount=flat_amount,
+            rate_bps=rate_bps,
         )
 
     def apply_taxes(

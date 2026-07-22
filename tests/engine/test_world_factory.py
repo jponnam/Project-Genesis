@@ -6,14 +6,17 @@ from civitas.domain import (
     CAMP_GOVERNMENT,
     CAMP_LOCATION,
     CAMP_MARKET,
+    CAMP_POLL_TAX_LAW,
     CANONICAL_SEED,
     AgentSpawned,
     GovernmentCreated,
+    LawCreated,
     LocationCreated,
     MarketCreated,
     SimulationConfig,
     SimulationStarted,
     default_governments,
+    default_laws,
     default_markets,
     default_world_map,
 )
@@ -65,6 +68,8 @@ def test_agents_have_stable_ids_names_and_origin_location() -> None:
     assert world.markets[0] == CAMP_MARKET
     assert world.governments == default_governments()
     assert world.governments[0] == CAMP_GOVERNMENT
+    assert world.laws == default_laws()
+    assert world.laws[0] == CAMP_POLL_TAX_LAW
     assert world.treasury == 0
     assert world.agents_at(0) == world.agents
 
@@ -86,8 +91,8 @@ def test_starting_money_within_configured_bounds() -> None:
     assert len(set(monies)) > 1
 
 
-def test_create_publishes_started_locations_markets_govs_and_spawned() -> None:
-    """Bus receives Started, locations, markets, governments, then spawns."""
+def test_create_publishes_started_locations_markets_govs_laws_spawned() -> None:
+    """Bus receives Started, locations, markets, governments, laws, spawns."""
     bus = EventBus()
     config = SimulationConfig(seed=42, agent_count=2, ticks=5, run_name="w")
     world = WorldFactory().create(config, bus=bus)
@@ -106,11 +111,15 @@ def test_create_publishes_started_locations_markets_govs_and_spawned() -> None:
     assert len(governments) == 1
     assert governments[0].name == "Camp Authority"
     assert len(governments[0].jurisdiction) == 9
+    laws = [event for event in bus.history if isinstance(event, LawCreated)]
+    assert len(laws) == 1
+    assert laws[0].name == "Camp Poll Tax"
+    assert laws[0].flat_amount == 1
     spawned = [event for event in bus.history if isinstance(event, AgentSpawned)]
     assert len(spawned) == 2
     assert spawned[0].name == world.agents[0].name
     assert spawned[1].agent_id.value == 1
-    # Markets then governments are published after locations, before spawns.
+    # Markets → governments → laws after locations, before spawns.
     first_market = next(
         index
         for index, event in enumerate(bus.history)
@@ -121,14 +130,19 @@ def test_create_publishes_started_locations_markets_govs_and_spawned() -> None:
         for index, event in enumerate(bus.history)
         if isinstance(event, GovernmentCreated)
     )
+    first_law = next(
+        index
+        for index, event in enumerate(bus.history)
+        if isinstance(event, LawCreated)
+    )
     first_spawn = next(
         index
         for index, event in enumerate(bus.history)
         if isinstance(event, AgentSpawned)
     )
     assert created[-1].sequence < markets[0].sequence < governments[0].sequence
-    assert governments[0].sequence < spawned[0].sequence
-    assert first_market < first_government < first_spawn
+    assert governments[0].sequence < laws[0].sequence < spawned[0].sequence
+    assert first_market < first_government < first_law < first_spawn
 
 
 def test_map_is_independent_of_seed() -> None:
@@ -139,4 +153,5 @@ def test_map_is_independent_of_seed() -> None:
     assert left.locations == right.locations
     assert left.markets == right.markets
     assert left.governments == right.governments
+    assert left.laws == right.laws
     assert left.agents[0].personality != right.agents[0].personality
