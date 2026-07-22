@@ -16,6 +16,6 @@ NonNegativeFloat = Annotated[float, Field(ge=0.0)]
 UnitInterval = Annotated[float, Field(ge=0.0, le=1.0)]
 AffinityScore = Annotated[float, Field(ge=-1.0, le=1.0)]
 NonEmptyStr = Annotated[str, Field(min_length=1, max_length=128)]
-# Episode content embeds sorted tech-fact lists; crop rotation pushes past
-# the earlier 256-char ceiling once the full catalog is known.
-MemoryContentStr = Annotated[str, Field(min_length=1, max_length=384)]
+# Episode content embeds sorted tech-fact lists; cabinetry pushes past
+# the earlier 384-char ceiling once the full catalog is known.
+MemoryContentStr = Annotated[str, Field(min_length=1, max_length=512)]

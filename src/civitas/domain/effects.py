@@ -204,7 +204,11 @@ architect/cartographer/agronomist/tailor/smith/curriculum). Phase 18
 Milestone 9 adds SAWPIT produce-energy discounts at the infrastructure
 seat (stacking with guild, workshop, weaver, smelter, joiner, foundry,
 fulling mill, forge works, mill town, ironworks, tannery, bellows, lathe,
-plane, abacus, pulley, customs, labor, safety codes, and loom).
+plane, abacus, pulley, customs, labor, safety codes, and loom). Phase 18
+Milestone 10 adds a global DOVETAIL produce-energy discount society-wide
+(stacking with guild, workshop, weaver, smelter, joiner, foundry, fulling
+mill, forge works, mill town, ironworks, tannery, bellows, lathe, plane,
+abacus, pulley, customs, labor, safety codes, and loom).
 The action
 executor,
 retrieval
@@ -341,6 +345,7 @@ TANNING_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 SMITHING_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 TOOLMAKING_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 JOINERY_PRODUCE_ENERGY_DISCOUNT: float = 0.02
+CABINETRY_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 ARCHIVE_RETRIEVAL_LIMIT_BONUS: int = 1
 LIBRARY_RETRIEVAL_LIMIT_BONUS: int = 1
 OBSERVATORY_RETRIEVAL_LIMIT_BONUS: int = 1
@@ -1613,7 +1618,9 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
     society-wide. An active LATHE innovation contributes
     ``TOOLMAKING_PRODUCE_ENERGY_DISCOUNT`` society-wide. An active PLANE
     innovation contributes ``JOINERY_PRODUCE_ENERGY_DISCOUNT``
-    society-wide. An active ``LABOR`` statute contributes its subject
+    society-wide. An active DOVETAIL innovation contributes
+    ``CABINETRY_PRODUCE_ENERGY_DISCOUNT`` society-wide. An active
+    ``LABOR`` statute contributes its subject
     discount. An active ``SAFETY_CODES`` statute contributes its subject
     discount. All stack when present.
     """
@@ -1657,6 +1664,8 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
         discount += TOOLMAKING_PRODUCE_ENERGY_DISCOUNT
     if innovation_kind_is_active(world, InnovationKind.PLANE):
         discount += JOINERY_PRODUCE_ENERGY_DISCOUNT
+    if innovation_kind_is_active(world, InnovationKind.DOVETAIL):
+        discount += CABINETRY_PRODUCE_ENERGY_DISCOUNT
     return discount
 
 
@@ -2115,6 +2124,8 @@ def census_effects(world: World) -> EffectsCensus:
         produce_discount += TOOLMAKING_PRODUCE_ENERGY_DISCOUNT
     if innovation_kind_is_active(world, InnovationKind.PLANE):
         produce_discount += JOINERY_PRODUCE_ENERGY_DISCOUNT
+    if innovation_kind_is_active(world, InnovationKind.DOVETAIL):
+        produce_discount += CABINETRY_PRODUCE_ENERGY_DISCOUNT
     produce_at_guild = clamp_unit(
         max(
             0.0,

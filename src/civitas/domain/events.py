@@ -709,6 +709,7 @@ class TechnologiesObserved(DomainEvent):
     discovered_toolmaking_count: NonNegativeInt = 0
     discovered_carpentry_count: NonNegativeInt = 0
     discovered_joinery_count: NonNegativeInt = 0
+    discovered_cabinetry_count: NonNegativeInt = 0
     locked_count: NonNegativeInt = 0
     researchable_count: NonNegativeInt = 0
 
@@ -795,6 +796,7 @@ class InnovationsObserved(DomainEvent):
     active_lathe_count: NonNegativeInt = 0
     active_sawmill_count: NonNegativeInt = 0
     active_plane_count: NonNegativeInt = 0
+    active_dovetail_count: NonNegativeInt = 0
 
 
 class KnowledgeLearned(DomainEvent):
@@ -841,6 +843,7 @@ class KnowledgeObserved(DomainEvent):
     toolmaking_knower_count: NonNegativeInt = 0
     carpentry_knower_count: NonNegativeInt = 0
     joinery_knower_count: NonNegativeInt = 0
+    cabinetry_knower_count: NonNegativeInt = 0
     total_fact_instances: NonNegativeInt
     coverage_bps: NonNegativeInt
 
