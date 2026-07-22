@@ -468,6 +468,9 @@ def test_relationships_observed_round_trips() -> None:
         mean_affinity=0.25,
         min_affinity=-0.1,
         max_affinity=0.6,
+        mean_trust=0.55,
+        min_trust=0.4,
+        max_trust=0.7,
     )
     restored = event_from_record(event.to_record())
     assert isinstance(restored, RelationshipsObserved)
@@ -475,3 +478,6 @@ def test_relationships_observed_round_trips() -> None:
     assert restored.living_bond_count == 2
     assert restored.min_affinity == -0.1
     assert restored.max_affinity == 0.6
+    assert restored.mean_trust == 0.55
+    assert restored.min_trust == 0.4
+    assert restored.max_trust == 0.7

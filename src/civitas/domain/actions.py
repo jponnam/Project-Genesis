@@ -118,6 +118,16 @@ class ActionChoice(BaseModel):
             if self.target_location_id is not None:
                 msg = "TRADE forbids target_location_id"
                 raise ValueError(msg)
+        elif self.action is ActionKind.SOCIALIZE:
+            if self.target_agent_id is None:
+                msg = "SOCIALIZE requires target_agent_id"
+                raise ValueError(msg)
+            if self.target_location_id is not None:
+                msg = "SOCIALIZE forbids target_location_id"
+                raise ValueError(msg)
+            if self.target_resource is not None:
+                msg = "SOCIALIZE forbids target_resource"
+                raise ValueError(msg)
         elif self.action is ActionKind.PRODUCE:
             if self.target_resource is None:
                 msg = "PRODUCE requires target_resource (recipe_id)"
@@ -136,6 +146,6 @@ class ActionChoice(BaseModel):
                 msg = "target_resource is only valid for GATHER, TRADE, or PRODUCE"
                 raise ValueError(msg)
             if self.target_agent_id is not None:
-                msg = "target_agent_id is only valid for TRADE"
+                msg = "target_agent_id is only valid for TRADE or SOCIALIZE"
                 raise ValueError(msg)
         return self

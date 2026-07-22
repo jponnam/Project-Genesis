@@ -123,3 +123,23 @@ def test_clear_bond_removes_directed_edge() -> None:
     source = cleared.agent_by_id(0)
     assert source is not None
     assert get_bond(source, 1) is None
+
+
+def test_adjust_trust_emits_relationship_updated() -> None:
+    """adjust_trust mutates trust and emits RelationshipUpdated."""
+    world = _world(
+        Agent.create(agent_id=0, name="A"),
+        Agent.create(agent_id=1, name="B"),
+    )
+    bus = EventBus()
+    updated = RelationshipSystem().adjust_trust(world, 0, 1, 0.2, bus=bus)
+    source = updated.agent_by_id(0)
+    assert source is not None
+    bond = get_bond(source, 1)
+    assert bond is not None
+    assert bond.trust == 0.7
+    assert bond.affinity == 0.0
+    events = [event for event in bus.history if isinstance(event, RelationshipUpdated)]
+    assert len(events) == 1
+    assert events[0].created is True
+    assert events[0].trust == 0.7

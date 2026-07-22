@@ -10,13 +10,20 @@ from civitas.domain import (
     AgentId,
     AgentStatus,
     Health,
+    Location,
+    LocationKind,
+    Needs,
     Relationship,
     RelationshipMap,
     SimulationConfig,
     World,
     adjust_affinity,
     adjust_relationship,
+    adjust_relationship_trust,
+    adjust_trust,
+    apply_socialize,
     bond_count,
+    can_socialize,
     census_relationships,
     clamp_affinity,
     clear_bond,
@@ -121,10 +128,10 @@ def test_world_relationship_rejects_illegal_cases() -> None:
 
 def test_census_relationships_counts_and_affinity_stats() -> None:
     """Census reports bond counts and living-only living_bond_count."""
-    a = set_bond(Agent.create(agent_id=0, name="A"), 1, affinity=0.2)
-    b = set_bond(Agent.create(agent_id=1, name="B"), 0, affinity=-0.4)
+    a = set_bond(Agent.create(agent_id=0, name="A"), 1, affinity=0.2, trust=0.4)
+    b = set_bond(Agent.create(agent_id=1, name="B"), 0, affinity=-0.4, trust=0.6)
     assert a is not None and b is not None
-    dead = set_bond(Agent.create(agent_id=2, name="C"), 0, affinity=1.0)
+    dead = set_bond(Agent.create(agent_id=2, name="C"), 0, affinity=1.0, trust=0.9)
     assert dead is not None
     dead = dead.model_copy(
         update={"status": AgentStatus.DEAD, "health": Health(vitality=0.0)}
@@ -137,4 +144,70 @@ def test_census_relationships_counts_and_affinity_stats() -> None:
     assert snap.mean_affinity == pytest.approx(round((0.2 - 0.4 + 1.0) / 3, 6))
     assert snap.min_affinity == -0.4
     assert snap.max_affinity == 1.0
+    assert snap.mean_trust == pytest.approx(round((0.4 + 0.6 + 0.9) / 3, 6))
+    assert snap.min_trust == 0.4
+    assert snap.max_trust == 0.9
     assert bond_count(world) == 3
+
+
+def test_adjust_trust_preserves_affinity() -> None:
+    """Trust adjustments keep affinity and create bonds when missing."""
+    agent = Agent.create(agent_id=0, name="A")
+    bonded = set_bond(agent, 1, affinity=0.3, trust=0.5)
+    assert bonded is not None
+    warmer = adjust_trust(bonded, 1, 0.2)
+    assert warmer is not None
+    bond = get_bond(warmer, 1)
+    assert bond is not None
+    assert bond.affinity == 0.3
+    assert bond.trust == 0.7
+    created = adjust_trust(agent, 2, 0.1)
+    assert created is not None
+    new_bond = get_bond(created, 2)
+    assert new_bond is not None
+    assert new_bond.affinity == 0.0
+    assert new_bond.trust == 0.6
+
+
+def test_can_socialize_and_apply_socialize() -> None:
+    """Legal SOCIALIZE restores social need and raises mutual bonds."""
+    actor = Agent.create(agent_id=0, name="A").model_copy(
+        update={
+            "needs": Needs(food=1.0, water=1.0, energy=1.0, social=0.4, safety=1.0),
+        }
+    )
+    partner = Agent.create(agent_id=1, name="B")
+    world = _world(actor, partner)
+    assert can_socialize(world, 0, 1) is True
+    updated = apply_socialize(world, 0, 1)
+    assert updated is not None
+    new_actor = updated.agent_by_id(0)
+    new_partner = updated.agent_by_id(1)
+    assert new_actor is not None and new_partner is not None
+    assert new_actor.needs.social == pytest.approx(0.55)
+    actor_bond = get_bond(new_actor, 1)
+    partner_bond = get_bond(new_partner, 0)
+    assert actor_bond is not None and partner_bond is not None
+    assert actor_bond.affinity == 0.05
+    assert actor_bond.trust == 0.55
+    assert partner_bond.affinity == 0.05
+    assert partner_bond.trust == 0.55
+
+
+def test_can_socialize_rejects_illegal_partners() -> None:
+    """Distant, dead, missing, and self partners are illegal."""
+    plain = Agent.create(agent_id=1, name="B", location_id=1)
+    elsewhere = Location.create(1, "Plain", 1, 0, kind=LocationKind.PLAIN)
+    world = World(
+        config=SimulationConfig(agent_count=2, seed=1),
+        locations=(CAMP_LOCATION, elsewhere),
+        agents=(Agent.create(agent_id=0, name="A"), plain),
+    )
+    assert can_socialize(world, 0, 1) is False
+    assert apply_socialize(world, 0, 1) is None
+    assert can_socialize(world, 0, 0) is False
+    dead = plain.model_copy(
+        update={"status": AgentStatus.DEAD, "health": Health(vitality=0.0)}
+    )
+    dead_world = world.with_agent(dead)
+    assert adjust_relationship_trust(dead_world, 0, 1, 0.1) is None

@@ -20,6 +20,7 @@ from civitas.domain import (
     LocationKind,
     NeedDecayed,
     Needs,
+    RelationshipUpdated,
     ResourceConsumed,
     ResourceGathered,
     ResourceProduced,
@@ -27,6 +28,7 @@ from civitas.domain import (
     ResourceTraded,
     SimulationConfig,
     World,
+    get_bond,
     location_stock,
 )
 from civitas.engine import EventBus, WorldFactory
@@ -497,6 +499,71 @@ def test_produce_fails_without_inputs() -> None:
         action=ActionKind.PRODUCE,
         utility=1.0,
         target_resource="tools",
+    )
+    bus = EventBus()
+    updated = ActionExecutor().execute(world, choice, bus=bus)
+    assert updated == world
+    completed = [event for event in bus.history if isinstance(event, ActionCompleted)]
+    assert completed[0].success is False
+
+
+def test_socialize_updates_mutual_bonds_and_social_need() -> None:
+    """SOCIALIZE restores social need and emits mutual RelationshipUpdated."""
+    actor = Agent.create(agent_id=0, name="A").model_copy(
+        update={
+            "needs": Needs(food=1.0, water=1.0, energy=1.0, social=0.4, safety=1.0),
+        }
+    )
+    partner = Agent.create(agent_id=1, name="B")
+    world = World(
+        config=SimulationConfig(agent_count=2, seed=1),
+        locations=(CAMP_LOCATION,),
+        agents=(actor, partner),
+    )
+    choice = ActionChoice(
+        agent_id=AgentId(value=0),
+        action=ActionKind.SOCIALIZE,
+        utility=1.0,
+        target_agent_id=AgentId(value=1),
+    )
+    bus = EventBus()
+    updated = ActionExecutor().execute(world, choice, bus=bus)
+    new_actor = updated.agent_by_id(0)
+    new_partner = updated.agent_by_id(1)
+    assert new_actor is not None and new_partner is not None
+    assert new_actor.needs.social == pytest.approx(0.55)
+    assert get_bond(new_actor, 1) is not None
+    assert get_bond(new_partner, 0) is not None
+    assert any(
+        isinstance(event, NeedDecayed) and event.need == "social"
+        for event in bus.history
+    )
+    bond_events = [
+        event for event in bus.history if isinstance(event, RelationshipUpdated)
+    ]
+    assert len(bond_events) == 2
+    assert {event.from_agent_id.value for event in bond_events} == {0, 1}
+    assert all(event.created for event in bond_events)
+    completed = [event for event in bus.history if isinstance(event, ActionCompleted)]
+    assert completed[0].success is True
+
+
+def test_socialize_fails_without_co_located_partner() -> None:
+    """SOCIALIZE fails cleanly when the partner is not co-located."""
+    plain = Location.create(1, "Plain", 1, 0, kind=LocationKind.PLAIN)
+    world = World(
+        config=SimulationConfig(agent_count=2, seed=1),
+        locations=(CAMP_LOCATION, plain),
+        agents=(
+            Agent.create(agent_id=0, name="A"),
+            Agent.create(agent_id=1, name="B", location_id=1),
+        ),
+    )
+    choice = ActionChoice(
+        agent_id=AgentId(value=0),
+        action=ActionKind.SOCIALIZE,
+        utility=1.0,
+        target_agent_id=AgentId(value=1),
     )
     bus = EventBus()
     updated = ActionExecutor().execute(world, choice, bus=bus)

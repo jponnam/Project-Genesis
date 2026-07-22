@@ -17,6 +17,7 @@ from civitas.domain import (
     DEFAULT_DRINK_CONSUME_AMOUNT,
     DEFAULT_EAT_CONSUME_AMOUNT,
     DEFAULT_MOVE_ENERGY_COST,
+    DEFAULT_TRUST,
     FOOD_RESOURCE,
     RESOURCE_NEED,
     WATER_RESOURCE,
@@ -30,6 +31,7 @@ from civitas.domain import (
     can_trade,
     enterable_neighbors,
     gatherable_resources,
+    get_bond,
     occupancy,
     producible_recipes,
     recipe_by_id,
@@ -93,10 +95,10 @@ class UtilityPolicy:
     ) -> float:
         """Compute utility of ``action`` for ``agent``.
 
-        MOVE / GATHER / TRADE / PRODUCE score their best legal target when
-        ``world`` is set (PRODUCE only needs the agent). EAT/DRINK score
-        0.0 without inventory food/water. REST scores 0.0 when energy is
-        already full.
+        MOVE / GATHER / TRADE / PRODUCE / SOCIALIZE score their best legal
+        target when ``world`` is set (PRODUCE only needs the agent).
+        EAT/DRINK score 0.0 without inventory food/water. REST scores 0.0
+        when energy is already full.
         """
         kind = ActionKind(action)
         if kind is ActionKind.MOVE:
@@ -110,6 +112,9 @@ class UtilityPolicy:
             return utility
         if kind is ActionKind.PRODUCE:
             utility, _recipe = self._best_produce(agent)
+            return utility
+        if kind is ActionKind.SOCIALIZE:
+            utility, _partner = self._best_socialize(agent, world)
             return utility
         if kind is ActionKind.EAT and not self._has_food(agent):
             return 0.0
@@ -162,6 +167,12 @@ class UtilityPolicy:
                 if target_agent is None or target_resource is None:
                     continue
                 target_location = None
+            elif action is ActionKind.SOCIALIZE:
+                utility, target_agent = self._best_socialize(agent, world)
+                if target_agent is None:
+                    continue
+                target_location = None
+                target_resource = None
             elif action is ActionKind.PRODUCE:
                 utility, target_resource = self._best_produce(agent)
                 if target_resource is None:
@@ -377,6 +388,42 @@ class UtilityPolicy:
                 best_utility = utility
                 best_recipe = recipe.recipe_id
         return best_utility, best_recipe
+
+    def _best_socialize(
+        self,
+        agent: Agent,
+        world: World | None,
+    ) -> tuple[float, AgentId | None]:
+        """Return (utility, partner) for the best legal SOCIALIZE."""
+        if world is None:
+            return 0.0, None
+
+        best_partner: AgentId | None = None
+        best_key: tuple[float, float, int] | None = None
+        for partner in world.agents_at(agent.location_id):
+            if partner.agent_id == agent.agent_id or not partner.is_alive():
+                continue
+            bond = get_bond(agent, partner.agent_id)
+            affinity = bond.affinity if bond is not None else 0.0
+            trust = bond.trust if bond is not None else DEFAULT_TRUST
+            # Prefer higher affinity, then higher trust, then lower id.
+            key = (-affinity, -trust, partner.agent_id.value)
+            if best_key is None or key < best_key:
+                best_key = key
+                best_partner = partner.agent_id
+        if best_partner is None:
+            return 0.0, None
+        return self._socialize_utility(agent), best_partner
+
+    def _socialize_utility(self, agent: Agent) -> float:
+        """Score SOCIALIZE from social urgency and extraversion."""
+        need_component = self._need_utility(agent, ActionKind.SOCIALIZE)
+        personality_component = self._personality_multiplier(
+            agent,
+            ActionKind.SOCIALIZE,
+        )
+        goal_component = self._goal_bonus(agent, ActionKind.SOCIALIZE)
+        return round((need_component * personality_component) + goal_component, 6)
 
     def _produce_utility(self, agent: Agent, recipe_id: str) -> float:
         """Score crafting ``recipe_id`` from output scarcity and needs."""

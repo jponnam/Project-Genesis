@@ -118,12 +118,12 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 4 — Milestone 1: Relationships**
+**Phase 4 — Milestone 2: Trust**
 
-Directed dyadic bonds (`Relationship` / `RelationshipSystem`) can be
-created, adjusted, and cleared between living agents. Each tick observes
-`RelationshipsObserved`; mutations emit `RelationshipUpdated`. Trust
-dynamics and SOCIALIZE partner bonding are later Phase 4 milestones.
+Co-located `SOCIALIZE` requires a partner and deterministically raises
+mutual directed trust and affinity via `apply_socialize`. The actor's
+social need is restored; bond changes emit `RelationshipUpdated`.
+Reputation, families, and network analytics are later Phase 4 milestones.
 
 ### Completed
 
@@ -153,6 +153,7 @@ JSONL storage → `civitas run`
 
 **Phase 4:**
 - Milestone 1: Relationships
+- Milestone 2: Trust
 
 ## License
 

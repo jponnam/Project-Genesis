@@ -10,6 +10,7 @@ from civitas.domain import (
     ActionKind,
     ActionSelected,
     Agent,
+    AgentId,
     AgentStatus,
     Goal,
     GoalSet,
@@ -23,6 +24,7 @@ from civitas.domain import (
     SimulationConfig,
     World,
     default_world_map,
+    set_bond,
 )
 from civitas.engine import EventBus, WorldFactory
 from civitas.systems import PolicyConfig, UtilityPolicy
@@ -138,7 +140,7 @@ def test_satisfied_agent_prefers_idle() -> None:
 
 
 def test_extraversion_raises_socialize_utility() -> None:
-    """Higher extraversion increases socialize utility."""
+    """Higher extraversion increases socialize utility when a partner exists."""
     needs = Needs(food=0.8, water=0.8, energy=0.8, social=0.4, safety=0.8)
     introvert = Agent.create(
         agent_id=0,
@@ -152,10 +154,47 @@ def test_extraversion_raises_socialize_utility() -> None:
         needs=needs,
         personality=Personality(extraversion=0.9),
     )
-    policy = UtilityPolicy()
-    assert policy.score(extrovert, ActionKind.SOCIALIZE) > policy.score(
-        introvert, ActionKind.SOCIALIZE
+    world = World(
+        config=SimulationConfig(agent_count=2, seed=1),
+        locations=(CAMP_LOCATION,),
+        agents=(introvert, extrovert),
     )
+    policy = UtilityPolicy()
+    assert policy.score(extrovert, ActionKind.SOCIALIZE, world=world) > policy.score(
+        introvert, ActionKind.SOCIALIZE, world=world
+    )
+
+
+def test_socialize_requires_co_located_partner() -> None:
+    """SOCIALIZE is unavailable alone and prefers higher-affinity partners."""
+    lonely = Agent.create(
+        agent_id=0,
+        name="A",
+        needs=Needs(food=1.0, water=1.0, energy=1.0, social=0.2, safety=1.0),
+        personality=Personality(extraversion=1.0),
+    )
+    alone_world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        agents=(lonely,),
+    )
+    choice = UtilityPolicy().select(lonely, world=alone_world)
+    assert choice.action is not ActionKind.SOCIALIZE
+
+    friend = Agent.create(agent_id=1, name="B")
+    stranger = Agent.create(agent_id=2, name="C")
+    chooser = set_bond(lonely, 2, affinity=0.1)
+    assert chooser is not None
+    chooser = set_bond(chooser, 1, affinity=0.8)
+    assert chooser is not None
+    world = World(
+        config=SimulationConfig(agent_count=3, seed=1),
+        locations=(CAMP_LOCATION,),
+        agents=(chooser, friend, stranger),
+    )
+    choice = UtilityPolicy().select(chooser, world=world)
+    assert choice.action is ActionKind.SOCIALIZE
+    assert choice.target_agent_id == AgentId(value=1)
 
 
 def test_goal_bonus_can_tip_selection() -> None:

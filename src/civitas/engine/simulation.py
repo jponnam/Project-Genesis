@@ -75,8 +75,8 @@ class SimulationEngine:
     parents cannot reproduce. Birth and death both complete before taxes
     so the levy sees the settled roster. Taxes complete before
     ``TickCompleted`` so wealth censuses reflect post-levy balances.
-    Taxes are disabled by default. Relationship mutations are not driven
-    by the tick loop yet — only observation is wired.
+    Taxes are disabled by default. Relationship observation is wired each
+    tick; SOCIALIZE may mutate bonds during action execution.
     """
 
     def __init__(

@@ -2,10 +2,11 @@
 
 The executor mutates the world only through immutable ``World`` updates.
 It does not call the needs, movement, gathering, food, water, energy,
-production, or policy systems; shared catalogs and domain helpers apply
-effects. Events include ``ActionCompleted`` and, when applicable,
-``NeedDecayed``, ``ResourceConsumed``, ``ResourceGathered``,
-``ResourceProduced``, ``ResourceTraded``, or ``AgentMoved``.
+production, relationship, or policy systems; shared catalogs and domain
+helpers apply effects. Events include ``ActionCompleted`` and, when
+applicable, ``NeedDecayed``, ``ResourceConsumed``, ``ResourceGathered``,
+``ResourceProduced``, ``ResourceTraded``, ``RelationshipUpdated``, or
+``AgentMoved``.
 """
 
 from __future__ import annotations
@@ -15,6 +16,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict, Field
 
 from civitas.domain import (
+    DEFAULT_AFFINITY_DELTA,
     DEFAULT_DRINK_CONSUME_AMOUNT,
     DEFAULT_DRINK_RESTORE,
     DEFAULT_EAT_CONSUME_AMOUNT,
@@ -22,6 +24,8 @@ from civitas.domain import (
     DEFAULT_GATHER_AMOUNT,
     DEFAULT_MOVE_ENERGY_COST,
     DEFAULT_REST_RESTORE,
+    DEFAULT_SOCIALIZE_RESTORE,
+    DEFAULT_TRUST_DELTA,
     FOOD_RESOURCE,
     WATER_RESOURCE,
     ActionChoice,
@@ -29,6 +33,7 @@ from civitas.domain import (
     ActionKind,
     AgentMoved,
     NeedDecayed,
+    RelationshipUpdated,
     ResourceConsumed,
     ResourceGathered,
     ResourceProduced,
@@ -39,7 +44,9 @@ from civitas.domain import (
     apply_gather,
     apply_produce,
     apply_rest,
+    apply_socialize,
     apply_trade,
+    get_bond,
     recipe_by_id,
     relocate,
 )
@@ -63,7 +70,7 @@ class ActionConfig(BaseModel):
     eat: UnitInterval = DEFAULT_EAT_RESTORE
     drink: UnitInterval = DEFAULT_DRINK_RESTORE
     rest: UnitInterval = DEFAULT_REST_RESTORE
-    socialize: UnitInterval = 0.15
+    socialize: UnitInterval = DEFAULT_SOCIALIZE_RESTORE
     seek_safety: UnitInterval = 0.10
     idle: UnitInterval = Field(default=0.0, ge=0.0, le=1.0)
     move_energy_cost: UnitInterval = DEFAULT_MOVE_ENERGY_COST
@@ -72,6 +79,8 @@ class ActionConfig(BaseModel):
     drink_consume_amount: PositiveInt = DEFAULT_DRINK_CONSUME_AMOUNT
     trade_quantity: PositiveInt = DEFAULT_TRADE_QUANTITY
     trade_price: NonNegativeInt = DEFAULT_TRADE_PRICE
+    socialize_trust_delta: UnitInterval = DEFAULT_TRUST_DELTA
+    socialize_affinity_delta: UnitInterval = DEFAULT_AFFINITY_DELTA
 
     def restore_for(self, action: ActionKind) -> float:
         """Return the need restoration amount for ``action``.
@@ -133,6 +142,8 @@ class ActionExecutor:
             world, success = self._apply_gather(world, agent, choice, bus)
         elif choice.action is ActionKind.TRADE:
             world, success = self._apply_trade(world, agent, choice, bus)
+        elif choice.action is ActionKind.SOCIALIZE:
+            world, success = self._apply_socialize(world, agent, choice, bus)
         else:
             updated_agent, success = self._apply(agent, choice, world, bus)
             if success and updated_agent is not agent:
@@ -168,7 +179,7 @@ class ActionExecutor:
         world: World,
         bus: EventBus | None,
     ) -> tuple[Agent, bool]:
-        """Apply non-GATHER/TRADE ``choice`` effects; return (agent, success)."""
+        """Apply non-GATHER/TRADE/SOCIALIZE choice effects; return (agent, success)."""
         action = choice.action
         if action is ActionKind.IDLE:
             return agent, True
@@ -469,4 +480,79 @@ class ActionExecutor:
                     price=terms.price,
                 )
             )
+        return updated, True
+
+    def _apply_socialize(
+        self,
+        world: World,
+        agent: Agent,
+        choice: ActionChoice,
+        bus: EventBus | None,
+    ) -> tuple[World, bool]:
+        """Apply SOCIALIZE via domain helper; emit bond/need events."""
+        if choice.target_agent_id is None:
+            return world, False
+
+        partner_id = choice.target_agent_id
+        partner_before = world.agent_by_id(partner_id)
+        actor_created = get_bond(agent, partner_id) is None
+        partner_created = (
+            partner_before is None or get_bond(partner_before, agent.agent_id) is None
+        )
+        previous_social = agent.needs.social
+
+        updated = apply_socialize(
+            world,
+            agent.agent_id,
+            partner_id,
+            trust_delta=self._config.socialize_trust_delta,
+            affinity_delta=self._config.socialize_affinity_delta,
+            restore=self._config.socialize,
+        )
+        if updated is None:
+            return world, False
+
+        if bus is not None:
+            actor_after = updated.agent_by_id(agent.agent_id)
+            partner_after = updated.agent_by_id(partner_id)
+            if actor_after is not None and actor_after.needs.social != previous_social:
+                bus.publish(
+                    NeedDecayed(
+                        tick=updated.tick,
+                        agent_id=agent.agent_id,
+                        need="social",
+                        previous=previous_social,
+                        current=actor_after.needs.social,
+                    )
+                )
+            actor_bond = (
+                get_bond(actor_after, partner_id) if actor_after is not None else None
+            )
+            if actor_after is not None and actor_bond is not None:
+                bus.publish(
+                    RelationshipUpdated(
+                        tick=updated.tick,
+                        from_agent_id=actor_after.agent_id,
+                        to_agent_id=actor_bond.other_id,
+                        affinity=actor_bond.affinity,
+                        trust=actor_bond.trust,
+                        created=actor_created,
+                    )
+                )
+            partner_bond = (
+                get_bond(partner_after, agent.agent_id)
+                if partner_after is not None
+                else None
+            )
+            if partner_after is not None and partner_bond is not None:
+                bus.publish(
+                    RelationshipUpdated(
+                        tick=updated.tick,
+                        from_agent_id=partner_after.agent_id,
+                        to_agent_id=partner_bond.other_id,
+                        affinity=partner_bond.affinity,
+                        trust=partner_bond.trust,
+                        created=partner_created,
+                    )
+                )
         return updated, True
