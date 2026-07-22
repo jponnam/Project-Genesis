@@ -89,9 +89,11 @@ craft and irrigation canal). Phase 14 Milestone 11 adds CUSTOMS law
 PRODUCE energy discounts for living subjects (stacking with guild,
 workshop, foundry, abacus, and pulley). Phase 14 Milestone 12 adds
 ENTREPOT city food-gather bonuses at the city seat (stacking with
-STOREHOUSE and WAYSTATION). The action executor, retrieval path, market
-fills, knowledge diffusion, and research progression read these helpers;
-``EffectsSystem`` only observes coverage. Systems never call each other.
+STOREHOUSE and WAYSTATION). Phase 15 Milestone 1 adds a global PLOW food-
+gather bonus (stacking with storehouse, waystation, and entrepot seat
+bonuses). The action executor, retrieval path, market fills, knowledge
+diffusion, and research progression read these helpers; ``EffectsSystem``
+only observes coverage. Systems never call each other.
 """
 
 from __future__ import annotations
@@ -169,6 +171,7 @@ LAZARETTO_DRINK_RESTORE_BONUS: float = 0.05
 STOREHOUSE_FOOD_GATHER_BONUS: int = 1
 WAYSTATION_FOOD_GATHER_BONUS: int = 1
 ENTREPOT_FOOD_GATHER_BONUS: int = 1
+AGRICULTURE_FOOD_GATHER_BONUS: int = 1
 SCAFFOLD_WOOD_GATHER_BONUS: int = 1
 MASON_STONE_GATHER_BONUS: int = 1
 QUARRY_STONE_GATHER_BONUS: int = 1
@@ -883,9 +886,10 @@ def gather_amount_bonus(
     canal, and sail). Stone bonuses come from an active FORGE innovation
     society-wide, an active MASON seat at ``location_id`` when provided,
     and an active QUARRY city at ``location_id`` when provided. Food
-    bonuses come from an active STOREHOUSE, WAYSTATION, and/or ENTREPOT
-    city at ``location_id`` when provided (they stack). Wood bonuses come
-    from an active SCAFFOLD at ``location_id`` when provided.
+    bonuses come from an active PLOW innovation society-wide, plus an
+    active STOREHOUSE, WAYSTATION, and/or ENTREPOT city at ``location_id``
+    when provided (they stack). Wood bonuses come from an active SCAFFOLD
+    at ``location_id`` when provided.
     """
     bonus = 0
     if resource == WATER_RESOURCE:
@@ -902,13 +906,16 @@ def gather_amount_bonus(
             bonus += MASON_STONE_GATHER_BONUS
         if location_id is not None and location_has_active_quarry(world, location_id):
             bonus += QUARRY_STONE_GATHER_BONUS
-    elif resource == FOOD_RESOURCE and location_id is not None:
-        if location_has_active_storehouse(world, location_id):
-            bonus += STOREHOUSE_FOOD_GATHER_BONUS
-        if location_has_active_waystation(world, location_id):
-            bonus += WAYSTATION_FOOD_GATHER_BONUS
-        if location_has_active_entrepot(world, location_id):
-            bonus += ENTREPOT_FOOD_GATHER_BONUS
+    elif resource == FOOD_RESOURCE:
+        if innovation_kind_is_active(world, InnovationKind.PLOW):
+            bonus += AGRICULTURE_FOOD_GATHER_BONUS
+        if location_id is not None:
+            if location_has_active_storehouse(world, location_id):
+                bonus += STOREHOUSE_FOOD_GATHER_BONUS
+            if location_has_active_waystation(world, location_id):
+                bonus += WAYSTATION_FOOD_GATHER_BONUS
+            if location_has_active_entrepot(world, location_id):
+                bonus += ENTREPOT_FOOD_GATHER_BONUS
     elif resource == ResourceKind.WOOD.value and location_id is not None:
         if location_has_active_scaffold(world, location_id):
             bonus += SCAFFOLD_WOOD_GATHER_BONUS

@@ -46,6 +46,7 @@ class TechnologyKind(StrEnum):
     NAVIGATION = "navigation"
     CARTOGRAPHY = "cartography"
     SEAFARING = "seafaring"
+    AGRICULTURE = "agriculture"
 
 
 class Technology(BaseModel):
@@ -227,6 +228,13 @@ CAMP_SEAFARING: Technology = Technology.create(
     discovered=False,
     prerequisite_ids=(17,),
 )
+CAMP_AGRICULTURE: Technology = Technology.create(
+    19,
+    "Camp Agriculture",
+    TechnologyKind.AGRICULTURE,
+    discovered=False,
+    prerequisite_ids=(18,),
+)
 
 
 def default_technologies() -> tuple[Technology, ...]:
@@ -251,6 +259,7 @@ def default_technologies() -> tuple[Technology, ...]:
         CAMP_NAVIGATION,
         CAMP_CARTOGRAPHY,
         CAMP_SEAFARING,
+        CAMP_AGRICULTURE,
     )
 
 
@@ -282,6 +291,7 @@ class TechnologyCensus(BaseModel):
     discovered_navigation_count: NonNegativeInt = 0
     discovered_cartography_count: NonNegativeInt = 0
     discovered_seafaring_count: NonNegativeInt = 0
+    discovered_agriculture_count: NonNegativeInt = 0
     locked_count: NonNegativeInt
     researchable_count: NonNegativeInt
 
@@ -410,6 +420,9 @@ def census_technologies(world: World) -> TechnologyCensus:
         1 for tech in discovered if tech.kind is TechnologyKind.CARTOGRAPHY
     )
     seafaring = sum(1 for tech in discovered if tech.kind is TechnologyKind.SEAFARING)
+    agriculture = sum(
+        1 for tech in discovered if tech.kind is TechnologyKind.AGRICULTURE
+    )
     return TechnologyCensus(
         tick=world.tick,
         technology_count=len(technologies),
@@ -434,6 +447,7 @@ def census_technologies(world: World) -> TechnologyCensus:
         discovered_navigation_count=navigation,
         discovered_cartography_count=cartography,
         discovered_seafaring_count=seafaring,
+        discovered_agriculture_count=agriculture,
         locked_count=len(locked),
         researchable_count=len(researchable),
     )

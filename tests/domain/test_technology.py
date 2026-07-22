@@ -6,6 +6,7 @@ import pytest
 from pydantic import ValidationError
 
 from civitas.domain import (
+    CAMP_AGRICULTURE,
     CAMP_ANATOMY,
     CAMP_ARCHITECTURE,
     CAMP_ASTRONOMY,
@@ -52,8 +53,8 @@ def _world(*agents: Agent, technologies: tuple[Technology, ...] = ()) -> World:
     )
 
 
-def test_default_technologies_seed_fire_through_seafaring() -> None:
-    """Canonical catalog has fire through seafaring progression."""
+def test_default_technologies_seed_fire_through_agriculture() -> None:
+    """Canonical catalog has fire through agriculture progression."""
     assert default_technologies() == (
         CAMP_FIRE,
         CAMP_POTTERY,
@@ -74,6 +75,7 @@ def test_default_technologies_seed_fire_through_seafaring() -> None:
         CAMP_NAVIGATION,
         CAMP_CARTOGRAPHY,
         CAMP_SEAFARING,
+        CAMP_AGRICULTURE,
     )
     assert CAMP_FIRE.kind is TechnologyKind.FIRE
     assert CAMP_FIRE.discovered is True
@@ -131,6 +133,9 @@ def test_default_technologies_seed_fire_through_seafaring() -> None:
     assert CAMP_SEAFARING.kind is TechnologyKind.SEAFARING
     assert CAMP_SEAFARING.discovered is False
     assert CAMP_SEAFARING.prerequisite_ids == (CAMP_CARTOGRAPHY.technology_id,)
+    assert CAMP_AGRICULTURE.kind is TechnologyKind.AGRICULTURE
+    assert CAMP_AGRICULTURE.discovered is False
+    assert CAMP_AGRICULTURE.prerequisite_ids == (CAMP_SEAFARING.technology_id,)
 
 
 def test_create_and_discover_technology() -> None:
@@ -171,9 +176,9 @@ def test_census_technologies_counts() -> None:
         technologies=default_technologies(),
     )
     snap = census_technologies(world)
-    assert snap.technology_count == 19
+    assert snap.technology_count == 20
     assert snap.discovered_count == 1
-    assert snap.undiscovered_count == 18
+    assert snap.undiscovered_count == 19
     assert snap.discovered_fire_count == 1
     assert snap.discovered_pottery_count == 0
     assert snap.discovered_irrigation_count == 0
@@ -193,7 +198,8 @@ def test_census_technologies_counts() -> None:
     assert snap.discovered_navigation_count == 0
     assert snap.discovered_cartography_count == 0
     assert snap.discovered_seafaring_count == 0
-    assert snap.locked_count == 17
+    assert snap.discovered_agriculture_count == 0
+    assert snap.locked_count == 18
     assert snap.researchable_count == 1
     assert prerequisites_met(world, CAMP_POTTERY) is True
     assert prerequisites_met(world, CAMP_IRRIGATION) is False
@@ -824,6 +830,51 @@ def test_seafaring_locked_until_cartography_discovered() -> None:
     with_seafaring = discover_technology(with_cartography, CAMP_SEAFARING.technology_id)
     assert with_seafaring is not None
     assert with_seafaring.technologies[18].discovered is True
+
+
+def test_agriculture_locked_until_seafaring_discovered() -> None:
+    """Agriculture cannot be discovered until seafaring is already known."""
+    world = _world(
+        Agent.create(agent_id=0, name="A"),
+        technologies=default_technologies(),
+    )
+    assert prerequisites_met(world, CAMP_AGRICULTURE) is False
+    assert discover_technology(world, CAMP_AGRICULTURE.technology_id) is None
+
+    current = world
+    for technology in (
+        CAMP_POTTERY,
+        CAMP_IRRIGATION,
+        CAMP_METALLURGY,
+        CAMP_WRITING,
+        CAMP_MATHEMATICS,
+        CAMP_ASTRONOMY,
+        CAMP_PHILOSOPHY,
+        CAMP_LOGIC,
+        CAMP_RHETORIC,
+        CAMP_MEDICINE,
+        CAMP_ANATOMY,
+        CAMP_HYGIENE,
+        CAMP_ENGINEERING,
+        CAMP_ARCHITECTURE,
+        CAMP_SURVEYING,
+        CAMP_NAVIGATION,
+        CAMP_CARTOGRAPHY,
+    ):
+        updated = discover_technology(current, technology.technology_id)
+        assert updated is not None
+        current = updated
+    assert prerequisites_met(current, CAMP_AGRICULTURE) is False
+    assert discover_technology(current, CAMP_AGRICULTURE.technology_id) is None
+
+    with_seafaring = discover_technology(current, CAMP_SEAFARING.technology_id)
+    assert with_seafaring is not None
+    assert prerequisites_met(with_seafaring, CAMP_AGRICULTURE) is True
+    with_agriculture = discover_technology(
+        with_seafaring, CAMP_AGRICULTURE.technology_id
+    )
+    assert with_agriculture is not None
+    assert with_agriculture.technologies[19].discovered is True
 
 
 def test_world_rejects_duplicate_kinds() -> None:

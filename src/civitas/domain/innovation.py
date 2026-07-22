@@ -17,6 +17,7 @@ from pydantic import BaseModel, ConfigDict
 
 from civitas.domain.ids import InnovationId, TechnologyId
 from civitas.domain.technology import (
+    CAMP_AGRICULTURE,
     CAMP_ANATOMY,
     CAMP_ARCHITECTURE,
     CAMP_ASTRONOMY,
@@ -67,6 +68,7 @@ class InnovationKind(StrEnum):
     COMPASS = "compass"
     MAP = "map"
     SAIL = "sail"
+    PLOW = "plow"
 
 
 class Innovation(BaseModel):
@@ -252,6 +254,14 @@ CAMP_SAIL: Innovation = Innovation.create(
     active=False,
 )
 
+CAMP_PLOW: Innovation = Innovation.create(
+    19,
+    CAMP_AGRICULTURE.technology_id.value,
+    "Camp Plow",
+    InnovationKind.PLOW,
+    active=False,
+)
+
 
 def default_innovations() -> tuple[Innovation, ...]:
     """Return the canonical initial innovation set."""
@@ -275,6 +285,7 @@ def default_innovations() -> tuple[Innovation, ...]:
         CAMP_COMPASS,
         CAMP_MAP,
         CAMP_SAIL,
+        CAMP_PLOW,
     )
 
 
@@ -306,6 +317,7 @@ class InnovationCensus(BaseModel):
     active_compass_count: NonNegativeInt = 0
     active_map_count: NonNegativeInt = 0
     active_sail_count: NonNegativeInt = 0
+    active_plow_count: NonNegativeInt = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -472,6 +484,7 @@ def census_innovations(world: World) -> InnovationCensus:
     compass = sum(1 for item in active if item.kind is InnovationKind.COMPASS)
     camp_map = sum(1 for item in active if item.kind is InnovationKind.MAP)
     sail = sum(1 for item in active if item.kind is InnovationKind.SAIL)
+    plow = sum(1 for item in active if item.kind is InnovationKind.PLOW)
     return InnovationCensus(
         tick=world.tick,
         innovation_count=len(innovations),
@@ -496,4 +509,5 @@ def census_innovations(world: World) -> InnovationCensus:
         active_compass_count=compass,
         active_map_count=camp_map,
         active_sail_count=sail,
+        active_plow_count=plow,
     )

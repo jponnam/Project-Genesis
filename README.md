@@ -123,15 +123,16 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 | **12** | Medicine and public health |
 | **13** | Engineering and construction |
 | **14** | Navigation and trade routes |
+| **15** | Agriculture and husbandry |
 
 ## Current Milestone
 
-**Phase 14 Milestone 12: Entrepot cities**
+**Phase 15 Milestone 1: Agriculture technology**
 
-``CityKind.ENTREPOT`` is a non-capital specialized seat for food staging.
-Active entrepots grant +1 food gather at their seat, stacking with
-storehouse and waystation. Not seeded; Camp City remains the only seeded
-settlement capital.
+``TechnologyKind.AGRICULTURE`` (id 19) requires seafaring. Research
+threshold 10. ``InnovationKind.PLOW`` raises food gather by 1
+society-wide when active, stacking with storehouse, waystation, and
+entrepot seat bonuses.
 
 ### Completed
 
@@ -275,6 +276,9 @@ JSONL storage → `civitas run`
 - Milestone 10: Seafaring technology
 - Milestone 11: Customs laws
 - Milestone 12: Entrepot cities
+
+**Phase 15:**
+- Milestone 1: Agriculture technology
 
 ## License
 

@@ -113,6 +113,7 @@ class KnowledgeSystem:
                     navigation_knower_count=snap.navigation_knower_count,
                     cartography_knower_count=snap.cartography_knower_count,
                     seafaring_knower_count=snap.seafaring_knower_count,
+                    agriculture_knower_count=snap.agriculture_knower_count,
                     total_fact_instances=snap.total_fact_instances,
                     coverage_bps=snap.coverage_bps,
                 )
