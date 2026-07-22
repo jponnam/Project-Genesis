@@ -216,6 +216,7 @@ from civitas.domain.laws import (
     safety_codes_produce_discount_for,
     sanitation_drink_bonus_for,
     sumptuary_market_discount_for,
+    timber_rights_wood_bonus_for,
     zoning_eat_bonus_for,
 )
 from civitas.domain.numeric import clamp_unit
@@ -1714,9 +1715,10 @@ def effective_gather_amount(
 
     Location-scoped bonuses come from ``gather_amount_bonus`` at the seat.
     When an ``agent`` is given, WOOD gathering also gains the subject-scoped
-    ``CONSERVATION`` statute bonus for living subjects (Phase 15 M11), and
-    STONE gathering also gains the subject-scoped ``MINERAL_RIGHTS`` statute
-    bonus for living subjects (Phase 17 M2).
+    ``CONSERVATION`` statute bonus for living subjects (Phase 15 M11) and the
+    subject-scoped ``TIMBER_RIGHTS`` statute bonus (Phase 18 M2), and STONE
+    gathering also gains the subject-scoped ``MINERAL_RIGHTS`` statute bonus
+    for living subjects (Phase 17 M2).
     """
     if base < 0:
         return 0
@@ -1728,6 +1730,7 @@ def effective_gather_amount(
     amount = base + gather_amount_bonus(world, resource, location_id=seat)
     if resource == ResourceKind.WOOD.value and agent is not None:
         amount += conservation_wood_bonus_for(world, agent)
+        amount += timber_rights_wood_bonus_for(world, agent)
     if resource == ResourceKind.STONE.value and agent is not None:
         amount += mineral_rights_stone_bonus_for(world, agent)
     return amount
