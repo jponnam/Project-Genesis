@@ -23,6 +23,7 @@ from civitas.systems.infrastructure import (
 )
 from civitas.systems.innovation import InnovationConfig, InnovationSystem
 from civitas.systems.institutions import InstitutionConfig, InstitutionSystem
+from civitas.systems.knowledge import KnowledgeConfig, KnowledgeSystem
 from civitas.systems.laws import LawConfig, LawSystem
 from civitas.systems.market import MarketConfig, MarketSystem
 from civitas.systems.movement import MovementConfig, MovementSystem
@@ -69,6 +70,8 @@ __all__ = [
     "InnovationSystem",
     "InstitutionConfig",
     "InstitutionSystem",
+    "KnowledgeConfig",
+    "KnowledgeSystem",
     "LawConfig",
     "LawSystem",
     "MarketConfig",

@@ -118,14 +118,13 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 6 — Milestone 3: Innovation**
+**Phase 6 — Milestone 4: Knowledge diffusion**
 
-Society adoption of discovered technologies. The factory seeds an active
-`Camp Fire Hearth` and inactive `Camp Pottery Craft`. After research
-discovers pottery, `InnovationSystem.apply_innovations` activates the
-craft the same tick. `InnovationSystem.observe` emits
-`InnovationsObserved`. Knowledge diffusion remains a later Phase 6
-milestone.
+Agent knowledge of discovered technologies. Founders start knowing
+`fire`. After pottery is discovered, bootstrap grants `pottery` to the
+lowest living agent id, then peer teaching spreads facts among
+co-located agents each tick. `KnowledgeSystem.observe` emits
+`KnowledgeObserved`. Effect wiring remains a later concern.
 
 ### Completed
 
@@ -172,6 +171,7 @@ JSONL storage → `civitas run`
 - Milestone 1: Technology
 - Milestone 2: Research
 - Milestone 3: Innovation
+- Milestone 4: Knowledge diffusion
 
 ## License
 

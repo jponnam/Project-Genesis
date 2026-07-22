@@ -333,6 +333,19 @@ class Knowledge(BaseModel):
         """Return whether ``fact`` is known."""
         return fact in self.facts
 
+    def learn(self, fact: str) -> Knowledge:
+        """Return a copy that includes ``fact`` (idempotent).
+
+        Raises:
+            ValueError: If ``fact`` is blank.
+        """
+        if not fact.strip():
+            msg = "knowledge facts must be non-blank"
+            raise ValueError(msg)
+        if fact in self.facts:
+            return self
+        return self.model_copy(update={"facts": self.facts | frozenset({fact})})
+
 
 class MemoryRecord(BaseModel):
     """A single episodic memory entry anchored to a tick."""

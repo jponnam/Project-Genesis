@@ -601,6 +601,26 @@ class InnovationsObserved(DomainEvent):
     active_pottery_craft_count: NonNegativeInt
 
 
+class KnowledgeLearned(DomainEvent):
+    """Emitted when an agent learns a technology fact."""
+
+    agent_id: AgentId
+    fact: NonEmptyStr
+    source: NonEmptyStr
+    teacher_id: AgentId | None = None
+
+
+class KnowledgeObserved(DomainEvent):
+    """Emitted when a knowledge census is taken."""
+
+    living_count: NonNegativeInt
+    discovered_technology_count: NonNegativeInt
+    fire_knower_count: NonNegativeInt
+    pottery_knower_count: NonNegativeInt
+    total_fact_instances: NonNegativeInt
+    coverage_bps: NonNegativeInt
+
+
 CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     SimulationStarted,
     SimulationCompleted,
@@ -653,6 +673,8 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     InnovationCreated,
     InnovationActivated,
     InnovationsObserved,
+    KnowledgeLearned,
+    KnowledgeObserved,
 )
 
 EVENT_TYPE_REGISTRY: dict[str, type[DomainEvent]] = {
