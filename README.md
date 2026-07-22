@@ -118,12 +118,14 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 5 — Milestone 2: Laws**
+**Phase 5 — Milestone 3: Voting**
 
-Statutes attach to governments. The factory seeds active `Camp Poll Tax`
-(`TAX_SCHEDULE`). Active schedules override levy parameters via domain
-helpers; `LawSystem.observe` emits `LawsObserved`. Voting, institutions,
-cities, and infrastructure remain later Phase 5 milestones.
+Living subjects elect government leaders by reputation standing
+(`standing_bps`; ties → smaller agent id). `conduct_election` /
+`VoteSystem.conduct` archive a closed `Election` and call `set_leader`.
+Elections are not auto-run each tick; `VoteSystem.observe` emits
+`ElectionsObserved`. Institutions, cities, and infrastructure remain
+later Phase 5 milestones.
 
 ### Completed
 
@@ -161,6 +163,7 @@ JSONL storage → `civitas run`
 **Phase 5:**
 - Milestone 1: Governments
 - Milestone 2: Laws
+- Milestone 3: Voting
 
 ## License
 

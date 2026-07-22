@@ -13,6 +13,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from civitas.domain.ids import (
     AgentId,
+    ElectionId,
     GovernmentId,
     LawId,
     ListingId,
@@ -427,6 +428,25 @@ class LawsObserved(DomainEvent):
     active_tax_schedule_count: NonNegativeInt
 
 
+class ElectionResolved(DomainEvent):
+    """Emitted when an election is conducted and a winner applied."""
+
+    election_id: ElectionId
+    government_id: GovernmentId
+    winner_id: AgentId | None = None
+    franchise_count: NonNegativeInt
+    ballot_count: NonNegativeInt
+
+
+class ElectionsObserved(DomainEvent):
+    """Emitted when an election-archive census is taken."""
+
+    election_count: NonNegativeInt
+    closed_count: NonNegativeInt
+    open_count: NonNegativeInt
+    governments_with_elections: NonNegativeInt
+
+
 CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     SimulationStarted,
     SimulationCompleted,
@@ -463,6 +483,8 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     NetworksObserved,
     GovernmentsObserved,
     LawsObserved,
+    ElectionResolved,
+    ElectionsObserved,
 )
 
 EVENT_TYPE_REGISTRY: dict[str, type[DomainEvent]] = {

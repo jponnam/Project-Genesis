@@ -2,8 +2,8 @@
 
 Laws are first-class world aggregates. Domain helpers own enactment,
 repeal, and tax-schedule lookup. Active ``TAX_SCHEDULE`` statutes override
-fallback levy parameters when collecting taxes. Voting and other statute
-kinds are later Phase 5 milestones.
+fallback levy parameters when collecting taxes. Elections (voting) are a
+separate Phase 5 aggregate; further statute kinds remain later milestones.
 """
 
 from __future__ import annotations

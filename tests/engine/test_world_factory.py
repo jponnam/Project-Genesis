@@ -70,6 +70,7 @@ def test_agents_have_stable_ids_names_and_origin_location() -> None:
     assert world.governments[0] == CAMP_GOVERNMENT
     assert world.laws == default_laws()
     assert world.laws[0] == CAMP_POLL_TAX_LAW
+    assert world.elections == ()
     assert world.treasury == 0
     assert world.agents_at(0) == world.agents
 

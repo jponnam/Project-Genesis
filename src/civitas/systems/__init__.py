@@ -29,6 +29,7 @@ from civitas.systems.relationships import RelationshipConfig, RelationshipSystem
 from civitas.systems.reputation import ReputationConfig, ReputationSystem
 from civitas.systems.taxes import TaxConfig, TaxSystem
 from civitas.systems.trading import TradingConfig, TradingSystem
+from civitas.systems.voting import VoteConfig, VoteSystem
 from civitas.systems.water import WaterConfig, WaterSystem
 
 __all__ = [
@@ -77,6 +78,8 @@ __all__ = [
     "TradingConfig",
     "TradingSystem",
     "UtilityPolicy",
+    "VoteConfig",
+    "VoteSystem",
     "WaterConfig",
     "WaterSystem",
 ]
