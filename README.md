@@ -126,10 +126,10 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 14 Milestone 3: Caravan institutions**
+**Phase 14 Milestone 4: Waystation infrastructure**
 
-``InstitutionKind.CARAVAN`` grants a seat-scoped MOVE energy discount that
-stacks with road, bridge, building codes, passage, and compass.
+``InfrastructureKind.WAYSTATION`` (build cost 8) grants a seat-scoped food
+gather bonus that stacks with storehouse.
 
 ### Completed
 
@@ -264,6 +264,7 @@ JSONL storage → `civitas run`
 - Milestone 1: Navigation technology
 - Milestone 2: Passage laws
 - Milestone 3: Caravan institutions
+- Milestone 4: Waystation infrastructure
 
 ## License
 

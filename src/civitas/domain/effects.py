@@ -71,9 +71,11 @@ road, bridge, and building codes). Phase 14 Milestone 2 adds PASSAGE law
 MOVE energy discounts for living subjects (stacking with road, bridge,
 building codes, and compass). Phase 14 Milestone 3 adds CARAVAN MOVE energy
 discounts at the institution seat (stacking with road, bridge, building
-codes, passage, and compass). The action executor, retrieval path, market
-fills, knowledge diffusion, and research progression read these helpers;
-``EffectsSystem`` only observes coverage. Systems never call each other.
+codes, passage, and compass). Phase 14 Milestone 4 adds WAYSTATION
+food-gather bonuses at the infrastructure seat (stacking with STOREHOUSE).
+The action executor, retrieval path, market fills, knowledge diffusion,
+and research progression read these helpers; ``EffectsSystem`` only
+observes coverage. Systems never call each other.
 """
 
 from __future__ import annotations
@@ -146,6 +148,7 @@ APOTHECARY_DRINK_RESTORE_BONUS: float = 0.05
 HYGIENE_DRINK_RESTORE_BONUS: float = 0.05
 LAZARETTO_DRINK_RESTORE_BONUS: float = 0.05
 STOREHOUSE_FOOD_GATHER_BONUS: int = 1
+WAYSTATION_FOOD_GATHER_BONUS: int = 1
 SCAFFOLD_WOOD_GATHER_BONUS: int = 1
 MASON_STONE_GATHER_BONUS: int = 1
 QUARRY_STONE_GATHER_BONUS: int = 1
@@ -226,6 +229,22 @@ def location_has_active_storehouse(
     )
     return any(
         item.kind is InfrastructureKind.STOREHOUSE and item.location_id == target
+        for item in active_infrastructure(world)
+    )
+
+
+def location_has_active_waystation(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active WAYSTATION stands at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InfrastructureKind.WAYSTATION and item.location_id == target
         for item in active_infrastructure(world)
     )
 
@@ -774,8 +793,9 @@ def gather_amount_bonus(
     active FORGE innovation society-wide, an active MASON seat at
     ``location_id`` when provided, and an active QUARRY city at
     ``location_id`` when provided. Food bonuses come from an active
-    STOREHOUSE at ``location_id`` when provided. Wood bonuses come from an
-    active SCAFFOLD at ``location_id`` when provided.
+    STOREHOUSE and/or WAYSTATION at ``location_id`` when provided (they
+    stack). Wood bonuses come from an active SCAFFOLD at ``location_id``
+    when provided.
     """
     bonus = 0
     if resource == WATER_RESOURCE:
@@ -793,6 +813,8 @@ def gather_amount_bonus(
     elif resource == FOOD_RESOURCE and location_id is not None:
         if location_has_active_storehouse(world, location_id):
             bonus += STOREHOUSE_FOOD_GATHER_BONUS
+        if location_has_active_waystation(world, location_id):
+            bonus += WAYSTATION_FOOD_GATHER_BONUS
     elif resource == ResourceKind.WOOD.value and location_id is not None:
         if location_has_active_scaffold(world, location_id):
             bonus += SCAFFOLD_WOOD_GATHER_BONUS
@@ -1118,6 +1140,11 @@ def census_effects(world: World) -> EffectsCensus:
         for item in active_infrastructure(world)
         if item.kind is InfrastructureKind.STOREHOUSE
     )
+    waystations = tuple(
+        item
+        for item in active_infrastructure(world)
+        if item.kind is InfrastructureKind.WAYSTATION
+    )
     roads = tuple(
         item
         for item in active_infrastructure(world)
@@ -1141,11 +1168,16 @@ def census_effects(world: World) -> EffectsCensus:
     if innovation_kind_is_active(world, InnovationKind.ASEPSIS):
         drink_bonus += HYGIENE_DRINK_RESTORE_BONUS
     drink_at_well = clamp_unit(DEFAULT_DRINK_RESTORE + drink_bonus)
-    # Food gather potential at a storehouse seat.
+    # Food gather potential at a storehouse/waystation seat (bonuses stack).
+    food_seat = None
+    if storehouses:
+        food_seat = storehouses[0].location_id
+    elif waystations:
+        food_seat = waystations[0].location_id
     food_at_storehouse = effective_gather_amount(
         world,
         FOOD_RESOURCE,
-        location_id=storehouses[0].location_id if storehouses else None,
+        location_id=food_seat,
     )
     scaffolds = tuple(
         item

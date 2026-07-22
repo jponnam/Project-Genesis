@@ -20,6 +20,7 @@ from civitas.domain import (
     DEFAULT_SHRINE_BUILD_COST,
     DEFAULT_STOA_BUILD_COST,
     DEFAULT_STOREHOUSE_BUILD_COST,
+    DEFAULT_WAYSTATION_BUILD_COST,
     DEFAULT_WELL_BUILD_COST,
     Agent,
     City,
@@ -202,6 +203,7 @@ def test_census_infrastructure_counts() -> None:
     assert snap.active_bathhouse_count == 0
     assert snap.active_bridge_count == 0
     assert snap.active_scaffold_count == 0
+    assert snap.active_waystation_count == 0
     assert census_infrastructure(world) == snap
 
 
@@ -568,8 +570,6 @@ def test_create_and_build_bridge() -> None:
     assert built.governments[0].treasury == 20 - DEFAULT_BRIDGE_BUILD_COST
 
 
-
-
 def test_create_and_build_scaffold() -> None:
     """SCAFFOLD is a distinct kind with its own catalog build cost."""
     assert build_cost_for(InfrastructureKind.SCAFFOLD) == DEFAULT_SCAFFOLD_BUILD_COST
@@ -601,6 +601,43 @@ def test_create_and_build_scaffold() -> None:
     )
     assert built is not None
     assert built.governments[0].treasury == 20 - DEFAULT_SCAFFOLD_BUILD_COST
+
+
+def test_create_and_build_waystation() -> None:
+    """WAYSTATION is a distinct kind with its own catalog build cost."""
+    assert (
+        build_cost_for(InfrastructureKind.WAYSTATION) == DEFAULT_WAYSTATION_BUILD_COST
+    )
+    world = _world(
+        Agent.create(agent_id=0, name="A"),
+        governments=(Government.create(0, "Camp", 0, (0,), treasury=20),),
+        infrastructure=(
+            Infrastructure.create(0, 0, 0, 0, "Well", InfrastructureKind.WELL),
+        ),
+    )
+    # Waystation may coexist with a well at the same seat.
+    created = create_infrastructure(
+        world,
+        Infrastructure.create(1, 0, 0, 0, "Waystation", InfrastructureKind.WAYSTATION),
+    )
+    assert created is not None
+    assert created.infrastructure[1].kind is InfrastructureKind.WAYSTATION
+    snap = census_infrastructure(created)
+    assert snap.active_well_count == 1
+    assert snap.active_waystation_count == 1
+
+    empty = _world(
+        Agent.create(agent_id=0, name="A"),
+        governments=(Government.create(0, "Camp", 0, (0,), treasury=20),),
+    )
+    built = build_infrastructure(
+        empty,
+        Infrastructure.create(
+            0, 0, 0, 0, "Paid Waystation", InfrastructureKind.WAYSTATION
+        ),
+    )
+    assert built is not None
+    assert built.governments[0].treasury == 20 - DEFAULT_WAYSTATION_BUILD_COST
 
 
 def test_world_rejects_city_location_mismatch() -> None:
