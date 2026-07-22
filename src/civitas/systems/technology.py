@@ -75,6 +75,7 @@ class TechSystem:
                     discovered_mathematics_count=snap.discovered_mathematics_count,
                     discovered_astronomy_count=snap.discovered_astronomy_count,
                     discovered_philosophy_count=snap.discovered_philosophy_count,
+                    discovered_logic_count=snap.discovered_logic_count,
                     locked_count=snap.locked_count,
                     researchable_count=snap.researchable_count,
                 )

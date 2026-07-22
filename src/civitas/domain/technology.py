@@ -35,6 +35,7 @@ class TechnologyKind(StrEnum):
     MATHEMATICS = "mathematics"
     ASTRONOMY = "astronomy"
     PHILOSOPHY = "philosophy"
+    LOGIC = "logic"
 
 
 class Technology(BaseModel):
@@ -139,6 +140,13 @@ CAMP_PHILOSOPHY: Technology = Technology.create(
     discovered=False,
     prerequisite_ids=(6,),
 )
+CAMP_LOGIC: Technology = Technology.create(
+    8,
+    "Camp Logic",
+    TechnologyKind.LOGIC,
+    discovered=False,
+    prerequisite_ids=(7,),
+)
 
 
 def default_technologies() -> tuple[Technology, ...]:
@@ -152,6 +160,7 @@ def default_technologies() -> tuple[Technology, ...]:
         CAMP_MATHEMATICS,
         CAMP_ASTRONOMY,
         CAMP_PHILOSOPHY,
+        CAMP_LOGIC,
     )
 
 
@@ -172,6 +181,7 @@ class TechnologyCensus(BaseModel):
     discovered_mathematics_count: NonNegativeInt = 0
     discovered_astronomy_count: NonNegativeInt = 0
     discovered_philosophy_count: NonNegativeInt = 0
+    discovered_logic_count: NonNegativeInt = 0
     locked_count: NonNegativeInt
     researchable_count: NonNegativeInt
 
@@ -283,6 +293,7 @@ def census_technologies(world: World) -> TechnologyCensus:
     )
     astronomy = sum(1 for tech in discovered if tech.kind is TechnologyKind.ASTRONOMY)
     philosophy = sum(1 for tech in discovered if tech.kind is TechnologyKind.PHILOSOPHY)
+    logic = sum(1 for tech in discovered if tech.kind is TechnologyKind.LOGIC)
     return TechnologyCensus(
         tick=world.tick,
         technology_count=len(technologies),
@@ -296,6 +307,7 @@ def census_technologies(world: World) -> TechnologyCensus:
         discovered_mathematics_count=mathematics,
         discovered_astronomy_count=astronomy,
         discovered_philosophy_count=philosophy,
+        discovered_logic_count=logic,
         locked_count=len(locked),
         researchable_count=len(researchable),
     )

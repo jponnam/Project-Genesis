@@ -28,6 +28,7 @@ from civitas.domain.ids import (
 from civitas.domain.time import Tick
 from civitas.domain.types import (
     AffinityScore,
+    MemoryContentStr,
     NonEmptyStr,
     NonNegativeInt,
     UnitInterval,
@@ -621,6 +622,7 @@ class TechnologiesObserved(DomainEvent):
     discovered_mathematics_count: NonNegativeInt = 0
     discovered_astronomy_count: NonNegativeInt = 0
     discovered_philosophy_count: NonNegativeInt = 0
+    discovered_logic_count: NonNegativeInt = 0
     locked_count: NonNegativeInt = 0
     researchable_count: NonNegativeInt = 0
 
@@ -685,6 +687,7 @@ class InnovationsObserved(DomainEvent):
     active_abacus_count: NonNegativeInt = 0
     active_star_chart_count: NonNegativeInt = 0
     active_dialectic_count: NonNegativeInt = 0
+    active_syllogism_count: NonNegativeInt = 0
 
 
 class KnowledgeLearned(DomainEvent):
@@ -709,6 +712,7 @@ class KnowledgeObserved(DomainEvent):
     mathematics_knower_count: NonNegativeInt = 0
     astronomy_knower_count: NonNegativeInt = 0
     philosophy_knower_count: NonNegativeInt = 0
+    logic_knower_count: NonNegativeInt = 0
     total_fact_instances: NonNegativeInt
     coverage_bps: NonNegativeInt
 
@@ -718,7 +722,7 @@ class MemoryRecorded(DomainEvent):
 
     agent_id: AgentId
     kind: NonEmptyStr
-    content: NonEmptyStr
+    content: MemoryContentStr
 
 
 class CognitionObserved(DomainEvent):

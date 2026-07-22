@@ -19,6 +19,7 @@ from civitas.domain import (
     CAMP_IRRIGATION,
     CAMP_IRRIGATION_CANAL,
     CAMP_LOCATION,
+    CAMP_LOGIC,
     CAMP_MATHEMATICS,
     CAMP_METALLURGY,
     CAMP_PHILOSOPHY,
@@ -26,11 +27,13 @@ from civitas.domain import (
     CAMP_POTTERY_CRAFT,
     CAMP_SCRIBE,
     CAMP_STAR_CHART,
+    CAMP_SYLLOGISM,
     CAMP_WRITING,
     CURRICULUM_TEACHINGS_PER_KNOWER_BONUS,
     DEFAULT_DRINK_RESTORE,
     DEFAULT_GATHER_AMOUNT,
     DEFAULT_MOVE_ENERGY_COST,
+    DEFAULT_POINTS_PER_TICK,
     DEFAULT_PRODUCE_ENERGY_COST,
     DEFAULT_REST_RESTORE,
     DEFAULT_RETRIEVAL_LIMIT,
@@ -40,6 +43,7 @@ from civitas.domain import (
     GUILD_PRODUCE_ENERGY_DISCOUNT,
     IRRIGATION_WATER_GATHER_BONUS,
     LIBRARY_RETRIEVAL_LIMIT_BONUS,
+    LOGIC_RESEARCH_POINTS_BONUS,
     MATHEMATICS_PRODUCE_ENERGY_DISCOUNT,
     METALLURGY_STONE_GATHER_BONUS,
     OBSERVATORY_RETRIEVAL_LIMIT_BONUS,
@@ -74,6 +78,7 @@ from civitas.domain import (
     effective_market_fee,
     effective_move_energy_cost,
     effective_produce_energy_cost,
+    effective_research_points_per_tick,
     effective_rest_restore,
     effective_retrieval_limit,
     effective_teachings_per_knower,
@@ -94,6 +99,7 @@ from civitas.domain import (
     location_has_active_temple,
     location_has_active_well,
     market_fee_for,
+    research_points_bonus,
     rest_restore_bonus,
     teachings_per_knower_bonus,
 )
@@ -113,6 +119,7 @@ def _world(*, innovations: tuple = ()) -> World:
             CAMP_MATHEMATICS,
             CAMP_ASTRONOMY,
             CAMP_PHILOSOPHY,
+            CAMP_LOGIC,
         ),
         innovations=innovations,
         agents=(Agent.create(agent_id=0, name="A"),),
@@ -1468,6 +1475,47 @@ def test_dialectic_stacks_with_scribe() -> None:
         + WRITING_TEACHINGS_PER_KNOWER_BONUS
         + PHILOSOPHY_TEACHINGS_PER_KNOWER_BONUS
     )
+
+
+def test_syllogism_boosts_research_points_per_tick() -> None:
+    """Active syllogism adds a society-wide research point bonus."""
+    discovered_logic = CAMP_LOGIC.model_copy(update={"discovered": True})
+    active_syllogism = CAMP_SYLLOGISM.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        technologies=(
+            CAMP_FIRE,
+            CAMP_POTTERY,
+            CAMP_IRRIGATION,
+            CAMP_METALLURGY,
+            CAMP_WRITING,
+            CAMP_MATHEMATICS,
+            CAMP_ASTRONOMY,
+            CAMP_PHILOSOPHY,
+            discovered_logic,
+        ),
+        innovations=(
+            CAMP_FIRE_HEARTH,
+            CAMP_POTTERY_CRAFT,
+            CAMP_IRRIGATION_CANAL,
+            CAMP_FORGE,
+            CAMP_SCRIBE,
+            CAMP_ABACUS,
+            CAMP_STAR_CHART,
+            CAMP_DIALECTIC,
+            active_syllogism,
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert research_points_bonus(world) == LOGIC_RESEARCH_POINTS_BONUS
+    assert (
+        effective_research_points_per_tick(world, base=DEFAULT_POINTS_PER_TICK)
+        == DEFAULT_POINTS_PER_TICK + LOGIC_RESEARCH_POINTS_BONUS
+    )
+    bare = _world()
+    assert research_points_bonus(bare) == 0
+    assert effective_research_points_per_tick(bare) == DEFAULT_POINTS_PER_TICK
 
 
 def test_bureaucracy_discounts_market_fee_at_seat() -> None:

@@ -21,11 +21,12 @@ teachings-per-knower bonus (stacking with scribe). Phase 11 adds
 TEMPLE REST restore bonuses (stacking with the global fire-hearth
 innovation), SHRINE DRINK restore bonuses (stacking with WELL),
 SANCTUARY city REST restore bonuses (stacking with fire hearth and
-temple), and SCHOOL teachings-per-knower bonuses (stacking with
-scribe/scriptorium/curriculum/academy/forum/dialectic). The action
-executor, retrieval path, market fills, and knowledge diffusion read
-these helpers; ``EffectsSystem`` only observes coverage. Systems never
-call each other.
+temple), SCHOOL teachings-per-knower bonuses (stacking with
+scribe/scriptorium/curriculum/academy/forum/dialectic), and a global
+SYLLOGISM research-points bonus. The action executor, retrieval path,
+market fills, knowledge diffusion, and research progression read these
+helpers; ``EffectsSystem`` only observes coverage. Systems never call
+each other.
 """
 
 from __future__ import annotations
@@ -49,6 +50,7 @@ from civitas.domain.laws import (
 )
 from civitas.domain.numeric import clamp_unit
 from civitas.domain.production import DEFAULT_PRODUCE_ENERGY_COST
+from civitas.domain.research import DEFAULT_POINTS_PER_TICK
 from civitas.domain.resources import DEFAULT_GATHER_AMOUNT, ResourceKind
 from civitas.domain.retrieval import DEFAULT_RETRIEVAL_LIMIT
 from civitas.domain.time import Tick
@@ -71,6 +73,7 @@ ACADEMY_TEACHINGS_PER_KNOWER_BONUS: int = 1
 FORUM_TEACHINGS_PER_KNOWER_BONUS: int = 1
 SCHOOL_TEACHINGS_PER_KNOWER_BONUS: int = 1
 PHILOSOPHY_TEACHINGS_PER_KNOWER_BONUS: int = 1
+LOGIC_RESEARCH_POINTS_BONUS: int = 1
 WELL_DRINK_RESTORE_BONUS: float = 0.05
 SHRINE_DRINK_RESTORE_BONUS: float = 0.05
 STOREHOUSE_FOOD_GATHER_BONUS: int = 1
@@ -376,6 +379,13 @@ def teachings_per_knower_bonus(world: World) -> int:
     return bonus
 
 
+def research_points_bonus(world: World) -> int:
+    """Return per-tick research point bonus from active logic innovations."""
+    if innovation_kind_is_active(world, InnovationKind.SYLLOGISM):
+        return LOGIC_RESEARCH_POINTS_BONUS
+    return 0
+
+
 def gather_amount_bonus(
     world: World,
     resource: str,
@@ -534,6 +544,17 @@ def effective_teachings_per_knower(
     if agent is not None:
         bonus += curriculum_teachings_bonus_for(world, agent)
     return base + bonus
+
+
+def effective_research_points_per_tick(
+    world: World,
+    *,
+    base: int = DEFAULT_POINTS_PER_TICK,
+) -> int:
+    """Return research points per tick including active syllogism bonus."""
+    if base < 0:
+        return 0
+    return base + research_points_bonus(world)
 
 
 def effective_gather_amount(
