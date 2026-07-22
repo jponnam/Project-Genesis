@@ -68,6 +68,9 @@ def test_default_institutions_seed_camp_council() -> None:
     assert all(
         item.kind is not InstitutionKind.ACADEMY for item in default_institutions()
     )
+    assert all(
+        item.kind is not InstitutionKind.TEMPLE for item in default_institutions()
+    )
 
 
 def test_create_and_lookup_institution() -> None:
@@ -177,6 +180,7 @@ def test_create_bureaucracy_alongside_other_kinds() -> None:
     assert snap.active_archive_count == 1
     assert snap.active_bureaucracy_count == 1
     assert snap.active_academy_count == 0
+    assert snap.active_temple_count == 0
     assert snap.active_count == 4
     assert (
         create_institution(
@@ -214,11 +218,49 @@ def test_create_academy_alongside_other_kinds() -> None:
     assert snap.active_archive_count == 1
     assert snap.active_bureaucracy_count == 1
     assert snap.active_academy_count == 1
+    assert snap.active_temple_count == 0
     assert snap.active_count == 5
     assert (
         create_institution(
             with_academy,
             Institution.create(5, 0, 0, "Second Academy", InstitutionKind.ACADEMY),
+        )
+        is None
+    )
+
+
+def test_create_temple_alongside_other_kinds() -> None:
+    """Temples coexist with other kinds; census counts each kind."""
+    world = _world(
+        Agent.create(agent_id=0, name="A"),
+        institutions=(
+            Institution.create(0, 0, 0, "Council", InstitutionKind.COUNCIL),
+            Institution.create(1, 0, 0, "Camp Guild", InstitutionKind.GUILD),
+            Institution.create(2, 0, 0, "Camp Archive", InstitutionKind.ARCHIVE),
+            Institution.create(
+                3, 0, 0, "Camp Bureaucracy", InstitutionKind.BUREAUCRACY
+            ),
+            Institution.create(4, 0, 0, "Camp Academy", InstitutionKind.ACADEMY),
+        ),
+    )
+    with_temple = create_institution(
+        world,
+        Institution.create(5, 0, 0, "Camp Temple", InstitutionKind.TEMPLE),
+    )
+    assert with_temple is not None
+    assert with_temple.institutions[5].kind is InstitutionKind.TEMPLE
+    snap = census_institutions(with_temple)
+    assert snap.active_council_count == 1
+    assert snap.active_guild_count == 1
+    assert snap.active_archive_count == 1
+    assert snap.active_bureaucracy_count == 1
+    assert snap.active_academy_count == 1
+    assert snap.active_temple_count == 1
+    assert snap.active_count == 6
+    assert (
+        create_institution(
+            with_temple,
+            Institution.create(6, 0, 0, "Second Temple", InstitutionKind.TEMPLE),
         )
         is None
     )
@@ -287,6 +329,7 @@ def test_census_institutions_counts() -> None:
     assert snap.active_archive_count == 0
     assert snap.active_bureaucracy_count == 0
     assert snap.active_academy_count == 0
+    assert snap.active_temple_count == 0
     assert snap.total_budget == 0
     assert snap.funded_count == 0
     assert census_institutions(world) == snap

@@ -123,16 +123,15 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 11 — Milestone 2: Ethics laws**
+**Phase 11 — Milestone 3: Temple institutions**
 
-``LawKind.ETHICS`` is one active statute per government. Living subject
-learners under an active ethics law get
-``ETHICS_MIN_TEACH_TRUST_DELTA`` (``-0.05``) via
-``ethics_min_teach_trust_delta_for``; peer diffusion uses
-``clamp_unit(base + delta)`` so the effective teach-trust floor is
-lower (easier knowledge spread). Census
-``active_ethics_count`` and ``LawsObserved`` track active ethics
-statutes.
+``InstitutionKind.TEMPLE`` is a durable government-attached organization
+with seat, officer, and budget like academies and guilds. An active
+temple at an agent's location grants ``+0.05`` REST restore
+(``TEMPLE_REST_RESTORE_BONUS``), stacking with the society-wide fire
+hearth bonus via ``effective_rest_restore``. Census tracks
+``active_temple_count`` on ``InstitutionsObserved``. No temple is
+seeded by default.
 
 ### Completed
 
@@ -224,6 +223,7 @@ JSONL storage → `civitas run`
 **Phase 11:**
 - Milestone 1: Philosophy technology
 - Milestone 2: Ethics laws
+- Milestone 3: Temple institutions
 
 ## License
 

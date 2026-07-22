@@ -17,10 +17,11 @@ CALENDAR law retrieval-limit bonuses for living subjects
 (stacking with archive, library, observatory, and star chart),
 and FORUM city teachings-per-knower bonuses (stacking with
 academy/scriptorium/curriculum/scribe), plus a global DIALECTIC
-teachings-per-knower bonus (stacking with scribe). The action
-executor, retrieval path, market fills, and knowledge diffusion
-read these helpers; ``EffectsSystem`` only observes coverage.
-Systems never call each other.
+teachings-per-knower bonus (stacking with scribe). Phase 11 adds
+TEMPLE REST restore bonuses (stacking with the global fire-hearth
+innovation). The action executor, retrieval path, market fills, and
+knowledge diffusion read these helpers; ``EffectsSystem`` only observes
+coverage. Systems never call each other.
 """
 
 from __future__ import annotations
@@ -55,6 +56,7 @@ if TYPE_CHECKING:
     from civitas.domain.world import World
 
 FIRE_HEARTH_REST_BONUS: float = 0.05
+TEMPLE_REST_RESTORE_BONUS: float = 0.05
 POTTERY_WATER_GATHER_BONUS: int = 1
 IRRIGATION_WATER_GATHER_BONUS: int = 1
 METALLURGY_STONE_GATHER_BONUS: int = 1
@@ -248,6 +250,22 @@ def location_has_active_academy(
     )
 
 
+def location_has_active_temple(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active TEMPLE is seated at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InstitutionKind.TEMPLE and item.location_id == target
+        for item in active_institutions(world)
+    )
+
+
 def location_has_active_library(
     world: World,
     location_id: LocationId | int,
@@ -266,11 +284,29 @@ def location_has_active_forum(
     return city is not None and city.active and city.kind is CityKind.FORUM
 
 
-def rest_restore_bonus(world: World) -> float:
-    """Return the REST restore bonus from active fire-hearth innovations."""
+def rest_restore_bonus(
+    world: World,
+    *,
+    location_id: LocationId | int | None = None,
+    agent: Agent | None = None,
+) -> float:
+    """Return the REST restore bonus from fire hearth and temple seat.
+
+    An active FIRE_HEARTH innovation contributes ``FIRE_HEARTH_REST_BONUS``
+    society-wide. An active TEMPLE at ``location_id`` or the agent's
+    location contributes ``TEMPLE_REST_RESTORE_BONUS``. Both stack.
+    """
+    bonus = 0.0
     if innovation_kind_is_active(world, InnovationKind.FIRE_HEARTH):
-        return FIRE_HEARTH_REST_BONUS
-    return 0.0
+        bonus += FIRE_HEARTH_REST_BONUS
+    seat = (
+        location_id
+        if location_id is not None
+        else (None if agent is None else agent.location_id)
+    )
+    if seat is not None and location_has_active_temple(world, seat):
+        bonus += TEMPLE_REST_RESTORE_BONUS
+    return bonus
 
 
 def teachings_per_knower_bonus(world: World) -> int:
@@ -389,9 +425,18 @@ def effective_rest_restore(
     world: World,
     *,
     base: float = DEFAULT_REST_RESTORE,
+    location_id: LocationId | int | None = None,
+    agent: Agent | None = None,
 ) -> float:
-    """Return REST restore amount including society innovation bonuses."""
-    return clamp_unit(base + rest_restore_bonus(world))
+    """Return REST restore amount including fire-hearth and temple bonuses.
+
+    Fire-hearth is society-wide. Temple bonus applies only when
+    ``location_id`` or ``agent`` places the resting agent at an active
+    TEMPLE seat. Both stack via ``rest_restore_bonus``.
+    """
+    return clamp_unit(
+        base + rest_restore_bonus(world, location_id=location_id, agent=agent)
+    )
 
 
 def effective_teachings_per_knower(

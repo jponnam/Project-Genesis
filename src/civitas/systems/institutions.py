@@ -83,6 +83,7 @@ class InstitutionSystem:
                     active_archive_count=snap.active_archive_count,
                     active_bureaucracy_count=snap.active_bureaucracy_count,
                     active_academy_count=snap.active_academy_count,
+                    active_temple_count=snap.active_temple_count,
                     total_budget=snap.total_budget,
                     funded_count=snap.funded_count,
                 )

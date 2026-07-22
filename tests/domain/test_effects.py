@@ -48,6 +48,7 @@ from civitas.domain import (
     ROAD_MOVE_ENERGY_DISCOUNT,
     SCRIPTORIUM_TEACHINGS_PER_KNOWER_BONUS,
     STOREHOUSE_FOOD_GATHER_BONUS,
+    TEMPLE_REST_RESTORE_BONUS,
     WELL_DRINK_RESTORE_BONUS,
     WRITING_TEACHINGS_PER_KNOWER_BONUS,
     Agent,
@@ -84,6 +85,7 @@ from civitas.domain import (
     location_has_active_road,
     location_has_active_scriptorium,
     location_has_active_storehouse,
+    location_has_active_temple,
     location_has_active_well,
     market_fee_for,
     rest_restore_bonus,
@@ -120,6 +122,52 @@ def test_fire_hearth_boosts_rest_restore() -> None:
     assert effective_rest_restore(with_fire) == pytest.approx(
         DEFAULT_REST_RESTORE + FIRE_HEARTH_REST_BONUS
     )
+
+
+def test_temple_boosts_rest_restore_and_stacks_with_fire_hearth() -> None:
+    """Active temple seat bonus stacks with society-wide fire hearth."""
+    temple_only = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        institutions=(
+            Institution.create(0, 0, 0, "Camp Temple", InstitutionKind.TEMPLE),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = temple_only.agents[0]
+    assert location_has_active_temple(temple_only, agent.location_id) is True
+    assert rest_restore_bonus(temple_only, agent=agent) == TEMPLE_REST_RESTORE_BONUS
+    assert effective_rest_restore(temple_only, agent=agent) == pytest.approx(
+        DEFAULT_REST_RESTORE + TEMPLE_REST_RESTORE_BONUS
+    )
+    # Without agent/location, temple (seat-scoped) does not apply.
+    assert rest_restore_bonus(temple_only) == 0.0
+    assert effective_rest_restore(temple_only) == pytest.approx(DEFAULT_REST_RESTORE)
+
+    stacked = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        institutions=(
+            Institution.create(0, 0, 0, "Camp Temple", InstitutionKind.TEMPLE),
+        ),
+        technologies=(CAMP_FIRE,),
+        innovations=(CAMP_FIRE_HEARTH,),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    stacked_agent = stacked.agents[0]
+    assert location_has_active_temple(stacked, stacked_agent.location_id) is True
+    assert rest_restore_bonus(stacked, agent=stacked_agent) == pytest.approx(
+        FIRE_HEARTH_REST_BONUS + TEMPLE_REST_RESTORE_BONUS
+    )
+    assert effective_rest_restore(stacked, agent=stacked_agent) == pytest.approx(
+        DEFAULT_REST_RESTORE + FIRE_HEARTH_REST_BONUS + TEMPLE_REST_RESTORE_BONUS
+    )
+    # Fire hearth still applies society-wide without a seat.
+    assert rest_restore_bonus(stacked) == FIRE_HEARTH_REST_BONUS
+    bare = _world()
+    assert location_has_active_temple(bare, bare.agents[0].location_id) is False
 
 
 def test_pottery_and_irrigation_stack_water_gather_bonus() -> None:

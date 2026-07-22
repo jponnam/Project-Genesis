@@ -5,8 +5,16 @@ from __future__ import annotations
 import pytest
 
 from civitas.domain import (
+    CAMP_FIRE,
+    CAMP_FIRE_HEARTH,
     CAMP_LOCATION,
+    DEFAULT_REST_RESTORE,
+    FIRE_HEARTH_REST_BONUS,
+    TEMPLE_REST_RESTORE_BONUS,
     Agent,
+    Government,
+    Institution,
+    InstitutionKind,
     NeedDecayed,
     Needs,
     SimulationConfig,
@@ -63,3 +71,27 @@ def test_missing_agent_raises() -> None:
     world = _world_tired()
     with pytest.raises(ValueError, match="not found"):
         EnergySystem().rest(world, 9)
+
+
+def test_rest_applies_temple_and_fire_hearth_bonuses() -> None:
+    """EnergySystem.rest passes the agent so temple seat bonus stacks with fire."""
+    agent = Agent.create(
+        agent_id=0,
+        name="A",
+        needs=Needs(food=1.0, water=1.0, energy=0.5, social=1.0, safety=1.0),
+    )
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        institutions=(
+            Institution.create(0, 0, 0, "Camp Temple", InstitutionKind.TEMPLE),
+        ),
+        technologies=(CAMP_FIRE,),
+        innovations=(CAMP_FIRE_HEARTH,),
+        agents=(agent,),
+    )
+    updated = EnergySystem().rest(world, 0)
+    assert updated.agents[0].needs.energy == pytest.approx(
+        0.5 + DEFAULT_REST_RESTORE + FIRE_HEARTH_REST_BONUS + TEMPLE_REST_RESTORE_BONUS
+    )
