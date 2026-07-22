@@ -10,14 +10,16 @@ architects, plus Phase 14 Milestone 3 caravans, Milestone 6
 merchants, and Milestone 8 cartographers, plus Phase 15 Milestone 3
 granaries, Milestone 6 husbandmen, and Milestone 8 agronomists, plus
 Phase 16 Milestone 3 weavers, Milestone 6 dyers, and Milestone 8
-tailors, plus Phase 17 Milestone 3 miners and Milestone 6 smelters.
+tailors, plus Phase 17 Milestone 3 miners, Milestone 6 smelters, and
+Milestone 8 smiths.
 Institutions are gov-attached civic organizations with a seat location
 inside the government's jurisdiction, an optional officer, and an
 integer budget funded from the parent government treasury. Councils,
 guilds, archives, bureaucracies, academies, temples, schools, lyceums,
 hospitals, apothecaries, collegia, workshops, masons, architects,
 caravans, merchants, cartographers, granaries, husbandmen,
-agronomists, weavers, dyers, tailors, miners, and smelters coexist; this
+agronomists, weavers, dyers, tailors, miners, smelters, and smiths
+coexist; this
 package seeds a single ``COUNCIL``. Writing-gated archive creation is
 a later milestone.
 """
@@ -67,6 +69,7 @@ class InstitutionKind(StrEnum):
     TAILOR = "tailor"
     MINER = "miner"
     SMELTER = "smelter"
+    SMITH = "smith"
 
 
 class Institution(BaseModel):
@@ -161,6 +164,7 @@ class InstitutionCensus(BaseModel):
     active_tailor_count: NonNegativeInt = 0
     active_miner_count: NonNegativeInt = 0
     active_smelter_count: NonNegativeInt = 0
+    active_smith_count: NonNegativeInt = 0
     total_budget: NonNegativeInt = 0
     funded_count: NonNegativeInt = 0
 
@@ -510,6 +514,9 @@ def census_institutions(world: World) -> InstitutionCensus:
     active_smelters = sum(
         1 for institution in active if institution.kind is InstitutionKind.SMELTER
     )
+    active_smiths = sum(
+        1 for institution in active if institution.kind is InstitutionKind.SMITH
+    )
     total_budget = institution_budget_total(world)
     funded_count = sum(1 for institution in institutions if institution.budget > 0)
     return InstitutionCensus(
@@ -545,6 +552,7 @@ def census_institutions(world: World) -> InstitutionCensus:
         active_tailor_count=active_tailors,
         active_miner_count=active_miners,
         active_smelter_count=active_smelters,
+        active_smith_count=active_smiths,
         total_budget=total_budget,
         funded_count=funded_count,
     )
