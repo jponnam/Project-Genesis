@@ -124,11 +124,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 12 — Milestone 3: Hospital institutions**
+**Phase 12 — Milestone 4: Clinic infrastructure**
 
-``InstitutionKind.HOSPITAL`` adds a gov-attached public health institution.
-An active hospital at the agent's location grants ``+0.05`` REST restore,
-stacking with fire hearth, remedy, temple, and sanctuary bonuses.
+``InfrastructureKind.CLINIC`` adds paid public-health infrastructure.
+An active clinic at the agent's location grants ``+0.05`` DRINK restore,
+stacking with well, shrine, and sanitation law bonuses.
 
 ### Completed
 
@@ -235,6 +235,7 @@ JSONL storage → `civitas run`
 - Milestone 1: Medicine technology
 - Milestone 2: Sanitation laws
 - Milestone 3: Hospital institutions
+- Milestone 4: Clinic infrastructure
 
 ## License
 

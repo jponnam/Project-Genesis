@@ -41,6 +41,7 @@ def test_observe_emits_without_mutating_world() -> None:
     assert events[0].active_stoa_count == 0
     assert events[0].active_observatory_count == 0
     assert events[0].active_shrine_count == 0
+    assert events[0].active_clinic_count == 0
 
 
 def test_observe_emits_active_stoa_count() -> None:
@@ -64,6 +65,29 @@ def test_observe_emits_active_stoa_count() -> None:
     assert len(events) == 1
     assert events[0].active_stoa_count == 1
     assert events[0].active_scriptorium_count == 0
+
+
+def test_observe_emits_active_clinic_count() -> None:
+    """observe includes active clinic counts in the infrastructure event."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        infrastructure=(
+            Infrastructure.create(0, 0, 0, 0, "Camp Clinic", InfrastructureKind.CLINIC),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    bus = EventBus()
+    updated = InfrastructureSystem().observe(world, bus=bus)
+    assert updated == world
+    events = [
+        event for event in bus.history if isinstance(event, InfrastructuresObserved)
+    ]
+    assert len(events) == 1
+    assert events[0].active_clinic_count == 1
+    assert events[0].active_shrine_count == 0
 
 
 def test_observe_can_suppress_events() -> None:

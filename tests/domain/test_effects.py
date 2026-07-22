@@ -35,6 +35,7 @@ from civitas.domain import (
     CAMP_STAR_CHART,
     CAMP_SYLLOGISM,
     CAMP_WRITING,
+    CLINIC_DRINK_RESTORE_BONUS,
     CURRICULUM_TEACHINGS_PER_KNOWER_BONUS,
     DEFAULT_DRINK_RESTORE,
     DEFAULT_GATHER_AMOUNT,
@@ -104,6 +105,7 @@ from civitas.domain import (
     location_has_active_agora,
     location_has_active_archive,
     location_has_active_bureaucracy,
+    location_has_active_clinic,
     location_has_active_forum,
     location_has_active_guild,
     location_has_active_hospital,
@@ -1140,8 +1142,39 @@ def test_shrine_boosts_drink_restore_for_colocated_agents() -> None:
     )
 
 
-def test_well_and_shrine_drink_restore_bonuses_stack() -> None:
-    """WELL and SHRINE drink restore bonuses stack at the same seat."""
+def test_clinic_boosts_drink_restore_for_colocated_agents() -> None:
+    """Active clinics add a DRINK restore bonus at their seat location."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        infrastructure=(
+            Infrastructure.create(0, 0, 0, 0, "Camp Clinic", InfrastructureKind.CLINIC),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_clinic(world, agent.location_id) is True
+    assert drink_restore_bonus(world, agent) == CLINIC_DRINK_RESTORE_BONUS
+    assert effective_drink_restore(world, agent) == pytest.approx(
+        DEFAULT_DRINK_RESTORE + CLINIC_DRINK_RESTORE_BONUS
+    )
+    bare = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_clinic(bare, bare.agents[0].location_id) is False
+    assert drink_restore_bonus(bare, bare.agents[0]) == 0.0
+    assert effective_drink_restore(bare, bare.agents[0]) == pytest.approx(
+        DEFAULT_DRINK_RESTORE
+    )
+
+
+def test_well_shrine_and_clinic_drink_restore_bonuses_stack() -> None:
+    """WELL, SHRINE, and CLINIC drink restore bonuses stack at the same seat."""
     world = World(
         config=SimulationConfig(agent_count=1, seed=1),
         locations=(CAMP_LOCATION,),
@@ -1150,17 +1183,24 @@ def test_well_and_shrine_drink_restore_bonuses_stack() -> None:
         infrastructure=(
             Infrastructure.create(0, 0, 0, 0, "Camp Well", InfrastructureKind.WELL),
             Infrastructure.create(1, 0, 0, 0, "Camp Shrine", InfrastructureKind.SHRINE),
+            Infrastructure.create(2, 0, 0, 0, "Camp Clinic", InfrastructureKind.CLINIC),
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
     )
     agent = world.agents[0]
     assert location_has_active_well(world, agent.location_id) is True
     assert location_has_active_shrine(world, agent.location_id) is True
+    assert location_has_active_clinic(world, agent.location_id) is True
     assert drink_restore_bonus(world, agent) == pytest.approx(
-        WELL_DRINK_RESTORE_BONUS + SHRINE_DRINK_RESTORE_BONUS
+        WELL_DRINK_RESTORE_BONUS
+        + SHRINE_DRINK_RESTORE_BONUS
+        + CLINIC_DRINK_RESTORE_BONUS
     )
     assert effective_drink_restore(world, agent) == pytest.approx(
-        DEFAULT_DRINK_RESTORE + WELL_DRINK_RESTORE_BONUS + SHRINE_DRINK_RESTORE_BONUS
+        DEFAULT_DRINK_RESTORE
+        + WELL_DRINK_RESTORE_BONUS
+        + SHRINE_DRINK_RESTORE_BONUS
+        + CLINIC_DRINK_RESTORE_BONUS
     )
 
 
@@ -1184,8 +1224,8 @@ def test_sanitation_boosts_drink_restore_for_subjects() -> None:
     assert effective_drink_restore(bare, bare.agents[0]) == DEFAULT_DRINK_RESTORE
 
 
-def test_sanitation_stacks_with_well_and_shrine_drink_restore() -> None:
-    """Sanitation subject bonus stacks with colocated well and shrine."""
+def test_sanitation_stacks_with_well_shrine_and_clinic_drink_restore() -> None:
+    """Sanitation subject bonus stacks with colocated well, shrine, and clinic."""
     world = World(
         config=SimulationConfig(agent_count=1, seed=1),
         locations=(CAMP_LOCATION,),
@@ -1194,6 +1234,7 @@ def test_sanitation_stacks_with_well_and_shrine_drink_restore() -> None:
         infrastructure=(
             Infrastructure.create(0, 0, 0, 0, "Camp Well", InfrastructureKind.WELL),
             Infrastructure.create(1, 0, 0, 0, "Camp Shrine", InfrastructureKind.SHRINE),
+            Infrastructure.create(2, 0, 0, 0, "Camp Clinic", InfrastructureKind.CLINIC),
         ),
         laws=(Law.create(0, 0, "Camp Sanitation", LawKind.SANITATION),),
         agents=(Agent.create(agent_id=0, name="A"),),
@@ -1202,12 +1243,14 @@ def test_sanitation_stacks_with_well_and_shrine_drink_restore() -> None:
     assert drink_restore_bonus(world, agent) == pytest.approx(
         WELL_DRINK_RESTORE_BONUS
         + SHRINE_DRINK_RESTORE_BONUS
+        + CLINIC_DRINK_RESTORE_BONUS
         + SANITATION_DRINK_RESTORE_BONUS
     )
     assert effective_drink_restore(world, agent) == pytest.approx(
         DEFAULT_DRINK_RESTORE
         + WELL_DRINK_RESTORE_BONUS
         + SHRINE_DRINK_RESTORE_BONUS
+        + CLINIC_DRINK_RESTORE_BONUS
         + SANITATION_DRINK_RESTORE_BONUS
     )
 
