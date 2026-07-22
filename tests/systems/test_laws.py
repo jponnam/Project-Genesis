@@ -37,6 +37,7 @@ def test_observe_emits_laws_observed_without_mutating_world() -> None:
     assert events[0].active_building_codes_count == 0
     assert events[0].active_zoning_count == 0
     assert events[0].active_passage_count == 0
+    assert events[0].active_customs_count == 0
 
 
 def test_observe_emits_active_assembly_count() -> None:
@@ -133,6 +134,22 @@ def test_observe_emits_active_passage_count() -> None:
     events = [event for event in bus.history if isinstance(event, LawsObserved)]
     assert len(events) == 1
     assert events[0].active_passage_count == 1
+
+
+def test_observe_emits_active_customs_count() -> None:
+    """observe reports active CUSTOMS laws in LawsObserved."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(Law.create(0, 0, "Camp Customs", LawKind.CUSTOMS),),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    bus = EventBus()
+    LawSystem().observe(world, bus=bus)
+    events = [event for event in bus.history if isinstance(event, LawsObserved)]
+    assert len(events) == 1
+    assert events[0].active_customs_count == 1
 
 
 def test_observe_can_suppress_events() -> None:

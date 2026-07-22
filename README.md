@@ -126,12 +126,12 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 14 Milestone 10: Seafaring technology**
+**Phase 14 Milestone 11: Customs laws**
 
-``TechnologyKind.SEAFARING`` (id 18) requires cartography. Research
-threshold 10. ``InnovationKind.SAIL`` raises water gather by 1
-society-wide when active, stacking with pottery craft and irrigation
-canal.
+``LawKind.CUSTOMS`` grants living subjects -0.02 PRODUCE energy cost
+when active. At most one active customs statute per government. Stacks
+with guild, workshop, foundry, abacus, and pulley. Not seeded in
+``default_laws``.
 
 ### Completed
 
@@ -273,6 +273,7 @@ JSONL storage → `civitas run`
 - Milestone 8: Cartographer institutions
 - Milestone 9: Beacon infrastructure
 - Milestone 10: Seafaring technology
+- Milestone 11: Customs laws
 
 ## License
 

@@ -19,9 +19,10 @@ statutes grant living subjects +0.05 REST restore (Phase 12 M11).
 Active ``BUILDING_CODES`` statutes grant living subjects -0.02 MOVE
 energy cost (Phase 13 M2). Active ``ZONING`` statutes grant living
 subjects +0.05 EAT restore (Phase 13 M11). Active ``PASSAGE`` statutes
-grant living subjects -0.02 MOVE energy cost (Phase 14 M2).
-Elections (voting) are a separate Phase 5 aggregate, as are
-institutions.
+grant living subjects -0.02 MOVE energy cost (Phase 14 M2). Active
+``CUSTOMS`` statutes grant living subjects -0.02 PRODUCE energy cost
+(Phase 14 M11). Elections (voting) are a separate Phase 5 aggregate,
+as are institutions.
 """
 
 from __future__ import annotations
@@ -55,6 +56,7 @@ class LawKind(StrEnum):
     BUILDING_CODES = "building_codes"
     ZONING = "zoning"
     PASSAGE = "passage"
+    CUSTOMS = "customs"
 
 
 # Statute kinds that allow at most one active law per government.
@@ -71,6 +73,7 @@ _UNIQUE_ACTIVE_KINDS: frozenset[LawKind] = frozenset(
         LawKind.BUILDING_CODES,
         LawKind.ZONING,
         LawKind.PASSAGE,
+        LawKind.CUSTOMS,
     }
 )
 
@@ -101,6 +104,9 @@ ZONING_EAT_RESTORE_BONUS: float = 0.05
 # Kind-only MOVE energy discount for living subjects under active PASSAGE.
 PASSAGE_MOVE_ENERGY_DISCOUNT: float = 0.02
 
+# Kind-only PRODUCE energy discount for living subjects under active CUSTOMS.
+CUSTOMS_PRODUCE_ENERGY_DISCOUNT: float = 0.02
+
 
 class Law(BaseModel):
     """One statute enacted by a government."""
@@ -117,7 +123,8 @@ class Law(BaseModel):
         description=(
             "TAX_SCHEDULE flat poll amount, or MARKET_FEE flat fill fee; "
             "ignored by CURRICULUM, CALENDAR, ETHICS, ASSEMBLY, SANITATION, "
-            "QUARANTINE, BUILDING_CODES, ZONING, PASSAGE, and other kinds."
+            "QUARANTINE, BUILDING_CODES, ZONING, PASSAGE, CUSTOMS, and other "
+            "kinds."
         ),
     )
     rate_bps: NonNegativeInt = Field(
@@ -187,6 +194,7 @@ class LawCensus(BaseModel):
     active_building_codes_count: NonNegativeInt
     active_zoning_count: NonNegativeInt = 0
     active_passage_count: NonNegativeInt = 0
+    active_customs_count: NonNegativeInt = 0
 
 
 def law_by_id(world: World, law_id: LawId | int) -> Law | None:
@@ -545,6 +553,36 @@ def passage_move_discount_for(world: World, agent: Agent) -> float:
     return PASSAGE_MOVE_ENERGY_DISCOUNT
 
 
+def active_customs_law(
+    world: World,
+    government_id: GovernmentId | int,
+) -> Law | None:
+    """Return the active customs statute for ``government_id``, if any.
+
+    When multiple active ``CUSTOMS`` laws exist (should not under uniqueness
+    rules), the lowest ``law_id`` wins.
+    """
+    for law in active_laws(world, government_id):
+        if law.kind == LawKind.CUSTOMS:
+            return law
+    return None
+
+
+def customs_produce_discount_for(world: World, agent: Agent) -> float:
+    """Return -0.02 PRODUCE cost when ``agent`` is under active CUSTOMS.
+
+    The statute kind alone enables the discount; ``flat_amount`` is ignored.
+    """
+    if not agent.is_alive():
+        return 0.0
+    government = government_at(world, agent.location_id)
+    if government is None:
+        return 0.0
+    if active_customs_law(world, government.government_id) is None:
+        return 0.0
+    return CUSTOMS_PRODUCE_ENERGY_DISCOUNT
+
+
 def _has_active_kind(
     world: World,
     government_id: GovernmentId,
@@ -625,6 +663,7 @@ def census_laws(world: World) -> LawCensus:
     )
     active_zoning = sum(1 for law in active if law.kind == LawKind.ZONING)
     active_passage = sum(1 for law in active if law.kind == LawKind.PASSAGE)
+    active_customs = sum(1 for law in active if law.kind == LawKind.CUSTOMS)
     return LawCensus(
         tick=world.tick,
         law_count=len(laws),
@@ -642,6 +681,7 @@ def census_laws(world: World) -> LawCensus:
         active_building_codes_count=active_building_codes,
         active_zoning_count=active_zoning,
         active_passage_count=active_passage,
+        active_customs_count=active_customs,
     )
 
 
@@ -651,6 +691,7 @@ __all__ = [
     "CALENDAR_RETRIEVAL_LIMIT_BONUS",
     "CAMP_POLL_TAX_LAW",
     "CURRICULUM_TEACHINGS_PER_KNOWER_BONUS",
+    "CUSTOMS_PRODUCE_ENERGY_DISCOUNT",
     "ETHICS_MIN_TEACH_TRUST_DELTA",
     "PASSAGE_MOVE_ENERGY_DISCOUNT",
     "QUARANTINE_REST_RESTORE_BONUS",
@@ -663,6 +704,7 @@ __all__ = [
     "active_building_codes_law",
     "active_calendar_law",
     "active_curriculum_law",
+    "active_customs_law",
     "active_ethics_law",
     "active_laws",
     "active_market_fee_law",
@@ -676,6 +718,7 @@ __all__ = [
     "calendar_retrieval_bonus_for",
     "census_laws",
     "curriculum_teachings_bonus_for",
+    "customs_produce_discount_for",
     "default_laws",
     "enact_law",
     "ethics_min_teach_trust_delta_for",
