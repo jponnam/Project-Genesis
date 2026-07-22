@@ -124,15 +124,17 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 | **13** | Engineering and construction |
 | **14** | Navigation and trade routes |
 | **15** | Agriculture and husbandry |
+| **16** | Textiles and craft goods |
 
 ## Current Milestone
 
-**Phase 15 Milestone 12: Pastoral cities**
+**Phase 16 Milestone 1: Textiles technology**
 
-``CityKind.PASTORAL`` is a non-capital specialized seat. Active pastorals
-grant a seat-scoped wood gather bonus, stacking with the scaffold seat,
-the coppice innovation society-wide, and the conservation subject bonus.
-Not seeded in ``default_cities()``.
+``TechnologyKind.TEXTILES`` (id 22) is gated on forestry, with an inactive
+``LOOM`` innovation that grants a society-wide PRODUCE energy discount when
+active. The discount stacks with guild, workshop, foundry, abacus
+(mathematics), pulley (engineering), and the customs law subject discount.
+Opens Phase 16.
 
 ### Completed
 
@@ -290,6 +292,9 @@ JSONL storage → `civitas run`
 - Milestone 10: Forestry technology
 - Milestone 11: Conservation laws
 - Milestone 12: Pastoral cities
+
+**Phase 16:**
+- Milestone 1: Textiles technology
 
 ## License
 

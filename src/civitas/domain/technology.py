@@ -49,6 +49,7 @@ class TechnologyKind(StrEnum):
     AGRICULTURE = "agriculture"
     CROP_ROTATION = "crop_rotation"
     FORESTRY = "forestry"
+    TEXTILES = "textiles"
 
 
 class Technology(BaseModel):
@@ -251,6 +252,13 @@ CAMP_FORESTRY: Technology = Technology.create(
     discovered=False,
     prerequisite_ids=(20,),
 )
+CAMP_TEXTILES: Technology = Technology.create(
+    22,
+    "Camp Textiles",
+    TechnologyKind.TEXTILES,
+    discovered=False,
+    prerequisite_ids=(21,),
+)
 
 
 def default_technologies() -> tuple[Technology, ...]:
@@ -278,6 +286,7 @@ def default_technologies() -> tuple[Technology, ...]:
         CAMP_AGRICULTURE,
         CAMP_CROP_ROTATION,
         CAMP_FORESTRY,
+        CAMP_TEXTILES,
     )
 
 
@@ -312,6 +321,7 @@ class TechnologyCensus(BaseModel):
     discovered_agriculture_count: NonNegativeInt = 0
     discovered_crop_rotation_count: NonNegativeInt = 0
     discovered_forestry_count: NonNegativeInt = 0
+    discovered_textiles_count: NonNegativeInt = 0
     locked_count: NonNegativeInt
     researchable_count: NonNegativeInt
 
@@ -447,6 +457,7 @@ def census_technologies(world: World) -> TechnologyCensus:
         1 for tech in discovered if tech.kind is TechnologyKind.CROP_ROTATION
     )
     forestry = sum(1 for tech in discovered if tech.kind is TechnologyKind.FORESTRY)
+    textiles = sum(1 for tech in discovered if tech.kind is TechnologyKind.TEXTILES)
     return TechnologyCensus(
         tick=world.tick,
         technology_count=len(technologies),
@@ -474,6 +485,7 @@ def census_technologies(world: World) -> TechnologyCensus:
         discovered_agriculture_count=agriculture,
         discovered_crop_rotation_count=crop_rotation,
         discovered_forestry_count=forestry,
+        discovered_textiles_count=textiles,
         locked_count=len(locked),
         researchable_count=len(researchable),
     )
