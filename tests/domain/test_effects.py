@@ -17,12 +17,14 @@ from civitas.domain import (
     CALENDAR_RETRIEVAL_LIMIT_BONUS,
     CAMP_ABACUS,
     CAMP_ANATOMY,
+    CAMP_ASEPSIS,
     CAMP_ASTRONOMY,
     CAMP_DIALECTIC,
     CAMP_DISSECTION,
     CAMP_FIRE,
     CAMP_FIRE_HEARTH,
     CAMP_FORGE,
+    CAMP_HYGIENE,
     CAMP_IRRIGATION,
     CAMP_IRRIGATION_CANAL,
     CAMP_LOCATION,
@@ -56,6 +58,7 @@ from civitas.domain import (
     FORUM_TEACHINGS_PER_KNOWER_BONUS,
     GUILD_PRODUCE_ENERGY_DISCOUNT,
     HOSPITAL_REST_RESTORE_BONUS,
+    HYGIENE_DRINK_RESTORE_BONUS,
     INFIRMARY_REST_RESTORE_BONUS,
     IRRIGATION_WATER_GATHER_BONUS,
     LIBRARY_RETRIEVAL_LIMIT_BONUS,
@@ -1485,6 +1488,38 @@ def test_apothecary_boosts_drink_restore_for_colocated_agents() -> None:
     )
 
 
+def test_asepsis_boosts_drink_restore_society_wide() -> None:
+    """Active asepsis adds a DRINK restore bonus for every agent."""
+    discovered_hygiene = CAMP_HYGIENE.model_copy(update={"discovered": True})
+    active_asepsis = CAMP_ASEPSIS.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        technologies=tuple(
+            discovered_hygiene
+            if tech.technology_id == CAMP_HYGIENE.technology_id
+            else tech
+            for tech in default_technologies()
+        ),
+        innovations=(active_asepsis,),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert drink_restore_bonus(world, agent) == HYGIENE_DRINK_RESTORE_BONUS
+    assert effective_drink_restore(world, agent) == pytest.approx(
+        DEFAULT_DRINK_RESTORE + HYGIENE_DRINK_RESTORE_BONUS
+    )
+    snap = census_effects(world)
+    assert snap.drink_restore_bps == round(
+        (DEFAULT_DRINK_RESTORE + HYGIENE_DRINK_RESTORE_BONUS) * 10_000
+    )
+    bare = _world()
+    assert drink_restore_bonus(bare, bare.agents[0]) == 0.0
+    assert effective_drink_restore(bare, bare.agents[0]) == pytest.approx(
+        DEFAULT_DRINK_RESTORE
+    )
+
+
 def test_well_shrine_clinic_and_apothecary_drink_restore_bonuses_stack() -> None:
     """WELL, SHRINE, CLINIC, and APOTHECARY bonuses stack at the same seat."""
     world = World(
@@ -1544,13 +1579,22 @@ def test_sanitation_boosts_drink_restore_for_subjects() -> None:
     assert effective_drink_restore(bare, bare.agents[0]) == DEFAULT_DRINK_RESTORE
 
 
-def test_sanitation_stacks_with_all_drink_restore_seats() -> None:
-    """Sanitation subject bonus stacks with every colocated drink source."""
+def test_sanitation_and_asepsis_stack_with_all_drink_restore_seats() -> None:
+    """Sanitation and asepsis stack with every colocated drink source."""
+    discovered_hygiene = CAMP_HYGIENE.model_copy(update={"discovered": True})
+    active_asepsis = CAMP_ASEPSIS.model_copy(update={"active": True})
     world = World(
         config=SimulationConfig(agent_count=1, seed=1),
         locations=(CAMP_LOCATION,),
         governments=(Government.create(0, "Camp", 0, (0,)),),
         cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        technologies=tuple(
+            discovered_hygiene
+            if tech.technology_id == CAMP_HYGIENE.technology_id
+            else tech
+            for tech in default_technologies()
+        ),
+        innovations=(active_asepsis,),
         infrastructure=(
             Infrastructure.create(0, 0, 0, 0, "Camp Well", InfrastructureKind.WELL),
             Infrastructure.create(1, 0, 0, 0, "Camp Shrine", InfrastructureKind.SHRINE),
@@ -1571,6 +1615,7 @@ def test_sanitation_stacks_with_all_drink_restore_seats() -> None:
         + CLINIC_DRINK_RESTORE_BONUS
         + APOTHECARY_DRINK_RESTORE_BONUS
         + SANITATION_DRINK_RESTORE_BONUS
+        + HYGIENE_DRINK_RESTORE_BONUS
     )
     assert effective_drink_restore(world, agent) == pytest.approx(
         DEFAULT_DRINK_RESTORE
@@ -1579,6 +1624,7 @@ def test_sanitation_stacks_with_all_drink_restore_seats() -> None:
         + CLINIC_DRINK_RESTORE_BONUS
         + APOTHECARY_DRINK_RESTORE_BONUS
         + SANITATION_DRINK_RESTORE_BONUS
+        + HYGIENE_DRINK_RESTORE_BONUS
     )
 
 

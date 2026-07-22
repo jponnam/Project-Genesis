@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from civitas.domain import (
+    ANATOMY_FACT,
     ASTRONOMY_FACT,
     CAMP_LOCATION,
     FIRE_FACT,
+    HYGIENE_FACT,
     IRRIGATION_FACT,
     LOGIC_FACT,
     MATHEMATICS_FACT,
@@ -81,11 +83,13 @@ def test_apply_reflections_updates_beliefs_and_memory() -> None:
 
 
 def test_reflection_prompt_accepts_full_technology_fact_content() -> None:
-    """Reflection prompt length still fits after adding medicine facts."""
+    """Reflection prompt length still fits with every canonical tech fact."""
     all_facts = frozenset(
         {
             ASTRONOMY_FACT,
+            ANATOMY_FACT,
             FIRE_FACT,
+            HYGIENE_FACT,
             IRRIGATION_FACT,
             LOGIC_FACT,
             MATHEMATICS_FACT,
@@ -102,6 +106,6 @@ def test_reflection_prompt_accepts_full_technology_fact_content() -> None:
     ).with_tick(Tick(value=1))
     world, _ = apply_memory_encoding(world)
     prompt = build_reflection_prompt(world.agents[0])
-    assert len(prompt) == 175
-    assert "medicine" in prompt
+    assert len(prompt) == 191
+    assert "hygiene" in prompt
     LanguageModelRequest(prompt=prompt, seed=42)

@@ -79,6 +79,7 @@ class TechSystem:
                     discovered_rhetoric_count=snap.discovered_rhetoric_count,
                     discovered_medicine_count=snap.discovered_medicine_count,
                     discovered_anatomy_count=snap.discovered_anatomy_count,
+                    discovered_hygiene_count=snap.discovered_hygiene_count,
                     locked_count=snap.locked_count,
                     researchable_count=snap.researchable_count,
                 )

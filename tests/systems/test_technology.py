@@ -23,7 +23,7 @@ def test_observe_emits_without_mutating_world() -> None:
     assert updated == world
     events = [event for event in bus.history if isinstance(event, TechnologiesObserved)]
     assert len(events) == 1
-    assert events[0].technology_count == 12
+    assert events[0].technology_count == 13
     assert events[0].discovered_count == 1
     assert events[0].discovered_fire_count == 1
     assert events[0].discovered_pottery_count == 0
@@ -37,7 +37,8 @@ def test_observe_emits_without_mutating_world() -> None:
     assert events[0].discovered_rhetoric_count == 0
     assert events[0].discovered_medicine_count == 0
     assert events[0].discovered_anatomy_count == 0
-    assert events[0].locked_count == 10
+    assert events[0].discovered_hygiene_count == 0
+    assert events[0].locked_count == 11
     assert events[0].researchable_count == 1
 
 
