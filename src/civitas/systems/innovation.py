@@ -105,6 +105,7 @@ class InnovationSystem:
                     active_syllogism_count=snap.active_syllogism_count,
                     active_oration_count=snap.active_oration_count,
                     active_remedy_count=snap.active_remedy_count,
+                    active_dissection_count=snap.active_dissection_count,
                 )
             )
         return world

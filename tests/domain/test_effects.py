@@ -7,6 +7,7 @@ import pytest
 from civitas.domain import (
     ACADEMY_TEACHINGS_PER_KNOWER_BONUS,
     AGORA_SOCIALIZE_RESTORE_BONUS,
+    ANATOMY_RESEARCH_POINTS_BONUS,
     APOTHECARY_DRINK_RESTORE_BONUS,
     ARCHIVE_RETRIEVAL_LIMIT_BONUS,
     ASSEMBLY_SOCIALIZE_RESTORE_BONUS,
@@ -14,8 +15,10 @@ from civitas.domain import (
     BUREAUCRACY_MARKET_FEE_DISCOUNT,
     CALENDAR_RETRIEVAL_LIMIT_BONUS,
     CAMP_ABACUS,
+    CAMP_ANATOMY,
     CAMP_ASTRONOMY,
     CAMP_DIALECTIC,
+    CAMP_DISSECTION,
     CAMP_FIRE,
     CAMP_FIRE_HEARTH,
     CAMP_FORGE,
@@ -2030,9 +2033,11 @@ def test_dialectic_stacks_with_scribe() -> None:
 
 
 def test_syllogism_boosts_research_points_per_tick() -> None:
-    """Active syllogism adds a society-wide research point bonus."""
+    """Active syllogism and dissection stack society-wide research bonuses."""
     discovered_logic = CAMP_LOGIC.model_copy(update={"discovered": True})
+    discovered_anatomy = CAMP_ANATOMY.model_copy(update={"discovered": True})
     active_syllogism = CAMP_SYLLOGISM.model_copy(update={"active": True})
+    active_dissection = CAMP_DISSECTION.model_copy(update={"active": True})
     world = World(
         config=SimulationConfig(agent_count=1, seed=1),
         locations=(CAMP_LOCATION,),
@@ -2046,6 +2051,9 @@ def test_syllogism_boosts_research_points_per_tick() -> None:
             CAMP_ASTRONOMY,
             CAMP_PHILOSOPHY,
             discovered_logic,
+            CAMP_RHETORIC,
+            CAMP_MEDICINE,
+            discovered_anatomy,
         ),
         innovations=(
             CAMP_FIRE_HEARTH,
@@ -2057,13 +2065,20 @@ def test_syllogism_boosts_research_points_per_tick() -> None:
             CAMP_STAR_CHART,
             CAMP_DIALECTIC,
             active_syllogism,
+            CAMP_ORATION,
+            CAMP_REMEDY,
+            active_dissection,
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
     )
-    assert research_points_bonus(world) == LOGIC_RESEARCH_POINTS_BONUS
+    assert research_points_bonus(world) == (
+        LOGIC_RESEARCH_POINTS_BONUS + ANATOMY_RESEARCH_POINTS_BONUS
+    )
     assert (
         effective_research_points_per_tick(world, base=DEFAULT_POINTS_PER_TICK)
-        == DEFAULT_POINTS_PER_TICK + LOGIC_RESEARCH_POINTS_BONUS
+        == DEFAULT_POINTS_PER_TICK
+        + LOGIC_RESEARCH_POINTS_BONUS
+        + ANATOMY_RESEARCH_POINTS_BONUS
     )
     bare = _world()
     assert research_points_bonus(bare) == 0
