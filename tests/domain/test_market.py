@@ -6,7 +6,10 @@ from civitas.domain import (
     CAMP_LOCATION,
     CAMP_MARKET,
     Agent,
+    Government,
     Inventory,
+    Law,
+    LawKind,
     ResourceStack,
     SimulationConfig,
     World,
@@ -17,6 +20,7 @@ from civitas.domain import (
     census_markets,
     fill_listing,
     post_listing,
+    society_money_total,
 )
 
 
@@ -33,12 +37,20 @@ def _with_food(agent_id: int, quantity: int, *, money: int = 0) -> Agent:
     )
 
 
-def _world(*agents: Agent) -> World:
+def _world(
+    *agents: Agent,
+    governments: tuple[Government, ...] = (),
+    laws: tuple[Law, ...] = (),
+    treasury: int = 0,
+) -> World:
     return World(
         config=SimulationConfig(agent_count=len(agents), seed=1),
         locations=(CAMP_LOCATION,),
         markets=(CAMP_MARKET,),
+        governments=governments,
+        laws=laws,
         agents=agents,
+        treasury=treasury,
     )
 
 
@@ -123,3 +135,64 @@ def test_census_markets_counts_open_book() -> None:
     assert snap.listing_count == 1
     assert snap.total_units == 2
     assert snap.market_listings == ((0, 1),)
+
+
+def test_fill_listing_with_market_fee_credits_government() -> None:
+    """Active MARKET_FEE debits buyer once per fill into the polity treasury."""
+    government = Government.create(0, "Camp", 0, (0,))
+    fee = Law.create(0, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=1)
+    world = _world(
+        _with_food(0, 1, money=0),
+        _with_food(1, 0, money=4),
+        governments=(government,),
+        laws=(fee,),
+    )
+    posted = post_listing(world, 0, 0, "food", quantity=1, unit_price=2)
+    assert posted is not None
+    world, listing = posted
+    initial = society_money_total(world)
+    filled = fill_listing(world, 0, listing.listing_id, 1, quantity=1)
+    assert filled is not None
+    buyer = filled.agent_by_id(1)
+    seller = filled.agent_by_id(0)
+    assert buyer is not None and seller is not None
+    assert buyer.money == 1  # 4 - 2 price - 1 fee
+    assert seller.money == 2
+    assert filled.government_by_id(0).treasury == 1  # type: ignore[union-attr]
+    assert filled.treasury == 0
+    assert society_money_total(filled) == initial
+
+
+def test_fill_listing_fails_when_buyer_cannot_afford_fee() -> None:
+    """Fill fails when price + fee exceeds buyer money."""
+    government = Government.create(0, "Camp", 0, (0,))
+    fee = Law.create(0, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=2)
+    world = _world(
+        _with_food(0, 1, money=0),
+        _with_food(1, 0, money=2),
+        governments=(government,),
+        laws=(fee,),
+    )
+    posted = post_listing(world, 0, 0, "food", quantity=1, unit_price=2)
+    assert posted is not None
+    world, listing = posted
+    assert can_fill_listing(world, 0, listing.listing_id, 1, quantity=1) is False
+    assert fill_listing(world, 0, listing.listing_id, 1, quantity=1) is None
+
+
+def test_fill_listing_without_government_skips_fee() -> None:
+    """Ungoverned markets charge no fee; world treasury stays put."""
+    world = _world(
+        _with_food(0, 1, money=0),
+        _with_food(1, 0, money=3),
+        treasury=5,
+    )
+    posted = post_listing(world, 0, 0, "food", quantity=1, unit_price=1)
+    assert posted is not None
+    world, listing = posted
+    filled = fill_listing(world, 0, listing.listing_id, 1, quantity=1)
+    assert filled is not None
+    buyer = filled.agent_by_id(1)
+    assert buyer is not None
+    assert buyer.money == 2
+    assert filled.treasury == 5

@@ -1,9 +1,10 @@
 """Market system: escrowed listings and open-book observation.
 
 Owns market mutations that emit listing events and tick-level book
-censuses that emit ``MarketObserved``. Legality and world updates live
-in domain helpers so other layers can reason about markets without
-calling this system.
+censuses that emit ``MarketObserved``. Active ``MARKET_FEE`` fills also
+emit ``MarketFeeCollected``. Legality and world updates live in domain
+helpers so other layers can reason about markets without calling this
+system.
 """
 
 from __future__ import annotations
@@ -16,6 +17,7 @@ from civitas.domain import (
     ListingCancelled,
     ListingFilled,
     ListingPosted,
+    MarketFeeCollected,
     MarketObserved,
     can_cancel_listing,
     can_fill_listing,
@@ -23,7 +25,9 @@ from civitas.domain import (
     cancel_listing,
     census_markets,
     fill_listing,
+    government_at,
     market_by_id,
+    market_fee_for,
     post_listing,
 )
 from civitas.domain.market import DEFAULT_LISTING_QUANTITY, DEFAULT_UNIT_PRICE
@@ -134,7 +138,7 @@ class MarketSystem:
         *,
         quantity: int | None = None,
     ) -> World:
-        """Fill a listing when legal; emit ``ListingFilled`` on success."""
+        """Fill a listing when legal; emit fill/fee events on success."""
         qty = self._config.default_quantity if quantity is None else quantity
         market = market_by_id(world, market_id)
         buyer = world.agent_by_id(buyer_id)
@@ -143,6 +147,8 @@ class MarketSystem:
             return world
         if not can_fill_listing(world, market_id, listing_id, buyer_id, qty):
             return world
+        fee = market_fee_for(world, market.location_id)
+        government = government_at(world, market.location_id)
         updated = fill_listing(world, market_id, listing_id, buyer_id, quantity=qty)
         if updated is None:
             return world
@@ -160,6 +166,27 @@ class MarketSystem:
                     total_price=listing.unit_price * qty,
                 )
             )
+            if fee > 0:
+                if government is None:
+                    treasury_after = updated.treasury
+                    government_id = None
+                else:
+                    credited = updated.government_by_id(government.government_id)
+                    if credited is None:
+                        return updated
+                    treasury_after = credited.treasury
+                    government_id = credited.government_id
+                bus.publish(
+                    MarketFeeCollected(
+                        tick=updated.tick,
+                        market_id=market.market_id,
+                        listing_id=listing.listing_id,
+                        buyer_id=buyer.agent_id,
+                        amount=fee,
+                        treasury_after=treasury_after,
+                        government_id=government_id,
+                    )
+                )
         return updated
 
     def cancel_listing(

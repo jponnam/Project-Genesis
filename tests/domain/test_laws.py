@@ -15,11 +15,13 @@ from civitas.domain import (
     LawKind,
     SimulationConfig,
     World,
+    active_market_fee_law,
     census_laws,
     default_laws,
     default_world_map,
     enact_law,
     levy_taxes,
+    market_fee_for,
     repeal_law,
     set_law_active,
     tax_schedule_for_agent,
@@ -63,6 +65,14 @@ def test_world_rejects_unknown_government_and_duplicate_active_tax() -> None:
         _world(Agent.create(agent_id=0, name="A"), laws=(left, right))
 
 
+def test_world_rejects_duplicate_active_market_fee() -> None:
+    """At most one active MARKET_FEE law per government."""
+    left = Law.create(0, 0, "Fee A", LawKind.MARKET_FEE, flat_amount=1)
+    right = Law.create(1, 0, "Fee B", LawKind.MARKET_FEE, flat_amount=2)
+    with pytest.raises(ValidationError, match="MARKET_FEE"):
+        _world(Agent.create(agent_id=0, name="A"), laws=(left, right))
+
+
 def test_enact_repeal_and_set_active() -> None:
     """Enactment and soft repeal follow legality rules."""
     world = _world(Agent.create(agent_id=0, name="A"))
@@ -79,6 +89,23 @@ def test_enact_repeal_and_set_active() -> None:
     reactivated = set_law_active(repealed, 0, True)
     assert reactivated is not None
     assert reactivated.law_by_id(0).active is True  # type: ignore[union-attr]
+
+
+def test_enact_market_fee_and_uniqueness() -> None:
+    """MARKET_FEE enacts once per government; lookup uses flat_amount."""
+    world = _world(Agent.create(agent_id=0, name="A"))
+    fee = Law.create(0, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=2)
+    enacted = enact_law(world, fee)
+    assert enacted is not None
+    assert market_fee_for(enacted, 0) == 2
+    assert active_market_fee_law(enacted, 0) == fee
+    duplicate = Law.create(1, 0, "Other Fee", LawKind.MARKET_FEE, flat_amount=3)
+    assert enact_law(enacted, duplicate) is None
+    # TAX_SCHEDULE may coexist with MARKET_FEE for the same government.
+    tax = Law.create(1, 0, "Poll", LawKind.TAX_SCHEDULE, flat_amount=1)
+    with_tax = enact_law(enacted, tax)
+    assert with_tax is not None
+    assert market_fee_for(with_tax, 0) == 2
 
 
 def test_tax_schedule_overrides_levy_fallback() -> None:
@@ -105,14 +132,29 @@ def test_census_laws_counts() -> None:
     """Census reports active/inactive and tax-schedule tallies."""
     active = Law.create(0, 0, "A", LawKind.TAX_SCHEDULE, flat_amount=1, active=True)
     inactive = Law.create(1, 0, "B", LawKind.TAX_SCHEDULE, flat_amount=1, active=False)
-    world = _world(Agent.create(agent_id=0, name="A"), laws=(active, inactive))
+    fee = Law.create(2, 0, "Fee", LawKind.MARKET_FEE, flat_amount=1, active=True)
+    world = _world(Agent.create(agent_id=0, name="A"), laws=(active, inactive, fee))
     snap = census_laws(world)
-    assert snap.law_count == 2
-    assert snap.active_count == 1
+    assert snap.law_count == 3
+    assert snap.active_count == 2
     assert snap.inactive_count == 1
     assert snap.governments_with_active_laws == 1
     assert snap.active_tax_schedule_count == 1
+    assert snap.active_market_fee_count == 1
     assert census_laws(world) == snap
+
+
+def test_market_fee_for_without_government_is_zero() -> None:
+    """Ungoverned locations have no market fee."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(),
+        laws=(),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert market_fee_for(world, 0) == 0
+    assert active_market_fee_law(world, 0) is None
 
 
 def test_full_map_default_law_compatible_with_camp_government() -> None:
