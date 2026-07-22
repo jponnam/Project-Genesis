@@ -2,14 +2,16 @@
 
 Laws are first-class world aggregates. Domain helpers own enactment,
 repeal, tax-schedule lookup, market-fee lookup, curriculum teaching
-bonuses, and calendar retrieval bonuses. Active ``TAX_SCHEDULE``
-statutes override fallback levy parameters when collecting taxes.
-Active ``MARKET_FEE`` statutes charge a flat buyer fee on market
-listing fills (Phase 9 M10). Active ``CURRICULUM`` statutes grant
-living subjects +1 teachings-per-knower (Phase 10 M4). Active
-``CALENDAR`` statutes grant living subjects +1 retrieval limit
-(Phase 10 M11). Elections (voting) are a separate Phase 5 aggregate,
-as are institutions.
+bonuses, calendar retrieval bonuses, and ethics teach-trust deltas.
+Active ``TAX_SCHEDULE`` statutes override fallback levy parameters
+when collecting taxes. Active ``MARKET_FEE`` statutes charge a flat
+buyer fee on market listing fills (Phase 9 M10). Active ``CURRICULUM``
+statutes grant living subjects +1 teachings-per-knower (Phase 10 M4).
+Active ``CALENDAR`` statutes grant living subjects +1 retrieval limit
+(Phase 10 M11). Active ``ETHICS`` statutes lower the peer teach-trust
+threshold for living subject learners by 0.05 (Phase 11 M2).
+Elections (voting) are a separate Phase 5 aggregate, as are
+institutions.
 """
 
 from __future__ import annotations
@@ -36,6 +38,7 @@ class LawKind(StrEnum):
     MARKET_FEE = "market_fee"
     CURRICULUM = "curriculum"
     CALENDAR = "calendar"
+    ETHICS = "ethics"
 
 
 # Statute kinds that allow at most one active law per government.
@@ -45,6 +48,7 @@ _UNIQUE_ACTIVE_KINDS: frozenset[LawKind] = frozenset(
         LawKind.MARKET_FEE,
         LawKind.CURRICULUM,
         LawKind.CALENDAR,
+        LawKind.ETHICS,
     }
 )
 
@@ -53,6 +57,9 @@ CURRICULUM_TEACHINGS_PER_KNOWER_BONUS: int = 1
 
 # Kind-only retrieval-limit bonus for living subjects under an active CALENDAR.
 CALENDAR_RETRIEVAL_LIMIT_BONUS: int = 1
+
+# Kind-only teach-trust delta for living subject learners under active ETHICS.
+ETHICS_MIN_TEACH_TRUST_DELTA: float = -0.05
 
 
 class Law(BaseModel):
@@ -69,7 +76,7 @@ class Law(BaseModel):
         default=0,
         description=(
             "TAX_SCHEDULE flat poll amount, or MARKET_FEE flat fill fee; "
-            "ignored by CURRICULUM, CALENDAR, and other kinds."
+            "ignored by CURRICULUM, CALENDAR, ETHICS, and other kinds."
         ),
     )
     rate_bps: NonNegativeInt = Field(
@@ -132,6 +139,7 @@ class LawCensus(BaseModel):
     active_market_fee_count: NonNegativeInt
     active_curriculum_count: NonNegativeInt
     active_calendar_count: NonNegativeInt
+    active_ethics_count: NonNegativeInt
 
 
 def law_by_id(world: World, law_id: LawId | int) -> Law | None:
@@ -279,6 +287,37 @@ def calendar_retrieval_bonus_for(world: World, agent: Agent) -> int:
     return CALENDAR_RETRIEVAL_LIMIT_BONUS
 
 
+def active_ethics_law(
+    world: World,
+    government_id: GovernmentId | int,
+) -> Law | None:
+    """Return the active ethics statute for ``government_id``, if any.
+
+    When multiple active ``ETHICS`` laws exist (should not under
+    uniqueness rules), the lowest ``law_id`` wins.
+    """
+    for law in active_laws(world, government_id):
+        if law.kind == LawKind.ETHICS:
+            return law
+    return None
+
+
+def ethics_min_teach_trust_delta_for(world: World, learner: Agent) -> float:
+    """Return -0.05 when ``learner`` is a living subject under active ETHICS.
+
+    The statute kind alone enables the delta; ``flat_amount`` is ignored.
+    Callers clamp ``base + delta`` into ``[0, 1]`` before teach checks.
+    """
+    if not learner.is_alive():
+        return 0.0
+    government = government_at(world, learner.location_id)
+    if government is None:
+        return 0.0
+    if active_ethics_law(world, government.government_id) is None:
+        return 0.0
+    return ETHICS_MIN_TEACH_TRUST_DELTA
+
+
 def _has_active_kind(
     world: World,
     government_id: GovernmentId,
@@ -350,6 +389,7 @@ def census_laws(world: World) -> LawCensus:
     active_fee = sum(1 for law in active if law.kind == LawKind.MARKET_FEE)
     active_curriculum = sum(1 for law in active if law.kind == LawKind.CURRICULUM)
     active_calendar = sum(1 for law in active if law.kind == LawKind.CALENDAR)
+    active_ethics = sum(1 for law in active if law.kind == LawKind.ETHICS)
     return LawCensus(
         tick=world.tick,
         law_count=len(laws),
@@ -360,6 +400,7 @@ def census_laws(world: World) -> LawCensus:
         active_market_fee_count=active_fee,
         active_curriculum_count=active_curriculum,
         active_calendar_count=active_calendar,
+        active_ethics_count=active_ethics,
     )
 
 
@@ -367,11 +408,13 @@ __all__ = [
     "CALENDAR_RETRIEVAL_LIMIT_BONUS",
     "CAMP_POLL_TAX_LAW",
     "CURRICULUM_TEACHINGS_PER_KNOWER_BONUS",
+    "ETHICS_MIN_TEACH_TRUST_DELTA",
     "Law",
     "LawCensus",
     "LawKind",
     "active_calendar_law",
     "active_curriculum_law",
+    "active_ethics_law",
     "active_laws",
     "active_market_fee_law",
     "active_tax_schedule",
@@ -380,6 +423,7 @@ __all__ = [
     "curriculum_teachings_bonus_for",
     "default_laws",
     "enact_law",
+    "ethics_min_teach_trust_delta_for",
     "law_by_id",
     "laws_for",
     "market_fee_for",

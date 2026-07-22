@@ -17,6 +17,8 @@ from pydantic import BaseModel, ConfigDict
 
 from civitas.domain.effects import effective_teachings_per_knower
 from civitas.domain.ids import AgentId
+from civitas.domain.laws import ethics_min_teach_trust_delta_for
+from civitas.domain.numeric import clamp_unit
 from civitas.domain.relationships import DEFAULT_TRUST, get_bond
 from civitas.domain.technology import (
     Technology,
@@ -174,8 +176,10 @@ def diffuse_knowledge(
 
     Candidates are ordered by ``(fact, teacher_id, learner_id)``. Each
     teacher may teach at most ``teachings_per_knower`` learners per apply.
-    Learners must trust the teacher at least ``min_trust`` (missing bonds
-    use ``DEFAULT_TRUST``).
+    Learners must trust the teacher at least the effective minimum
+    ``clamp_unit(min_trust + ethics_delta)`` (missing bonds use
+    ``DEFAULT_TRUST``). Active ``ETHICS`` statutes lower that threshold
+    for living subject learners.
     """
     if teachings_per_knower < 0:
         msg = f"teachings_per_knower must be >= 0, got {teachings_per_knower}"
@@ -207,7 +211,14 @@ def diffuse_knowledge(
                     continue
                 if learner.knowledge.knows(fact):
                     continue
-                if not can_learn_from_teacher(learner, teacher, min_trust=min_trust):
+                effective_min_trust = clamp_unit(
+                    min_trust + ethics_min_teach_trust_delta_for(world, learner)
+                )
+                if not can_learn_from_teacher(
+                    learner,
+                    teacher,
+                    min_trust=effective_min_trust,
+                ):
                     continue
                 candidates.append(
                     (

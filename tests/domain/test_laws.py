@@ -9,6 +9,7 @@ from civitas.domain import (
     CAMP_GOVERNMENT,
     CAMP_LOCATION,
     CAMP_POLL_TAX_LAW,
+    ETHICS_MIN_TEACH_TRUST_DELTA,
     Agent,
     AgentStatus,
     Government,
@@ -18,6 +19,7 @@ from civitas.domain import (
     World,
     active_calendar_law,
     active_curriculum_law,
+    active_ethics_law,
     active_market_fee_law,
     calendar_retrieval_bonus_for,
     census_laws,
@@ -25,6 +27,7 @@ from civitas.domain import (
     default_laws,
     default_world_map,
     enact_law,
+    ethics_min_teach_trust_delta_for,
     levy_taxes,
     market_fee_for,
     repeal_law,
@@ -91,6 +94,14 @@ def test_world_rejects_duplicate_active_calendar() -> None:
     left = Law.create(0, 0, "Calendar A", LawKind.CALENDAR)
     right = Law.create(1, 0, "Calendar B", LawKind.CALENDAR)
     with pytest.raises(ValidationError, match="CALENDAR"):
+        _world(Agent.create(agent_id=0, name="A"), laws=(left, right))
+
+
+def test_world_rejects_duplicate_active_ethics() -> None:
+    """At most one active ETHICS law per government."""
+    left = Law.create(0, 0, "Ethics A", LawKind.ETHICS)
+    right = Law.create(1, 0, "Ethics B", LawKind.ETHICS)
+    with pytest.raises(ValidationError, match="ETHICS"):
         _world(Agent.create(agent_id=0, name="A"), laws=(left, right))
 
 
@@ -221,6 +232,65 @@ def test_calendar_bonus_requires_living_subject() -> None:
     assert calendar_retrieval_bonus_for(bare, bare.agents[0]) == 0
 
 
+def test_enact_ethics_and_uniqueness() -> None:
+    """ETHICS enacts once per government; kind alone enables the trust delta."""
+    world = _world(Agent.create(agent_id=0, name="A"))
+    ethics = Law.create(0, 0, "Camp Ethics", LawKind.ETHICS, flat_amount=9)
+    enacted = enact_law(world, ethics)
+    assert enacted is not None
+    assert active_ethics_law(enacted, 0) == ethics
+    assert ethics_min_teach_trust_delta_for(enacted, enacted.agents[0]) == (
+        ETHICS_MIN_TEACH_TRUST_DELTA
+    )
+    assert ETHICS_MIN_TEACH_TRUST_DELTA == -0.05
+    duplicate = Law.create(1, 0, "Other Ethics", LawKind.ETHICS)
+    assert enact_law(enacted, duplicate) is None
+    # Other unique kinds may coexist with ETHICS.
+    tax = Law.create(1, 0, "Poll", LawKind.TAX_SCHEDULE, flat_amount=1)
+    with_tax = enact_law(enacted, tax)
+    assert with_tax is not None
+    fee = Law.create(2, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=1)
+    with_fee = enact_law(with_tax, fee)
+    assert with_fee is not None
+    curriculum = Law.create(3, 0, "Camp Schools", LawKind.CURRICULUM)
+    with_curriculum = enact_law(with_fee, curriculum)
+    assert with_curriculum is not None
+    calendar = Law.create(4, 0, "Camp Calendar", LawKind.CALENDAR)
+    with_calendar = enact_law(with_curriculum, calendar)
+    assert with_calendar is not None
+    assert active_ethics_law(with_calendar, 0) == ethics
+    assert (
+        ethics_min_teach_trust_delta_for(with_calendar, with_calendar.agents[0])
+        == ETHICS_MIN_TEACH_TRUST_DELTA
+    )
+
+
+def test_ethics_delta_requires_living_subject() -> None:
+    """Only living agents under an ETHICS polity receive the teach-trust delta."""
+    ethics = Law.create(0, 0, "Camp Ethics", LawKind.ETHICS)
+    world = _world(Agent.create(agent_id=0, name="A"), laws=(ethics,))
+    assert ethics_min_teach_trust_delta_for(world, world.agents[0]) == (
+        ETHICS_MIN_TEACH_TRUST_DELTA
+    )
+    dead = world.agents[0].model_copy(
+        update={
+            "status": AgentStatus.DEAD,
+            "health": world.agents[0].health.model_copy(update={"vitality": 0.0}),
+        }
+    )
+    assert ethics_min_teach_trust_delta_for(world, dead) == 0.0
+    ungoverned = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(),
+        laws=(),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert ethics_min_teach_trust_delta_for(ungoverned, ungoverned.agents[0]) == 0.0
+    bare = _world(Agent.create(agent_id=0, name="A"))
+    assert ethics_min_teach_trust_delta_for(bare, bare.agents[0]) == 0.0
+
+
 def test_tax_schedule_overrides_levy_fallback() -> None:
     """Active TAX_SCHEDULE beats levy_taxes fallback parameters."""
     law = Law.create(0, 0, "Heavy", LawKind.TAX_SCHEDULE, flat_amount=2)
@@ -248,19 +318,21 @@ def test_census_laws_counts() -> None:
     fee = Law.create(2, 0, "Fee", LawKind.MARKET_FEE, flat_amount=1, active=True)
     curriculum = Law.create(3, 0, "Schools", LawKind.CURRICULUM, active=True)
     calendar = Law.create(4, 0, "Calendar", LawKind.CALENDAR, active=True)
+    ethics = Law.create(5, 0, "Ethics", LawKind.ETHICS, active=True)
     world = _world(
         Agent.create(agent_id=0, name="A"),
-        laws=(active, inactive, fee, curriculum, calendar),
+        laws=(active, inactive, fee, curriculum, calendar, ethics),
     )
     snap = census_laws(world)
-    assert snap.law_count == 5
-    assert snap.active_count == 4
+    assert snap.law_count == 6
+    assert snap.active_count == 5
     assert snap.inactive_count == 1
     assert snap.governments_with_active_laws == 1
     assert snap.active_tax_schedule_count == 1
     assert snap.active_market_fee_count == 1
     assert snap.active_curriculum_count == 1
     assert snap.active_calendar_count == 1
+    assert snap.active_ethics_count == 1
     assert census_laws(world) == snap
 
 

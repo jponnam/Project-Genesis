@@ -127,6 +127,39 @@ def test_diffuse_knowledge_requires_learner_trust() -> None:
     assert not world.agents[1].knowledge.knows(POTTERY_FACT)
 
 
+def test_ethics_lowers_min_teach_trust_for_subject_learners() -> None:
+    """Active ETHICS lets subject learners learn at trust just below the base floor."""
+    bare = World(
+        config=SimulationConfig(agent_count=2, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        technologies=default_technologies(),
+        research_progress=default_research_progress(),
+        innovations=default_innovations(),
+        agents=(
+            Agent.create(agent_id=0, name="A", knowledge=_FIRE_AND_POTTERY),
+            Agent.create(agent_id=1, name="B", knowledge=_FIRE),
+        ),
+    )
+    discovered = discover_technology(bare, CAMP_POTTERY.technology_id)
+    assert discovered is not None
+    bonded = set_relationship(discovered, 1, 0, affinity=0.0, trust=0.46)
+    assert bonded is not None
+    without, blocked = diffuse_knowledge(bonded, teachings_per_knower=1, min_trust=0.5)
+    assert blocked == ()
+    assert not without.agents[1].knowledge.knows(POTTERY_FACT)
+
+    with_ethics = bonded.model_copy(
+        update={"laws": (Law.create(0, 0, "Camp Ethics", LawKind.ETHICS),)}
+    )
+    taught, gains = diffuse_knowledge(
+        with_ethics, teachings_per_knower=1, min_trust=0.5
+    )
+    assert len(gains) == 1
+    assert gains[0].agent_id.value == 1
+    assert taught.agents[1].knowledge.knows(POTTERY_FACT)
+
+
 def test_apply_knowledge_diffusion_bootstraps_then_diffuses() -> None:
     """Full apply bootstraps pottery then spreads one peer hop."""
     world = _world(

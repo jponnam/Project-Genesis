@@ -69,6 +69,7 @@ class LawSystem:
                     active_market_fee_count=snap.active_market_fee_count,
                     active_curriculum_count=snap.active_curriculum_count,
                     active_calendar_count=snap.active_calendar_count,
+                    active_ethics_count=snap.active_ethics_count,
                 )
             )
         return world
