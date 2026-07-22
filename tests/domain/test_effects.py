@@ -84,6 +84,7 @@ from civitas.domain import (
     FIRE_HEARTH_REST_BONUS,
     FORUM_TEACHINGS_PER_KNOWER_BONUS,
     FOUNDRY_PRODUCE_ENERGY_DISCOUNT,
+    GRANARY_FOOD_GATHER_BONUS,
     GUILD_PRODUCE_ENERGY_DISCOUNT,
     HARBOR_MARKET_FEE_DISCOUNT,
     HOSPITAL_REST_RESTORE_BONUS,
@@ -175,6 +176,7 @@ from civitas.domain import (
     location_has_active_entrepot,
     location_has_active_forum,
     location_has_active_foundry,
+    location_has_active_granary,
     location_has_active_guild,
     location_has_active_harbor,
     location_has_active_hospital,
@@ -2520,8 +2522,32 @@ def test_plow_raises_food_gather_society_wide() -> None:
     assert effective_gather_amount(bare, "food") == DEFAULT_GATHER_AMOUNT
 
 
-def test_plow_stacks_with_storehouse_waystation_and_entrepot_food_gather() -> None:
-    """Plow food gather bonus stacks with storehouse, waystation, and entrepot."""
+def test_granary_boosts_food_gather_for_colocated_agents() -> None:
+    """Active granary seats add a food gather bonus at their location."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        institutions=(
+            Institution.create(0, 0, 0, "Camp Granary", InstitutionKind.GRANARY),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_granary(world, agent.location_id) is True
+    assert gather_amount_bonus(world, "food", location_id=agent.location_id) == (
+        GRANARY_FOOD_GATHER_BONUS
+    )
+    assert gather_amount_bonus(world, "food") == 0
+    assert effective_gather_amount(world, "food", agent=agent) == (
+        DEFAULT_GATHER_AMOUNT + GRANARY_FOOD_GATHER_BONUS
+    )
+
+
+def test_plow_stacks_with_storehouse_waystation_entrepot_and_granary_food_gather() -> (
+    None
+):
+    """Plow stacks with storehouse, waystation, entrepot, and granary food bonuses."""
     discovered_agriculture = CAMP_AGRICULTURE.model_copy(update={"discovered": True})
     active_plow = CAMP_PLOW.model_copy(update={"active": True})
     world = World(
@@ -2539,6 +2565,9 @@ def test_plow_stacks_with_storehouse_waystation_and_entrepot_food_gather() -> No
             Infrastructure.create(
                 1, 0, 1, 1, "Entrepot Waystation", InfrastructureKind.WAYSTATION
             ),
+        ),
+        institutions=(
+            Institution.create(0, 0, 1, "Entrepot Granary", InstitutionKind.GRANARY),
         ),
         technologies=tuple(
             discovered_agriculture
@@ -2558,7 +2587,9 @@ def test_plow_stacks_with_storehouse_waystation_and_entrepot_food_gather() -> No
         + STOREHOUSE_FOOD_GATHER_BONUS
         + WAYSTATION_FOOD_GATHER_BONUS
         + ENTREPOT_FOOD_GATHER_BONUS
+        + GRANARY_FOOD_GATHER_BONUS
     )
+    assert location_has_active_granary(world, agent.location_id) is True
     assert gather_amount_bonus(world, "food") == AGRICULTURE_FOOD_GATHER_BONUS
     assert gather_amount_bonus(world, "food", location_id=agent.location_id) == (
         expected
