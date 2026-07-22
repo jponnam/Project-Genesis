@@ -6,6 +6,7 @@ import pytest
 from pydantic import ValidationError
 
 from civitas.domain import (
+    CAMP_ASTRONOMY,
     CAMP_FIRE,
     CAMP_IRRIGATION,
     CAMP_LOCATION,
@@ -39,8 +40,8 @@ def _world(*agents: Agent, technologies: tuple[Technology, ...] = ()) -> World:
     )
 
 
-def test_default_technologies_seed_fire_through_mathematics() -> None:
-    """Canonical catalog has fire through mathematics progression."""
+def test_default_technologies_seed_fire_through_astronomy() -> None:
+    """Canonical catalog has fire through astronomy progression."""
     assert default_technologies() == (
         CAMP_FIRE,
         CAMP_POTTERY,
@@ -48,6 +49,7 @@ def test_default_technologies_seed_fire_through_mathematics() -> None:
         CAMP_METALLURGY,
         CAMP_WRITING,
         CAMP_MATHEMATICS,
+        CAMP_ASTRONOMY,
     )
     assert CAMP_FIRE.kind is TechnologyKind.FIRE
     assert CAMP_FIRE.discovered is True
@@ -66,6 +68,9 @@ def test_default_technologies_seed_fire_through_mathematics() -> None:
     assert CAMP_MATHEMATICS.kind is TechnologyKind.MATHEMATICS
     assert CAMP_MATHEMATICS.discovered is False
     assert CAMP_MATHEMATICS.prerequisite_ids == (CAMP_WRITING.technology_id,)
+    assert CAMP_ASTRONOMY.kind is TechnologyKind.ASTRONOMY
+    assert CAMP_ASTRONOMY.discovered is False
+    assert CAMP_ASTRONOMY.prerequisite_ids == (CAMP_MATHEMATICS.technology_id,)
 
 
 def test_create_and_discover_technology() -> None:
@@ -106,22 +111,24 @@ def test_census_technologies_counts() -> None:
         technologies=default_technologies(),
     )
     snap = census_technologies(world)
-    assert snap.technology_count == 6
+    assert snap.technology_count == 7
     assert snap.discovered_count == 1
-    assert snap.undiscovered_count == 5
+    assert snap.undiscovered_count == 6
     assert snap.discovered_fire_count == 1
     assert snap.discovered_pottery_count == 0
     assert snap.discovered_irrigation_count == 0
     assert snap.discovered_metallurgy_count == 0
     assert snap.discovered_writing_count == 0
     assert snap.discovered_mathematics_count == 0
-    assert snap.locked_count == 4
+    assert snap.discovered_astronomy_count == 0
+    assert snap.locked_count == 5
     assert snap.researchable_count == 1
     assert prerequisites_met(world, CAMP_POTTERY) is True
     assert prerequisites_met(world, CAMP_IRRIGATION) is False
     assert prerequisites_met(world, CAMP_METALLURGY) is False
     assert prerequisites_met(world, CAMP_WRITING) is False
     assert prerequisites_met(world, CAMP_MATHEMATICS) is False
+    assert prerequisites_met(world, CAMP_ASTRONOMY) is False
     assert census_technologies(world) == snap
 
 
@@ -240,6 +247,36 @@ def test_mathematics_locked_until_writing_discovered() -> None:
     with_math = discover_technology(with_writing, CAMP_MATHEMATICS.technology_id)
     assert with_math is not None
     assert with_math.technologies[5].discovered is True
+
+
+def test_astronomy_locked_until_mathematics_discovered() -> None:
+    """Astronomy cannot be discovered until mathematics is already known."""
+    world = _world(
+        Agent.create(agent_id=0, name="A"),
+        technologies=default_technologies(),
+    )
+    assert prerequisites_met(world, CAMP_ASTRONOMY) is False
+    assert discover_technology(world, CAMP_ASTRONOMY.technology_id) is None
+
+    with_pottery = discover_technology(world, CAMP_POTTERY.technology_id)
+    assert with_pottery is not None
+    with_irrigation = discover_technology(with_pottery, CAMP_IRRIGATION.technology_id)
+    assert with_irrigation is not None
+    with_metallurgy = discover_technology(
+        with_irrigation, CAMP_METALLURGY.technology_id
+    )
+    assert with_metallurgy is not None
+    with_writing = discover_technology(with_metallurgy, CAMP_WRITING.technology_id)
+    assert with_writing is not None
+    assert prerequisites_met(with_writing, CAMP_ASTRONOMY) is False
+    assert discover_technology(with_writing, CAMP_ASTRONOMY.technology_id) is None
+
+    with_math = discover_technology(with_writing, CAMP_MATHEMATICS.technology_id)
+    assert with_math is not None
+    assert prerequisites_met(with_math, CAMP_ASTRONOMY) is True
+    with_astronomy = discover_technology(with_math, CAMP_ASTRONOMY.technology_id)
+    assert with_astronomy is not None
+    assert with_astronomy.technologies[6].discovered is True
 
 
 def test_world_rejects_duplicate_kinds() -> None:

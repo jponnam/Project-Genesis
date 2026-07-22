@@ -961,16 +961,17 @@ def test_technology_created_and_observed_round_trips() -> None:
     observed = TechnologiesObserved(
         sequence=28,
         tick=Tick(value=8),
-        technology_count=6,
+        technology_count=7,
         discovered_count=1,
-        undiscovered_count=5,
+        undiscovered_count=6,
         discovered_fire_count=1,
         discovered_pottery_count=0,
         discovered_irrigation_count=0,
         discovered_metallurgy_count=0,
         discovered_writing_count=0,
         discovered_mathematics_count=0,
-        locked_count=4,
+        discovered_astronomy_count=0,
+        locked_count=5,
         researchable_count=1,
     )
     restored = event_from_record(observed.to_record())
@@ -980,6 +981,7 @@ def test_technology_created_and_observed_round_trips() -> None:
     assert restored.discovered_metallurgy_count == 0
     assert restored.discovered_writing_count == 0
     assert restored.discovered_mathematics_count == 0
+    assert restored.discovered_astronomy_count == 0
     assert restored.researchable_count == 1
 
 
@@ -1052,15 +1054,16 @@ def test_innovation_events_round_trip() -> None:
     observed = InnovationsObserved(
         sequence=34,
         tick=Tick(value=8),
-        innovation_count=6,
+        innovation_count=7,
         active_count=1,
-        inactive_count=5,
+        inactive_count=6,
         active_fire_hearth_count=1,
         active_pottery_craft_count=0,
         active_irrigation_canal_count=0,
         active_forge_count=0,
         active_scribe_count=0,
         active_abacus_count=0,
+        active_star_chart_count=0,
     )
     restored_observed = event_from_record(observed.to_record())
     assert isinstance(restored_observed, InnovationsObserved)
@@ -1069,6 +1072,7 @@ def test_innovation_events_round_trip() -> None:
     assert restored_observed.active_forge_count == 0
     assert restored_observed.active_scribe_count == 0
     assert restored_observed.active_abacus_count == 0
+    assert restored_observed.active_star_chart_count == 0
 
 
 def test_knowledge_events_round_trip() -> None:
@@ -1110,6 +1114,7 @@ def test_knowledge_events_round_trip() -> None:
         metallurgy_knower_count=0,
         writing_knower_count=0,
         mathematics_knower_count=0,
+        astronomy_knower_count=0,
         total_fact_instances=3,
         coverage_bps=10_000,
     )
@@ -1119,6 +1124,7 @@ def test_knowledge_events_round_trip() -> None:
     assert restored_observed.metallurgy_knower_count == 0
     assert restored_observed.writing_knower_count == 0
     assert restored_observed.mathematics_knower_count == 0
+    assert restored_observed.astronomy_knower_count == 0
     assert restored_observed.coverage_bps == 10_000
 
 

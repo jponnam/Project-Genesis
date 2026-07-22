@@ -10,11 +10,12 @@ retrieval-limit bonuses (stacking with archive), BUREAUCRACY
 market-fee discounts, a global ABACUS produce-energy discount
 (stacking with guild seat discounts), ACADEMY
 teachings-per-knower bonuses (stacking with scribe/scriptorium/
-curriculum), and OBSERVATORY retrieval-limit bonuses (stacking
-with archive and library). The action executor, retrieval path,
-market fills, and knowledge diffusion read these helpers;
-``EffectsSystem`` only observes coverage. Systems never call each
-other.
+curriculum), OBSERVATORY retrieval-limit bonuses (stacking with
+archive and library), and a global STAR_CHART retrieval-limit
+bonus (stacking with archive, library, and observatory). The
+action executor, retrieval path, market fills, and knowledge
+diffusion read these helpers; ``EffectsSystem`` only observes
+coverage. Systems never call each other.
 """
 
 from __future__ import annotations
@@ -59,6 +60,7 @@ MATHEMATICS_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 ARCHIVE_RETRIEVAL_LIMIT_BONUS: int = 1
 LIBRARY_RETRIEVAL_LIMIT_BONUS: int = 1
 OBSERVATORY_RETRIEVAL_LIMIT_BONUS: int = 1
+ASTRONOMY_RETRIEVAL_LIMIT_BONUS: int = 1
 BUREAUCRACY_MARKET_FEE_DISCOUNT: int = 1
 
 
@@ -315,11 +317,12 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
 
 
 def retrieval_limit_bonus(world: World, agent: Agent) -> int:
-    """Return retrieval-limit bonuses at the agent's seat.
+    """Return retrieval-limit bonuses for the agent.
 
     Active ARCHIVE institutions, LIBRARY city seats, and OBSERVATORY
-    infrastructure each contribute ``+1`` and stack when present at the
-    same location.
+    infrastructure each contribute ``+1`` when present at the agent's
+    location. An active STAR_CHART innovation contributes
+    ``ASTRONOMY_RETRIEVAL_LIMIT_BONUS`` society-wide. All stack.
     """
     bonus = 0
     if location_has_active_archive(world, agent.location_id):
@@ -328,6 +331,8 @@ def retrieval_limit_bonus(world: World, agent: Agent) -> int:
         bonus += LIBRARY_RETRIEVAL_LIMIT_BONUS
     if location_has_active_observatory(world, agent.location_id):
         bonus += OBSERVATORY_RETRIEVAL_LIMIT_BONUS
+    if innovation_kind_is_active(world, InnovationKind.STAR_CHART):
+        bonus += ASTRONOMY_RETRIEVAL_LIMIT_BONUS
     return bonus
 
 
@@ -451,7 +456,7 @@ def effective_retrieval_limit(
     *,
     base: int = DEFAULT_RETRIEVAL_LIMIT,
 ) -> int:
-    """Return memory retrieval limit including archive, library, observatory."""
+    """Return memory retrieval limit including location and star-chart bonuses."""
     if base < 0:
         return 0
     return base + retrieval_limit_bonus(world, agent)

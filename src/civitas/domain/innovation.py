@@ -17,6 +17,7 @@ from pydantic import BaseModel, ConfigDict
 
 from civitas.domain.ids import InnovationId, TechnologyId
 from civitas.domain.technology import (
+    CAMP_ASTRONOMY,
     CAMP_FIRE,
     CAMP_IRRIGATION,
     CAMP_MATHEMATICS,
@@ -41,6 +42,7 @@ class InnovationKind(StrEnum):
     FORGE = "forge"
     SCRIBE = "scribe"
     ABACUS = "abacus"
+    STAR_CHART = "star_chart"
 
 
 class Innovation(BaseModel):
@@ -122,6 +124,14 @@ CAMP_ABACUS: Innovation = Innovation.create(
     active=False,
 )
 
+CAMP_STAR_CHART: Innovation = Innovation.create(
+    6,
+    CAMP_ASTRONOMY.technology_id.value,
+    "Camp Star Chart",
+    InnovationKind.STAR_CHART,
+    active=False,
+)
+
 
 def default_innovations() -> tuple[Innovation, ...]:
     """Return the canonical initial innovation set."""
@@ -132,6 +142,7 @@ def default_innovations() -> tuple[Innovation, ...]:
         CAMP_FORGE,
         CAMP_SCRIBE,
         CAMP_ABACUS,
+        CAMP_STAR_CHART,
     )
 
 
@@ -150,6 +161,7 @@ class InnovationCensus(BaseModel):
     active_forge_count: NonNegativeInt = 0
     active_scribe_count: NonNegativeInt = 0
     active_abacus_count: NonNegativeInt = 0
+    active_star_chart_count: NonNegativeInt = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -303,6 +315,7 @@ def census_innovations(world: World) -> InnovationCensus:
     forge = sum(1 for item in active if item.kind is InnovationKind.FORGE)
     scribe = sum(1 for item in active if item.kind is InnovationKind.SCRIBE)
     abacus = sum(1 for item in active if item.kind is InnovationKind.ABACUS)
+    star_chart = sum(1 for item in active if item.kind is InnovationKind.STAR_CHART)
     return InnovationCensus(
         tick=world.tick,
         innovation_count=len(innovations),
@@ -314,4 +327,5 @@ def census_innovations(world: World) -> InnovationCensus:
         active_forge_count=forge,
         active_scribe_count=scribe,
         active_abacus_count=abacus,
+        active_star_chart_count=star_chart,
     )

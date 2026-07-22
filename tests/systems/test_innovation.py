@@ -27,7 +27,7 @@ def test_observe_emits_without_mutating_world() -> None:
     assert updated == world
     events = [event for event in bus.history if isinstance(event, InnovationsObserved)]
     assert len(events) == 1
-    assert events[0].innovation_count == 6
+    assert events[0].innovation_count == 7
     assert events[0].active_count == 1
     assert events[0].active_fire_hearth_count == 1
     assert events[0].active_pottery_craft_count == 0
@@ -35,6 +35,7 @@ def test_observe_emits_without_mutating_world() -> None:
     assert events[0].active_forge_count == 0
     assert events[0].active_scribe_count == 0
     assert events[0].active_abacus_count == 0
+    assert events[0].active_star_chart_count == 0
 
 
 def test_observe_can_suppress_events() -> None:

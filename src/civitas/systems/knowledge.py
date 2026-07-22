@@ -100,6 +100,7 @@ class KnowledgeSystem:
                     metallurgy_knower_count=snap.metallurgy_knower_count,
                     writing_knower_count=snap.writing_knower_count,
                     mathematics_knower_count=snap.mathematics_knower_count,
+                    astronomy_knower_count=snap.astronomy_knower_count,
                     total_fact_instances=snap.total_fact_instances,
                     coverage_bps=snap.coverage_bps,
                 )
