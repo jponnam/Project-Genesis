@@ -14,6 +14,7 @@ from civitas.domain import (
     ETHICS_MIN_TEACH_TRUST_DELTA,
     QUARANTINE_REST_RESTORE_BONUS,
     SANITATION_DRINK_RESTORE_BONUS,
+    ZONING_EAT_RESTORE_BONUS,
     Agent,
     AgentStatus,
     Government,
@@ -29,6 +30,7 @@ from civitas.domain import (
     active_market_fee_law,
     active_quarantine_law,
     active_sanitation_law,
+    active_zoning_law,
     assembly_socialize_bonus_for,
     building_codes_move_discount_for,
     calendar_retrieval_bonus_for,
@@ -45,6 +47,7 @@ from civitas.domain import (
     sanitation_drink_bonus_for,
     set_law_active,
     tax_schedule_for_agent,
+    zoning_eat_bonus_for,
 )
 
 
@@ -72,6 +75,7 @@ def test_default_laws_seed_camp_poll_tax() -> None:
     assert all(law.kind is not LawKind.SANITATION for law in default_laws())
     assert all(law.kind is not LawKind.QUARANTINE for law in default_laws())
     assert all(law.kind is not LawKind.BUILDING_CODES for law in default_laws())
+    assert all(law.kind is not LawKind.ZONING for law in default_laws())
 
 
 def test_world_rejects_unknown_government_and_duplicate_active_tax() -> None:
@@ -149,6 +153,14 @@ def test_world_rejects_duplicate_active_building_codes() -> None:
     left = Law.create(0, 0, "Building Codes A", LawKind.BUILDING_CODES)
     right = Law.create(1, 0, "Building Codes B", LawKind.BUILDING_CODES)
     with pytest.raises(ValidationError, match="BUILDING_CODES"):
+        _world(Agent.create(agent_id=0, name="A"), laws=(left, right))
+
+
+def test_world_rejects_duplicate_active_zoning() -> None:
+    """At most one active ZONING law per government."""
+    left = Law.create(0, 0, "Zoning A", LawKind.ZONING)
+    right = Law.create(1, 0, "Zoning B", LawKind.ZONING)
+    with pytest.raises(ValidationError, match="ZONING"):
         _world(Agent.create(agent_id=0, name="A"), laws=(left, right))
 
 
@@ -523,6 +535,51 @@ def test_enact_building_codes_and_uniqueness() -> None:
     ) == BUILDING_CODES_MOVE_ENERGY_DISCOUNT
 
 
+def test_enact_zoning_and_uniqueness() -> None:
+    """ZONING enacts once per government; kind alone enables the eat bonus."""
+    world = _world(Agent.create(agent_id=0, name="A"))
+    zoning = Law.create(0, 0, "Camp Zoning", LawKind.ZONING)
+    enacted = enact_law(world, zoning)
+    assert enacted is not None
+    assert active_zoning_law(enacted, 0) == zoning
+    assert zoning_eat_bonus_for(enacted, enacted.agents[0]) == ZONING_EAT_RESTORE_BONUS
+    assert ZONING_EAT_RESTORE_BONUS == 0.05
+    duplicate = Law.create(1, 0, "Other Zoning", LawKind.ZONING)
+    assert enact_law(enacted, duplicate) is None
+    # Other unique kinds may coexist with ZONING.
+    tax = Law.create(1, 0, "Poll", LawKind.TAX_SCHEDULE, flat_amount=1)
+    with_tax = enact_law(enacted, tax)
+    assert with_tax is not None
+    fee = Law.create(2, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=1)
+    with_fee = enact_law(with_tax, fee)
+    assert with_fee is not None
+    curriculum = Law.create(3, 0, "Camp Schools", LawKind.CURRICULUM)
+    with_curriculum = enact_law(with_fee, curriculum)
+    assert with_curriculum is not None
+    calendar = Law.create(4, 0, "Camp Calendar", LawKind.CALENDAR)
+    with_calendar = enact_law(with_curriculum, calendar)
+    assert with_calendar is not None
+    ethics = Law.create(5, 0, "Camp Ethics", LawKind.ETHICS)
+    with_ethics = enact_law(with_calendar, ethics)
+    assert with_ethics is not None
+    assembly = Law.create(6, 0, "Camp Assembly", LawKind.ASSEMBLY)
+    with_assembly = enact_law(with_ethics, assembly)
+    assert with_assembly is not None
+    sanitation = Law.create(7, 0, "Camp Sanitation", LawKind.SANITATION)
+    with_sanitation = enact_law(with_assembly, sanitation)
+    assert with_sanitation is not None
+    quarantine = Law.create(8, 0, "Camp Quarantine", LawKind.QUARANTINE)
+    with_quarantine = enact_law(with_sanitation, quarantine)
+    assert with_quarantine is not None
+    building_codes = Law.create(9, 0, "Camp Building Codes", LawKind.BUILDING_CODES)
+    with_codes = enact_law(with_quarantine, building_codes)
+    assert with_codes is not None
+    assert active_zoning_law(with_codes, 0) == zoning
+    assert zoning_eat_bonus_for(with_codes, with_codes.agents[0]) == (
+        ZONING_EAT_RESTORE_BONUS
+    )
+
+
 def test_sanitation_bonus_requires_living_subject() -> None:
     """Only living agents under a SANITATION polity receive the drink bonus."""
     sanitation = Law.create(0, 0, "Camp Sanitation", LawKind.SANITATION)
@@ -601,6 +658,31 @@ def test_building_codes_discount_requires_living_subject() -> None:
     assert building_codes_move_discount_for(bare, bare.agents[0]) == 0.0
 
 
+def test_zoning_bonus_requires_living_subject() -> None:
+    """Only living agents under a ZONING polity receive the eat bonus."""
+    zoning = Law.create(0, 0, "Camp Zoning", LawKind.ZONING)
+    world = _world(Agent.create(agent_id=0, name="A"), laws=(zoning,))
+    assert zoning_eat_bonus_for(world, world.agents[0]) == ZONING_EAT_RESTORE_BONUS
+    dead = world.agents[0].model_copy(
+        update={
+            "status": AgentStatus.DEAD,
+            "health": world.agents[0].health.model_copy(update={"vitality": 0.0}),
+        }
+    )
+    assert zoning_eat_bonus_for(world, dead) == 0.0
+    ungoverned = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(),
+        laws=(),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert zoning_eat_bonus_for(ungoverned, ungoverned.agents[0]) == 0.0
+    bare = _world(Agent.create(agent_id=0, name="A"))
+    assert zoning_eat_bonus_for(bare, bare.agents[0]) == 0.0
+
+
+
 def test_tax_schedule_overrides_levy_fallback() -> None:
     """Active TAX_SCHEDULE beats levy_taxes fallback parameters."""
     law = Law.create(0, 0, "Heavy", LawKind.TAX_SCHEDULE, flat_amount=2)
@@ -639,6 +721,7 @@ def test_census_laws_counts() -> None:
         LawKind.BUILDING_CODES,
         active=True,
     )
+    zoning = Law.create(10, 0, "Zoning", LawKind.ZONING, active=True)
     world = _world(
         Agent.create(agent_id=0, name="A"),
         laws=(
@@ -652,11 +735,12 @@ def test_census_laws_counts() -> None:
             sanitation,
             quarantine,
             building_codes,
+            zoning,
         ),
     )
     snap = census_laws(world)
-    assert snap.law_count == 10
-    assert snap.active_count == 9
+    assert snap.law_count == 11
+    assert snap.active_count == 10
     assert snap.inactive_count == 1
     assert snap.governments_with_active_laws == 1
     assert snap.active_tax_schedule_count == 1
@@ -668,6 +752,7 @@ def test_census_laws_counts() -> None:
     assert snap.active_sanitation_count == 1
     assert snap.active_quarantine_count == 1
     assert snap.active_building_codes_count == 1
+    assert snap.active_zoning_count == 1
     assert census_laws(world) == snap
 
 

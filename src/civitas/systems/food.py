@@ -18,6 +18,7 @@ from civitas.domain import (
     apply_eat,
     can_eat,
 )
+from civitas.domain.effects import effective_eat_restore
 from civitas.domain.food import DEFAULT_EAT_CONSUME_AMOUNT, DEFAULT_EAT_RESTORE
 from civitas.domain.types import PositiveInt, UnitInterval
 
@@ -73,9 +74,10 @@ class FoodSystem:
             raise ValueError(msg)
 
         previous_food = agent.needs.food
+        restore = effective_eat_restore(world, agent, base=float(self._config.restore))
         updated = apply_eat(
             agent,
-            restore=self._config.restore,
+            restore=restore,
             amount=self._config.consume_amount,
         )
         if updated is None:

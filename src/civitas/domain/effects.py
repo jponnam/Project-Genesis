@@ -63,9 +63,10 @@ scribe/dialectic/scriptorium/academy/forum/school/stoa/collegium/curriculum).
 Phase 13 Milestone 9 adds SCAFFOLD wood-gather bonuses at the infrastructure
 seat. Phase 13 Milestone 10 adds a global PLUMB_LINE retrieval-limit bonus
 (stacking with star chart, archive, library, observatory, lyceum, and
-calendar). The action executor, retrieval path, market fills, knowledge
-diffusion, and research progression read these helpers; ``EffectsSystem``
-only observes coverage. Systems never call each other.
+calendar). Phase 13 Milestone 11 adds ZONING law EAT restore bonuses for
+living subjects. The action executor, retrieval path, market fills,
+knowledge diffusion, and research progression read these helpers;
+``EffectsSystem`` only observes coverage. Systems never call each other.
 """
 
 from __future__ import annotations
@@ -76,7 +77,7 @@ from pydantic import BaseModel, ConfigDict
 
 from civitas.domain.cities import CityKind, active_cities, city_at
 from civitas.domain.energy import DEFAULT_REST_RESTORE
-from civitas.domain.food import FOOD_RESOURCE
+from civitas.domain.food import DEFAULT_EAT_RESTORE, FOOD_RESOURCE
 from civitas.domain.geography import DEFAULT_MOVE_ENERGY_COST
 from civitas.domain.ids import LocationId
 from civitas.domain.infrastructure import InfrastructureKind, active_infrastructure
@@ -90,6 +91,7 @@ from civitas.domain.laws import (
     market_fee_for,
     quarantine_rest_bonus_for,
     sanitation_drink_bonus_for,
+    zoning_eat_bonus_for,
 )
 from civitas.domain.numeric import clamp_unit
 from civitas.domain.production import DEFAULT_PRODUCE_ENERGY_COST
@@ -786,6 +788,14 @@ def drink_restore_bonus(world: World, agent: Agent) -> float:
     return bonus
 
 
+def eat_restore_bonus(world: World, agent: Agent) -> float:
+    """Return the EAT restore bonus from zoning laws.
+
+    An active ``ZONING`` statute contributes for living subjects.
+    """
+    return zoning_eat_bonus_for(world, agent)
+
+
 def move_energy_discount(world: World, agent: Agent) -> float:
     """Return MOVE energy discount from road/bridge seats and building codes.
 
@@ -993,6 +1003,19 @@ def effective_drink_restore(
     ``effective_drink_restore = clamp_unit(base + drink_restore_bonus(...))``.
     """
     return clamp_unit(base + drink_restore_bonus(world, agent))
+
+
+def effective_eat_restore(
+    world: World,
+    agent: Agent,
+    *,
+    base: float = DEFAULT_EAT_RESTORE,
+) -> float:
+    """Return EAT restore amount including zoning law bonuses.
+
+    ``effective_eat_restore = clamp_unit(base + eat_restore_bonus(...))``.
+    """
+    return clamp_unit(base + eat_restore_bonus(world, agent))
 
 
 def effective_move_energy_cost(

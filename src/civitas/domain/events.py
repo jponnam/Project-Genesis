@@ -527,6 +527,7 @@ class LawsObserved(DomainEvent):
     active_sanitation_count: NonNegativeInt = 0
     active_quarantine_count: NonNegativeInt = 0
     active_building_codes_count: NonNegativeInt = 0
+    active_zoning_count: NonNegativeInt = 0
 
 
 class ElectionResolved(DomainEvent):
