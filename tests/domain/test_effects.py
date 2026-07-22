@@ -47,6 +47,7 @@ from civitas.domain import (
     POTTERY_WATER_GATHER_BONUS,
     ROAD_MOVE_ENERGY_DISCOUNT,
     SCRIPTORIUM_TEACHINGS_PER_KNOWER_BONUS,
+    SHRINE_DRINK_RESTORE_BONUS,
     STOREHOUSE_FOOD_GATHER_BONUS,
     TEMPLE_REST_RESTORE_BONUS,
     WELL_DRINK_RESTORE_BONUS,
@@ -84,6 +85,7 @@ from civitas.domain import (
     location_has_active_observatory,
     location_has_active_road,
     location_has_active_scriptorium,
+    location_has_active_shrine,
     location_has_active_storehouse,
     location_has_active_temple,
     location_has_active_well,
@@ -657,6 +659,61 @@ def test_well_boosts_drink_restore_for_colocated_agents() -> None:
     assert snap.drink_restore_bps == 3500
     assert snap.active_storehouse_count == 0
     assert snap.food_gather_amount == DEFAULT_GATHER_AMOUNT
+
+
+def test_shrine_boosts_drink_restore_for_colocated_agents() -> None:
+    """Active shrines add a DRINK restore bonus at their seat location."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        infrastructure=(
+            Infrastructure.create(0, 0, 0, 0, "Camp Shrine", InfrastructureKind.SHRINE),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_shrine(world, agent.location_id) is True
+    assert drink_restore_bonus(world, agent) == SHRINE_DRINK_RESTORE_BONUS
+    assert effective_drink_restore(world, agent) == pytest.approx(
+        DEFAULT_DRINK_RESTORE + SHRINE_DRINK_RESTORE_BONUS
+    )
+    bare = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_shrine(bare, bare.agents[0].location_id) is False
+    assert drink_restore_bonus(bare, bare.agents[0]) == 0.0
+    assert effective_drink_restore(bare, bare.agents[0]) == pytest.approx(
+        DEFAULT_DRINK_RESTORE
+    )
+
+
+def test_well_and_shrine_drink_restore_bonuses_stack() -> None:
+    """WELL and SHRINE drink restore bonuses stack at the same seat."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        infrastructure=(
+            Infrastructure.create(0, 0, 0, 0, "Camp Well", InfrastructureKind.WELL),
+            Infrastructure.create(1, 0, 0, 0, "Camp Shrine", InfrastructureKind.SHRINE),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_well(world, agent.location_id) is True
+    assert location_has_active_shrine(world, agent.location_id) is True
+    assert drink_restore_bonus(world, agent) == pytest.approx(
+        WELL_DRINK_RESTORE_BONUS + SHRINE_DRINK_RESTORE_BONUS
+    )
+    assert effective_drink_restore(world, agent) == pytest.approx(
+        DEFAULT_DRINK_RESTORE + WELL_DRINK_RESTORE_BONUS + SHRINE_DRINK_RESTORE_BONUS
+    )
 
 
 def test_storehouse_boosts_food_gather_for_colocated_agents() -> None:

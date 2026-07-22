@@ -19,9 +19,10 @@ and FORUM city teachings-per-knower bonuses (stacking with
 academy/scriptorium/curriculum/scribe), plus a global DIALECTIC
 teachings-per-knower bonus (stacking with scribe). Phase 11 adds
 TEMPLE REST restore bonuses (stacking with the global fire-hearth
-innovation). The action executor, retrieval path, market fills, and
-knowledge diffusion read these helpers; ``EffectsSystem`` only observes
-coverage. Systems never call each other.
+innovation) and SHRINE DRINK restore bonuses (stacking with WELL).
+The action executor, retrieval path, market fills, and knowledge
+diffusion read these helpers; ``EffectsSystem`` only observes coverage.
+Systems never call each other.
 """
 
 from __future__ import annotations
@@ -66,6 +67,7 @@ ACADEMY_TEACHINGS_PER_KNOWER_BONUS: int = 1
 FORUM_TEACHINGS_PER_KNOWER_BONUS: int = 1
 PHILOSOPHY_TEACHINGS_PER_KNOWER_BONUS: int = 1
 WELL_DRINK_RESTORE_BONUS: float = 0.05
+SHRINE_DRINK_RESTORE_BONUS: float = 0.05
 STOREHOUSE_FOOD_GATHER_BONUS: int = 1
 ROAD_MOVE_ENERGY_DISCOUNT: float = 0.02
 GUILD_PRODUCE_ENERGY_DISCOUNT: float = 0.02
@@ -182,6 +184,22 @@ def location_has_active_observatory(
     )
     return any(
         item.kind is InfrastructureKind.OBSERVATORY and item.location_id == target
+        for item in active_infrastructure(world)
+    )
+
+
+def location_has_active_shrine(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active SHRINE stands at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InfrastructureKind.SHRINE and item.location_id == target
         for item in active_infrastructure(world)
     )
 
@@ -351,10 +369,18 @@ def gather_amount_bonus(
 
 
 def drink_restore_bonus(world: World, agent: Agent) -> float:
-    """Return the DRINK restore bonus from a WELL at the agent's location."""
+    """Return the DRINK restore bonus from WELL/SHRINE at the agent's location.
+
+    An active WELL contributes ``WELL_DRINK_RESTORE_BONUS``. An active
+    SHRINE contributes ``SHRINE_DRINK_RESTORE_BONUS``. Both stack when
+    present at the same seat.
+    """
+    bonus = 0.0
     if location_has_active_well(world, agent.location_id):
-        return WELL_DRINK_RESTORE_BONUS
-    return 0.0
+        bonus += WELL_DRINK_RESTORE_BONUS
+    if location_has_active_shrine(world, agent.location_id):
+        bonus += SHRINE_DRINK_RESTORE_BONUS
+    return bonus
 
 
 def move_energy_discount(world: World, agent: Agent) -> float:
@@ -499,7 +525,11 @@ def effective_drink_restore(
     *,
     base: float = DEFAULT_DRINK_RESTORE,
 ) -> float:
-    """Return DRINK restore amount including well infrastructure bonuses."""
+    """Return DRINK restore amount including well and shrine bonuses.
+
+    ``effective_drink_restore = clamp_unit(base + well_bonus + shrine_bonus)``
+    where each active seat kind contributes ``+0.05`` when colocated.
+    """
     return clamp_unit(base + drink_restore_bonus(world, agent))
 
 

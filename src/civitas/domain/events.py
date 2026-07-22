@@ -593,6 +593,7 @@ class InfrastructuresObserved(DomainEvent):
     active_road_count: NonNegativeInt = 0
     active_scriptorium_count: NonNegativeInt = 0
     active_observatory_count: NonNegativeInt = 0
+    active_shrine_count: NonNegativeInt = 0
 
 
 class TechnologyCreated(DomainEvent):

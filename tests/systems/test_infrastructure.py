@@ -39,6 +39,7 @@ def test_observe_emits_without_mutating_world() -> None:
     assert events[0].active_road_count == 0
     assert events[0].active_scriptorium_count == 0
     assert events[0].active_observatory_count == 0
+    assert events[0].active_shrine_count == 0
 
 
 def test_observe_can_suppress_events() -> None:

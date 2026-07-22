@@ -123,15 +123,14 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 11 — Milestone 3: Temple institutions**
+**Phase 11 — Milestone 4: Shrine infrastructure**
 
-``InstitutionKind.TEMPLE`` is a durable government-attached organization
-with seat, officer, and budget like academies and guilds. An active
-temple at an agent's location grants ``+0.05`` REST restore
-(``TEMPLE_REST_RESTORE_BONUS``), stacking with the society-wide fire
-hearth bonus via ``effective_rest_restore``. Census tracks
-``active_temple_count`` on ``InstitutionsObserved``. No temple is
-seeded by default.
+``InfrastructureKind.SHRINE`` is paid infrastructure
+(``DEFAULT_SHRINE_BUILD_COST`` = 7) like wells and observatories. An
+active shrine at an agent's location grants ``+0.05`` DRINK restore
+(``SHRINE_DRINK_RESTORE_BONUS``), stacking with WELL via
+``effective_drink_restore``. Census tracks ``active_shrine_count`` on
+``InfrastructuresObserved``. No shrine is seeded by default.
 
 ### Completed
 
@@ -224,6 +223,7 @@ JSONL storage → `civitas run`
 - Milestone 1: Philosophy technology
 - Milestone 2: Ethics laws
 - Milestone 3: Temple institutions
+- Milestone 4: Shrine infrastructure
 
 ## License
 
