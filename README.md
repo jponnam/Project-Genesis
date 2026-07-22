@@ -128,12 +128,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 16 Milestone 2: Labor laws**
+**Phase 16 Milestone 3: Weaver institutions**
 
-``LawKind.LABOR`` grants living subjects -0.02 PRODUCE energy cost when
-active. At most one active labor statute per government. Stacks with
-guild, workshop, foundry, abacus, pulley, customs, and loom. Not seeded
-in ``default_laws``.
+``InstitutionKind.WEAVER`` grants a seat-scoped PRODUCE energy discount
+that stacks with guild, workshop, foundry, abacus, pulley, customs,
+labor, and loom. Not seeded.
 
 ### Completed
 
@@ -295,6 +294,7 @@ JSONL storage → `civitas run`
 **Phase 16:**
 - Milestone 1: Textiles technology
 - Milestone 2: Labor laws
+- Milestone 3: Weaver institutions
 
 ## License
 
