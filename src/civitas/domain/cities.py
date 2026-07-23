@@ -42,14 +42,16 @@ Milestone 5 adds ``CityKind.TIMBER_TOWN`` as a non-capital specialized
 seat for forestry (gatherers at the seat gain a wood gather bonus).
 Phase 18 Milestone 12 adds ``CityKind.GUILDHALL`` as a non-capital
 specialized seat for craft production (living residents gain a PRODUCE
+energy discount). Phase 19 Milestone 5 adds ``CityKind.POTTERY_TOWN`` as a
+non-capital specialized seat for ceramics (living residents gain a PRODUCE
 energy discount).
 Resident
 counts are derived from living agents at the seat. Infrastructure remains a
 separate aggregate. Camp City stays the only seeded settlement capital;
 libraries, forums, sanctuaries, agoras, infirmaries, lazarettos, foundries,
 quarries, harbors, entrepots, farmsteads, pastorals, mill towns,
-emporiums, mining camps, ironworks, timber towns, and guildhalls are not
-seeded.
+emporiums, mining camps, ironworks, timber towns, guildhalls, and pottery
+towns are not seeded.
 """
 
 from __future__ import annotations
@@ -94,6 +96,7 @@ class CityKind(StrEnum):
     IRONWORKS = "ironworks"
     TIMBER_TOWN = "timber_town"
     GUILDHALL = "guildhall"
+    POTTERY_TOWN = "pottery_town"
 
 
 # City kinds that may never be flagged as capital.
@@ -118,6 +121,7 @@ _NON_CAPITAL_KINDS: frozenset[CityKind] = frozenset(
         CityKind.IRONWORKS,
         CityKind.TIMBER_TOWN,
         CityKind.GUILDHALL,
+        CityKind.POTTERY_TOWN,
     }
 )
 
@@ -210,6 +214,7 @@ class CityCensus(BaseModel):
     active_ironworks_count: NonNegativeInt = 0
     active_timber_town_count: NonNegativeInt = 0
     active_guildhall_count: NonNegativeInt = 0
+    active_pottery_town_count: NonNegativeInt = 0
 
 
 def city_by_id(world: World, city_id: CityId | int) -> City | None:
@@ -458,6 +463,18 @@ def guildhalls_for(
     )
 
 
+def pottery_towns_for(
+    world: World,
+    government_id: GovernmentId | int,
+) -> tuple[City, ...]:
+    """Return pottery-town cities for ``government_id`` in ascending id order."""
+    return tuple(
+        city
+        for city in cities_for(world, government_id)
+        if city.kind is CityKind.POTTERY_TOWN
+    )
+
+
 def city_at(world: World, location_id: LocationId | int) -> City | None:
     """Return the city seated at ``location_id``, or ``None``."""
     target = (
@@ -671,6 +688,9 @@ def census_cities(world: World) -> CityCensus:
         1 for city in active if city.kind is CityKind.TIMBER_TOWN
     )
     active_guildhalls = sum(1 for city in active if city.kind is CityKind.GUILDHALL)
+    active_pottery_towns = sum(
+        1 for city in active if city.kind is CityKind.POTTERY_TOWN
+    )
     return CityCensus(
         tick=world.tick,
         city_count=len(cities),
@@ -702,4 +722,5 @@ def census_cities(world: World) -> CityCensus:
         active_ironworks_count=active_ironworks,
         active_timber_town_count=active_timber_towns,
         active_guildhall_count=active_guildhalls,
+        active_pottery_town_count=active_pottery_towns,
     )

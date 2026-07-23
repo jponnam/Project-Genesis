@@ -131,15 +131,15 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 19 Milestone 4: Kiln yard infrastructure**
+**Phase 19 Milestone 5: Pottery town cities**
 
-``InfrastructureKind.KILN_YARD`` is a craft infrastructure seat whose
-living colocated agents gain a PRODUCE energy discount. It stacks with
-the full produce chain: guild, workshop, weaver, smelter, joiner, potter,
-foundry, fulling mill, forge works, sawpit, mill town, ironworks,
-guildhall, tannery, bellows, lathe, plane, dovetail, kiln, abacus,
-pulley, customs, labor, safety codes, firing codes, and loom. Kiln yards
-are not seeded.
+``CityKind.POTTERY_TOWN`` is a non-capital specialized city seat for
+ceramics whose living residents gain a PRODUCE energy discount. It stacks
+with the full produce chain: guild, workshop, weaver, smelter, joiner,
+potter, foundry, fulling mill, forge works, sawpit, kiln yard, mill town,
+ironworks, guildhall, tannery, bellows, lathe, plane, dovetail, kiln,
+abacus, pulley, customs, labor, safety codes, firing codes, and loom.
+Pottery towns cannot be capitals and are not seeded.
 
 ### Completed
 
@@ -345,6 +345,7 @@ JSONL storage → `civitas run`
 - Milestone 2: Firing codes laws
 - Milestone 3: Potter institutions
 - Milestone 4: Kiln yard infrastructure
+- Milestone 5: Pottery town cities
 
 ## License
 
