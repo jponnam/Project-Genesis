@@ -131,14 +131,14 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 19 Milestone 2: Firing codes laws**
+**Phase 19 Milestone 3: Potter institutions**
 
-``LawKind.FIRING_CODES`` is a subject-scoped statute. Living agents under
-an active firing-codes law gain a PRODUCE energy discount that stacks with
-the full produce chain: guild, workshop, weaver, smelter, joiner, foundry,
-fulling mill, forge works, sawpit, mill town, ironworks, guildhall,
-tannery, bellows, lathe, plane, dovetail, kiln, abacus, pulley, customs,
-labor, safety codes, and loom. Firing codes are not seeded.
+``InstitutionKind.POTTER`` is a craft seat whose living colocated agents
+gain a PRODUCE energy discount. It stacks with the full produce chain:
+guild, workshop, weaver, smelter, joiner, foundry, fulling mill, forge
+works, sawpit, mill town, ironworks, guildhall, tannery, bellows, lathe,
+plane, dovetail, kiln, abacus, pulley, customs, labor, safety codes,
+firing codes, and loom. Potters are not seeded.
 
 ### Completed
 
@@ -342,6 +342,7 @@ JSONL storage → `civitas run`
 **Phase 19:**
 - Milestone 1: Ceramics technology
 - Milestone 2: Firing codes laws
+- Milestone 3: Potter institutions
 
 ## License
 
