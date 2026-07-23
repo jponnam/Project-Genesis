@@ -123,7 +123,8 @@ civitas emergence runs/demo_seed42.jsonl
 civitas emergence runs/demo_seed42.jsonl --format json
 uv pip install -e ".[observatory]"
 civitas serve --host 127.0.0.1 --port 8000
-# OpenAPI UI: http://127.0.0.1:8000/docs
+# Observatory: http://127.0.0.1:8000/ui/
+# OpenAPI UI:  http://127.0.0.1:8000/docs
 ```
 
 ## Roadmap
@@ -154,12 +155,13 @@ civitas serve --host 127.0.0.1 --port 8000
 
 ## Current Milestone
 
-**Phase 21 Milestone 6: Local research API**
+**Phase 21 Milestone 7: Interactive observatory**
 
-Read-only FastAPI service over JSONL runs (`civitas serve`):
-`/health`, `/runs`, `/runs/{id}`, `/events`, `/summary`, `/metrics`,
-`/emergence`, `/agents`, `/timeline`. Pagination + filters on events;
-OpenAPI at `/docs`. Install API deps with `uv pip install -e ".[observatory]"`.
+Server-rendered observatory UI at `/ui/` (via `civitas serve`): run
+selector, overview dashboard, timeline/filters, agents, wealth/resource
+panels, event-frequency bars, institutions/cities/tech, emergence
+findings, and seed comparison. Unavailable reconstructions are labeled
+explicitly. Requires `uv pip install -e ".[observatory]"`.
 
 See also: `docs/CURRENT_STATE_AUDIT.md` (baseline audit) and
 `docs/PHASE_21_DESIGN.md` (phase plan).

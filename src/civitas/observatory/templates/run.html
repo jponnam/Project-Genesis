@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero" data-reveal>
+  <h1>{{ run.run_id }}</h1>
+  <p>
+    seed {{ run.seed if run.seed is not none else "unavailable" }} ·
+    {{ run.ticks_executed if run.ticks_executed is not none else "?" }} ticks ·
+    {{ run.event_count if run.event_count is not none else "?" }} events ·
+    name {{ run.run_name or "unavailable" }}
+  </p>
+  {% for note in run.verification_notes %}
+    <span class="chip warn">{{ note }}</span>
+  {% endfor %}
+</section>
+
+<section class="panel" data-reveal>
+  <h2>Filters</h2>
+  <form class="inline" method="get">
+    <label>From tick<input type="number" name="from_tick" min="0" value="{{ filters.from_tick if filters.from_tick is not none else '' }}"></label>
+    <label>To tick<input type="number" name="to_tick" min="0" value="{{ filters.to_tick if filters.to_tick is not none else '' }}"></label>
+    <label>Agent id<input type="number" name="agent_id" min="0" value="{{ filters.agent_id if filters.agent_id is not none else '' }}"></label>
+    <label>Event type<input type="text" name="event_type" value="{{ filters.event_type or '' }}" placeholder="ActionSelected"></label>
+    <button type="submit">Apply</button>
+    <a class="button secondary" href="/ui/runs/{{ run.run_id }}">Clear</a>
+  </form>
+</section>
+
+<div class="grid">
+  <section class="panel third" data-reveal>
+    <h3>Population</h3>
+    {% if summary.population %}
+      <p>alive {{ summary.population.alive }} · dead {{ summary.population.dead }} · total {{ summary.population.total }}</p>
+      <p class="muted">births {{ summary.births }} · deaths {{ summary.deaths }}</p>
+    {% else %}
+      <div class="empty">Population census unavailable in this log.</div>
+    {% endif %}
+  </section>
+
+  <section class="panel third" data-reveal>
+    <h3>Wealth</h3>
+    {% if wealth %}
+      <p>total {{ wealth.total }} · mean alive {{ '%.2f'|format(wealth.mean_alive) }}</p>
+      <p class="muted">gini_bps {{ wealth.gini_bps }} · top1_share_bps {{ wealth.top1_share_bps }}</p>
+    {% else %}
+      <div class="empty">Wealth census unavailable in this log.</div>
+    {% endif %}
+  </section>
+
+  <section class="panel third" data-reveal>
+    <h3>Resources</h3>
+    {% if resource_holdings_available %}
+      <p>Final holdings available.</p>
+    {% else %}
+      <div class="empty">Final per-agent holdings unavailable. Showing flows only.</div>
+    {% endif %}
+    <p class="muted">gathered {{ summary.resources_gathered }}</p>
+    <p class="muted">consumed {{ summary.resources_consumed }}</p>
+  </section>
+
+  <section class="panel half" data-reveal>
+    <h3>Event-type frequency</h3>
+    {% if event_frequency %}
+      {% set counts = event_frequency.values()|list %}
+      {% set max_count = counts|max %}
+      {% for name, count in event_frequency.items() %}
+        <div class="bar-row">
+          <div>{{ name }}</div>
+          <div class="bar-track"><div class="bar-fill" data-width="{{ (count / max_count * 100) if max_count else 0 }}"></div></div>
+          <div>{{ count }}</div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty">Event frequency unavailable.</div>
+    {% endif %}
+  </section>
+
+  <section class="panel half" data-reveal>
+    <h3>Agent activity</h3>
+    {% if activity %}
+      {% for agent, share in activity.items() %}
+        <div class="bar-row">
+          <div>agent {{ agent }}</div>
+          <div class="bar-track"><div class="bar-fill" data-width="{{ share * 100 }}"></div></div>
+          <div>{{ '%.0f'|format(share * 100) }}%</div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty">No ActionSelected events for activity distribution.</div>
+    {% endif %}
+  </section>
+
+  <section class="panel half" data-reveal>
+    <h3>Institutions · Cities · Technologies</h3>
+    <p><strong>Institutions</strong>: {{ summary.institutions|list or "none recorded" }}</p>
+    <p><strong>Cities</strong>: {{ summary.cities|list or "none recorded" }}</p>
+    <p><strong>Technologies discovered</strong>: {{ summary.technologies_discovered|list or "none recorded" }}</p>
+  </section>
+
+  <section class="panel half" data-reveal>
+    <h3>Emergence findings</h3>
+    {% if emergence.findings %}
+      {% for finding in emergence.findings %}
+        <div class="finding">
+          <strong>{{ finding.pattern }}</strong>
+          <span class="chip">strength {{ '%.2f'|format(finding.strength) }}</span>
+          <span class="chip">confidence {{ '%.2f'|format(finding.confidence) }}</span>
+          <p>{{ finding.explanation }}</p>
+          <p class="muted">ticks {{ finding.tick_start }}–{{ finding.tick_end }}</p>
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty">No rule thresholds matched for this run.</div>
+    {% endif %}
+  </section>
+
+  <section class="panel" data-reveal>
+    <h3>Agents</h3>
+    <table>
+      <thead><tr><th>ID</th><th>Name</th><th>Status</th><th>Location</th><th>Actions</th></tr></thead>
+      <tbody>
+        {% for agent in agents %}
+        <tr>
+          <td><a href="/ui/runs/{{ run.run_id }}/agents/{{ agent.agent_id }}">{{ agent.agent_id }}</a></td>
+          <td>{{ agent.name or "unavailable" }}</td>
+          <td>{% if agent.died %}dead ({{ agent.death_cause }}){% else %}alive{% endif %}</td>
+          <td>{{ agent.last_location_id if agent.last_location_id is not none else "unavailable" }}</td>
+          <td>{{ agent.action_counts }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="panel" data-reveal>
+    <h3>Timeline / filtered events</h3>
+    <p class="muted">Showing {{ event_page|length }} of {{ event_total }} matched events.</p>
+    {% if summary.notable_events %}
+      <h4>Notable</h4>
+      <ul>
+        {% for item in summary.notable_events %}
+          <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+    <table>
+      <thead><tr><th>Seq</th><th>Tick</th><th>Type</th><th>Detail</th></tr></thead>
+      <tbody>
+        {% for event in event_page %}
+        <tr>
+          <td>{{ event.sequence }}</td>
+          <td>{{ event.tick.value if event.tick is mapping else event.tick }}</td>
+          <td>{{ event.event_type }}</td>
+          <td class="muted">
+            {% if event.action is defined %}action={{ event.action }}{% endif %}
+            {% if event.agent_id is defined %} agent={{ event.agent_id.value if event.agent_id is mapping else event.agent_id }}{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,137 @@
+:root {
+  --bg0: #0f1410;
+  --bg1: #182019;
+  --bg2: #223027;
+  --ink: #e7efe6;
+  --muted: #9aaf9c;
+  --accent: #d0a35c;
+  --accent-2: #6f9e7a;
+  --danger: #c47b6a;
+  --line: rgba(231, 239, 230, 0.12);
+  --shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+  --radius: 18px;
+  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --font-body: "Segoe UI", "Helvetica Neue", sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  min-height: 100vh;
+  color: var(--ink);
+  font-family: var(--font-body);
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(208, 163, 92, 0.18), transparent 55%),
+    radial-gradient(900px 500px at 90% 0%, rgba(111, 158, 122, 0.16), transparent 50%),
+    linear-gradient(180deg, var(--bg0), #121a14 40%, var(--bg1));
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.shell { width: min(1180px, calc(100% - 2rem)); margin: 0 auto; padding: 1.5rem 0 3rem; }
+.topbar {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
+  margin-bottom: 1.75rem;
+}
+.brand {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  letter-spacing: 0.02em;
+}
+.brand span { color: var(--accent); }
+.nav { display: flex; gap: 1rem; color: var(--muted); font-size: 0.95rem; }
+
+.hero {
+  padding: 1.5rem 1.6rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, rgba(34, 48, 39, 0.9), rgba(24, 32, 25, 0.75));
+  box-shadow: var(--shadow);
+  margin-bottom: 1.25rem;
+}
+.hero h1, .panel h2, .panel h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  margin: 0 0 0.4rem;
+}
+.hero p, .muted { color: var(--muted); }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1rem;
+}
+.panel {
+  grid-column: span 12;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(24, 32, 25, 0.78);
+  padding: 1rem 1.1rem 1.15rem;
+}
+.panel.half { grid-column: span 6; }
+.panel.third { grid-column: span 4; }
+
+@media (max-width: 900px) {
+  .panel.half, .panel.third { grid-column: span 12; }
+}
+
+table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+th, td { padding: 0.45rem 0.35rem; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+th { color: var(--muted); font-weight: 600; }
+
+.bar-row { display: grid; grid-template-columns: 160px 1fr 48px; gap: 0.5rem; align-items: center; margin: 0.35rem 0; }
+.bar-track { height: 10px; background: rgba(255,255,255,0.06); border-radius: 999px; overflow: hidden; }
+.bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent-2), var(--accent)); }
+
+.chip {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin: 0.1rem 0.2rem 0.1rem 0;
+}
+.chip.warn { color: #f0d3a0; border-color: rgba(208,163,92,0.4); }
+
+form.inline { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: end; }
+label { display: grid; gap: 0.25rem; color: var(--muted); font-size: 0.85rem; }
+input, select, button {
+  background: var(--bg2);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.5rem 0.7rem;
+  font: inherit;
+}
+button, .button {
+  background: linear-gradient(135deg, #b8893f, #d0a35c);
+  color: #1a140a;
+  border: none;
+  font-weight: 650;
+  cursor: pointer;
+}
+button.secondary { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+
+.empty {
+  padding: 1rem;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  color: var(--muted);
+}
+
+.compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+@media (max-width: 900px) { .compare { grid-template-columns: 1fr; } }
+
+.finding {
+  border-left: 3px solid var(--accent);
+  padding: 0.55rem 0.75rem;
+  margin: 0.55rem 0;
+  background: rgba(255,255,255,0.03);
+}
+.finding strong { display: block; margin-bottom: 0.2rem; }

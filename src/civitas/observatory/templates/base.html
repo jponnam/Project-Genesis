@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ title }} · Civitas Observatory</title>
+  <link rel="stylesheet" href="/ui/static/styles.css" />
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">Civitas <span>Observatory</span></div>
+      <nav class="nav">
+        <a href="/ui/">Runs</a>
+        <a href="/ui/compare">Compare</a>
+        <a href="/docs" target="_blank" rel="noreferrer">API docs</a>
+      </nav>
+    </header>
+    {% block content %}{% endblock %}
+  </div>
+  <script src="/ui/static/app.js"></script>
+</body>
+</html>

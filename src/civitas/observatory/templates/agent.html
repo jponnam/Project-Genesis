@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero" data-reveal>
+  <h1>Agent {{ agent.agent_id }}</h1>
+  <p>
+    <a href="/ui/runs/{{ run_id }}">← back to run</a> ·
+    {{ agent.name or "unnamed" }} ·
+    {% if agent.died %}dead{% else %}alive{% endif %}
+  </p>
+</section>
+
+<div class="grid">
+  <section class="panel half" data-reveal>
+    <h3>Profile</h3>
+    <p>spawned: {{ agent.spawned }}</p>
+    <p>born: {{ agent.born }}</p>
+    <p>died: {{ agent.died }}{% if agent.death_cause %} ({{ agent.death_cause }}){% endif %}</p>
+    <p>last location: {{ agent.last_location_id if agent.last_location_id is not none else "unavailable" }}</p>
+    <p>action counts: {{ agent.action_counts or "none recorded" }}</p>
+  </section>
+  <section class="panel half" data-reveal>
+    <h3>Notes</h3>
+    <div class="empty">
+      Per-agent inventories and need trajectories are not fully reconstructable
+      from the current event schema unless corresponding events exist.
+    </div>
+  </section>
+  <section class="panel" data-reveal>
+    <h3>Events involving this agent</h3>
+    <p class="muted">{{ events|length }} of {{ event_total }} matched events shown.</p>
+    <table>
+      <thead><tr><th>Seq</th><th>Tick</th><th>Type</th><th>Action</th></tr></thead>
+      <tbody>
+        {% for event in events %}
+        <tr>
+          <td>{{ event.sequence }}</td>
+          <td>{{ event.tick.value if event.tick is mapping else event.tick }}</td>
+          <td>{{ event.event_type }}</td>
+          <td>{{ event.action if event.action is defined else "—" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+</div>
+{% endblock %}
