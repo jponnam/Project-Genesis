@@ -14,6 +14,7 @@ from civitas.domain import (
     CONSERVATION_WOOD_GATHER_BONUS,
     CUSTOMS_PRODUCE_ENERGY_DISCOUNT,
     ETHICS_MIN_TEACH_TRUST_DELTA,
+    FIRING_CODES_PRODUCE_ENERGY_DISCOUNT,
     FOREST_MANAGEMENT_WOOD_GATHER_BONUS,
     LABOR_PRODUCE_ENERGY_DISCOUNT,
     LAND_TENURE_EAT_RESTORE_BONUS,
@@ -39,6 +40,7 @@ from civitas.domain import (
     active_curriculum_law,
     active_customs_law,
     active_ethics_law,
+    active_firing_codes_law,
     active_forest_management_law,
     active_labor_law,
     active_land_tenure_law,
@@ -62,6 +64,7 @@ from civitas.domain import (
     default_world_map,
     enact_law,
     ethics_min_teach_trust_delta_for,
+    firing_codes_produce_discount_for,
     forest_management_wood_bonus_for,
     labor_produce_discount_for,
     land_tenure_eat_bonus_for,
@@ -112,6 +115,7 @@ def test_default_laws_seed_camp_poll_tax() -> None:
     assert all(law.kind is not LawKind.LABOR for law in default_laws())
     assert all(law.kind is not LawKind.SUMPTUARY for law in default_laws())
     assert all(law.kind is not LawKind.SAFETY_CODES for law in default_laws())
+    assert all(law.kind is not LawKind.FIRING_CODES for law in default_laws())
 
 
 def test_world_rejects_unknown_government_and_duplicate_active_tax() -> None:
@@ -237,6 +241,14 @@ def test_world_rejects_duplicate_active_sumptuary() -> None:
     left = Law.create(0, 0, "Sumptuary A", LawKind.SUMPTUARY)
     right = Law.create(1, 0, "Sumptuary B", LawKind.SUMPTUARY)
     with pytest.raises(ValidationError, match="SUMPTUARY"):
+        _world(Agent.create(agent_id=0, name="A"), laws=(left, right))
+
+
+def test_world_rejects_duplicate_active_firing_codes() -> None:
+    """At most one active FIRING_CODES law per government."""
+    left = Law.create(0, 0, "Firing Codes A", LawKind.FIRING_CODES)
+    right = Law.create(1, 0, "Firing Codes B", LawKind.FIRING_CODES)
+    with pytest.raises(ValidationError, match="FIRING_CODES"):
         _world(Agent.create(agent_id=0, name="A"), laws=(left, right))
 
 
@@ -1228,6 +1240,61 @@ def test_forest_management_bonus_requires_living_subject() -> None:
     assert forest_management_wood_bonus_for(bare, bare.agents[0]) == 0
 
 
+def test_enact_firing_codes_and_uniqueness() -> None:
+    """FIRING_CODES enacts once per government; kind alone enables discount."""
+    world = _world(Agent.create(agent_id=0, name="A"))
+    firing_codes = Law.create(0, 0, "Camp Firing Codes", LawKind.FIRING_CODES)
+    enacted = enact_law(world, firing_codes)
+    assert enacted is not None
+    assert active_firing_codes_law(enacted, 0) == firing_codes
+    assert firing_codes_produce_discount_for(enacted, enacted.agents[0]) == (
+        FIRING_CODES_PRODUCE_ENERGY_DISCOUNT
+    )
+    assert FIRING_CODES_PRODUCE_ENERGY_DISCOUNT == 0.02
+    duplicate = Law.create(1, 0, "Other Firing Codes", LawKind.FIRING_CODES)
+    assert enact_law(enacted, duplicate) is None
+    # Other unique kinds may coexist with FIRING_CODES.
+    safety_codes = Law.create(1, 0, "Camp Safety Codes", LawKind.SAFETY_CODES)
+    with_safety = enact_law(enacted, safety_codes)
+    assert with_safety is not None
+    assert active_firing_codes_law(with_safety, 0) == firing_codes
+    assert (
+        firing_codes_produce_discount_for(
+            with_safety,
+            with_safety.agents[0],
+        )
+        == FIRING_CODES_PRODUCE_ENERGY_DISCOUNT
+    )
+
+
+def test_firing_codes_discount_requires_living_subject() -> None:
+    """Only living agents under FIRING_CODES receive the produce discount."""
+    firing_codes = Law.create(0, 0, "Camp Firing Codes", LawKind.FIRING_CODES)
+    world = _world(Agent.create(agent_id=0, name="A"), laws=(firing_codes,))
+    assert firing_codes_produce_discount_for(world, world.agents[0]) == (
+        FIRING_CODES_PRODUCE_ENERGY_DISCOUNT
+    )
+    dead = world.agents[0].model_copy(
+        update={
+            "status": AgentStatus.DEAD,
+            "health": world.agents[0].health.model_copy(update={"vitality": 0.0}),
+        }
+    )
+    assert firing_codes_produce_discount_for(world, dead) == 0.0
+    ungoverned = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(),
+        laws=(),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert firing_codes_produce_discount_for(
+        ungoverned, ungoverned.agents[0]
+    ) == 0.0
+    bare = _world(Agent.create(agent_id=0, name="A"))
+    assert firing_codes_produce_discount_for(bare, bare.agents[0]) == 0.0
+
+
 def test_enact_labor_and_uniqueness() -> None:
     """LABOR enacts once per government; kind alone enables discount."""
     world = _world(Agent.create(agent_id=0, name="A"))
@@ -1431,6 +1498,7 @@ def test_census_laws_counts() -> None:
     forest_management = Law.create(
         20, 0, "Forest Management", LawKind.FOREST_MANAGEMENT, active=True
     )
+    firing_codes = Law.create(21, 0, "Firing Codes", LawKind.FIRING_CODES, active=True)
     world = _world(
         Agent.create(agent_id=0, name="A"),
         laws=(
@@ -1455,11 +1523,12 @@ def test_census_laws_counts() -> None:
             safety_codes,
             timber_rights,
             forest_management,
+            firing_codes,
         ),
     )
     snap = census_laws(world)
-    assert snap.law_count == 21
-    assert snap.active_count == 20
+    assert snap.law_count == 22
+    assert snap.active_count == 21
     assert snap.inactive_count == 1
     assert snap.governments_with_active_laws == 1
     assert snap.active_tax_schedule_count == 1
@@ -1482,6 +1551,7 @@ def test_census_laws_counts() -> None:
     assert snap.active_safety_codes_count == 1
     assert snap.active_timber_rights_count == 1
     assert snap.active_forest_management_count == 1
+    assert snap.active_firing_codes_count == 1
     assert census_laws(world) == snap
 
 

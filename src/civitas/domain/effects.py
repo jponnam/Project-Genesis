@@ -217,7 +217,11 @@ Phase 19 Milestone 1 adds a global KILN produce-energy discount society-wide
 (stacking with guild, workshop, weaver, smelter, joiner, foundry, fulling
 mill, forge works, mill town, ironworks, guildhall, sawpit, tannery, bellows,
 lathe, plane, dovetail, abacus, pulley, customs, labor, safety codes, and
-loom).
+loom). Phase 19 Milestone 2 adds subject-scoped FIRING_CODES PRODUCE energy
+discounts (stacking with guild, workshop, weaver, smelter, joiner, foundry,
+fulling mill, forge works, sawpit, mill town, ironworks, guildhall, tannery,
+bellows, lathe, plane, dovetail, kiln, abacus, pulley, customs, labor,
+safety codes, and loom).
 The action
 executor,
 retrieval
@@ -247,6 +251,7 @@ from civitas.domain.laws import (
     conservation_wood_bonus_for,
     curriculum_teachings_bonus_for,
     customs_produce_discount_for,
+    firing_codes_produce_discount_for,
     forest_management_wood_bonus_for,
     labor_produce_discount_for,
     land_tenure_eat_bonus_for,
@@ -1647,6 +1652,7 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
     society-wide. An active
     ``LABOR`` statute contributes its subject
     discount. An active ``SAFETY_CODES`` statute contributes its subject
+    discount. An active ``FIRING_CODES`` statute contributes its subject
     discount. All stack when present.
     """
     discount = 0.0
@@ -1677,6 +1683,7 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
     discount += customs_produce_discount_for(world, agent)
     discount += labor_produce_discount_for(world, agent)
     discount += safety_codes_produce_discount_for(world, agent)
+    discount += firing_codes_produce_discount_for(world, agent)
     if innovation_kind_is_active(world, InnovationKind.ABACUS):
         discount += MATHEMATICS_PRODUCE_ENERGY_DISCOUNT
     if innovation_kind_is_active(world, InnovationKind.PULLEY):
