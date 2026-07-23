@@ -670,6 +670,7 @@ class InfrastructuresObserved(DomainEvent):
     active_lumber_yard_count: NonNegativeInt = 0
     active_sawpit_count: NonNegativeInt = 0
     active_kiln_yard_count: NonNegativeInt = 0
+    active_clay_pit_count: NonNegativeInt = 0
 
 
 class TechnologyCreated(DomainEvent):

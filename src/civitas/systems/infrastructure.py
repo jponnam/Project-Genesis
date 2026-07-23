@@ -103,6 +103,7 @@ class InfrastructureSystem:
                     active_lumber_yard_count=snap.active_lumber_yard_count,
                     active_sawpit_count=snap.active_sawpit_count,
                     active_kiln_yard_count=snap.active_kiln_yard_count,
+                    active_clay_pit_count=snap.active_clay_pit_count,
                 )
             )
         return world

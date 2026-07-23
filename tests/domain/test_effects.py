@@ -96,6 +96,7 @@ from civitas.domain import (
     CARTOGRAPHY_RETRIEVAL_LIMIT_BONUS,
     CARVER_TEACHINGS_PER_KNOWER_BONUS,
     CERAMICS_PRODUCE_ENERGY_DISCOUNT,
+    CLAY_PIT_PRODUCE_ENERGY_DISCOUNT,
     CLINIC_DRINK_RESTORE_BONUS,
     COLLEGIUM_TEACHINGS_PER_KNOWER_BONUS,
     CONSERVATION_WOOD_GATHER_BONUS,
@@ -256,6 +257,7 @@ from civitas.domain import (
     location_has_active_caravan,
     location_has_active_cartographer,
     location_has_active_carver,
+    location_has_active_clay_pit,
     location_has_active_clinic,
     location_has_active_collegium,
     location_has_active_ditch,
@@ -6859,6 +6861,77 @@ def test_kiln_yard_reduces_produce_energy_for_colocated_agents() -> None:
         agents=(Agent.create(agent_id=0, name="A"),),
     )
     assert location_has_active_kiln_yard(bare, bare.agents[0].location_id) is False
+
+
+
+def test_clay_pit_reduces_produce_energy_for_colocated_agents() -> None:
+    """Active clay pits discount PRODUCE energy at their seat location."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 0, 0, "Camp Clay Pit", InfrastructureKind.CLAY_PIT
+            ),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_clay_pit(world, agent.location_id) is True
+    assert effective_produce_energy_cost(
+        world,
+        agent,
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(
+        DEFAULT_PRODUCE_ENERGY_COST - CLAY_PIT_PRODUCE_ENERGY_DISCOUNT
+    )
+    assert census_effects(world).produce_energy_cost_bps == round(
+        (DEFAULT_PRODUCE_ENERGY_COST - CLAY_PIT_PRODUCE_ENERGY_DISCOUNT) * 10_000
+    )
+    bare = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_clay_pit(bare, bare.agents[0].location_id) is False
+
+
+def test_clay_pit_stacks_with_kiln_yard_and_potter() -> None:
+    """Clay pit seat discount stacks with kiln yard and potter seats."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        institutions=(
+            Institution.create(0, 0, 0, "Camp Potter", InstitutionKind.POTTER),
+        ),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 0, 0, "Camp Kiln Yard", InfrastructureKind.KILN_YARD
+            ),
+            Infrastructure.create(
+                1, 0, 0, 0, "Camp Clay Pit", InfrastructureKind.CLAY_PIT
+            ),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    expected = (
+        DEFAULT_PRODUCE_ENERGY_COST
+        - POTTER_PRODUCE_ENERGY_DISCOUNT
+        - KILN_YARD_PRODUCE_ENERGY_DISCOUNT
+        - CLAY_PIT_PRODUCE_ENERGY_DISCOUNT
+    )
+    assert effective_produce_energy_cost(
+        world,
+        agent,
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(expected)
+    assert census_effects(world).produce_energy_cost_bps == round(expected * 10_000)
+
 
 
 def test_sawpit_stacks_with_guild_workshop_weaver_and_forge_works() -> None:
