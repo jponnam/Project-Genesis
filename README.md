@@ -131,15 +131,15 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 19 Milestone 6: Glazer institutions**
+**Phase 19 Milestone 7: Glazing technology**
 
-``InstitutionKind.GLAZER`` is a finishing craft seat whose living colocated
-agents gain a PRODUCE energy discount. It stacks with the full produce
-chain: guild, workshop, weaver, smelter, joiner, potter, foundry, fulling
-mill, forge works, sawpit, kiln yard, mill town, ironworks, guildhall,
-pottery town, tannery, bellows, lathe, plane, dovetail, kiln, abacus,
-pulley, customs, labor, safety codes, firing codes, and loom. Glazers are
-not seeded.
+``TechnologyKind.GLAZING`` unlocks the inactive ``GLAZE`` innovation. When
+active, glaze grants a society-wide PRODUCE energy discount that stacks
+with the full produce chain: guild, workshop, weaver, smelter, joiner,
+potter, glazer, foundry, fulling mill, forge works, sawpit, kiln yard,
+mill town, ironworks, guildhall, pottery town, tannery, bellows, lathe,
+plane, dovetail, kiln, abacus, pulley, customs, labor, safety codes,
+firing codes, and loom. Glazing requires ceramics.
 
 ### Completed
 
@@ -347,6 +347,7 @@ JSONL storage → `civitas run`
 - Milestone 4: Kiln yard infrastructure
 - Milestone 5: Pottery town cities
 - Milestone 6: Glazer institutions
+- Milestone 7: Glazing technology
 
 ## License
 

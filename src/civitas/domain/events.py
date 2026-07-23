@@ -718,6 +718,7 @@ class TechnologiesObserved(DomainEvent):
     discovered_joinery_count: NonNegativeInt = 0
     discovered_cabinetry_count: NonNegativeInt = 0
     discovered_ceramics_count: NonNegativeInt = 0
+    discovered_glazing_count: NonNegativeInt = 0
     locked_count: NonNegativeInt = 0
     researchable_count: NonNegativeInt = 0
 
@@ -806,6 +807,7 @@ class InnovationsObserved(DomainEvent):
     active_plane_count: NonNegativeInt = 0
     active_dovetail_count: NonNegativeInt = 0
     active_kiln_count: NonNegativeInt = 0
+    active_glaze_count: NonNegativeInt = 0
 
 
 class KnowledgeLearned(DomainEvent):
@@ -854,6 +856,7 @@ class KnowledgeObserved(DomainEvent):
     joinery_knower_count: NonNegativeInt = 0
     cabinetry_knower_count: NonNegativeInt = 0
     ceramics_knower_count: NonNegativeInt = 0
+    glazing_knower_count: NonNegativeInt = 0
     total_fact_instances: NonNegativeInt
     coverage_bps: NonNegativeInt
 

@@ -66,6 +66,7 @@ CARPENTRY_FACT: str = TechnologyKind.CARPENTRY.value
 JOINERY_FACT: str = TechnologyKind.JOINERY.value
 CABINETRY_FACT: str = TechnologyKind.CABINETRY.value
 CERAMICS_FACT: str = TechnologyKind.CERAMICS.value
+GLAZING_FACT: str = TechnologyKind.GLAZING.value
 
 
 class KnowledgeSource(StrEnum):
@@ -116,6 +117,7 @@ class KnowledgeCensus(BaseModel):
     joinery_knower_count: NonNegativeInt = 0
     cabinetry_knower_count: NonNegativeInt = 0
     ceramics_knower_count: NonNegativeInt = 0
+    glazing_knower_count: NonNegativeInt = 0
     total_fact_instances: NonNegativeInt
     coverage_bps: NonNegativeInt
 
@@ -415,6 +417,9 @@ def census_knowledge(world: World) -> KnowledgeCensus:
     ceramics_knowers = sum(
         1 for agent in living if agent.knowledge.knows(CERAMICS_FACT)
     )
+    glazing_knowers = sum(
+        1 for agent in living if agent.knowledge.knows(GLAZING_FACT)
+    )
     total_fact_instances = 0
     for agent in living:
         total_fact_instances += sum(
@@ -464,6 +469,7 @@ def census_knowledge(world: World) -> KnowledgeCensus:
         joinery_knower_count=joinery_knowers,
         cabinetry_knower_count=cabinetry_knowers,
         ceramics_knower_count=ceramics_knowers,
+        glazing_knower_count=glazing_knowers,
         total_fact_instances=total_fact_instances,
         coverage_bps=coverage_bps,
     )

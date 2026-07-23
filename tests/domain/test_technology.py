@@ -19,6 +19,7 @@ from civitas.domain import (
     CAMP_ENGINEERING,
     CAMP_FIRE,
     CAMP_FORESTRY,
+    CAMP_GLAZING,
     CAMP_HYGIENE,
     CAMP_IRRIGATION,
     CAMP_JOINERY,
@@ -65,8 +66,8 @@ def _world(*agents: Agent, technologies: tuple[Technology, ...] = ()) -> World:
     )
 
 
-def test_default_technologies_seed_fire_through_ceramics() -> None:
-    """Canonical catalog has fire through ceramics progression."""
+def test_default_technologies_seed_fire_through_glazing() -> None:
+    """Canonical catalog has fire through glazing progression."""
     assert default_technologies() == (
         CAMP_FIRE,
         CAMP_POTTERY,
@@ -100,6 +101,7 @@ def test_default_technologies_seed_fire_through_ceramics() -> None:
         CAMP_JOINERY,
         CAMP_CABINETRY,
         CAMP_CERAMICS,
+        CAMP_GLAZING,
     )
     assert CAMP_FIRE.kind is TechnologyKind.FIRE
     assert CAMP_FIRE.discovered is True
@@ -196,6 +198,9 @@ def test_default_technologies_seed_fire_through_ceramics() -> None:
     assert CAMP_CERAMICS.kind is TechnologyKind.CERAMICS
     assert CAMP_CERAMICS.discovered is False
     assert CAMP_CERAMICS.prerequisite_ids == (CAMP_CABINETRY.technology_id,)
+    assert CAMP_GLAZING.kind is TechnologyKind.GLAZING
+    assert CAMP_GLAZING.discovered is False
+    assert CAMP_GLAZING.prerequisite_ids == (CAMP_CERAMICS.technology_id,)
 
 
 def test_create_and_discover_technology() -> None:
@@ -236,9 +241,9 @@ def test_census_technologies_counts() -> None:
         technologies=default_technologies(),
     )
     snap = census_technologies(world)
-    assert snap.technology_count == 32
+    assert snap.technology_count == 33
     assert snap.discovered_count == 1
-    assert snap.undiscovered_count == 31
+    assert snap.undiscovered_count == 32
     assert snap.discovered_fire_count == 1
     assert snap.discovered_pottery_count == 0
     assert snap.discovered_irrigation_count == 0
@@ -271,7 +276,8 @@ def test_census_technologies_counts() -> None:
     assert snap.discovered_joinery_count == 0
     assert snap.discovered_cabinetry_count == 0
     assert snap.discovered_ceramics_count == 0
-    assert snap.locked_count == 30
+    assert snap.discovered_glazing_count == 0
+    assert snap.locked_count == 31
     assert snap.researchable_count == 1
     assert prerequisites_met(world, CAMP_POTTERY) is True
     assert prerequisites_met(world, CAMP_IRRIGATION) is False
@@ -1567,6 +1573,64 @@ def test_ceramics_locked_until_cabinetry_discovered() -> None:
     )
     assert with_ceramics is not None
     assert with_ceramics.technologies[31].discovered is True
+
+
+def test_glazing_locked_until_ceramics_discovered() -> None:
+    """Glazing cannot be discovered until ceramics is already known."""
+    world = _world(
+        Agent.create(agent_id=0, name="A"),
+        technologies=default_technologies(),
+    )
+    assert prerequisites_met(world, CAMP_GLAZING) is False
+    assert discover_technology(world, CAMP_GLAZING.technology_id) is None
+
+    current = world
+    for technology in (
+        CAMP_POTTERY,
+        CAMP_IRRIGATION,
+        CAMP_METALLURGY,
+        CAMP_WRITING,
+        CAMP_MATHEMATICS,
+        CAMP_ASTRONOMY,
+        CAMP_PHILOSOPHY,
+        CAMP_LOGIC,
+        CAMP_RHETORIC,
+        CAMP_MEDICINE,
+        CAMP_ANATOMY,
+        CAMP_HYGIENE,
+        CAMP_ENGINEERING,
+        CAMP_ARCHITECTURE,
+        CAMP_SURVEYING,
+        CAMP_NAVIGATION,
+        CAMP_CARTOGRAPHY,
+        CAMP_SEAFARING,
+        CAMP_AGRICULTURE,
+        CAMP_CROP_ROTATION,
+        CAMP_FORESTRY,
+        CAMP_TEXTILES,
+        CAMP_DYEING,
+        CAMP_TANNING,
+        CAMP_MINING,
+        CAMP_SMITHING,
+        CAMP_TOOLMAKING,
+        CAMP_CARPENTRY,
+        CAMP_JOINERY,
+        CAMP_CABINETRY,
+    ):
+        updated = discover_technology(current, technology.technology_id)
+        assert updated is not None
+        current = updated
+    assert prerequisites_met(current, CAMP_GLAZING) is False
+    assert discover_technology(current, CAMP_GLAZING.technology_id) is None
+
+    with_ceramics = discover_technology(current, CAMP_CERAMICS.technology_id)
+    assert with_ceramics is not None
+    assert prerequisites_met(with_ceramics, CAMP_GLAZING) is True
+    with_glazing = discover_technology(
+        with_ceramics, CAMP_GLAZING.technology_id
+    )
+    assert with_glazing is not None
+    assert with_glazing.technologies[32].discovered is True
 
 
 def test_world_rejects_duplicate_kinds() -> None:

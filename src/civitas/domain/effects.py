@@ -240,7 +240,12 @@ produce-energy discounts at the institution seat (stacking with guild,
 workshop, weaver, smelter, joiner, potter, foundry, fulling mill, forge
 works, sawpit, kiln yard, mill town, ironworks, guildhall, pottery town,
 tannery, bellows, lathe, plane, dovetail, kiln, abacus, pulley, customs,
-labor, safety codes, firing codes, and loom).
+labor, safety codes, firing codes, and loom). Phase 19 Milestone 7 adds a
+global GLAZE produce-energy discount society-wide (stacking with guild,
+workshop, weaver, smelter, joiner, potter, glazer, foundry, fulling mill,
+forge works, sawpit, kiln yard, mill town, ironworks, guildhall, pottery
+town, tannery, bellows, lathe, plane, dovetail, kiln, abacus, pulley,
+customs, labor, safety codes, firing codes, and loom).
 The action
 executor,
 retrieval
@@ -386,6 +391,7 @@ TOOLMAKING_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 JOINERY_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 CABINETRY_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 CERAMICS_PRODUCE_ENERGY_DISCOUNT: float = 0.02
+GLAZING_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 ARCHIVE_RETRIEVAL_LIMIT_BONUS: int = 1
 LIBRARY_RETRIEVAL_LIMIT_BONUS: int = 1
 OBSERVATORY_RETRIEVAL_LIMIT_BONUS: int = 1
@@ -1798,6 +1804,8 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
         discount += CABINETRY_PRODUCE_ENERGY_DISCOUNT
     if innovation_kind_is_active(world, InnovationKind.KILN):
         discount += CERAMICS_PRODUCE_ENERGY_DISCOUNT
+    if innovation_kind_is_active(world, InnovationKind.GLAZE):
+        discount += GLAZING_PRODUCE_ENERGY_DISCOUNT
     return discount
 
 
@@ -2293,6 +2301,8 @@ def census_effects(world: World) -> EffectsCensus:
         produce_discount += CABINETRY_PRODUCE_ENERGY_DISCOUNT
     if innovation_kind_is_active(world, InnovationKind.KILN):
         produce_discount += CERAMICS_PRODUCE_ENERGY_DISCOUNT
+    if innovation_kind_is_active(world, InnovationKind.GLAZE):
+        produce_discount += GLAZING_PRODUCE_ENERGY_DISCOUNT
     produce_at_guild = clamp_unit(
         max(
             0.0,
