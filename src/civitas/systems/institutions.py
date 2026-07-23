@@ -109,6 +109,7 @@ class InstitutionSystem:
                     active_carver_count=snap.active_carver_count,
                     active_potter_count=snap.active_potter_count,
                     active_glazer_count=snap.active_glazer_count,
+                    active_tilewright_count=snap.active_tilewright_count,
                     total_budget=snap.total_budget,
                     funded_count=snap.funded_count,
                 )

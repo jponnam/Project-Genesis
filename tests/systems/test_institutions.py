@@ -60,6 +60,7 @@ def test_observe_emits_institutions_observed_without_mutating_world() -> None:
     assert events[0].active_carver_count == 0
     assert events[0].active_potter_count == 0
     assert events[0].active_glazer_count == 0
+    assert events[0].active_tilewright_count == 0
     assert events[0].vacant_officer_count == 1
     assert events[0].total_budget == 0
     assert events[0].funded_count == 0
@@ -103,6 +104,7 @@ def test_observe_emits_active_health_institution_counts() -> None:
             Institution.create(22, 0, 0, "Camp Carver", InstitutionKind.CARVER),
             Institution.create(23, 0, 0, "Camp Potter", InstitutionKind.POTTER),
             Institution.create(24, 0, 0, "Camp Glazer", InstitutionKind.GLAZER),
+            Institution.create(25, 0, 0, "Camp Tilewright", InstitutionKind.TILEWRIGHT),
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
     )
@@ -136,6 +138,7 @@ def test_observe_emits_active_health_institution_counts() -> None:
     assert events[0].active_carver_count == 1
     assert events[0].active_potter_count == 1
     assert events[0].active_glazer_count == 1
+    assert events[0].active_tilewright_count == 1
 
 
 def test_observe_can_suppress_events() -> None:

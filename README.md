@@ -131,15 +131,16 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 19 Milestone 7: Glazing technology**
+**Phase 19 Milestone 8: Tilewright institutions**
 
-``TechnologyKind.GLAZING`` unlocks the inactive ``GLAZE`` innovation. When
-active, glaze grants a society-wide PRODUCE energy discount that stacks
-with the full produce chain: guild, workshop, weaver, smelter, joiner,
-potter, glazer, foundry, fulling mill, forge works, sawpit, kiln yard,
-mill town, ironworks, guildhall, pottery town, tannery, bellows, lathe,
-plane, dovetail, kiln, abacus, pulley, customs, labor, safety codes,
-firing codes, and loom. Glazing requires ceramics.
+``InstitutionKind.TILEWRIGHT`` is a gov-attached teaching institution seated
+inside its government's jurisdiction. An active tilewright grants a
+teachings-per-knower bonus at its seat location that stacks with the scribe
+and dialectic society-wide bonuses and the scriptorium, stoa, academy,
+forum, school, collegium, architect, cartographer, agronomist, tailor,
+smith, carver, and curriculum bonuses. Tilewrights are not seeded; the
+institution census and ``InstitutionsObserved`` event report the active
+tilewright count.
 
 ### Completed
 
@@ -348,6 +349,7 @@ JSONL storage → `civitas run`
 - Milestone 5: Pottery town cities
 - Milestone 6: Glazer institutions
 - Milestone 7: Glazing technology
+- Milestone 8: Tilewright institutions
 
 ## License
 
