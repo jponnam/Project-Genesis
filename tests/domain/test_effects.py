@@ -137,6 +137,7 @@ from civitas.domain import (
     GLASSBLOWER_PRODUCE_ENERGY_DISCOUNT,
     GLASSHOUSE_PRODUCE_ENERGY_DISCOUNT,
     GLASSMAKING_PRODUCE_ENERGY_DISCOUNT,
+    GLASSWORKS_PRODUCE_ENERGY_DISCOUNT,
     GLAZER_PRODUCE_ENERGY_DISCOUNT,
     GLAZING_PRODUCE_ENERGY_DISCOUNT,
     GRANARY_FOOD_GATHER_BONUS,
@@ -284,6 +285,7 @@ from civitas.domain import (
     location_has_active_fulling_mill,
     location_has_active_glassblower,
     location_has_active_glasshouse,
+    location_has_active_glassworks,
     location_has_active_glazer,
     location_has_active_granary,
     location_has_active_guild,
@@ -7629,6 +7631,38 @@ def test_kiln_quarter_reduces_produce_energy_for_residents() -> None:
         agents=(Agent.create(agent_id=0, name="A"),),
     )
     assert location_has_active_kiln_quarter(bare, bare.agents[0].location_id) is False
+
+
+def test_glassworks_reduces_produce_energy_for_residents() -> None:
+    """Active glassworks discount PRODUCE energy for residents at the seat."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Glassworks", CityKind.GLASSWORKS),
+        ),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_glassworks(world, agent.location_id) is True
+    assert effective_produce_energy_cost(
+        world,
+        agent,
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(
+        DEFAULT_PRODUCE_ENERGY_COST - GLASSWORKS_PRODUCE_ENERGY_DISCOUNT
+    )
+    assert census_effects(world).produce_energy_cost_bps == round(
+        (DEFAULT_PRODUCE_ENERGY_COST - GLASSWORKS_PRODUCE_ENERGY_DISCOUNT) * 10_000
+    )
+    bare = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_glassworks(bare, bare.agents[0].location_id) is False
 
 
 def test_guildhall_stacks_with_guild_workshop_smelter_and_joiner() -> None:

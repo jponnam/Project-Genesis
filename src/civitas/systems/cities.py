@@ -93,6 +93,7 @@ class CitySystem:
                     active_guildhall_count=snap.active_guildhall_count,
                     active_pottery_town_count=snap.active_pottery_town_count,
                     active_kiln_quarter_count=snap.active_kiln_quarter_count,
+                    active_glassworks_count=snap.active_glassworks_count,
                 )
             )
         return world
