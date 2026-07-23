@@ -39,6 +39,10 @@ town, tannery, bellows, lathe, abacus, pulley, customs, labor, and loom.
 Active ``TIMBER_RIGHTS`` statutes grant living subjects +1 WOOD gather
 (Phase 18 M2), stacking with sawmill and coppice society-wide, the
 scaffold seat, the conservation subject bonus, and the pastoral city.
+Active ``FOREST_MANAGEMENT`` statutes grant living subjects +1 WOOD gather
+(Phase 18 M11), stacking with sawmill and coppice society-wide, the
+scaffold seat, the conservation and timber-rights subject bonuses, and the
+pastoral city.
 Elections (voting) are a separate Phase 5 aggregate, as are institutions.
 """
 
@@ -81,6 +85,7 @@ class LawKind(StrEnum):
     MINERAL_RIGHTS = "mineral_rights"
     SAFETY_CODES = "safety_codes"
     TIMBER_RIGHTS = "timber_rights"
+    FOREST_MANAGEMENT = "forest_management"
 
 
 # Statute kinds that allow at most one active law per government.
@@ -105,6 +110,7 @@ _UNIQUE_ACTIVE_KINDS: frozenset[LawKind] = frozenset(
         LawKind.MINERAL_RIGHTS,
         LawKind.SAFETY_CODES,
         LawKind.TIMBER_RIGHTS,
+        LawKind.FOREST_MANAGEMENT,
     }
 )
 
@@ -159,6 +165,9 @@ SAFETY_CODES_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 # Kind-only WOOD gather bonus for living subjects under active TIMBER_RIGHTS.
 TIMBER_RIGHTS_WOOD_GATHER_BONUS: int = 1
 
+# Kind-only WOOD gather bonus for living subjects under FOREST_MANAGEMENT.
+FOREST_MANAGEMENT_WOOD_GATHER_BONUS: int = 1
+
 
 class Law(BaseModel):
     """One statute enacted by a government."""
@@ -177,7 +186,7 @@ class Law(BaseModel):
             "ignored by CURRICULUM, CALENDAR, ETHICS, ASSEMBLY, SANITATION, "
             "QUARANTINE, BUILDING_CODES, ZONING, PASSAGE, CUSTOMS, "
             "LAND_TENURE, CONSERVATION, LABOR, SUMPTUARY, MINERAL_RIGHTS, "
-            "SAFETY_CODES, TIMBER_RIGHTS, and other kinds."
+            "SAFETY_CODES, TIMBER_RIGHTS, FOREST_MANAGEMENT, and other kinds."
         ),
     )
     rate_bps: NonNegativeInt = Field(
@@ -255,6 +264,7 @@ class LawCensus(BaseModel):
     active_mineral_rights_count: NonNegativeInt = 0
     active_safety_codes_count: NonNegativeInt = 0
     active_timber_rights_count: NonNegativeInt = 0
+    active_forest_management_count: NonNegativeInt = 0
 
 
 def law_by_id(world: World, law_id: LawId | int) -> Law | None:
@@ -856,6 +866,36 @@ def timber_rights_wood_bonus_for(world: World, agent: Agent) -> int:
     return TIMBER_RIGHTS_WOOD_GATHER_BONUS
 
 
+def active_forest_management_law(
+    world: World,
+    government_id: GovernmentId | int,
+) -> Law | None:
+    """Return the active forest-management statute for ``government_id``, if any.
+
+    When multiple active ``FOREST_MANAGEMENT`` laws exist (should not under
+    uniqueness rules), the lowest ``law_id`` wins.
+    """
+    for law in active_laws(world, government_id):
+        if law.kind == LawKind.FOREST_MANAGEMENT:
+            return law
+    return None
+
+
+def forest_management_wood_bonus_for(world: World, agent: Agent) -> int:
+    """Return +1 when ``agent`` is a living subject under FOREST_MANAGEMENT.
+
+    The statute kind alone enables the bonus; ``flat_amount`` is ignored.
+    """
+    if not agent.is_alive():
+        return 0
+    government = government_at(world, agent.location_id)
+    if government is None:
+        return 0
+    if active_forest_management_law(world, government.government_id) is None:
+        return 0
+    return FOREST_MANAGEMENT_WOOD_GATHER_BONUS
+
+
 def _has_active_kind(
     world: World,
     government_id: GovernmentId,
@@ -952,6 +992,9 @@ def census_laws(world: World) -> LawCensus:
     active_timber_rights = sum(
         1 for law in active if law.kind == LawKind.TIMBER_RIGHTS
     )
+    active_forest_management = sum(
+        1 for law in active if law.kind == LawKind.FOREST_MANAGEMENT
+    )
     return LawCensus(
         tick=world.tick,
         law_count=len(laws),
@@ -977,6 +1020,7 @@ def census_laws(world: World) -> LawCensus:
         active_mineral_rights_count=active_mineral_rights,
         active_safety_codes_count=active_safety_codes,
         active_timber_rights_count=active_timber_rights,
+        active_forest_management_count=active_forest_management,
     )
 
 
@@ -989,6 +1033,7 @@ __all__ = [
     "CURRICULUM_TEACHINGS_PER_KNOWER_BONUS",
     "CUSTOMS_PRODUCE_ENERGY_DISCOUNT",
     "ETHICS_MIN_TEACH_TRUST_DELTA",
+    "FOREST_MANAGEMENT_WOOD_GATHER_BONUS",
     "LABOR_PRODUCE_ENERGY_DISCOUNT",
     "LAND_TENURE_EAT_RESTORE_BONUS",
     "MINERAL_RIGHTS_STONE_GATHER_BONUS",
@@ -1009,6 +1054,7 @@ __all__ = [
     "active_curriculum_law",
     "active_customs_law",
     "active_ethics_law",
+    "active_forest_management_law",
     "active_labor_law",
     "active_land_tenure_law",
     "active_laws",
@@ -1032,6 +1078,7 @@ __all__ = [
     "default_laws",
     "enact_law",
     "ethics_min_teach_trust_delta_for",
+    "forest_management_wood_bonus_for",
     "labor_produce_discount_for",
     "land_tenure_eat_bonus_for",
     "law_by_id",

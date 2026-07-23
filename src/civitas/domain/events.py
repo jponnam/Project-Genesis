@@ -537,6 +537,7 @@ class LawsObserved(DomainEvent):
     active_mineral_rights_count: NonNegativeInt = 0
     active_safety_codes_count: NonNegativeInt = 0
     active_timber_rights_count: NonNegativeInt = 0
+    active_forest_management_count: NonNegativeInt = 0
 
 
 class ElectionResolved(DomainEvent):
