@@ -132,13 +132,16 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 20 Milestone 2: Annealing codes laws**
+**Phase 20 Milestone 3: Glassblower institutions**
 
-``LawKind.ANNEALING_CODES`` is a subject-scoped statute. Living subjects of a
-government with active annealing codes gain a PRODUCE energy discount that
-stacks with clay codes, firing codes, and the existing produce chain,
-including blowpipe, kaolin, glaze, kiln, clay pit, and kiln yard. Annealing
-codes are not seeded.
+``InstitutionKind.GLASSBLOWER`` is a craft seat whose living colocated
+agents gain a PRODUCE energy discount. It stacks with the full produce
+chain: guild, workshop, weaver, smelter, joiner, potter, glazer, foundry,
+fulling mill, forge works, sawpit, kiln yard, mill town, ironworks,
+guildhall, pottery town, tannery, bellows, lathe, plane, dovetail, kiln,
+abacus, pulley, customs, labor, safety codes, firing codes, clay codes,
+annealing codes, blowpipe, kaolin, glaze, clay pit, kiln quarter, and loom.
+Glassblowers are not seeded.
 
 ### Completed
 
@@ -356,6 +359,7 @@ JSONL storage → `civitas run`
 **Phase 20:**
 - Milestone 1: Glassmaking technology
 - Milestone 2: Annealing codes laws
+- Milestone 3: Glassblower institutions
 
 ## License
 
