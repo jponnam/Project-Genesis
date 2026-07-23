@@ -216,5 +216,6 @@ mypy
 | M5 Emergence detection | Merged |
 | M6 Research API | Merged |
 | M7 Observatory UI | Merged |
-| M8 Seed comparison | In progress |
-| M9–M10 | Sequential PRs with GitHub auto-merge |
+| M8 Seed comparison | Merged |
+| M9 Demo scenarios | In progress |
+| M10 Portfolio docs | Pending |
