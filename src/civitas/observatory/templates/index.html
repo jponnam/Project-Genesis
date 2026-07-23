@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero" data-reveal>
+  <h1>Simulation Observatory</h1>
+  <p>
+    Inspect deterministic Civitas runs already written to JSONL.
+    No live LLM provider is used here — analytics and emergence findings are
+    rule-based over persisted events.
+  </p>
+</section>
+
+<section class="panel" data-reveal>
+  <h2>Run selector</h2>
+  {% if not runs_available %}
+    <div class="empty">
+      No JSONL runs found. Generate one with
+      <code>civitas run --seed 42 --ticks 20 --agents 5 --name demo</code>
+      then restart <code>civitas serve</code>.
+    </div>
+  {% else %}
+    <form class="inline" action="/ui/open/" method="get" onsubmit="event.preventDefault(); const v=this.run_id.value; if(v) location.href='/ui/runs/'+encodeURIComponent(v);">
+      <label>Choose a run
+        <select name="run_id" required>
+          {% for run in runs %}
+            <option value="{{ run.run_id }}">
+              {{ run.run_id }}
+              {% if run.seed is not none %}· seed {{ run.seed }}{% endif %}
+              {% if run.event_count is not none %}· {{ run.event_count }} events{% endif %}
+            </option>
+          {% endfor %}
+        </select>
+      </label>
+      <button type="submit">Open dashboard</button>
+      <a class="button secondary" href="/ui/compare">Compare seeds</a>
+    </form>
+    <table style="margin-top:1rem">
+      <thead>
+        <tr>
+          <th>Run</th><th>Seed</th><th>Name</th><th>Ticks</th><th>Events</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for run in runs %}
+        <tr>
+          <td><a href="/ui/runs/{{ run.run_id }}">{{ run.run_id }}</a></td>
+          <td>{{ run.seed if run.seed is not none else "unavailable" }}</td>
+          <td>{{ run.run_name or "unavailable" }}</td>
+          <td>{{ run.ticks_executed if run.ticks_executed is not none else "unavailable" }}</td>
+          <td>{{ run.event_count if run.event_count is not none else "unavailable" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+</section>
+{% endblock %}

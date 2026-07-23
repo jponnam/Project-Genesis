@@ -214,5 +214,6 @@ mypy
 | M3 Inspect CLI | Merged |
 | M4 Analytics engine | Merged |
 | M5 Emergence detection | Merged |
-| M6 Research API | In progress |
-| M7–M10 | Sequential PRs with GitHub auto-merge |
+| M6 Research API | Merged |
+| M7 Observatory UI | In progress |
+| M8–M10 | Sequential PRs with GitHub auto-merge |

@@ -6,10 +6,12 @@ run artifacts under ``CIVITAS_RUNS_DIR`` (default: ``runs/``).
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Annotated, Any
 
 from fastapi import FastAPI, HTTPException, Query, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 
 from civitas import __version__
 from civitas.analytics import analyze_emergence, analyze_run
@@ -34,16 +36,32 @@ from civitas.api.models import (
     RunListItem,
     TimelineResponse,
 )
+from civitas.observatory.routes import router as observatory_router
 from civitas.storage.summary import build_inspection
 
 app = FastAPI(
     title="Civitas Lab Research API",
     description=(
         "Read-only HTTP API over local JSONL simulation runs. "
-        "Does not execute or modify simulations."
+        "Does not execute or modify simulations. "
+        "Observatory UI is served under /ui/."
     ),
     version=__version__,
 )
+
+_OBSERVATORY_STATIC = Path(__file__).resolve().parent.parent / "observatory" / "static"
+app.mount(
+    "/ui/static",
+    StaticFiles(directory=str(_OBSERVATORY_STATIC)),
+    name="observatory-static",
+)
+app.include_router(observatory_router, prefix="/ui")
+
+
+@app.get("/", include_in_schema=False)
+def root_redirect() -> RedirectResponse:
+    """Send browsers to the observatory home page."""
+    return RedirectResponse(url="/ui/", status_code=307)
 
 
 def _http_error(status_code: int, detail: str) -> HTTPException:

@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero" data-reveal>
+  <h1>Seed / run comparison</h1>
+  <p>Compare two existing JSONL runs using event-derived summaries and metrics.</p>
+</section>
+
+<section class="panel" data-reveal>
+  <form class="inline" method="get">
+    <label>Left run
+      <select name="left" required>
+        <option value="">Select…</option>
+        {% for run in runs %}
+          <option value="{{ run.run_id }}" {% if left == run.run_id %}selected{% endif %}>{{ run.run_id }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Right run
+      <select name="right" required>
+        <option value="">Select…</option>
+        {% for run in runs %}
+          <option value="{{ run.run_id }}" {% if right == run.run_id %}selected{% endif %}>{{ run.run_id }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <button type="submit">Compare</button>
+  </form>
+  {% if error %}<div class="empty">{{ error }}</div>{% endif %}
+  {% if not runs %}<div class="empty">No runs available to compare.</div>{% endif %}
+</section>
+
+{% if left_summary and right_summary %}
+<div class="compare">
+  <section class="panel" data-reveal>
+    <h3>{{ left }}</h3>
+    <p>seed {{ left_summary.seed }} · events {{ left_summary.event_count }} · living {{ left_summary.estimated_living }}</p>
+    <p>actions {{ left_summary.actions }}</p>
+    <p>techs {{ left_summary.technologies_discovered|list }}</p>
+    <p>wealth gini
+      {% if left_summary.wealth %}{{ left_summary.wealth.gini_bps }}{% else %}unavailable{% endif %}
+    </p>
+    <h4>Emergence</h4>
+    {% if left_emergence and left_emergence.findings %}
+      {% for finding in left_emergence.findings %}
+        <div class="finding"><strong>{{ finding.pattern }}</strong><p>{{ finding.explanation }}</p></div>
+      {% endfor %}
+    {% else %}
+      <div class="empty">No findings.</div>
+    {% endif %}
+  </section>
+  <section class="panel" data-reveal>
+    <h3>{{ right }}</h3>
+    <p>seed {{ right_summary.seed }} · events {{ right_summary.event_count }} · living {{ right_summary.estimated_living }}</p>
+    <p>actions {{ right_summary.actions }}</p>
+    <p>techs {{ right_summary.technologies_discovered|list }}</p>
+    <p>wealth gini
+      {% if right_summary.wealth %}{{ right_summary.wealth.gini_bps }}{% else %}unavailable{% endif %}
+    </p>
+    <h4>Emergence</h4>
+    {% if right_emergence and right_emergence.findings %}
+      {% for finding in right_emergence.findings %}
+        <div class="finding"><strong>{{ finding.pattern }}</strong><p>{{ finding.explanation }}</p></div>
+      {% endfor %}
+    {% else %}
+      <div class="empty">No findings.</div>
+    {% endif %}
+  </section>
+</div>
+{% endif %}
+{% endblock %}
