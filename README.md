@@ -105,12 +105,17 @@ civitas run --seed 42 --ticks 100 --agents 10 --name default
 civitas run --seed 42 --ticks 20 --agents 5 -o runs/demo.jsonl
 ```
 
-Available commands today: `version`, `run`, and `config` (`show`,
-`fingerprint`). `civitas run` executes a deterministic simulation and
-writes the event stream to JSONL (default:
-`runs/<name>_seed<seed>.jsonl`). Library replay is available via
-`civitas.storage.JsonlEventStore`; Phase 21 adds first-class
-`replay` / `inspect` / observatory tooling.
+Available commands today: `version`, `run`, `replay`, and `config`
+(`show`, `fingerprint`). `civitas run` executes a deterministic
+simulation and writes the event stream to JSONL (default:
+`runs/<name>_seed<seed>.jsonl`).
+
+```bash
+civitas replay runs/demo_seed42.jsonl
+civitas replay runs/demo_seed42.jsonl --event-type ActionSelected --list
+civitas replay runs/demo_seed42.jsonl --from-tick 1 --to-tick 5 --agent 0
+civitas replay runs/demo_seed42.jsonl --final-state --strict
+```
 
 ## Roadmap
 
@@ -140,11 +145,11 @@ writes the event stream to JSONL (default:
 
 ## Current Milestone
 
-**Phase 21 Milestone 1: Repository quality repair**
+**Phase 21 Milestone 2: Replay CLI**
 
-Restore green quality gates (`ruff format --check .`), correct package
-repository URLs, and publish the Phase 21 design
-(`docs/PHASE_21_DESIGN.md`). No simulation behavior changes.
+``civitas replay PATH`` loads existing JSONL event logs, verifies
+lifecycle metadata, filters by tick/agent/event type, and can show a
+partial event-derived final-state summary (not a full ``World`` rebuild).
 
 See also: `docs/CURRENT_STATE_AUDIT.md` (baseline audit) and
 `docs/PHASE_21_DESIGN.md` (phase plan).

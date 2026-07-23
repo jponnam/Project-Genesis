@@ -9,18 +9,19 @@ from typer.testing import CliRunner
 from civitas import __version__
 from civitas.cli.app import app, build_config, default_events_path, main
 from civitas.domain import CANONICAL_SEED, SimulationConfig
-from civitas.storage import JsonlEventStore
+from civitas.storage import JsonlEventStore, write_events
 
 runner = CliRunner()
 
 
-def test_help_lists_version_config_and_run() -> None:
-    """Root help must advertise version, config, and run commands."""
+def test_help_lists_version_config_run_and_replay() -> None:
+    """Root help must advertise version, config, run, and replay commands."""
     result = runner.invoke(app, ["--help"])
     assert result.exit_code == 0
     assert "version" in result.stdout
     assert "config" in result.stdout
     assert "run" in result.stdout
+    assert "replay" in result.stdout
 
 
 def test_version_command_prints_package_version() -> None:
@@ -185,3 +186,87 @@ def test_run_rejects_invalid_config(tmp_path: Path) -> None:
     assert result.exit_code == 1
     assert "Invalid configuration" in result.stdout
     assert not output.exists()
+
+
+def _cli_mini_run(tmp_path: Path) -> Path:
+    """Write a small deterministic JSONL run for replay CLI tests."""
+    output = tmp_path / "cli_replay.jsonl"
+    result = runner.invoke(
+        app,
+        [
+            "run",
+            "--seed",
+            "42",
+            "--ticks",
+            "2",
+            "--agents",
+            "2",
+            "--name",
+            "cli_replay",
+            "--output",
+            str(output),
+        ],
+    )
+    assert result.exit_code == 0, result.stdout
+    return output
+
+
+def test_replay_summary_reads_existing_run(tmp_path: Path) -> None:
+    """``civitas replay`` prints metadata for a valid JSONL run."""
+    output = _cli_mini_run(tmp_path)
+    result = runner.invoke(app, ["replay", str(output)])
+    assert result.exit_code == 0, result.stdout
+    assert "Replay" in result.stdout
+    assert "cli_replay" in result.stdout
+    assert "Event types" in result.stdout
+    assert "SimulationStarted" in result.stdout
+
+
+def test_replay_filters_by_event_type_and_lists(tmp_path: Path) -> None:
+    """Replay supports event-type filters and event listing."""
+    output = _cli_mini_run(tmp_path)
+    result = runner.invoke(
+        app,
+        [
+            "replay",
+            str(output),
+            "--event-type",
+            "ActionSelected",
+            "--list",
+            "--limit",
+            "3",
+        ],
+    )
+    assert result.exit_code == 0, result.stdout
+    assert "ActionSelected" in result.stdout
+    assert "action=" in result.stdout
+
+
+def test_replay_final_state_flag(tmp_path: Path) -> None:
+    """``--final-state`` shows the partial event-derived summary."""
+    output = _cli_mini_run(tmp_path)
+    result = runner.invoke(app, ["replay", str(output), "--final-state"])
+    assert result.exit_code == 0, result.stdout
+    assert "Final state" in result.stdout
+    assert "estimated_living" in result.stdout
+    assert "not a full World reconstruction" in result.stdout
+
+
+def test_replay_missing_file_errors(tmp_path: Path) -> None:
+    """Missing replay paths exit with a clear error."""
+    result = runner.invoke(app, ["replay", str(tmp_path / "missing.jsonl")])
+    assert result.exit_code == 1
+    assert "Replay failed" in result.stdout
+    assert "not found" in result.stdout
+
+
+def test_replay_strict_fails_on_incomplete_log(tmp_path: Path) -> None:
+    """``--strict`` exits non-zero when verification notes exist."""
+    output = _cli_mini_run(tmp_path)
+    events = list(JsonlEventStore(output).read_all())
+    truncated = [e for e in events if e.event_type != "SimulationCompleted"]
+    bad = tmp_path / "incomplete.jsonl"
+    write_events(bad, truncated)
+    result = runner.invoke(app, ["replay", str(bad), "--strict"])
+    assert result.exit_code == 1
+    assert "Verification notes" in result.stdout
