@@ -540,6 +540,7 @@ class LawsObserved(DomainEvent):
     active_forest_management_count: NonNegativeInt = 0
     active_firing_codes_count: NonNegativeInt = 0
     active_clay_codes_count: NonNegativeInt = 0
+    active_annealing_codes_count: NonNegativeInt = 0
 
 
 class ElectionResolved(DomainEvent):

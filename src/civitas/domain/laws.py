@@ -53,6 +53,12 @@ joiner, foundry, fulling mill, forge works, sawpit, mill town, ironworks,
 guildhall, tannery, bellows, lathe, plane, dovetail, kiln, glaze, kaolin,
 clay pit, kiln yard, abacus, pulley, customs, labor, safety codes, firing
 codes, and loom.
+Active ``ANNEALING_CODES`` statutes grant living subjects -0.02 PRODUCE
+energy cost (Phase 20 M2), stacking with guild, workshop, weaver, smelter,
+joiner, foundry, fulling mill, forge works, sawpit, mill town, ironworks,
+guildhall, tannery, bellows, lathe, plane, dovetail, kiln, glaze, kaolin,
+clay pit, kiln yard, abacus, pulley, customs, labor, safety codes, firing
+codes, clay codes, blowpipe, and loom.
 Elections (voting) are a separate Phase 5 aggregate, as are institutions.
 """
 
@@ -98,6 +104,7 @@ class LawKind(StrEnum):
     FOREST_MANAGEMENT = "forest_management"
     FIRING_CODES = "firing_codes"
     CLAY_CODES = "clay_codes"
+    ANNEALING_CODES = "annealing_codes"
 
 
 # Statute kinds that allow at most one active law per government.
@@ -125,6 +132,7 @@ _UNIQUE_ACTIVE_KINDS: frozenset[LawKind] = frozenset(
         LawKind.FOREST_MANAGEMENT,
         LawKind.FIRING_CODES,
         LawKind.CLAY_CODES,
+        LawKind.ANNEALING_CODES,
     }
 )
 
@@ -188,6 +196,9 @@ FIRING_CODES_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 # Kind-only PRODUCE energy discount for living subjects under CLAY_CODES.
 CLAY_CODES_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 
+# Kind-only PRODUCE energy discount for living subjects under ANNEALING_CODES.
+ANNEALING_CODES_PRODUCE_ENERGY_DISCOUNT: float = 0.02
+
 
 class Law(BaseModel):
     """One statute enacted by a government."""
@@ -207,7 +218,7 @@ class Law(BaseModel):
             "QUARANTINE, BUILDING_CODES, ZONING, PASSAGE, CUSTOMS, "
             "LAND_TENURE, CONSERVATION, LABOR, SUMPTUARY, MINERAL_RIGHTS, "
             "SAFETY_CODES, TIMBER_RIGHTS, FOREST_MANAGEMENT, FIRING_CODES, "
-            "CLAY_CODES, and other kinds."
+            "CLAY_CODES, ANNEALING_CODES, and other kinds."
         ),
     )
     rate_bps: NonNegativeInt = Field(
@@ -288,6 +299,7 @@ class LawCensus(BaseModel):
     active_forest_management_count: NonNegativeInt = 0
     active_firing_codes_count: NonNegativeInt = 0
     active_clay_codes_count: NonNegativeInt = 0
+    active_annealing_codes_count: NonNegativeInt = 0
 
 
 def law_by_id(world: World, law_id: LawId | int) -> Law | None:
@@ -1042,6 +1054,36 @@ def clay_codes_produce_discount_for(world: World, agent: Agent) -> float:
     return CLAY_CODES_PRODUCE_ENERGY_DISCOUNT
 
 
+def active_annealing_codes_law(
+    world: World,
+    government_id: GovernmentId | int,
+) -> Law | None:
+    """Return the active annealing-codes statute for ``government_id``, if any.
+
+    When multiple active ``ANNEALING_CODES`` laws exist (should not under
+    uniqueness rules), the lowest ``law_id`` wins.
+    """
+    for law in active_laws(world, government_id):
+        if law.kind == LawKind.ANNEALING_CODES:
+            return law
+    return None
+
+
+def annealing_codes_produce_discount_for(world: World, agent: Agent) -> float:
+    """Return -0.02 PRODUCE cost when ``agent`` is under active ANNEALING_CODES.
+
+    The statute kind alone enables the discount; ``flat_amount`` is ignored.
+    """
+    if not agent.is_alive():
+        return 0.0
+    government = government_at(world, agent.location_id)
+    if government is None:
+        return 0.0
+    if active_annealing_codes_law(world, government.government_id) is None:
+        return 0.0
+    return ANNEALING_CODES_PRODUCE_ENERGY_DISCOUNT
+
+
 def census_laws(world: World) -> LawCensus:
     """Build a deterministic law census for ``world``."""
     laws = world.laws
@@ -1085,6 +1127,9 @@ def census_laws(world: World) -> LawCensus:
     active_clay_codes = sum(
         1 for law in active if law.kind == LawKind.CLAY_CODES
     )
+    active_annealing_codes = sum(
+        1 for law in active if law.kind == LawKind.ANNEALING_CODES
+    )
     return LawCensus(
         tick=world.tick,
         law_count=len(laws),
@@ -1113,10 +1158,12 @@ def census_laws(world: World) -> LawCensus:
         active_forest_management_count=active_forest_management,
         active_firing_codes_count=active_firing_codes,
         active_clay_codes_count=active_clay_codes,
+        active_annealing_codes_count=active_annealing_codes,
     )
 
 
 __all__ = [
+    "ANNEALING_CODES_PRODUCE_ENERGY_DISCOUNT",
     "ASSEMBLY_SOCIALIZE_RESTORE_BONUS",
     "BUILDING_CODES_MOVE_ENERGY_DISCOUNT",
     "CALENDAR_RETRIEVAL_LIMIT_BONUS",
@@ -1141,6 +1188,7 @@ __all__ = [
     "Law",
     "LawCensus",
     "LawKind",
+    "active_annealing_codes_law",
     "active_assembly_law",
     "active_building_codes_law",
     "active_calendar_law",
@@ -1164,6 +1212,7 @@ __all__ = [
     "active_tax_schedule",
     "active_timber_rights_law",
     "active_zoning_law",
+    "annealing_codes_produce_discount_for",
     "assembly_socialize_bonus_for",
     "building_codes_move_discount_for",
     "calendar_retrieval_bonus_for",
