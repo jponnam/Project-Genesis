@@ -40,11 +40,13 @@ from civitas.domain import (
     CAMP_COMPASS,
     CAMP_COPPICE,
     CAMP_CROP_ROTATION,
+    CAMP_CRYSTAL,
     CAMP_DIALECTIC,
     CAMP_DISSECTION,
     CAMP_DOVETAIL,
     CAMP_DYEING,
     CAMP_ENGINEERING,
+    CAMP_FACET,
     CAMP_FALLOW,
     CAMP_FIRE,
     CAMP_FIRE_HEARTH,
@@ -109,6 +111,7 @@ from civitas.domain import (
     COLLEGIUM_TEACHINGS_PER_KNOWER_BONUS,
     CONSERVATION_WOOD_GATHER_BONUS,
     CROP_ROTATION_EAT_RESTORE_BONUS,
+    CRYSTAL_PRODUCE_ENERGY_DISCOUNT,
     CURRICULUM_TEACHINGS_PER_KNOWER_BONUS,
     CUSTOMS_PRODUCE_ENERGY_DISCOUNT,
     DEFAULT_DRINK_RESTORE,
@@ -6625,6 +6628,41 @@ def test_lens_raises_produce_discount_society_wide() -> None:
     )
     agent = world.agents[0]
     expected = DEFAULT_PRODUCE_ENERGY_COST - OPTICS_PRODUCE_ENERGY_DISCOUNT
+    assert effective_produce_energy_cost(
+        world,
+        agent,
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(expected)
+    assert census_effects(world).produce_energy_cost_bps == round(expected * 10_000)
+    bare = _world()
+    assert census_effects(bare).produce_energy_cost_bps == round(
+        DEFAULT_PRODUCE_ENERGY_COST * 10_000
+    )
+
+
+def test_facet_raises_produce_discount_society_wide() -> None:
+    """Active facet discounts PRODUCE energy for every agent society-wide."""
+    discovered_crystal = CAMP_CRYSTAL.model_copy(update={"discovered": True})
+    active_facet = CAMP_FACET.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        technologies=tuple(
+            discovered_crystal
+            if item.technology_id == CAMP_CRYSTAL.technology_id
+            else item
+            for item in default_technologies()
+        ),
+        innovations=tuple(
+            active_facet
+            if item.innovation_id == CAMP_FACET.innovation_id
+            else item
+            for item in default_innovations()
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    expected = DEFAULT_PRODUCE_ENERGY_COST - CRYSTAL_PRODUCE_ENERGY_DISCOUNT
     assert effective_produce_energy_cost(
         world,
         agent,

@@ -26,6 +26,7 @@ from civitas.domain.technology import (
     CAMP_CARTOGRAPHY,
     CAMP_CERAMICS,
     CAMP_CROP_ROTATION,
+    CAMP_CRYSTAL,
     CAMP_DYEING,
     CAMP_ENGINEERING,
     CAMP_FIRE,
@@ -101,6 +102,7 @@ class InnovationKind(StrEnum):
     KAOLIN = "kaolin"
     BLOWPIPE = "blowpipe"
     LENS = "lens"
+    FACET = "facet"
 
 
 class Innovation(BaseModel):
@@ -422,6 +424,14 @@ CAMP_LENS: Innovation = Innovation.create(
     active=False,
 )
 
+CAMP_FACET: Innovation = Innovation.create(
+    36,
+    CAMP_CRYSTAL.technology_id.value,
+    "Camp Facet",
+    InnovationKind.FACET,
+    active=False,
+)
+
 
 def default_innovations() -> tuple[Innovation, ...]:
     """Return the canonical initial innovation set."""
@@ -462,6 +472,7 @@ def default_innovations() -> tuple[Innovation, ...]:
         CAMP_KAOLIN,
         CAMP_BLOWPIPE,
         CAMP_LENS,
+        CAMP_FACET,
     )
 
 
@@ -510,6 +521,7 @@ class InnovationCensus(BaseModel):
     active_kaolin_count: NonNegativeInt = 0
     active_blowpipe_count: NonNegativeInt = 0
     active_lens_count: NonNegativeInt = 0
+    active_facet_count: NonNegativeInt = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -693,6 +705,7 @@ def census_innovations(world: World) -> InnovationCensus:
     kaolin = sum(1 for item in active if item.kind is InnovationKind.KAOLIN)
     blowpipe = sum(1 for item in active if item.kind is InnovationKind.BLOWPIPE)
     lens = sum(1 for item in active if item.kind is InnovationKind.LENS)
+    facet = sum(1 for item in active if item.kind is InnovationKind.FACET)
     return InnovationCensus(
         tick=world.tick,
         innovation_count=len(innovations),
@@ -734,4 +747,5 @@ def census_innovations(world: World) -> InnovationCensus:
         active_kaolin_count=kaolin,
         active_blowpipe_count=blowpipe,
         active_lens_count=lens,
+        active_facet_count=facet,
     )

@@ -733,6 +733,7 @@ class TechnologiesObserved(DomainEvent):
     discovered_porcelain_count: NonNegativeInt = 0
     discovered_glassmaking_count: NonNegativeInt = 0
     discovered_optics_count: NonNegativeInt = 0
+    discovered_crystal_count: NonNegativeInt = 0
     locked_count: NonNegativeInt = 0
     researchable_count: NonNegativeInt = 0
 
@@ -825,6 +826,7 @@ class InnovationsObserved(DomainEvent):
     active_kaolin_count: NonNegativeInt = 0
     active_blowpipe_count: NonNegativeInt = 0
     active_lens_count: NonNegativeInt = 0
+    active_facet_count: NonNegativeInt = 0
 
 
 class KnowledgeLearned(DomainEvent):
@@ -877,6 +879,7 @@ class KnowledgeObserved(DomainEvent):
     porcelain_knower_count: NonNegativeInt = 0
     glassmaking_knower_count: NonNegativeInt = 0
     optics_knower_count: NonNegativeInt = 0
+    crystal_knower_count: NonNegativeInt = 0
     total_fact_instances: NonNegativeInt
     coverage_bps: NonNegativeInt
 
