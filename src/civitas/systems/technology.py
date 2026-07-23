@@ -99,6 +99,7 @@ class TechSystem:
                     discovered_joinery_count=snap.discovered_joinery_count,
                     discovered_cabinetry_count=snap.discovered_cabinetry_count,
                     discovered_ceramics_count=snap.discovered_ceramics_count,
+                    discovered_glazing_count=snap.discovered_glazing_count,
                     locked_count=snap.locked_count,
                     researchable_count=snap.researchable_count,
                 )
