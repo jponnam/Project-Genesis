@@ -102,6 +102,7 @@ class TechSystem:
                     discovered_glazing_count=snap.discovered_glazing_count,
                     discovered_porcelain_count=snap.discovered_porcelain_count,
                     discovered_glassmaking_count=snap.discovered_glassmaking_count,
+                    discovered_optics_count=snap.discovered_optics_count,
                     locked_count=snap.locked_count,
                     researchable_count=snap.researchable_count,
                 )
