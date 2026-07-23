@@ -20,6 +20,8 @@ from civitas.domain import (
     CAMP_CARPENTRY_RESEARCH,
     CAMP_CARTOGRAPHY,
     CAMP_CARTOGRAPHY_RESEARCH,
+    CAMP_CERAMICS,
+    CAMP_CERAMICS_RESEARCH,
     CAMP_CROP_ROTATION,
     CAMP_CROP_ROTATION_RESEARCH,
     CAMP_DYEING,
@@ -102,7 +104,7 @@ def _world(
     )
 
 
-def test_default_research_progress_seeds_pottery_through_cabinetry() -> None:
+def test_default_research_progress_seeds_pottery_through_ceramics() -> None:
     """Canonical research tracks undiscovered technologies at zero points."""
     assert default_research_progress() == (
         CAMP_POTTERY_RESEARCH,
@@ -135,6 +137,7 @@ def test_default_research_progress_seeds_pottery_through_cabinetry() -> None:
         CAMP_CARPENTRY_RESEARCH,
         CAMP_JOINERY_RESEARCH,
         CAMP_CABINETRY_RESEARCH,
+        CAMP_CERAMICS_RESEARCH,
     )
     assert CAMP_POTTERY_RESEARCH.technology_id == CAMP_POTTERY.technology_id
     assert CAMP_POTTERY_RESEARCH.points == 0
@@ -226,6 +229,9 @@ def test_default_research_progress_seeds_pottery_through_cabinetry() -> None:
     assert CAMP_CABINETRY_RESEARCH.technology_id == CAMP_CABINETRY.technology_id
     assert CAMP_CABINETRY_RESEARCH.points == 0
     assert CAMP_CABINETRY_RESEARCH.threshold == 10
+    assert CAMP_CERAMICS_RESEARCH.technology_id == CAMP_CERAMICS.technology_id
+    assert CAMP_CERAMICS_RESEARCH.points == 0
+    assert CAMP_CERAMICS_RESEARCH.threshold == 10
 
 
 def test_advance_research_increments_and_discovers() -> None:
@@ -274,6 +280,7 @@ def test_advance_research_increments_and_discovers() -> None:
         CAMP_CARPENTRY_RESEARCH,
         CAMP_JOINERY_RESEARCH,
         CAMP_CABINETRY_RESEARCH,
+        CAMP_CERAMICS_RESEARCH,
     )
     assert world.technologies[1].discovered is True
     assert world.technologies[1].kind is TechnologyKind.POTTERY
@@ -318,6 +325,7 @@ def test_advance_research_large_step_discovers_immediately() -> None:
         CAMP_CARPENTRY_RESEARCH,
         CAMP_JOINERY_RESEARCH,
         CAMP_CABINETRY_RESEARCH,
+        CAMP_CERAMICS_RESEARCH,
     )
     assert world.technologies[1].discovered is True
 
@@ -786,6 +794,7 @@ def test_active_syllogism_adds_research_point_per_tick() -> None:
             CAMP_CARPENTRY,
             CAMP_JOINERY,
             CAMP_CABINETRY,
+            CAMP_CERAMICS,
         ),
         research_progress=(CAMP_POTTERY_RESEARCH,),
         innovations=tuple(
