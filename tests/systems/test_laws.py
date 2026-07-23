@@ -266,11 +266,7 @@ def test_observe_emits_active_forest_management_count() -> None:
         config=SimulationConfig(agent_count=1, seed=1),
         locations=(CAMP_LOCATION,),
         governments=(Government.create(0, "Camp", 0, (0,)),),
-        laws=(
-            Law.create(
-                0, 0, "Camp Forest Management", LawKind.FOREST_MANAGEMENT
-            ),
-        ),
+        laws=(Law.create(0, 0, "Camp Forest Management", LawKind.FOREST_MANAGEMENT),),
         agents=(Agent.create(agent_id=0, name="A"),),
     )
     bus = EventBus()
@@ -278,8 +274,6 @@ def test_observe_emits_active_forest_management_count() -> None:
     events = [event for event in bus.history if isinstance(event, LawsObserved)]
     assert len(events) == 1
     assert events[0].active_forest_management_count == 1
-
-
 
 
 def test_observe_emits_active_firing_codes_count() -> None:

@@ -1786,9 +1786,7 @@ def test_create_ironworks_under_camp_government() -> None:
     assert city_by_id(created, 1) is not None
     assert city_by_id(created, 1).kind is CityKind.IRONWORKS  # type: ignore[union-attr]
     assert city_by_id(created, 1).is_capital is False  # type: ignore[union-attr]
-    assert ironworks_for(created, CAMP_GOVERNMENT.government_id.value) == (
-        ironworks,
-    )
+    assert ironworks_for(created, CAMP_GOVERNMENT.government_id.value) == (ironworks,)
     snap = census_cities(created)
     assert snap.active_settlement_count == 1
     assert snap.active_ironworks_count == 1
@@ -1984,9 +1982,7 @@ def test_create_guildhall_under_camp_government() -> None:
     assert city_by_id(created, 1) is not None
     assert city_by_id(created, 1).kind is CityKind.GUILDHALL  # type: ignore[union-attr]
     assert city_by_id(created, 1).is_capital is False  # type: ignore[union-attr]
-    assert guildhalls_for(created, CAMP_GOVERNMENT.government_id.value) == (
-        guildhall,
-    )
+    assert guildhalls_for(created, CAMP_GOVERNMENT.government_id.value) == (guildhall,)
     snap = census_cities(created)
     assert snap.active_settlement_count == 1
     assert snap.active_guildhall_count == 1
@@ -2060,8 +2056,6 @@ def test_world_rejects_capital_guildhall() -> None:
             ),
             agents=(Agent.create(agent_id=0, name="A"),),
         )
-
-
 
 
 def test_create_pottery_town_under_camp_government() -> None:
@@ -2283,9 +2277,7 @@ def test_create_glassworks_under_camp_government() -> None:
     assert city_by_id(created, 1) is not None
     assert city_by_id(created, 1).kind is CityKind.GLASSWORKS  # type: ignore[union-attr]
     assert city_by_id(created, 1).is_capital is False  # type: ignore[union-attr]
-    assert glassworks_for(created, CAMP_GOVERNMENT.government_id.value) == (
-        glassworks,
-    )
+    assert glassworks_for(created, CAMP_GOVERNMENT.government_id.value) == (glassworks,)
     snap = census_cities(created)
     assert snap.active_settlement_count == 1
     assert snap.active_glassworks_count == 1

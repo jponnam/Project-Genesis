@@ -47,9 +47,9 @@ dev = [
 civitas = "civitas.cli.app:main"
 
 [project.urls]
-Homepage = "https://github.com/civitas-lab/civitas-lab"
-Documentation = "https://github.com/civitas-lab/civitas-lab#readme"
-Repository = "https://github.com/civitas-lab/civitas-lab"
+Homepage = "https://github.com/jponnam/Project-Genesis"
+Documentation = "https://github.com/jponnam/Project-Genesis#readme"
+Repository = "https://github.com/jponnam/Project-Genesis"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/civitas"]

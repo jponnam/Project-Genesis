@@ -91,18 +91,14 @@ def test_observe_emits_active_health_institution_counts() -> None:
             ),
             Institution.create(11, 0, 0, "Camp Granary", InstitutionKind.GRANARY),
             Institution.create(12, 0, 0, "Camp Husbandman", InstitutionKind.HUSBANDMAN),
-            Institution.create(
-                13, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST
-            ),
+            Institution.create(13, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST),
             Institution.create(14, 0, 0, "Camp Weaver", InstitutionKind.WEAVER),
             Institution.create(15, 0, 0, "Camp Dyer", InstitutionKind.DYER),
             Institution.create(16, 0, 0, "Camp Tailor", InstitutionKind.TAILOR),
             Institution.create(17, 0, 0, "Camp Miner", InstitutionKind.MINER),
             Institution.create(18, 0, 0, "Camp Smelter", InstitutionKind.SMELTER),
             Institution.create(19, 0, 0, "Camp Smith", InstitutionKind.SMITH),
-            Institution.create(
-                20, 0, 0, "Camp Woodcutter", InstitutionKind.WOODCUTTER
-            ),
+            Institution.create(20, 0, 0, "Camp Woodcutter", InstitutionKind.WOODCUTTER),
             Institution.create(21, 0, 0, "Camp Joiner", InstitutionKind.JOINER),
             Institution.create(22, 0, 0, "Camp Carver", InstitutionKind.CARVER),
             Institution.create(23, 0, 0, "Camp Potter", InstitutionKind.POTTER),

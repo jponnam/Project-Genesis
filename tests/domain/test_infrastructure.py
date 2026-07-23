@@ -807,9 +807,7 @@ def test_create_and_build_fulling_mill() -> None:
 
 def test_create_and_build_warehouse() -> None:
     """WAREHOUSE is a distinct kind with its own catalog build cost."""
-    assert (
-        build_cost_for(InfrastructureKind.WAREHOUSE) == DEFAULT_WAREHOUSE_BUILD_COST
-    )
+    assert build_cost_for(InfrastructureKind.WAREHOUSE) == DEFAULT_WAREHOUSE_BUILD_COST
     world = _world(
         Agent.create(agent_id=0, name="A"),
         governments=(Government.create(0, "Camp", 0, (0,), treasury=20),),
@@ -820,9 +818,7 @@ def test_create_and_build_warehouse() -> None:
     # Warehouse may coexist with a well at the same seat.
     created = create_infrastructure(
         world,
-        Infrastructure.create(
-            1, 0, 0, 0, "Warehouse", InfrastructureKind.WAREHOUSE
-        ),
+        Infrastructure.create(1, 0, 0, 0, "Warehouse", InfrastructureKind.WAREHOUSE),
     )
     assert created is not None
     assert created.infrastructure[1].kind is InfrastructureKind.WAREHOUSE
@@ -846,9 +842,7 @@ def test_create_and_build_warehouse() -> None:
 
 def test_create_and_build_mineshaft() -> None:
     """MINESHAFT is a distinct kind with its own catalog build cost."""
-    assert (
-        build_cost_for(InfrastructureKind.MINESHAFT) == DEFAULT_MINESHAFT_BUILD_COST
-    )
+    assert build_cost_for(InfrastructureKind.MINESHAFT) == DEFAULT_MINESHAFT_BUILD_COST
     world = _world(
         Agent.create(agent_id=0, name="A"),
         governments=(Government.create(0, "Camp", 0, (0,), treasury=20),),
@@ -859,9 +853,7 @@ def test_create_and_build_mineshaft() -> None:
     # Mineshaft may coexist with a well at the same seat.
     created = create_infrastructure(
         world,
-        Infrastructure.create(
-            1, 0, 0, 0, "Mineshaft", InfrastructureKind.MINESHAFT
-        ),
+        Infrastructure.create(1, 0, 0, 0, "Mineshaft", InfrastructureKind.MINESHAFT),
     )
     assert created is not None
     assert created.infrastructure[1].kind is InfrastructureKind.MINESHAFT
@@ -886,8 +878,7 @@ def test_create_and_build_mineshaft() -> None:
 def test_create_and_build_forge_works() -> None:
     """FORGE_WORKS is a distinct kind with its own catalog build cost."""
     assert (
-        build_cost_for(InfrastructureKind.FORGE_WORKS)
-        == DEFAULT_FORGE_WORKS_BUILD_COST
+        build_cost_for(InfrastructureKind.FORGE_WORKS) == DEFAULT_FORGE_WORKS_BUILD_COST
     )
     world = _world(
         Agent.create(agent_id=0, name="A"),
@@ -926,8 +917,7 @@ def test_create_and_build_forge_works() -> None:
 def test_create_and_build_lumber_yard() -> None:
     """LUMBER_YARD is a distinct kind with its own catalog build cost."""
     assert (
-        build_cost_for(InfrastructureKind.LUMBER_YARD)
-        == DEFAULT_LUMBER_YARD_BUILD_COST
+        build_cost_for(InfrastructureKind.LUMBER_YARD) == DEFAULT_LUMBER_YARD_BUILD_COST
     )
     world = _world(
         Agent.create(agent_id=0, name="A"),
@@ -965,10 +955,7 @@ def test_create_and_build_lumber_yard() -> None:
 
 def test_create_and_build_sawpit() -> None:
     """SAWPIT is a distinct kind with its own catalog build cost."""
-    assert (
-        build_cost_for(InfrastructureKind.SAWPIT)
-        == DEFAULT_SAWPIT_BUILD_COST
-    )
+    assert build_cost_for(InfrastructureKind.SAWPIT) == DEFAULT_SAWPIT_BUILD_COST
     world = _world(
         Agent.create(agent_id=0, name="A"),
         governments=(Government.create(0, "Camp", 0, (0,), treasury=20),),
@@ -979,9 +966,7 @@ def test_create_and_build_sawpit() -> None:
     # Sawpit may coexist with a well at the same seat.
     created = create_infrastructure(
         world,
-        Infrastructure.create(
-            1, 0, 0, 0, "Sawpit", InfrastructureKind.SAWPIT
-        ),
+        Infrastructure.create(1, 0, 0, 0, "Sawpit", InfrastructureKind.SAWPIT),
     )
     assert created is not None
     assert created.infrastructure[1].kind is InfrastructureKind.SAWPIT
@@ -995,22 +980,15 @@ def test_create_and_build_sawpit() -> None:
     )
     built = build_infrastructure(
         empty,
-        Infrastructure.create(
-            0, 0, 0, 0, "Paid Sawpit", InfrastructureKind.SAWPIT
-        ),
+        Infrastructure.create(0, 0, 0, 0, "Paid Sawpit", InfrastructureKind.SAWPIT),
     )
     assert built is not None
     assert built.governments[0].treasury == 20 - DEFAULT_SAWPIT_BUILD_COST
 
 
-
-
 def test_create_and_build_kiln_yard() -> None:
     """KILN_YARD is a distinct kind with its own catalog build cost."""
-    assert (
-        build_cost_for(InfrastructureKind.KILN_YARD)
-        == DEFAULT_KILN_YARD_BUILD_COST
-    )
+    assert build_cost_for(InfrastructureKind.KILN_YARD) == DEFAULT_KILN_YARD_BUILD_COST
     world = _world(
         Agent.create(agent_id=0, name="A"),
         governments=(Government.create(0, "Camp", 0, (0,), treasury=20),),
@@ -1021,9 +999,7 @@ def test_create_and_build_kiln_yard() -> None:
     # Kiln yard may coexist with a well at the same seat.
     created = create_infrastructure(
         world,
-        Infrastructure.create(
-            1, 0, 0, 0, "Kiln Yard", InfrastructureKind.KILN_YARD
-        ),
+        Infrastructure.create(1, 0, 0, 0, "Kiln Yard", InfrastructureKind.KILN_YARD),
     )
     assert created is not None
     assert created.infrastructure[1].kind is InfrastructureKind.KILN_YARD
@@ -1047,9 +1023,7 @@ def test_create_and_build_kiln_yard() -> None:
 
 def test_create_and_build_clay_pit() -> None:
     """CLAY_PIT is a distinct kind with its own catalog build cost."""
-    assert (
-        build_cost_for(InfrastructureKind.CLAY_PIT) == DEFAULT_CLAY_PIT_BUILD_COST
-    )
+    assert build_cost_for(InfrastructureKind.CLAY_PIT) == DEFAULT_CLAY_PIT_BUILD_COST
     world = _world(
         Agent.create(agent_id=0, name="A"),
         governments=(Government.create(0, "Camp", 0, (0,), treasury=20),),
@@ -1060,9 +1034,7 @@ def test_create_and_build_clay_pit() -> None:
     # Clay pit may coexist with a well at the same seat.
     created = create_infrastructure(
         world,
-        Infrastructure.create(
-            1, 0, 0, 0, "Clay Pit", InfrastructureKind.CLAY_PIT
-        ),
+        Infrastructure.create(1, 0, 0, 0, "Clay Pit", InfrastructureKind.CLAY_PIT),
     )
     assert created is not None
     assert created.infrastructure[1].kind is InfrastructureKind.CLAY_PIT
@@ -1076,9 +1048,7 @@ def test_create_and_build_clay_pit() -> None:
     )
     built = build_infrastructure(
         empty,
-        Infrastructure.create(
-            0, 0, 0, 0, "Paid Clay Pit", InfrastructureKind.CLAY_PIT
-        ),
+        Infrastructure.create(0, 0, 0, 0, "Paid Clay Pit", InfrastructureKind.CLAY_PIT),
     )
     assert built is not None
     assert built.governments[0].treasury == 20 - DEFAULT_CLAY_PIT_BUILD_COST
@@ -1099,9 +1069,7 @@ def test_create_and_build_glasshouse() -> None:
     # Glasshouse may coexist with a well at the same seat.
     created = create_infrastructure(
         world,
-        Infrastructure.create(
-            1, 0, 0, 0, "Glasshouse", InfrastructureKind.GLASSHOUSE
-        ),
+        Infrastructure.create(1, 0, 0, 0, "Glasshouse", InfrastructureKind.GLASSHOUSE),
     )
     assert created is not None
     assert created.infrastructure[1].kind is InfrastructureKind.GLASSHOUSE

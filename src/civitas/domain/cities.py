@@ -732,13 +732,9 @@ def census_cities(world: World) -> CityCensus:
     active_pastorals = sum(1 for city in active if city.kind is CityKind.PASTORAL)
     active_mill_towns = sum(1 for city in active if city.kind is CityKind.MILL_TOWN)
     active_emporiums = sum(1 for city in active if city.kind is CityKind.EMPORIUM)
-    active_mining_camps = sum(
-        1 for city in active if city.kind is CityKind.MINING_CAMP
-    )
+    active_mining_camps = sum(1 for city in active if city.kind is CityKind.MINING_CAMP)
     active_ironworks = sum(1 for city in active if city.kind is CityKind.IRONWORKS)
-    active_timber_towns = sum(
-        1 for city in active if city.kind is CityKind.TIMBER_TOWN
-    )
+    active_timber_towns = sum(1 for city in active if city.kind is CityKind.TIMBER_TOWN)
     active_guildhalls = sum(1 for city in active if city.kind is CityKind.GUILDHALL)
     active_pottery_towns = sum(
         1 for city in active if city.kind is CityKind.POTTERY_TOWN
@@ -746,9 +742,7 @@ def census_cities(world: World) -> CityCensus:
     active_kiln_quarters = sum(
         1 for city in active if city.kind is CityKind.KILN_QUARTER
     )
-    active_glassworks = sum(
-        1 for city in active if city.kind is CityKind.GLASSWORKS
-    )
+    active_glassworks = sum(1 for city in active if city.kind is CityKind.GLASSWORKS)
     active_crystal_quarters = sum(
         1 for city in active if city.kind is CityKind.CRYSTAL_QUARTER
     )

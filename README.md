@@ -6,8 +6,9 @@ autonomous agents, and civilization formation.**
 Civitas Lab is not a game and not a simulation toy. It is a deterministic,
 reproducible research substrate for investigating emergence, long-term
 planning, memory, relationships, economies, institutions, governments,
-markets, misinformation, conflict, alliances, innovation, culture, and
-technological progress in populations of autonomous AI agents.
+markets, innovation, and technological progress in populations of
+autonomous agents driven by explicit utility policies (optional cognition
+uses a seeded mock LLM adapter — not a live model provider).
 
 ## Design Principles
 
@@ -58,7 +59,7 @@ src/civitas/
            └────────┘   └───────────┘
 ```
 
-## Tech Stack (Phase 1)
+## Tech Stack
 
 - Python 3.14+
 - Pydantic v2
@@ -66,8 +67,10 @@ src/civitas/
 - Rich
 - pytest / mypy / ruff
 
-Later phases may introduce FastAPI, React, PostgreSQL, Redis, OpenTelemetry,
-LLM SDKs, DuckDB/Polars, Temporal, and Ray — **only when explicitly requested**.
+Phase 21 adds a local research API and observatory UI on top of existing
+JSONL runs (no new civilization catalogs). Heavier infrastructure
+(PostgreSQL, Redis, Ray, etc.) remains out of scope unless explicitly
+requested.
 
 ## Development Setup
 
@@ -84,7 +87,7 @@ uv pip install -e ".[dev]"
 ```bash
 pytest
 ruff check src tests
-ruff format --check src tests
+ruff format --check .
 mypy
 ```
 
@@ -102,8 +105,12 @@ civitas run --seed 42 --ticks 100 --agents 10 --name default
 civitas run --seed 42 --ticks 20 --agents 5 -o runs/demo.jsonl
 ```
 
-`civitas run` executes a deterministic simulation and writes the event
-stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
+Available commands today: `version`, `run`, and `config` (`show`,
+`fingerprint`). `civitas run` executes a deterministic simulation and
+writes the event stream to JSONL (default:
+`runs/<name>_seed<seed>.jsonl`). Library replay is available via
+`civitas.storage.JsonlEventStore`; Phase 21 adds first-class
+`replay` / `inspect` / observatory tooling.
 
 ## Roadmap
 
@@ -115,7 +122,7 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 | **4** | Relationships, trust, reputation, families, social networks |
 | **5** | Governments, laws, institutions, voting, cities, infrastructure |
 | **6** | Technology, research, innovation, knowledge diffusion |
-| **7** | LLM integration, agent cognition, reflection, planning, memory retrieval |
+| **7** | Cognition ports (mock LLM), reflection, planning, memory retrieval |
 | **8** | Effect wiring from innovations into action outcomes |
 | **9** | Technology prerequisite trees and deeper tech progression |
 | **10** | Writing, record-keeping, and institutional memory |
@@ -129,15 +136,18 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 | **18** | Timber and carpentry |
 | **19** | Ceramics and kilncraft |
 | **20** | Glass and glasscraft |
+| **21** | Simulation observatory and emergence analytics (no new catalogs) |
 
 ## Current Milestone
 
-**Phase 20 Milestone 12: Crystal quarter cities**
+**Phase 21 Milestone 1: Repository quality repair**
 
-``CityKind.CRYSTAL_QUARTER`` as a non-capital specialized craft city. Living
-residents at an active crystal quarter seat gain a PRODUCE energy discount
-that stacks with glassworks and the existing produce chain. Closes Phase 20
-(Glass and glasscraft).
+Restore green quality gates (`ruff format --check .`), correct package
+repository URLs, and publish the Phase 21 design
+(`docs/PHASE_21_DESIGN.md`). No simulation behavior changes.
+
+See also: `docs/CURRENT_STATE_AUDIT.md` (baseline audit) and
+`docs/PHASE_21_DESIGN.md` (phase plan).
 
 ### Completed
 

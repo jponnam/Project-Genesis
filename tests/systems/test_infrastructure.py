@@ -409,9 +409,7 @@ def test_observe_emits_active_sawpit_count() -> None:
         governments=(Government.create(0, "Camp", 0, (0,)),),
         cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
         infrastructure=(
-            Infrastructure.create(
-                0, 0, 0, 0, "Camp Sawpit", InfrastructureKind.SAWPIT
-            ),
+            Infrastructure.create(0, 0, 0, 0, "Camp Sawpit", InfrastructureKind.SAWPIT),
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
     )
@@ -424,7 +422,6 @@ def test_observe_emits_active_sawpit_count() -> None:
     assert len(events) == 1
     assert events[0].active_sawpit_count == 1
     assert events[0].active_forge_works_count == 0
-
 
 
 def test_observe_emits_active_kiln_yard_count() -> None:
@@ -450,7 +447,6 @@ def test_observe_emits_active_kiln_yard_count() -> None:
     assert len(events) == 1
     assert events[0].active_kiln_yard_count == 1
     assert events[0].active_sawpit_count == 0
-
 
 
 def test_observe_emits_active_clay_pit_count() -> None:

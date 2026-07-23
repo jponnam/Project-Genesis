@@ -1062,14 +1062,10 @@ def test_forestry_locked_until_crop_rotation_discovered() -> None:
     assert prerequisites_met(current, CAMP_FORESTRY) is False
     assert discover_technology(current, CAMP_FORESTRY.technology_id) is None
 
-    with_crop_rotation = discover_technology(
-        current, CAMP_CROP_ROTATION.technology_id
-    )
+    with_crop_rotation = discover_technology(current, CAMP_CROP_ROTATION.technology_id)
     assert with_crop_rotation is not None
     assert prerequisites_met(with_crop_rotation, CAMP_FORESTRY) is True
-    with_forestry = discover_technology(
-        with_crop_rotation, CAMP_FORESTRY.technology_id
-    )
+    with_forestry = discover_technology(with_crop_rotation, CAMP_FORESTRY.technology_id)
     assert with_forestry is not None
     assert with_forestry.technologies[21].discovered is True
 
@@ -1115,9 +1111,7 @@ def test_textiles_locked_until_forestry_discovered() -> None:
     with_forestry = discover_technology(current, CAMP_FORESTRY.technology_id)
     assert with_forestry is not None
     assert prerequisites_met(with_forestry, CAMP_TEXTILES) is True
-    with_textiles = discover_technology(
-        with_forestry, CAMP_TEXTILES.technology_id
-    )
+    with_textiles = discover_technology(with_forestry, CAMP_TEXTILES.technology_id)
     assert with_textiles is not None
     assert with_textiles.technologies[22].discovered is True
 
@@ -1164,9 +1158,7 @@ def test_dyeing_locked_until_textiles_discovered() -> None:
     with_textiles = discover_technology(current, CAMP_TEXTILES.technology_id)
     assert with_textiles is not None
     assert prerequisites_met(with_textiles, CAMP_DYEING) is True
-    with_dyeing = discover_technology(
-        with_textiles, CAMP_DYEING.technology_id
-    )
+    with_dyeing = discover_technology(with_textiles, CAMP_DYEING.technology_id)
     assert with_dyeing is not None
     assert with_dyeing.technologies[23].discovered is True
 
@@ -1214,9 +1206,7 @@ def test_tanning_locked_until_dyeing_discovered() -> None:
     with_dyeing = discover_technology(current, CAMP_DYEING.technology_id)
     assert with_dyeing is not None
     assert prerequisites_met(with_dyeing, CAMP_TANNING) is True
-    with_tanning = discover_technology(
-        with_dyeing, CAMP_TANNING.technology_id
-    )
+    with_tanning = discover_technology(with_dyeing, CAMP_TANNING.technology_id)
     assert with_tanning is not None
     assert with_tanning.technologies[24].discovered is True
 
@@ -1265,9 +1255,7 @@ def test_mining_locked_until_tanning_discovered() -> None:
     with_tanning = discover_technology(current, CAMP_TANNING.technology_id)
     assert with_tanning is not None
     assert prerequisites_met(with_tanning, CAMP_MINING) is True
-    with_mining = discover_technology(
-        with_tanning, CAMP_MINING.technology_id
-    )
+    with_mining = discover_technology(with_tanning, CAMP_MINING.technology_id)
     assert with_mining is not None
     assert with_mining.technologies[25].discovered is True
 
@@ -1317,9 +1305,7 @@ def test_smithing_locked_until_mining_discovered() -> None:
     with_mining = discover_technology(current, CAMP_MINING.technology_id)
     assert with_mining is not None
     assert prerequisites_met(with_mining, CAMP_SMITHING) is True
-    with_smithing = discover_technology(
-        with_mining, CAMP_SMITHING.technology_id
-    )
+    with_smithing = discover_technology(with_mining, CAMP_SMITHING.technology_id)
     assert with_smithing is not None
     assert with_smithing.technologies[26].discovered is True
 
@@ -1370,9 +1356,7 @@ def test_toolmaking_locked_until_smithing_discovered() -> None:
     with_smithing = discover_technology(current, CAMP_SMITHING.technology_id)
     assert with_smithing is not None
     assert prerequisites_met(with_smithing, CAMP_TOOLMAKING) is True
-    with_toolmaking = discover_technology(
-        with_smithing, CAMP_TOOLMAKING.technology_id
-    )
+    with_toolmaking = discover_technology(with_smithing, CAMP_TOOLMAKING.technology_id)
     assert with_toolmaking is not None
     assert with_toolmaking.technologies[27].discovered is True
 
@@ -1424,9 +1408,7 @@ def test_carpentry_locked_until_toolmaking_discovered() -> None:
     with_toolmaking = discover_technology(current, CAMP_TOOLMAKING.technology_id)
     assert with_toolmaking is not None
     assert prerequisites_met(with_toolmaking, CAMP_CARPENTRY) is True
-    with_carpentry = discover_technology(
-        with_toolmaking, CAMP_CARPENTRY.technology_id
-    )
+    with_carpentry = discover_technology(with_toolmaking, CAMP_CARPENTRY.technology_id)
     assert with_carpentry is not None
     assert with_carpentry.technologies[28].discovered is True
 
@@ -1479,9 +1461,7 @@ def test_joinery_locked_until_carpentry_discovered() -> None:
     with_carpentry = discover_technology(current, CAMP_CARPENTRY.technology_id)
     assert with_carpentry is not None
     assert prerequisites_met(with_carpentry, CAMP_JOINERY) is True
-    with_joinery = discover_technology(
-        with_carpentry, CAMP_JOINERY.technology_id
-    )
+    with_joinery = discover_technology(with_carpentry, CAMP_JOINERY.technology_id)
     assert with_joinery is not None
     assert with_joinery.technologies[29].discovered is True
 
@@ -1535,9 +1515,7 @@ def test_cabinetry_locked_until_joinery_discovered() -> None:
     with_joinery = discover_technology(current, CAMP_JOINERY.technology_id)
     assert with_joinery is not None
     assert prerequisites_met(with_joinery, CAMP_CABINETRY) is True
-    with_cabinetry = discover_technology(
-        with_joinery, CAMP_CABINETRY.technology_id
-    )
+    with_cabinetry = discover_technology(with_joinery, CAMP_CABINETRY.technology_id)
     assert with_cabinetry is not None
     assert with_cabinetry.technologies[30].discovered is True
 
@@ -1592,9 +1570,7 @@ def test_ceramics_locked_until_cabinetry_discovered() -> None:
     with_cabinetry = discover_technology(current, CAMP_CABINETRY.technology_id)
     assert with_cabinetry is not None
     assert prerequisites_met(with_cabinetry, CAMP_CERAMICS) is True
-    with_ceramics = discover_technology(
-        with_cabinetry, CAMP_CERAMICS.technology_id
-    )
+    with_ceramics = discover_technology(with_cabinetry, CAMP_CERAMICS.technology_id)
     assert with_ceramics is not None
     assert with_ceramics.technologies[31].discovered is True
 
@@ -1650,9 +1626,7 @@ def test_glazing_locked_until_ceramics_discovered() -> None:
     with_ceramics = discover_technology(current, CAMP_CERAMICS.technology_id)
     assert with_ceramics is not None
     assert prerequisites_met(with_ceramics, CAMP_GLAZING) is True
-    with_glazing = discover_technology(
-        with_ceramics, CAMP_GLAZING.technology_id
-    )
+    with_glazing = discover_technology(with_ceramics, CAMP_GLAZING.technology_id)
     assert with_glazing is not None
     assert with_glazing.technologies[32].discovered is True
 
@@ -1709,9 +1683,7 @@ def test_porcelain_locked_until_glazing_discovered() -> None:
     with_glazing = discover_technology(current, CAMP_GLAZING.technology_id)
     assert with_glazing is not None
     assert prerequisites_met(with_glazing, CAMP_PORCELAIN) is True
-    with_porcelain = discover_technology(
-        with_glazing, CAMP_PORCELAIN.technology_id
-    )
+    with_porcelain = discover_technology(with_glazing, CAMP_PORCELAIN.technology_id)
     assert with_porcelain is not None
     assert with_porcelain.technologies[33].discovered is True
 
@@ -1830,9 +1802,7 @@ def test_optics_locked_until_glassmaking_discovered() -> None:
     with_glassmaking = discover_technology(current, CAMP_GLASSMAKING.technology_id)
     assert with_glassmaking is not None
     assert prerequisites_met(with_glassmaking, CAMP_OPTICS) is True
-    with_optics = discover_technology(
-        with_glassmaking, CAMP_OPTICS.technology_id
-    )
+    with_optics = discover_technology(with_glassmaking, CAMP_OPTICS.technology_id)
     assert with_optics is not None
     assert with_optics.technologies[35].discovered is True
 
@@ -1889,9 +1859,7 @@ def test_crystal_locked_until_optics_discovered() -> None:
     with_optics = discover_technology(current, CAMP_OPTICS.technology_id)
     assert with_optics is not None
     assert prerequisites_met(with_optics, CAMP_CRYSTAL) is True
-    with_crystal = discover_technology(
-        with_optics, CAMP_CRYSTAL.technology_id
-    )
+    with_crystal = discover_technology(with_optics, CAMP_CRYSTAL.technology_id)
     assert with_crystal is not None
     assert with_crystal.technologies[36].discovered is True
 
