@@ -215,5 +215,6 @@ mypy
 | M4 Analytics engine | Merged |
 | M5 Emergence detection | Merged |
 | M6 Research API | Merged |
-| M7 Observatory UI | In progress |
-| M8–M10 | Sequential PRs with GitHub auto-merge |
+| M7 Observatory UI | Merged |
+| M8 Seed comparison | In progress |
+| M9–M10 | Sequential PRs with GitHub auto-merge |

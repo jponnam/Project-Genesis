@@ -106,9 +106,10 @@ civitas run --seed 42 --ticks 20 --agents 5 -o runs/demo.jsonl
 ```
 
 Available commands today: `version`, `run`, `replay`, `inspect`,
-`metrics`, `emergence`, `serve`, and `config` (`show`, `fingerprint`).
-`civitas run` executes a deterministic simulation and writes the event
-stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
+`metrics`, `emergence`, `compare`, `serve`, and `config`
+(`show`, `fingerprint`). `civitas run` executes a deterministic
+simulation and writes the event stream to JSONL (default:
+`runs/<name>_seed<seed>.jsonl`).
 
 ```bash
 civitas replay runs/demo_seed42.jsonl
@@ -121,6 +122,8 @@ civitas metrics runs/demo_seed42.jsonl
 civitas metrics runs/demo_seed42.jsonl --format json
 civitas emergence runs/demo_seed42.jsonl
 civitas emergence runs/demo_seed42.jsonl --format json
+civitas compare runs/a_seed42.jsonl runs/b_seed7.jsonl
+civitas compare runs/a_seed42.jsonl runs/b_seed7.jsonl --format json
 uv pip install -e ".[observatory]"
 civitas serve --host 127.0.0.1 --port 8000
 # Observatory: http://127.0.0.1:8000/ui/
@@ -155,13 +158,11 @@ civitas serve --host 127.0.0.1 --port 8000
 
 ## Current Milestone
 
-**Phase 21 Milestone 7: Interactive observatory**
+**Phase 21 Milestone 8: Seed comparison**
 
-Server-rendered observatory UI at `/ui/` (via `civitas serve`): run
-selector, overview dashboard, timeline/filters, agents, wealth/resource
-panels, event-frequency bars, institutions/cities/tech, emergence
-findings, and seed comparison. Unavailable reconstructions are labeled
-explicitly. Requires `uv pip install -e ".[observatory]"`.
+``civitas compare RUN_A RUN_B`` (also ``GET /compare`` and `/ui/compare`)
+produces deterministic deltas across config, event volume, actions,
+inequality, institutions/techs, population, and emergence findings.
 
 See also: `docs/CURRENT_STATE_AUDIT.md` (baseline audit) and
 `docs/PHASE_21_DESIGN.md` (phase plan).

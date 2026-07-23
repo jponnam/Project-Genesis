@@ -27,6 +27,7 @@ def test_help_lists_core_commands() -> None:
         "inspect",
         "metrics",
         "emergence",
+        "compare",
         "serve",
     ):
         assert command in result.stdout
@@ -336,3 +337,37 @@ def test_emergence_command_json(tmp_path: Path) -> None:
     payload = json.loads(result.stdout)
     assert "findings" in payload
     assert len(payload["rules_evaluated"]) == 10
+
+
+def test_compare_command_json(tmp_path: Path) -> None:
+    """``civitas compare`` emits a deterministic JSON comparison."""
+    left = _cli_mini_run(tmp_path)
+    right = tmp_path / "other.jsonl"
+    assert (
+        runner.invoke(
+            app,
+            [
+                "run",
+                "--seed",
+                "7",
+                "--ticks",
+                "2",
+                "--agents",
+                "2",
+                "--name",
+                "other",
+                "--output",
+                str(right),
+            ],
+        ).exit_code
+        == 0
+    )
+    result = runner.invoke(
+        app,
+        ["compare", str(left), str(right), "--format", "json"],
+    )
+    assert result.exit_code == 0, result.stdout
+    payload = json.loads(result.stdout)
+    assert payload["identical_seeds"] is False
+    assert payload["left"]["seed"] == 42
+    assert payload["right"]["seed"] == 7

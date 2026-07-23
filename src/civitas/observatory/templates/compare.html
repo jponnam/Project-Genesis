@@ -2,7 +2,7 @@
 {% block content %}
 <section class="hero" data-reveal>
   <h1>Seed / run comparison</h1>
-  <p>Compare two existing JSONL runs using event-derived summaries and metrics.</p>
+  <p>Deterministic side-by-side comparison of two JSONL runs.</p>
 </section>
 
 <section class="panel" data-reveal>
@@ -29,42 +29,53 @@
   {% if not runs %}<div class="empty">No runs available to compare.</div>{% endif %}
 </section>
 
-{% if left_summary and right_summary %}
-<div class="compare">
-  <section class="panel" data-reveal>
-    <h3>{{ left }}</h3>
-    <p>seed {{ left_summary.seed }} · events {{ left_summary.event_count }} · living {{ left_summary.estimated_living }}</p>
-    <p>actions {{ left_summary.actions }}</p>
-    <p>techs {{ left_summary.technologies_discovered|list }}</p>
-    <p>wealth gini
-      {% if left_summary.wealth %}{{ left_summary.wealth.gini_bps }}{% else %}unavailable{% endif %}
-    </p>
-    <h4>Emergence</h4>
-    {% if left_emergence and left_emergence.findings %}
-      {% for finding in left_emergence.findings %}
-        <div class="finding"><strong>{{ finding.pattern }}</strong><p>{{ finding.explanation }}</p></div>
-      {% endfor %}
-    {% else %}
-      <div class="empty">No findings.</div>
-    {% endif %}
-  </section>
-  <section class="panel" data-reveal>
-    <h3>{{ right }}</h3>
-    <p>seed {{ right_summary.seed }} · events {{ right_summary.event_count }} · living {{ right_summary.estimated_living }}</p>
-    <p>actions {{ right_summary.actions }}</p>
-    <p>techs {{ right_summary.technologies_discovered|list }}</p>
-    <p>wealth gini
-      {% if right_summary.wealth %}{{ right_summary.wealth.gini_bps }}{% else %}unavailable{% endif %}
-    </p>
-    <h4>Emergence</h4>
-    {% if right_emergence and right_emergence.findings %}
-      {% for finding in right_emergence.findings %}
-        <div class="finding"><strong>{{ finding.pattern }}</strong><p>{{ finding.explanation }}</p></div>
-      {% endfor %}
-    {% else %}
-      <div class="empty">No findings.</div>
-    {% endif %}
-  </section>
-</div>
+{% if comparison %}
+<section class="panel" data-reveal>
+  <h3>Overview</h3>
+  <p>
+    identical seeds: {{ comparison.identical_seeds }} ·
+    identical event counts: {{ comparison.identical_event_counts }}
+  </p>
+  {% for note in comparison.notes %}
+    <span class="chip warn">{{ note }}</span>
+  {% endfor %}
+  <table>
+    <thead><tr><th>Field</th><th>Left</th><th>Right</th></tr></thead>
+    <tbody>
+      <tr><td>path</td><td>{{ comparison.left.path }}</td><td>{{ comparison.right.path }}</td></tr>
+      <tr><td>seed</td><td>{{ comparison.left.seed }}</td><td>{{ comparison.right.seed }}</td></tr>
+      <tr><td>events</td><td>{{ comparison.left.event_count }}</td><td>{{ comparison.right.event_count }}</td></tr>
+      <tr><td>living</td><td>{{ comparison.left.estimated_living }}</td><td>{{ comparison.right.estimated_living }}</td></tr>
+      <tr><td>gini_bps</td><td>{{ comparison.left.wealth_gini_bps }}</td><td>{{ comparison.right.wealth_gini_bps }}</td></tr>
+      <tr><td>actions</td><td>{{ comparison.left.actions }}</td><td>{{ comparison.right.actions }}</td></tr>
+      <tr><td>institutions</td><td>{{ comparison.left.institutions|list }}</td><td>{{ comparison.right.institutions|list }}</td></tr>
+      <tr><td>technologies</td><td>{{ comparison.left.technologies_discovered|list }}</td><td>{{ comparison.right.technologies_discovered|list }}</td></tr>
+      <tr><td>emergence</td><td>{{ comparison.left.emergence_patterns|list }}</td><td>{{ comparison.right.emergence_patterns|list }}</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="panel" data-reveal>
+  <h3>Deltas</h3>
+  {% if comparison.deltas %}
+    <table>
+      <thead><tr><th>Field</th><th>Left</th><th>Right</th></tr></thead>
+      <tbody>
+        {% for delta in comparison.deltas %}
+        <tr>
+          <td>{{ delta.field }}</td>
+          <td>{{ delta.left }}</td>
+          <td>{{ delta.right }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="empty">No field-level deltas.</div>
+  {% endif %}
+  <p class="muted">shared emergence: {{ comparison.shared_emergence|list }}</p>
+  <p class="muted">unique left: {{ comparison.unique_left_emergence|list }}</p>
+  <p class="muted">unique right: {{ comparison.unique_right_emergence|list }}</p>
+</section>
 {% endif %}
 {% endblock %}

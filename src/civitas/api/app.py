@@ -14,7 +14,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from civitas import __version__
-from civitas.analytics import analyze_emergence, analyze_run
+from civitas.analytics import analyze_emergence, analyze_run, compare_runs
 from civitas.api.catalog import (
     ReplayError,
     RunNotFoundError,
@@ -25,6 +25,7 @@ from civitas.api.catalog import (
     list_run_paths,
     load_run_events,
     paginate_events,
+    resolve_run_path,
     summary_dict,
 )
 from civitas.api.models import (
@@ -219,6 +220,22 @@ def get_timeline(run_id: str) -> TimelineResponse:
     path, _events = load_run_events(run_id)
     report = build_inspection(path)
     return TimelineResponse(run_id=run_id, entries=list(report.notable_events))
+
+
+@app.get(
+    "/compare",
+    response_model=dict[str, Any],
+    tags=["compare"],
+    responses={404: {"model": ErrorResponse}, 400: {"model": ErrorResponse}},
+)
+def compare_run_ids(
+    left: Annotated[str, Query(min_length=1, description="Left run_id")],
+    right: Annotated[str, Query(min_length=1, description="Right run_id")],
+) -> dict[str, Any]:
+    """Compare two runs from the configured runs directory."""
+    left_path = resolve_run_path(left)
+    right_path = resolve_run_path(right)
+    return compare_runs(left_path, right_path).to_dict()
 
 
 def create_app() -> FastAPI:

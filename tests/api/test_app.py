@@ -141,3 +141,20 @@ def test_api_is_read_only(client: TestClient, sample_run: str, runs_dir: Path) -
     assert client.post("/runs").status_code in {404, 405, 401, 403}
     assert client.delete(f"/runs/{sample_run}").status_code in {404, 405, 401, 403}
     assert path.read_bytes() == before
+
+
+def test_compare_endpoint(client: TestClient, sample_run: str, runs_dir: Path) -> None:
+    """GET /compare returns a structured comparison payload."""
+    other = SimulationEngine().run(
+        SimulationConfig(seed=7, ticks=2, agent_count=2, run_name="other")
+    )
+    write_events(runs_dir / "other_seed7.jsonl", other.events)
+    response = client.get(
+        "/compare",
+        params={"left": sample_run, "right": "other_seed7"},
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["identical_seeds"] is False
+    assert body["left"]["seed"] == 42
+    assert body["right"]["seed"] == 7
