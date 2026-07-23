@@ -19,7 +19,15 @@ def test_help_lists_core_commands() -> None:
     """Root help must advertise the researcher-facing commands."""
     result = runner.invoke(app, ["--help"])
     assert result.exit_code == 0
-    for command in ("version", "config", "run", "replay", "inspect", "metrics"):
+    for command in (
+        "version",
+        "config",
+        "run",
+        "replay",
+        "inspect",
+        "metrics",
+        "emergence",
+    ):
         assert command in result.stdout
 
 
@@ -317,3 +325,13 @@ def test_metrics_text_and_json(tmp_path: Path) -> None:
     assert payload["event_count"] > 0
     names = {metric["name"] for metric in payload["metrics"]}
     assert "action_diversity_entropy" in names
+
+
+def test_emergence_command_json(tmp_path: Path) -> None:
+    """``civitas emergence --format json`` returns a structured report."""
+    output = _cli_mini_run(tmp_path)
+    result = runner.invoke(app, ["emergence", str(output), "--format", "json"])
+    assert result.exit_code == 0, result.stdout
+    payload = json.loads(result.stdout)
+    assert "findings" in payload
+    assert len(payload["rules_evaluated"]) == 10
