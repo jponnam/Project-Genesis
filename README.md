@@ -131,15 +131,15 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 19 Milestone 5: Pottery town cities**
+**Phase 19 Milestone 6: Glazer institutions**
 
-``CityKind.POTTERY_TOWN`` is a non-capital specialized city seat for
-ceramics whose living residents gain a PRODUCE energy discount. It stacks
-with the full produce chain: guild, workshop, weaver, smelter, joiner,
-potter, foundry, fulling mill, forge works, sawpit, kiln yard, mill town,
-ironworks, guildhall, tannery, bellows, lathe, plane, dovetail, kiln,
-abacus, pulley, customs, labor, safety codes, firing codes, and loom.
-Pottery towns cannot be capitals and are not seeded.
+``InstitutionKind.GLAZER`` is a finishing craft seat whose living colocated
+agents gain a PRODUCE energy discount. It stacks with the full produce
+chain: guild, workshop, weaver, smelter, joiner, potter, foundry, fulling
+mill, forge works, sawpit, kiln yard, mill town, ironworks, guildhall,
+pottery town, tannery, bellows, lathe, plane, dovetail, kiln, abacus,
+pulley, customs, labor, safety codes, firing codes, and loom. Glazers are
+not seeded.
 
 ### Completed
 
@@ -346,6 +346,7 @@ JSONL storage → `civitas run`
 - Milestone 3: Potter institutions
 - Milestone 4: Kiln yard infrastructure
 - Milestone 5: Pottery town cities
+- Milestone 6: Glazer institutions
 
 ## License
 

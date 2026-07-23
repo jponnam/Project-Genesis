@@ -235,7 +235,12 @@ adds POTTERY_TOWN city PRODUCE energy discounts at the city seat (stacking
 with guild, workshop, weaver, smelter, joiner, potter, foundry, fulling mill,
 forge works, sawpit, kiln yard, mill town, ironworks, guildhall, tannery,
 bellows, lathe, plane, dovetail, kiln, abacus, pulley, customs, labor,
-safety codes, firing codes, and loom).
+safety codes, firing codes, and loom). Phase 19 Milestone 6 adds GLAZER
+produce-energy discounts at the institution seat (stacking with guild,
+workshop, weaver, smelter, joiner, potter, foundry, fulling mill, forge
+works, sawpit, kiln yard, mill town, ironworks, guildhall, pottery town,
+tannery, bellows, lathe, plane, dovetail, kiln, abacus, pulley, customs,
+labor, safety codes, firing codes, and loom).
 The action
 executor,
 retrieval
@@ -371,6 +376,7 @@ GUILDHALL_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 POTTERY_TOWN_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 JOINER_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 POTTER_PRODUCE_ENERGY_DISCOUNT: float = 0.02
+GLAZER_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 MATHEMATICS_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 ENGINEERING_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 TEXTILES_PRODUCE_ENERGY_DISCOUNT: float = 0.02
@@ -940,6 +946,22 @@ def location_has_active_potter(
         for item in active_institutions(world)
     )
 
+
+
+def location_has_active_glazer(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active GLAZER is seated at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InstitutionKind.GLAZER and item.location_id == target
+        for item in active_institutions(world)
+    )
 
 def location_has_active_architect(
     world: World,
@@ -1698,6 +1720,8 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
     active JOINER at the agent's location contributes
     ``JOINER_PRODUCE_ENERGY_DISCOUNT``. An active POTTER at the agent's
     location contributes ``POTTER_PRODUCE_ENERGY_DISCOUNT``. An active
+    GLAZER at the agent's location contributes
+    ``GLAZER_PRODUCE_ENERGY_DISCOUNT``. An active
     ``CUSTOMS`` statute
     contributes its subject discount. An active
     ABACUS innovation contributes ``MATHEMATICS_PRODUCE_ENERGY_DISCOUNT``
@@ -1750,6 +1774,8 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
         discount += JOINER_PRODUCE_ENERGY_DISCOUNT
     if location_has_active_potter(world, agent.location_id):
         discount += POTTER_PRODUCE_ENERGY_DISCOUNT
+    if location_has_active_glazer(world, agent.location_id):
+        discount += GLAZER_PRODUCE_ENERGY_DISCOUNT
     discount += customs_produce_discount_for(world, agent)
     discount += labor_produce_discount_for(world, agent)
     discount += safety_codes_produce_discount_for(world, agent)
@@ -2124,6 +2150,11 @@ def census_effects(world: World) -> EffectsCensus:
         for item in active_institutions(world)
         if item.kind is InstitutionKind.POTTER
     )
+    glazers = tuple(
+        item
+        for item in active_institutions(world)
+        if item.kind is InstitutionKind.GLAZER
+    )
     fulling_mills = tuple(
         item
         for item in active_infrastructure(world)
@@ -2224,6 +2255,8 @@ def census_effects(world: World) -> EffectsCensus:
         produce_discount += JOINER_PRODUCE_ENERGY_DISCOUNT
     if potters:
         produce_discount += POTTER_PRODUCE_ENERGY_DISCOUNT
+    if glazers:
+        produce_discount += GLAZER_PRODUCE_ENERGY_DISCOUNT
     if fulling_mills:
         produce_discount += FULLING_MILL_PRODUCE_ENERGY_DISCOUNT
     if forge_works:
