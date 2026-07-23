@@ -157,6 +157,7 @@ from civitas.domain import (
     LABOR_PRODUCE_ENERGY_DISCOUNT,
     LAND_TENURE_EAT_RESTORE_BONUS,
     LAZARETTO_DRINK_RESTORE_BONUS,
+    LENSMAKER_PRODUCE_ENERGY_DISCOUNT,
     LIBRARY_RETRIEVAL_LIMIT_BONUS,
     LOGIC_RESEARCH_POINTS_BONUS,
     LUMBER_YARD_WOOD_GATHER_BONUS,
@@ -299,6 +300,7 @@ from civitas.domain import (
     location_has_active_kiln_quarter,
     location_has_active_kiln_yard,
     location_has_active_lazaretto,
+    location_has_active_lensmaker,
     location_has_active_library,
     location_has_active_lumber_yard,
     location_has_active_lyceum,
@@ -6850,6 +6852,37 @@ def test_glassblower_reduces_produce_energy_for_colocated_agents() -> None:
         agents=(Agent.create(agent_id=0, name="A"),),
     )
     assert location_has_active_glassblower(bare, bare.agents[0].location_id) is False
+
+
+def test_lensmaker_reduces_produce_energy_for_colocated_agents() -> None:
+    """Active lensmakers discount PRODUCE energy at their seat location."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        institutions=(
+            Institution.create(0, 0, 0, "Camp Lensmaker", InstitutionKind.LENSMAKER),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_lensmaker(world, agent.location_id) is True
+    assert effective_produce_energy_cost(
+        world,
+        agent,
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(
+        DEFAULT_PRODUCE_ENERGY_COST - LENSMAKER_PRODUCE_ENERGY_DISCOUNT
+    )
+    assert census_effects(world).produce_energy_cost_bps == round(
+        (DEFAULT_PRODUCE_ENERGY_COST - LENSMAKER_PRODUCE_ENERGY_DISCOUNT) * 10_000
+    )
+    bare = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_lensmaker(bare, bare.agents[0].location_id) is False
 
 
 def test_joiner_stacks_with_guild_workshop_abacus_and_pulley() -> None:
