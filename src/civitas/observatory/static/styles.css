@@ -54,8 +54,21 @@ a:hover { text-decoration: underline; }
   font-family: var(--font-display);
   font-weight: 600;
   margin: 0 0 0.4rem;
+  color: var(--ink);
 }
 .hero p, .muted { color: var(--muted); }
+
+[data-reveal] {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 420ms ease, transform 420ms ease;
+}
+@media (prefers-reduced-motion: no-preference) {
+  [data-reveal]:not(.is-revealed) {
+    opacity: 0.92;
+    transform: translateY(6px);
+  }
+}
 
 .grid {
   display: grid;

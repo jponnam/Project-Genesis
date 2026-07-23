@@ -217,5 +217,5 @@ mypy
 | M6 Research API | Merged |
 | M7 Observatory UI | Merged |
 | M8 Seed comparison | Merged |
-| M9 Demo scenarios | In progress |
-| M10 Portfolio docs | Pending |
+| M9 Demo scenarios | Merged |
+| M10 Portfolio docs | Complete (this PR) |

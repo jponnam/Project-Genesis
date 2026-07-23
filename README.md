@@ -1,78 +1,62 @@
 # Civitas Lab
 
-**Open-source AI research platform for studying emergent intelligence,
-autonomous agents, and civilization formation.**
+**Deterministic society simulation for research on agents, institutions, and
+event-sourced civilization dynamics.**
 
-Civitas Lab is not a game and not a simulation toy. It is a deterministic,
-reproducible research substrate for investigating emergence, long-term
-planning, memory, relationships, economies, institutions, governments,
-markets, innovation, and technological progress in populations of
-autonomous agents driven by explicit utility policies (optional cognition
-uses a seeded mock LLM adapter — not a live model provider).
+Civitas Lab is a reproducible, tick-based research substrate — not a game.
+Populations of autonomous agents act under explicit utility policies; optional
+cognition uses a **seeded mock LLM adapter only** (no live model provider).
+Every meaningful change is a typed domain event persisted to JSONL for offline
+replay, analytics, and the Simulation Observatory.
 
-## Design Principles
+## Design principles
 
 | Principle | Meaning |
 |---|---|
-| Determinism | Same seed → identical simulation, always |
-| Event sourcing | Every meaningful state change is a `DomainEvent` |
-| Clean architecture | Domain has no outward dependencies |
-| Decoupled systems | Systems communicate only through domain events |
-| Research-grade quality | Typed, tested, linted, reproducible |
+| Determinism | Same seed + config + version → same trajectory |
+| Event sourcing | Meaningful state changes are `DomainEvent` records |
+| Clean architecture | Domain has no outward Civitas dependencies |
+| Decoupled systems | Systems communicate through domain events |
+| Research honesty | Metrics and emergence rules must be event-derivable |
 
 ## Architecture
 
-```
-src/civitas/
-├── domain/       # Core models, value objects, domain events
-├── engine/       # Clock, seeded RNG, world lifecycle, tick loop
-├── systems/      # Needs, policy, economy, governance, … (decoupled)
-├── llm/          # Optional language-model adapters (Protocol + mocks)
-├── storage/      # Append-only JSONL event persistence & replay
-├── analytics/    # Offline metrics over event streams
-└── cli/          # Researcher-facing Typer interface
+```text
+CLI / Observatory UI / FastAPI
+        │
+        ▼
+Replay · Inspect · Analytics · Emergence · Compare
+        │
+        ▼
+SimulationEngine → ActionExecutor → Systems
+        │
+        ▼
+World · Agents · EventBus · Clock · SeededRNG
+        │
+        ▼
+JSONL event store · TOML config · catalogs
 ```
 
-### Layer rules
-
-1. **domain** depends on nothing inside Civitas Lab.
-2. **engine** and **systems** depend on **domain** only (plus stdlib / approved libs).
-3. **systems** must not import each other.
-4. **storage** and **analytics** read/write event streams; they never own policy.
-5. **cli** is a thin adapter over engine and storage.
+Package layout:
 
 ```text
-                 ┌─────────────┐
-                 │     cli     │
-                 └──────┬──────┘
-                        │
-          ┌─────────────┼─────────────┐
-          ▼             ▼             ▼
-     ┌────────┐   ┌─────────┐   ┌──────────┐
-     │ engine │──▶│ systems │──▶│ storage  │
-     └───┬────┘   └────┬────┘   └────┬─────┘
-         │             │             │
-         └──────┬──────┴──────┬──────┘
-                ▼             ▼
-           ┌────────┐   ┌───────────┐
-           │ domain │   │ analytics │
-           └────────┘   └───────────┘
+src/civitas/
+├── domain/        # models, value objects, domain events
+├── engine/        # clock, RNG, world lifecycle, tick loop
+├── systems/       # needs, policy, economy, governance, …
+├── llm/           # Protocol + mock adapters (no live provider)
+├── storage/       # JSONL persistence, replay, inspect summaries
+├── analytics/     # offline metrics, emergence, seed compare
+├── api/           # read-only FastAPI research API
+├── observatory/   # Jinja2 UI + static assets
+├── scenarios/     # demonstration recipe loader
+└── cli/           # Typer entrypoint (`civitas`)
 ```
 
-## Tech Stack
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for layer rules and
+observatory boundaries.
 
-- Python 3.14+
-- Pydantic v2
-- Typer
-- Rich
-- pytest / mypy / ruff
-
-Phase 21 adds a local research API and observatory UI on top of existing
-JSONL runs (no new civilization catalogs). Heavier infrastructure
-(PostgreSQL, Redis, Ray, etc.) remains out of scope unless explicitly
-requested.
-
-## Development Setup
+## Quick start
 
 ```bash
 # Requires uv (https://docs.astral.sh/uv/)
@@ -80,9 +64,92 @@ uv python install 3.14
 uv venv --python 3.14 .venv
 source .venv/bin/activate
 uv pip install -e ".[dev]"
+
+civitas version
+civitas run --seed 42 --ticks 20 --agents 6 --name demo
+civitas inspect runs/demo_seed42.jsonl
+civitas metrics runs/demo_seed42.jsonl
 ```
 
-### Quality gates
+### Observatory
+
+```bash
+export CIVITAS_RUNS_DIR=$PWD/runs
+civitas serve --host 127.0.0.1 --port 8000
+# UI:      http://127.0.0.1:8000/ui/
+# OpenAPI: http://127.0.0.1:8000/docs
+```
+
+![Observatory home](docs/images/observatory_home.png)
+
+![Run dashboard](docs/images/observatory_run.png)
+
+![Seed comparison](docs/images/observatory_compare.png)
+
+## Sample session
+
+```bash
+civitas run --seed 42 --ticks 20 --agents 6 --name portfolio_demo
+civitas inspect runs/portfolio_demo_seed42.jsonl
+```
+
+Example inspect summary (abridged):
+
+```text
+path                    runs/portfolio_demo_seed42.jsonl
+run_name                portfolio_demo
+seed                    42
+ticks_executed          20
+event_count             3096
+agents_spawned          6
+births                  11
+deaths                  0
+estimated_living        17
+institutions            ['council:Camp Council']
+cities                  ['settlement:Camp City']
+technologies_discovered ['pottery:Camp Pottery', 'irrigation:Camp Irrigation']
+```
+
+```bash
+civitas emergence runs/portfolio_demo_seed42.jsonl
+civitas compare runs/portfolio_demo_seed42.jsonl runs/portfolio_alt_seed7.jsonl
+civitas scenarios list
+civitas scenarios show wealth_concentration
+```
+
+## Documentation
+
+| Doc | Topic |
+|---|---|
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Layers and runtime |
+| [`docs/EVENT_MODEL.md`](docs/EVENT_MODEL.md) | Domain events & JSONL |
+| [`docs/ANALYTICS.md`](docs/ANALYTICS.md) | Offline metrics |
+| [`docs/EMERGENCE_DETECTION.md`](docs/EMERGENCE_DETECTION.md) | Rule-based findings |
+| [`docs/OBSERVATORY.md`](docs/OBSERVATORY.md) | API + UI |
+| [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md) | Seeds and verification |
+| [`docs/DEMO_GUIDE.md`](docs/DEMO_GUIDE.md) | Portfolio demo path |
+| [`docs/PHASE_21_DESIGN.md`](docs/PHASE_21_DESIGN.md) | Phase 21 plan |
+| [`scenarios/README.md`](scenarios/README.md) | Demonstration recipes |
+
+## Capabilities
+
+- Deterministic multi-agent simulation through Phases 1–20 civilization catalogs
+- Append-only JSONL event logs with typed round-trip persistence
+- CLI: `run`, `replay`, `inspect`, `metrics`, `emergence`, `compare`, `scenarios`, `serve`, `config`
+- Offline analytics and explicit emergence rules over persisted events
+- Read-only FastAPI research API and Jinja2 Observatory UI
+- Seed / run comparison for counterfactual research
+- Data-driven demonstration scenarios (TOML)
+
+## Limitations
+
+- No live LLM provider — mock adapter only
+- Final per-agent resource **holdings** are not reconstructed from JSONL (flows and census snapshots are)
+- Observatory is local/read-only; it does not launch or mutate simulations
+- Analytics omit metrics that cannot be honestly derived from events
+- Not a multiplayer game client or production SaaS stack
+
+## Quality status
 
 ```bash
 pytest
@@ -91,314 +158,39 @@ ruff format --check .
 mypy
 ```
 
-All four must pass before a milestone is considered complete.
+Phase 21 Milestone 10 baseline on this branch: **1307** tests passing;
+coverage typically ~**89%** under `pytest --cov` (see CI / local run).
 
-### CLI
+## Tech stack
 
-```bash
-civitas --help
-civitas version
-civitas config show
-civitas config show --seed 42 --ticks 100 --agents 10 --name default
-civitas config fingerprint --seed 7 --ticks 50
-civitas run --seed 42 --ticks 100 --agents 10 --name default
-civitas run --seed 42 --ticks 20 --agents 5 -o runs/demo.jsonl
-```
-
-Available commands today: `version`, `run`, `replay`, `inspect`,
-`metrics`, `emergence`, `compare`, `scenarios`, `serve`, and `config`
-(`show`, `fingerprint`). `civitas run` executes a deterministic
-simulation and writes the event stream to JSONL (default:
-`runs/<name>_seed<seed>.jsonl`).
-
-```bash
-civitas replay runs/demo_seed42.jsonl
-civitas replay runs/demo_seed42.jsonl --event-type ActionSelected --list
-civitas replay runs/demo_seed42.jsonl --from-tick 1 --to-tick 5 --agent 0
-civitas replay runs/demo_seed42.jsonl --final-state --strict
-civitas inspect runs/demo_seed42.jsonl
-civitas inspect runs/demo_seed42.jsonl --format json
-civitas metrics runs/demo_seed42.jsonl
-civitas metrics runs/demo_seed42.jsonl --format json
-civitas emergence runs/demo_seed42.jsonl
-civitas emergence runs/demo_seed42.jsonl --format json
-civitas compare runs/a_seed42.jsonl runs/b_seed7.jsonl
-civitas compare runs/a_seed42.jsonl runs/b_seed7.jsonl --format json
-civitas scenarios list
-civitas scenarios show wealth_concentration
-uv pip install -e ".[observatory]"
-civitas serve --host 127.0.0.1 --port 8000
-# Observatory: http://127.0.0.1:8000/ui/
-# OpenAPI UI:  http://127.0.0.1:8000/docs
-```
-
-Demonstration recipes live in [`scenarios/`](scenarios/README.md).
+Python 3.14+, Pydantic v2, Typer, Rich, pytest / mypy / ruff; optional
+FastAPI + Jinja2 + uvicorn via `.[observatory]` (included in `.[dev]`).
 
 ## Roadmap
 
 | Phase | Focus |
 |---|---|
-| **1** | Project structure, config, CLI, clock, domain models, events, RNG, world factory, needs, utility policy, action executor, engine, JSONL storage |
-| **2** | Locations, movement, resources, food/water/energy, population, birth/death |
-| **3** | Economy, trading, markets, prices, production, taxes, wealth |
-| **4** | Relationships, trust, reputation, families, social networks |
-| **5** | Governments, laws, institutions, voting, cities, infrastructure |
-| **6** | Technology, research, innovation, knowledge diffusion |
-| **7** | Cognition ports (mock LLM), reflection, planning, memory retrieval |
-| **8** | Effect wiring from innovations into action outcomes |
-| **9** | Technology prerequisite trees and deeper tech progression |
-| **10** | Writing, record-keeping, and institutional memory |
-| **11** | Philosophy, ethics, and reflective culture |
-| **12** | Medicine and public health |
-| **13** | Engineering and construction |
-| **14** | Navigation and trade routes |
-| **15** | Agriculture and husbandry |
-| **16** | Textiles and craft goods |
-| **17** | Mining and minerals |
-| **18** | Timber and carpentry |
-| **19** | Ceramics and kilncraft |
-| **20** | Glass and glasscraft |
-| **21** | Simulation observatory and emergence analytics (no new catalogs) |
+| **1–20** | Engine through glass/crystal civilization catalogs (complete on `main`) |
+| **21** | Simulation observatory and emergence analytics (**complete** — no new catalogs) |
+| Next | Portfolio polish, deeper research tooling, or catalog work only if requested |
 
-## Current Milestone
+## Current milestone
 
-**Phase 21 Milestone 9: Demonstration scenarios**
+**Phase 21 Milestone 10: Portfolio documentation** — README, architecture /
+event / analytics / emergence / observatory / reproducibility / demo guides,
+and real Observatory screenshots. See `docs/PHASE_21_DESIGN.md`.
 
-Data-driven TOML recipes under ``scenarios/`` (scarcity, wealth,
-institutions, technology diffusion, urban concentration, market
-specialization) with research questions, exact run commands, observable
-signals, and limitations. ``civitas scenarios list|show`` — no engine
-hard-coding.
+### Completed (summary)
 
-See also: `docs/CURRENT_STATE_AUDIT.md` (baseline audit) and
-`docs/PHASE_21_DESIGN.md` (phase plan).
+Phases **1–20** delivered the deterministic engine, economy, social systems,
+governance, knowledge, cognition ports (mock), and civilization catalog
+progression through glasscraft. Phase **21** M1–M10 delivered quality repair,
+replay/inspect, analytics, emergence, research API, Observatory UI, seed
+comparison, demonstration scenarios, and portfolio documentation.
 
-### Completed
-
-**Phase 1:** structure → config → CLI → clock → domain → events → RNG →
-world factory → needs → utility policy → action executor → engine →
-JSONL storage → `civitas run`
-
-**Phase 2:**
-- Milestone 1: Locations
-- Milestone 2: Movement
-- Milestone 3: Resource gathering
-- Milestone 4: Food
-- Milestone 5: Water
-- Milestone 6: Energy
-- Milestone 7: Population
-- Milestone 8: Birth
-- Milestone 9: Death
-
-**Phase 3:**
-- Milestone 1: Economy
-- Milestone 2: Trading
-- Milestone 3: Markets
-- Milestone 4: Prices
-- Milestone 5: Production
-- Milestone 6: Taxes
-- Milestone 7: Wealth
-
-**Phase 4:**
-- Milestone 1: Relationships
-- Milestone 2: Trust
-- Milestone 3: Reputation
-- Milestone 4: Families
-- Milestone 5: Social networks
-
-**Phase 5:**
-- Milestone 1: Governments
-- Milestone 2: Laws
-- Milestone 3: Voting
-- Milestone 4: Institutions
-- Milestone 5: Cities
-- Milestone 6: Infrastructure
-
-**Phase 6:**
-- Milestone 1: Technology
-- Milestone 2: Research
-- Milestone 3: Innovation
-- Milestone 4: Knowledge diffusion
-
-**Phase 7:**
-- Milestone 1: Episodic memory encoding
-- Milestone 2: Reflection
-- Milestone 3: Planning
-- Milestone 4: Memory retrieval
-
-**Phase 8:**
-- Milestone 1: Effect wiring
-- Milestone 2: Infrastructure effects
-- Milestone 3: Birth knowledge inheritance
-- Milestone 4: Trust-gated teaching
-
-**Phase 9:**
-- Milestone 1: Technology prerequisite trees
-- Milestone 2: Irrigation technology
-- Milestone 3: Tax redirection to government treasuries
-- Milestone 4: Institution budgets
-- Milestone 5: Treasury-funded infrastructure construction
-- Milestone 6: Storehouse infrastructure
-- Milestone 7: Road infrastructure
-- Milestone 8: Institution-funded infrastructure construction
-- Milestone 9: Guild institutions
-- Milestone 10: Market fee laws
-- Milestone 11: Outpost cities
-- Milestone 12: Metallurgy technology
-
-**Phase 10:**
-- Milestone 1: Writing technology
-- Milestone 2: Archive institutions
-- Milestone 3: Scriptorium infrastructure
-- Milestone 4: Curriculum laws
-- Milestone 5: Library cities
-- Milestone 6: Bureaucracy institutions
-- Milestone 7: Mathematics technology
-- Milestone 8: Academy institutions
-- Milestone 9: Observatory infrastructure
-- Milestone 10: Astronomy technology
-- Milestone 11: Calendar laws
-- Milestone 12: Forum cities
-
-**Phase 11:**
-- Milestone 1: Philosophy technology
-- Milestone 2: Ethics laws
-- Milestone 3: Temple institutions
-- Milestone 4: Shrine infrastructure
-- Milestone 5: Sanctuary cities
-- Milestone 6: School institutions
-- Milestone 7: Logic technology
-- Milestone 8: Lyceum institutions
-- Milestone 9: Stoa infrastructure
-- Milestone 10: Rhetoric technology
-- Milestone 11: Assembly laws
-- Milestone 12: Agora cities
-
-**Phase 12:**
-- Milestone 1: Medicine technology
-- Milestone 2: Sanitation laws
-- Milestone 3: Hospital institutions
-- Milestone 4: Clinic infrastructure
-- Milestone 5: Infirmary cities
-- Milestone 6: Apothecary institutions
-- Milestone 7: Anatomy technology
-- Milestone 8: Collegium institutions
-- Milestone 9: Bathhouse infrastructure
-- Milestone 10: Hygiene technology
-- Milestone 11: Quarantine laws
-- Milestone 12: Lazaretto cities
-
-**Phase 13:**
-- Milestone 1: Engineering technology
-- Milestone 2: Building codes laws
-- Milestone 3: Workshop institutions
-- Milestone 4: Bridge infrastructure
-- Milestone 5: Foundry cities
-- Milestone 6: Mason institutions
-- Milestone 7: Architecture technology
-- Milestone 8: Architect institutions
-- Milestone 9: Scaffold infrastructure
-- Milestone 10: Surveying technology
-- Milestone 11: Zoning laws
-- Milestone 12: Quarry cities
-
-**Phase 14:**
-- Milestone 1: Navigation technology
-- Milestone 2: Passage laws
-- Milestone 3: Caravan institutions
-- Milestone 4: Waystation infrastructure
-- Milestone 5: Harbor cities
-- Milestone 6: Merchant institutions
-- Milestone 7: Cartography technology
-- Milestone 8: Cartographer institutions
-- Milestone 9: Beacon infrastructure
-- Milestone 10: Seafaring technology
-- Milestone 11: Customs laws
-- Milestone 12: Entrepot cities
-
-**Phase 15:**
-- Milestone 1: Agriculture technology
-- Milestone 2: Land tenure laws
-- Milestone 3: Granary institutions
-- Milestone 4: Ditch infrastructure
-- Milestone 5: Farmstead cities
-- Milestone 6: Husbandman institutions
-- Milestone 7: Crop rotation technology
-- Milestone 8: Agronomist institutions
-- Milestone 9: Terrace infrastructure
-- Milestone 10: Forestry technology
-- Milestone 11: Conservation laws
-- Milestone 12: Pastoral cities
-
-**Phase 16:**
-- Milestone 1: Textiles technology
-- Milestone 2: Labor laws
-- Milestone 3: Weaver institutions
-- Milestone 4: Fulling mill infrastructure
-- Milestone 5: Mill town cities
-- Milestone 6: Dyer institutions
-- Milestone 7: Dyeing technology
-- Milestone 8: Tailor institutions
-- Milestone 9: Warehouse infrastructure
-- Milestone 10: Tanning technology
-- Milestone 11: Sumptuary laws
-- Milestone 12: Emporium cities
-
-**Phase 17:**
-- Milestone 1: Mining technology
-- Milestone 2: Mineral rights laws
-- Milestone 3: Miner institutions
-- Milestone 4: Mineshaft infrastructure
-- Milestone 5: Mining camp cities
-- Milestone 6: Smelter institutions
-- Milestone 7: Smithing technology
-- Milestone 8: Smith institutions
-- Milestone 9: Forge works infrastructure
-- Milestone 10: Toolmaking technology
-- Milestone 11: Safety codes laws
-- Milestone 12: Ironworks cities
-
-**Phase 18:**
-- Milestone 1: Carpentry technology
-- Milestone 2: Timber rights laws
-- Milestone 3: Woodcutter institutions
-- Milestone 4: Lumber yard infrastructure
-- Milestone 5: Timber town cities
-- Milestone 6: Joiner institutions
-- Milestone 7: Joinery technology
-- Milestone 8: Carver institutions
-- Milestone 9: Sawpit infrastructure
-- Milestone 10: Cabinetry technology
-- Milestone 11: Forest management laws
-- Milestone 12: Guildhall cities
-
-**Phase 19:**
-- Milestone 1: Ceramics technology
-- Milestone 2: Firing codes laws
-- Milestone 3: Potter institutions
-- Milestone 4: Kiln yard infrastructure
-- Milestone 5: Pottery town cities
-- Milestone 6: Glazer institutions
-- Milestone 7: Glazing technology
-- Milestone 8: Tilewright institutions
-- Milestone 9: Clay pit infrastructure
-- Milestone 10: Porcelain technology
-- Milestone 11: Clay codes laws
-- Milestone 12: Kiln quarter cities
-
-**Phase 20:**
-- Milestone 1: Glassmaking technology
-- Milestone 2: Annealing codes laws
-- Milestone 3: Glassblower institutions
-- Milestone 4: Glasshouse infrastructure
-- Milestone 5: Glassworks cities
-- Milestone 6: Lensmaker institutions
-- Milestone 7: Optics technology
-- Milestone 8: Optician institutions
-- Milestone 9: Lehr infrastructure
-- Milestone 10: Crystal technology
-- Milestone 11: Crystal codes laws
-- Milestone 12: Crystal quarter cities
+Detailed milestone lists for Phases 1–20 remain in git history and prior
+release notes; the living design for Phase 21 is
+[`docs/PHASE_21_DESIGN.md`](docs/PHASE_21_DESIGN.md).
 
 ## License
 

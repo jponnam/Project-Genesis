@@ -13,17 +13,15 @@
     window.setTimeout(apply, 80 + index * 40);
   });
 
+  // Reveal motion: animate from a class so first paint stays readable
+  // (important for docs screenshots and no-JS readability).
   document.querySelectorAll("[data-reveal]").forEach((el, index) => {
     if (reduce) {
-      el.style.opacity = "1";
+      el.classList.add("is-revealed");
       return;
     }
-    el.style.opacity = "0";
-    el.style.transform = "translateY(8px)";
-    el.style.transition = "opacity 420ms ease, transform 420ms ease";
     window.setTimeout(() => {
-      el.style.opacity = "1";
-      el.style.transform = "translateY(0)";
+      el.classList.add("is-revealed");
     }, 60 + index * 50);
   });
 })();
