@@ -88,6 +88,7 @@ class LawSystem:
                         snap.active_forest_management_count
                     ),
                     active_firing_codes_count=snap.active_firing_codes_count,
+                    active_clay_codes_count=snap.active_clay_codes_count,
                 )
             )
         return world

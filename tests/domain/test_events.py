@@ -724,6 +724,7 @@ def test_law_created_and_observed_round_trips() -> None:
         active_timber_rights_count=0,
         active_forest_management_count=0,
         active_firing_codes_count=0,
+        active_clay_codes_count=0,
     )
     restored = event_from_record(observed.to_record())
     assert isinstance(restored, LawsObserved)
@@ -750,6 +751,7 @@ def test_law_created_and_observed_round_trips() -> None:
     assert restored.active_timber_rights_count == 0
     assert restored.active_forest_management_count == 0
     assert restored.active_firing_codes_count == 0
+    assert restored.active_clay_codes_count == 0
 
 
 def test_election_resolved_and_observed_round_trips() -> None:

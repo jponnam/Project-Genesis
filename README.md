@@ -131,12 +131,12 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 19 Milestone 10: Porcelain technology**
+**Phase 19 Milestone 11: Clay codes laws**
 
-``TechnologyKind.PORCELAIN`` unlocks the inactive ``KAOLIN`` innovation.
-When active, kaolin grants a society-wide PRODUCE energy discount that
-stacks with the full produce chain, including glaze, kiln, clay pit, and
-kiln yard. Porcelain requires glazing.
+``LawKind.CLAY_CODES`` is a subject-scoped statute. Living subjects of a
+government with active clay codes gain a PRODUCE energy discount that
+stacks with firing codes and the existing produce chain, including glaze,
+kiln, clay pit, kiln yard, and kaolin. Clay codes are not seeded.
 
 ### Completed
 
@@ -348,6 +348,7 @@ JSONL storage → `civitas run`
 - Milestone 8: Tilewright institutions
 - Milestone 9: Clay pit infrastructure
 - Milestone 10: Porcelain technology
+- Milestone 11: Clay codes laws
 
 ## License
 

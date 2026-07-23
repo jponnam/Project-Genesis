@@ -262,6 +262,12 @@ potter, glazer, foundry, fulling mill, forge works, sawpit, kiln yard,
 clay pit, mill town, ironworks, guildhall, pottery town, tannery,
 bellows, lathe, plane, dovetail, kiln, glaze, abacus, pulley, customs,
 labor, safety codes, firing codes, and loom).
+Phase 19 Milestone 11 adds subject-scoped CLAY_CODES PRODUCE energy
+discounts (stacking with guild, workshop, weaver, smelter, joiner, potter,
+glazer, foundry, fulling mill, forge works, sawpit, kiln yard, clay pit,
+mill town, ironworks, guildhall, pottery town, tannery, bellows, lathe,
+plane, dovetail, kiln, glaze, kaolin, abacus, pulley, customs, labor,
+safety codes, firing codes, and loom).
 The action
 executor,
 retrieval
@@ -288,6 +294,7 @@ from civitas.domain.laws import (
     assembly_socialize_bonus_for,
     building_codes_move_discount_for,
     calendar_retrieval_bonus_for,
+    clay_codes_produce_discount_for,
     conservation_wood_bonus_for,
     curriculum_teachings_bonus_for,
     customs_produce_discount_for,
@@ -1802,6 +1809,7 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
     ``LABOR`` statute contributes its subject
     discount. An active ``SAFETY_CODES`` statute contributes its subject
     discount. An active ``FIRING_CODES`` statute contributes its subject
+    discount. An active ``CLAY_CODES`` statute contributes its subject
     discount. All stack when present.
     """
     discount = 0.0
@@ -1843,6 +1851,7 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
     discount += labor_produce_discount_for(world, agent)
     discount += safety_codes_produce_discount_for(world, agent)
     discount += firing_codes_produce_discount_for(world, agent)
+    discount += clay_codes_produce_discount_for(world, agent)
     if innovation_kind_is_active(world, InnovationKind.ABACUS):
         discount += MATHEMATICS_PRODUCE_ENERGY_DISCOUNT
     if innovation_kind_is_active(world, InnovationKind.PULLEY):
