@@ -19,6 +19,7 @@ from rich.console import Console
 from rich.table import Table
 
 from civitas import __version__
+from civitas.analytics import MetricsReport, analyze_run
 from civitas.domain import CANONICAL_SEED, SimulationConfig
 from civitas.engine import SimulationEngine, SimulationResult
 from civitas.storage import (
@@ -502,6 +503,49 @@ def _render_inspection(report: RunInspection) -> None:
             console.print(f"  - {notable}")
     else:
         console.print("[dim]Notable events: none beyond routine observations.[/dim]")
+
+
+def _render_metrics(report: MetricsReport) -> None:
+    """Print a Rich table of analytics metric results."""
+    table = Table(title="Analytics metrics", show_header=True, header_style="bold")
+    table.add_column("name", style="cyan")
+    table.add_column("status")
+    table.add_column("value")
+    for metric in report.metrics:
+        table.add_row(metric.name, metric.status, str(metric.value))
+    console.print(table)
+    console.print(f"[dim]events={report.event_count} path={report.path}[/dim]")
+
+
+@app.command("metrics")
+def metrics_command(
+    path: Annotated[
+        Path,
+        typer.Argument(
+            exists=False,
+            dir_okay=False,
+            readable=True,
+            help="Path to a JSONL event log produced by civitas run.",
+        ),
+    ],
+    output_format: Annotated[
+        Literal["text", "json"],
+        typer.Option(
+            "--format",
+            help="Output format: Rich text table or machine-readable JSON.",
+        ),
+    ] = "text",
+) -> None:
+    """Compute offline analytics metrics for a JSONL run."""
+    try:
+        report = analyze_run(path)
+    except ReplayError as exc:
+        console.print(f"[red]Metrics failed:[/red] {exc}")
+        raise typer.Exit(code=exc.exit_code) from exc
+    if output_format == "json":
+        console.print_json(json.dumps(report.to_dict()))
+        return
+    _render_metrics(report)
 
 
 @app.command("inspect")
