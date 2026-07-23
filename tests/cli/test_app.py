@@ -27,6 +27,7 @@ def test_help_lists_core_commands() -> None:
         "inspect",
         "metrics",
         "emergence",
+        "serve",
     ):
         assert command in result.stdout
 

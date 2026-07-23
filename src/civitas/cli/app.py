@@ -550,6 +550,46 @@ def _render_emergence(report: EmergenceReport) -> None:
     )
 
 
+@app.command("serve")
+def serve_command(
+    host: Annotated[
+        str,
+        typer.Option("--host", help="Bind address for the research API."),
+    ] = "127.0.0.1",
+    port: Annotated[
+        int,
+        typer.Option("--port", min=1, max=65535, help="Bind port."),
+    ] = 8000,
+    runs_dir: Annotated[
+        Path | None,
+        typer.Option(
+            "--runs-dir",
+            help="Directory of JSONL runs (sets CIVITAS_RUNS_DIR).",
+            file_okay=False,
+        ),
+    ] = None,
+) -> None:
+    """Serve the read-only research API (requires the observatory extra)."""
+    import os
+
+    try:
+        import uvicorn
+    except ImportError as exc:
+        console.print(
+            "[red]API dependencies missing.[/red] Install with: "
+            'uv pip install -e ".[observatory]"'
+        )
+        raise typer.Exit(code=1) from exc
+
+    if runs_dir is not None:
+        os.environ["CIVITAS_RUNS_DIR"] = str(runs_dir.resolve())
+    console.print(
+        f"Serving Civitas research API on http://{host}:{port} "
+        f"(runs_dir={os.environ.get('CIVITAS_RUNS_DIR', 'runs')})"
+    )
+    uvicorn.run("civitas.api.app:app", host=host, port=port, log_level="info")
+
+
 @app.command("emergence")
 def emergence_command(
     path: Annotated[

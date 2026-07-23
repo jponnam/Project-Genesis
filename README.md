@@ -106,7 +106,7 @@ civitas run --seed 42 --ticks 20 --agents 5 -o runs/demo.jsonl
 ```
 
 Available commands today: `version`, `run`, `replay`, `inspect`,
-`metrics`, `emergence`, and `config` (`show`, `fingerprint`).
+`metrics`, `emergence`, `serve`, and `config` (`show`, `fingerprint`).
 `civitas run` executes a deterministic simulation and writes the event
 stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
@@ -121,6 +121,9 @@ civitas metrics runs/demo_seed42.jsonl
 civitas metrics runs/demo_seed42.jsonl --format json
 civitas emergence runs/demo_seed42.jsonl
 civitas emergence runs/demo_seed42.jsonl --format json
+uv pip install -e ".[observatory]"
+civitas serve --host 127.0.0.1 --port 8000
+# OpenAPI UI: http://127.0.0.1:8000/docs
 ```
 
 ## Roadmap
@@ -151,14 +154,12 @@ civitas emergence runs/demo_seed42.jsonl --format json
 
 ## Current Milestone
 
-**Phase 21 Milestone 5: Emergence detection**
+**Phase 21 Milestone 6: Local research API**
 
-Rule-based ``civitas emergence PATH`` detects explicit patterns such as
-persistent inequality, sustained specialization, coordinated behavior,
-institutional clustering, market concentration, technology diffusion,
-urban concentration, stable communities, rapid transitions, and
-resource-collapse signals. Each finding includes strength, confidence,
-evidence, tick range, entities, and metric values — no LLM prose.
+Read-only FastAPI service over JSONL runs (`civitas serve`):
+`/health`, `/runs`, `/runs/{id}`, `/events`, `/summary`, `/metrics`,
+`/emergence`, `/agents`, `/timeline`. Pagination + filters on events;
+OpenAPI at `/docs`. Install API deps with `uv pip install -e ".[observatory]"`.
 
 See also: `docs/CURRENT_STATE_AUDIT.md` (baseline audit) and
 `docs/PHASE_21_DESIGN.md` (phase plan).

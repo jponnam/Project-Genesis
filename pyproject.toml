@@ -36,11 +36,21 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+observatory = [
+    "fastapi>=0.128",
+    "uvicorn[standard]>=0.34",
+    "httpx>=0.28",
+    "httpx2>=2.0",
+]
 dev = [
     "pytest>=8.4",
     "pytest-cov>=6.0",
     "mypy>=1.16",
     "ruff>=0.12",
+    "fastapi>=0.128",
+    "uvicorn[standard]>=0.34",
+    "httpx>=0.28",
+    "httpx2>=2.0",
 ]
 
 [project.scripts]
