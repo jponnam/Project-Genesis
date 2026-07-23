@@ -293,6 +293,13 @@ clay pit, mill town, ironworks, guildhall, pottery town, tannery, bellows,
 lathe, plane, dovetail, kiln, glaze, kaolin, abacus, pulley, customs,
 labor, safety codes, firing codes, clay codes, annealing codes, and
 blowpipe).
+Phase 20 Milestone 4 adds GLASSHOUSE produce-energy discounts at the
+infrastructure seat (stacking with guild, workshop, weaver, smelter,
+joiner, potter, glazer, glassblower, foundry, fulling mill, forge works,
+sawpit, kiln yard, clay pit, mill town, ironworks, guildhall, pottery
+town, tannery, bellows, lathe, plane, dovetail, kiln, glaze, kaolin,
+abacus, pulley, customs, labor, safety codes, firing codes, clay codes,
+annealing codes, and blowpipe).
 The action
 executor,
 retrieval
@@ -425,6 +432,7 @@ FORGE_WORKS_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 SAWPIT_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 KILN_YARD_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 CLAY_PIT_PRODUCE_ENERGY_DISCOUNT: float = 0.02
+GLASSHOUSE_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 FOUNDRY_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 MILL_TOWN_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 IRONWORKS_PRODUCE_ENERGY_DISCOUNT: float = 0.02
@@ -684,6 +692,22 @@ def location_has_active_clay_pit(
     )
     return any(
         item.kind is InfrastructureKind.CLAY_PIT and item.location_id == target
+        for item in active_infrastructure(world)
+    )
+
+
+def location_has_active_glasshouse(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active GLASSHOUSE stands at ``location_id``."""
+    target = (
+        location_id
+        if isinstance(location_id, LocationId)
+        else LocationId(value=location_id)
+    )
+    return any(
+        item.kind is InfrastructureKind.GLASSHOUSE and item.location_id == target
         for item in active_infrastructure(world)
     )
 
@@ -1825,9 +1849,10 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
     ``FORGE_WORKS_PRODUCE_ENERGY_DISCOUNT``. An active SAWPIT at the
     agent's location contributes ``SAWPIT_PRODUCE_ENERGY_DISCOUNT``. An
     active KILN_YARD at the agent's location contributes
-    ``KILN_YARD_PRODUCE_ENERGY_DISCOUNT``. An active CLAY_PIT at the
+    ``KILN_YARD_PRODUCE_ENERGY_DISCOUNT``.     An active CLAY_PIT at the
     agent's location contributes ``CLAY_PIT_PRODUCE_ENERGY_DISCOUNT``.
-    An active FOUNDRY city at the
+    An active GLASSHOUSE at the agent's location contributes
+    ``GLASSHOUSE_PRODUCE_ENERGY_DISCOUNT``. An active FOUNDRY city at the
     agent's location contributes ``FOUNDRY_PRODUCE_ENERGY_DISCOUNT``. An
     active MILL_TOWN city at the agent's location contributes
     ``MILL_TOWN_PRODUCE_ENERGY_DISCOUNT``. An active IRONWORKS city at the
@@ -1891,6 +1916,8 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
         discount += KILN_YARD_PRODUCE_ENERGY_DISCOUNT
     if location_has_active_clay_pit(world, agent.location_id):
         discount += CLAY_PIT_PRODUCE_ENERGY_DISCOUNT
+    if location_has_active_glasshouse(world, agent.location_id):
+        discount += GLASSHOUSE_PRODUCE_ENERGY_DISCOUNT
     if location_has_active_foundry(world, agent.location_id):
         discount += FOUNDRY_PRODUCE_ENERGY_DISCOUNT
     if location_has_active_mill_town(world, agent.location_id):
@@ -2330,6 +2357,11 @@ def census_effects(world: World) -> EffectsCensus:
         for item in active_infrastructure(world)
         if item.kind is InfrastructureKind.CLAY_PIT
     )
+    glasshouses = tuple(
+        item
+        for item in active_infrastructure(world)
+        if item.kind is InfrastructureKind.GLASSHOUSE
+    )
     foundries = tuple(
         city for city in active_cities(world) if city.kind is CityKind.FOUNDRY
     )
@@ -2427,6 +2459,8 @@ def census_effects(world: World) -> EffectsCensus:
         produce_discount += KILN_YARD_PRODUCE_ENERGY_DISCOUNT
     if clay_pits:
         produce_discount += CLAY_PIT_PRODUCE_ENERGY_DISCOUNT
+    if glasshouses:
+        produce_discount += GLASSHOUSE_PRODUCE_ENERGY_DISCOUNT
     if foundries:
         produce_discount += FOUNDRY_PRODUCE_ENERGY_DISCOUNT
     if mill_towns:

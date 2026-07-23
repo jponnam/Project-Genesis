@@ -132,16 +132,16 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 20 Milestone 3: Glassblower institutions**
+**Phase 20 Milestone 4: Glasshouse infrastructure**
 
-``InstitutionKind.GLASSBLOWER`` is a craft seat whose living colocated
-agents gain a PRODUCE energy discount. It stacks with the full produce
-chain: guild, workshop, weaver, smelter, joiner, potter, glazer, foundry,
-fulling mill, forge works, sawpit, kiln yard, mill town, ironworks,
-guildhall, pottery town, tannery, bellows, lathe, plane, dovetail, kiln,
-abacus, pulley, customs, labor, safety codes, firing codes, clay codes,
-annealing codes, blowpipe, kaolin, glaze, clay pit, kiln quarter, and loom.
-Glassblowers are not seeded.
+``InfrastructureKind.GLASSHOUSE`` is a craft infrastructure seat whose
+living colocated agents gain a PRODUCE energy discount. It stacks with
+the full produce chain: guild, workshop, weaver, smelter, joiner, potter,
+glazer, glassblower, foundry, fulling mill, forge works, sawpit, kiln yard,
+mill town, ironworks, guildhall, pottery town, tannery, bellows, lathe,
+plane, dovetail, kiln, abacus, pulley, customs, labor, safety codes, firing
+codes, clay codes, annealing codes, blowpipe, kaolin, glaze, clay pit,
+kiln quarter, and loom. Glasshouses are not seeded.
 
 ### Completed
 
@@ -360,6 +360,7 @@ JSONL storage → `civitas run`
 - Milestone 1: Glassmaking technology
 - Milestone 2: Annealing codes laws
 - Milestone 3: Glassblower institutions
+- Milestone 4: Glasshouse infrastructure
 
 ## License
 

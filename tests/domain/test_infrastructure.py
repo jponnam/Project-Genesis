@@ -18,6 +18,7 @@ from civitas.domain import (
     DEFAULT_DITCH_BUILD_COST,
     DEFAULT_FORGE_WORKS_BUILD_COST,
     DEFAULT_FULLING_MILL_BUILD_COST,
+    DEFAULT_GLASSHOUSE_BUILD_COST,
     DEFAULT_KILN_YARD_BUILD_COST,
     DEFAULT_LUMBER_YARD_BUILD_COST,
     DEFAULT_MINESHAFT_BUILD_COST,
@@ -226,6 +227,7 @@ def test_census_infrastructure_counts() -> None:
     assert snap.active_sawpit_count == 0
     assert snap.active_kiln_yard_count == 0
     assert snap.active_clay_pit_count == 0
+    assert snap.active_glasshouse_count == 0
     assert census_infrastructure(world) == snap
 
 
@@ -1078,6 +1080,45 @@ def test_create_and_build_clay_pit() -> None:
     )
     assert built is not None
     assert built.governments[0].treasury == 20 - DEFAULT_CLAY_PIT_BUILD_COST
+
+
+def test_create_and_build_glasshouse() -> None:
+    """GLASSHOUSE is a distinct kind with its own catalog build cost."""
+    assert (
+        build_cost_for(InfrastructureKind.GLASSHOUSE) == DEFAULT_GLASSHOUSE_BUILD_COST
+    )
+    world = _world(
+        Agent.create(agent_id=0, name="A"),
+        governments=(Government.create(0, "Camp", 0, (0,), treasury=20),),
+        infrastructure=(
+            Infrastructure.create(0, 0, 0, 0, "Well", InfrastructureKind.WELL),
+        ),
+    )
+    # Glasshouse may coexist with a well at the same seat.
+    created = create_infrastructure(
+        world,
+        Infrastructure.create(
+            1, 0, 0, 0, "Glasshouse", InfrastructureKind.GLASSHOUSE
+        ),
+    )
+    assert created is not None
+    assert created.infrastructure[1].kind is InfrastructureKind.GLASSHOUSE
+    snap = census_infrastructure(created)
+    assert snap.active_well_count == 1
+    assert snap.active_glasshouse_count == 1
+
+    empty = _world(
+        Agent.create(agent_id=0, name="A"),
+        governments=(Government.create(0, "Camp", 0, (0,), treasury=20),),
+    )
+    built = build_infrastructure(
+        empty,
+        Infrastructure.create(
+            0, 0, 0, 0, "Paid Glasshouse", InfrastructureKind.GLASSHOUSE
+        ),
+    )
+    assert built is not None
+    assert built.governments[0].treasury == 20 - DEFAULT_GLASSHOUSE_BUILD_COST
 
 
 def test_world_rejects_city_location_mismatch() -> None:
