@@ -1,0 +1,23 @@
+id = "scarcity_and_cooperation"
+title = "Scarcity and cooperation"
+research_question = "Under a small population and short horizon, do agents prioritize survival actions (gather/eat/drink/rest) over expansion, and do shared locations appear in the population census?"
+
+seed = 42
+ticks = 30
+agents = 4
+run_name = "scarcity_coop"
+
+command = "civitas run --seed 42 --ticks 30 --agents 4 --name scarcity_coop"
+
+observable_signals = [
+  "ActionSelected histogram dominated by move/rest/gather/eat/drink rather than produce-heavy mixes",
+  "PopulationObserved location_counts show agents sharing a subset of map cells",
+  "civitas metrics reports non-empty action_diversity_entropy",
+  "ResourceGathered events appear when agents reach deposits",
+]
+
+limitations = [
+  "Default world still begins with fire-era tech and a single settlement; this is not a crafted famine map",
+  "Cooperation is inferred from co-location and action mix, not from an explicit coalition system",
+  "Short runs may not produce trades or births",
+]

@@ -106,7 +106,7 @@ civitas run --seed 42 --ticks 20 --agents 5 -o runs/demo.jsonl
 ```
 
 Available commands today: `version`, `run`, `replay`, `inspect`,
-`metrics`, `emergence`, `compare`, `serve`, and `config`
+`metrics`, `emergence`, `compare`, `scenarios`, `serve`, and `config`
 (`show`, `fingerprint`). `civitas run` executes a deterministic
 simulation and writes the event stream to JSONL (default:
 `runs/<name>_seed<seed>.jsonl`).
@@ -124,11 +124,15 @@ civitas emergence runs/demo_seed42.jsonl
 civitas emergence runs/demo_seed42.jsonl --format json
 civitas compare runs/a_seed42.jsonl runs/b_seed7.jsonl
 civitas compare runs/a_seed42.jsonl runs/b_seed7.jsonl --format json
+civitas scenarios list
+civitas scenarios show wealth_concentration
 uv pip install -e ".[observatory]"
 civitas serve --host 127.0.0.1 --port 8000
 # Observatory: http://127.0.0.1:8000/ui/
 # OpenAPI UI:  http://127.0.0.1:8000/docs
 ```
+
+Demonstration recipes live in [`scenarios/`](scenarios/README.md).
 
 ## Roadmap
 
@@ -158,11 +162,13 @@ civitas serve --host 127.0.0.1 --port 8000
 
 ## Current Milestone
 
-**Phase 21 Milestone 8: Seed comparison**
+**Phase 21 Milestone 9: Demonstration scenarios**
 
-``civitas compare RUN_A RUN_B`` (also ``GET /compare`` and `/ui/compare`)
-produces deterministic deltas across config, event volume, actions,
-inequality, institutions/techs, population, and emergence findings.
+Data-driven TOML recipes under ``scenarios/`` (scarcity, wealth,
+institutions, technology diffusion, urban concentration, market
+specialization) with research questions, exact run commands, observable
+signals, and limitations. ``civitas scenarios list|show`` — no engine
+hard-coding.
 
 See also: `docs/CURRENT_STATE_AUDIT.md` (baseline audit) and
 `docs/PHASE_21_DESIGN.md` (phase plan).

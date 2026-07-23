@@ -1,0 +1,22 @@
+id = "institutional_formation"
+title = "Institutional formation"
+research_question = "Which civic institutions and laws are present at bootstrap, and do institution-related observation events remain stable across ticks?"
+
+seed = 7
+ticks = 15
+agents = 5
+run_name = "institutions"
+
+command = "civitas run --seed 7 --ticks 15 --agents 5 --name institutions"
+
+observable_signals = [
+  "InstitutionCreated includes council; LawCreated includes tax_schedule",
+  "CityCreated includes settlement capital; InfrastructureCreated includes well",
+  "InstitutionsObserved / LawsObserved / CitiesObserved emit each tick",
+  "civitas inspect lists institutions and cities from creation events",
+]
+
+limitations = [
+  "Default factory seeds a minimal civic stack; late-phase institutions are not auto-founded",
+  "This scenario observes formation-at-bootstrap more than endogenous founding mid-run",
+]

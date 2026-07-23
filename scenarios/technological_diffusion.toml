@@ -1,0 +1,23 @@
+id = "technological_diffusion"
+title = "Technological diffusion"
+research_question = "Can research produce a technology discovery beyond fire, and do KnowledgeLearned events show facts spreading among agents?"
+
+seed = 42
+ticks = 80
+agents = 6
+run_name = "tech_diffusion"
+
+command = "civitas run --seed 42 --ticks 80 --agents 6 --name tech_diffusion"
+
+observable_signals = [
+  "ResearchProgressed events accumulate points",
+  "TechnologyDiscovered may appear (e.g. pottery) depending on research dynamics",
+  "KnowledgeLearned events can indicate teaching/diffusion after discoveries",
+  "civitas emergence technology_diffusion fires only if multiple agents learn the same fact",
+]
+
+limitations = [
+  "Discovery is stochastic within the seeded RNG; not every seed/tick length unlocks the same techs",
+  "Most Phase 10–20 catalog techs remain undiscovered in default short-to-medium runs",
+  "Do not treat absence of diffusion as an engine failure",
+]

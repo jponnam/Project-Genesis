@@ -28,6 +28,7 @@ def test_help_lists_core_commands() -> None:
         "metrics",
         "emergence",
         "compare",
+        "scenarios",
         "serve",
     ):
         assert command in result.stdout
@@ -337,6 +338,25 @@ def test_emergence_command_json(tmp_path: Path) -> None:
     payload = json.loads(result.stdout)
     assert "findings" in payload
     assert len(payload["rules_evaluated"]) == 10
+
+
+def test_scenarios_list_and_show() -> None:
+    """Scenario CLI lists bundled recipes and shows details."""
+    listed = runner.invoke(app, ["scenarios", "list"])
+    assert listed.exit_code == 0, listed.stdout
+    assert "wealth_concentration" in listed.stdout
+    shown = runner.invoke(app, ["scenarios", "show", "wealth_concentration"])
+    assert shown.exit_code == 0, shown.stdout
+    assert "Observable signals" in shown.stdout
+    assert "civitas run" in shown.stdout
+    raw = runner.invoke(
+        app,
+        ["scenarios", "show", "wealth_concentration", "--format", "json"],
+    )
+    assert raw.exit_code == 0
+    payload = json.loads(raw.stdout)
+    assert payload["id"] == "wealth_concentration"
+    assert payload["seed"] == 42
 
 
 def test_compare_command_json(tmp_path: Path) -> None:

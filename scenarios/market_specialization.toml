@@ -1,0 +1,23 @@
+id = "market_specialization"
+title = "Market specialization"
+research_question = "Do agents differentiate action mixes (specialization) and does market/trade activity appear in longer runs?"
+
+seed = 99
+ticks = 60
+agents = 8
+run_name = "market_spec"
+
+command = "civitas run --seed 99 --ticks 60 --agents 8 --name market_spec"
+
+observable_signals = [
+  "civitas metrics agent_activity_distribution shows uneven action shares across agents",
+  "action_diversity_entropy and repeated_behavior_entropy quantify mix vs habit",
+  "ResourceTraded / Listing* events may appear when market activity occurs",
+  "civitas emergence sustained_specialization may flag an agent with a dominant action",
+]
+
+limitations = [
+  "Trades are not guaranteed; many runs remain gather/move heavy",
+  "Specialization is behavioral (action histogram), not job titles",
+  "Market fee / late craft discounts require activated entities not present at bootstrap",
+]

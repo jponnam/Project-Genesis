@@ -1,0 +1,22 @@
+id = "urban_development"
+title = "Urban development"
+research_question = "Do living agents concentrate in particular locations over time, and is that visible in PopulationObserved location_counts?"
+
+seed = 11
+ticks = 50
+agents = 10
+run_name = "urban_dev"
+
+command = "civitas run --seed 11 --ticks 50 --agents 10 --name urban_dev"
+
+observable_signals = [
+  "PopulationObserved.location_counts change across ticks",
+  "civitas inspect population.location_counts shows uneven cell occupancy",
+  "civitas emergence urban_concentration may fire if one location holds >=60% of living agents",
+  "CityCreated still records the seeded settlement even if no new cities are founded",
+]
+
+limitations = [
+  "Only one city kind is seeded by default; 'urban' here means spatial concentration, not new CityKind creation",
+  "Movement utility may disperse agents; concentration is not guaranteed",
+]

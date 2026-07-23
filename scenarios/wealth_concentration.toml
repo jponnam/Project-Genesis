@@ -1,0 +1,23 @@
+id = "wealth_concentration"
+title = "Wealth concentration"
+research_question = "Does money become uneven across living agents, and is that visible in WealthObserved gini/top1 metrics?"
+
+seed = 42
+ticks = 40
+agents = 8
+run_name = "wealth_conc"
+
+command = "civitas run --seed 42 --ticks 40 --agents 8 --name wealth_conc"
+
+observable_signals = [
+  "WealthObserved.gini_bps and top1_share_bps are present in the final census",
+  "civitas metrics wealth_gini_bps and wealth_concentration return status=ok",
+  "civitas emergence may flag persistent_inequality or market_concentration when thresholds are met",
+  "civitas inspect shows final wealth census fields",
+]
+
+limitations = [
+  "Inequality can remain modest if few transfers/taxes occur",
+  "Emergence rules are thresholded; a run may be unequal without crossing detector cutoffs",
+  "No per-agent wealth time series is persisted beyond census aggregates",
+]

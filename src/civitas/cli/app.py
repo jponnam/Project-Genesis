@@ -29,6 +29,7 @@ from civitas.analytics import (
 )
 from civitas.domain import CANONICAL_SEED, SimulationConfig
 from civitas.engine import SimulationEngine, SimulationResult
+from civitas.scenarios import ScenarioNotFoundError, list_scenarios, load_scenario
 from civitas.storage import (
     ReplayError,
     ReplayResult,
@@ -54,6 +55,13 @@ config_app = typer.Typer(
     no_args_is_help=True,
 )
 app.add_typer(config_app, name="config")
+
+scenarios_app = typer.Typer(
+    name="scenarios",
+    help="List and inspect data-driven demonstration scenarios.",
+    no_args_is_help=True,
+)
+app.add_typer(scenarios_app, name="scenarios")
 
 SeedOpt = Annotated[
     int,
@@ -599,6 +607,66 @@ def _render_comparison(report: ComparisonReport) -> None:
     console.print(f"unique_right_emergence={list(report.unique_right_emergence)}")
     for note in report.notes:
         console.print(f"[yellow]note:[/yellow] {note}")
+
+
+@scenarios_app.command("list")
+def scenarios_list_command() -> None:
+    """List available demonstration scenarios."""
+    scenarios = list_scenarios()
+    if not scenarios:
+        console.print("[yellow]No scenarios found.[/yellow]")
+        raise typer.Exit(code=1)
+    table = Table(title="Scenarios", show_header=True, header_style="bold")
+    table.add_column("id", style="cyan")
+    table.add_column("title")
+    table.add_column("seed", justify="right")
+    table.add_column("ticks", justify="right")
+    table.add_column("agents", justify="right")
+    for scenario in scenarios:
+        table.add_row(
+            scenario.id,
+            scenario.title,
+            str(scenario.seed),
+            str(scenario.ticks),
+            str(scenario.agents),
+        )
+    console.print(table)
+
+
+@scenarios_app.command("show")
+def scenarios_show_command(
+    scenario_id: Annotated[str, typer.Argument(help="Scenario id.")],
+    output_format: Annotated[
+        Literal["text", "json"],
+        typer.Option("--format", help="Rich text or JSON."),
+    ] = "text",
+) -> None:
+    """Show one demonstration scenario recipe."""
+    try:
+        scenario = load_scenario(scenario_id)
+    except ScenarioNotFoundError as exc:
+        console.print(f"[red]Scenario failed:[/red] {exc}")
+        raise typer.Exit(code=1) from exc
+    if output_format == "json":
+        console.print_json(json.dumps(scenario.to_dict()))
+        return
+    table = Table(title=scenario.title, show_header=True, header_style="bold")
+    table.add_column("Field", style="cyan")
+    table.add_column("Value")
+    table.add_row("id", scenario.id)
+    table.add_row("research_question", scenario.research_question)
+    table.add_row("seed", str(scenario.seed))
+    table.add_row("ticks", str(scenario.ticks))
+    table.add_row("agents", str(scenario.agents))
+    table.add_row("run_name", scenario.run_name)
+    table.add_row("command", scenario.command)
+    console.print(table)
+    console.print("[bold]Observable signals[/bold]")
+    for item in scenario.observable_signals:
+        console.print(f"  - {item}")
+    console.print("[bold]Limitations[/bold]")
+    for item in scenario.limitations:
+        console.print(f"  - {item}")
 
 
 @app.command("compare")
