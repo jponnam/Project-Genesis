@@ -125,6 +125,7 @@ class KnowledgeSystem:
                     carpentry_knower_count=snap.carpentry_knower_count,
                     joinery_knower_count=snap.joinery_knower_count,
                     cabinetry_knower_count=snap.cabinetry_knower_count,
+                    ceramics_knower_count=snap.ceramics_knower_count,
                     total_fact_instances=snap.total_fact_instances,
                     coverage_bps=snap.coverage_bps,
                 )

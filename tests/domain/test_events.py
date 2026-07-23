@@ -1160,6 +1160,7 @@ def test_technology_created_and_observed_round_trips() -> None:
         discovered_carpentry_count=0,
         discovered_joinery_count=0,
         discovered_cabinetry_count=0,
+        discovered_ceramics_count=0,
         locked_count=12,
         researchable_count=1,
     )
@@ -1195,6 +1196,7 @@ def test_technology_created_and_observed_round_trips() -> None:
     assert restored.discovered_carpentry_count == 0
     assert restored.discovered_joinery_count == 0
     assert restored.discovered_cabinetry_count == 0
+    assert restored.discovered_ceramics_count == 0
     assert restored.researchable_count == 1
 
 
@@ -1301,6 +1303,7 @@ def test_innovation_events_round_trip() -> None:
         active_sawmill_count=0,
         active_plane_count=0,
         active_dovetail_count=0,
+        active_kiln_count=0,
     )
     restored_observed = event_from_record(observed.to_record())
     assert isinstance(restored_observed, InnovationsObserved)
@@ -1334,6 +1337,7 @@ def test_innovation_events_round_trip() -> None:
     assert restored_observed.active_sawmill_count == 0
     assert restored_observed.active_plane_count == 0
     assert restored_observed.active_dovetail_count == 0
+    assert restored_observed.active_kiln_count == 0
 
 
 def test_knowledge_events_round_trip() -> None:
@@ -1400,6 +1404,7 @@ def test_knowledge_events_round_trip() -> None:
         carpentry_knower_count=0,
         joinery_knower_count=0,
         cabinetry_knower_count=0,
+        ceramics_knower_count=0,
         total_fact_instances=3,
         coverage_bps=10_000,
     )
@@ -1434,6 +1439,7 @@ def test_knowledge_events_round_trip() -> None:
     assert restored_observed.carpentry_knower_count == 0
     assert restored_observed.joinery_knower_count == 0
     assert restored_observed.cabinetry_knower_count == 0
+    assert restored_observed.ceramics_knower_count == 0
     assert restored_observed.coverage_bps == 10_000
 
 

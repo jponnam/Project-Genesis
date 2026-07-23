@@ -127,17 +127,18 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 | **16** | Textiles and craft goods |
 | **17** | Mining and minerals |
 | **18** | Timber and carpentry |
+| **19** | Ceramics and kilncraft |
 
 ## Current Milestone
 
-**Phase 18 Milestone 12: Guildhall cities**
+**Phase 19 Milestone 1: Ceramics technology**
 
-``CityKind.GUILDHALL`` is a non-capital specialized city seat for craft
-production whose living residents gain a PRODUCE energy discount. It
+``TechnologyKind.CERAMICS`` unlocks the inactive ``KILN`` innovation.
+When active, kiln grants a society-wide PRODUCE energy discount that
 stacks with the full produce chain: guild, workshop, weaver, smelter,
 joiner, foundry, fulling mill, forge works, sawpit, mill town, ironworks,
-tannery, bellows, lathe, plane, dovetail, abacus, pulley, customs, labor,
-safety codes, and loom. Guildhalls cannot be capitals and are not seeded.
+guildhall, tannery, bellows, lathe, plane, dovetail, abacus, pulley,
+customs, labor, safety codes, and loom. Ceramics requires cabinetry.
 
 ### Completed
 
@@ -337,6 +338,9 @@ JSONL storage → `civitas run`
 - Milestone 10: Cabinetry technology
 - Milestone 11: Forest management laws
 - Milestone 12: Guildhall cities
+
+**Phase 19:**
+- Milestone 1: Ceramics technology
 
 ## License
 
