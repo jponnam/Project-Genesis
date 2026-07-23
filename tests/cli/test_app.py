@@ -15,15 +15,12 @@ from civitas.storage import JsonlEventStore, write_events
 runner = CliRunner()
 
 
-def test_help_lists_version_config_run_replay_and_inspect() -> None:
-    """Root help must advertise version, config, run, replay, and inspect."""
+def test_help_lists_core_commands() -> None:
+    """Root help must advertise the researcher-facing commands."""
     result = runner.invoke(app, ["--help"])
     assert result.exit_code == 0
-    assert "version" in result.stdout
-    assert "config" in result.stdout
-    assert "run" in result.stdout
-    assert "replay" in result.stdout
-    assert "inspect" in result.stdout
+    for command in ("version", "config", "run", "replay", "inspect", "metrics"):
+        assert command in result.stdout
 
 
 def test_version_command_prints_package_version() -> None:
@@ -305,3 +302,18 @@ def test_inspect_missing_file(tmp_path: Path) -> None:
     result = runner.invoke(app, ["inspect", str(tmp_path / "missing.jsonl")])
     assert result.exit_code == 1
     assert "Inspect failed" in result.stdout
+
+
+def test_metrics_text_and_json(tmp_path: Path) -> None:
+    """``civitas metrics`` supports Rich and JSON output."""
+    output = _cli_mini_run(tmp_path)
+    text = runner.invoke(app, ["metrics", str(output)])
+    assert text.exit_code == 0, text.stdout
+    assert "Analytics metrics" in text.stdout
+    assert "wealth_gini_bps" in text.stdout
+    raw = runner.invoke(app, ["metrics", str(output), "--format", "json"])
+    assert raw.exit_code == 0, raw.stdout
+    payload = json.loads(raw.stdout)
+    assert payload["event_count"] > 0
+    names = {metric["name"] for metric in payload["metrics"]}
+    assert "action_diversity_entropy" in names

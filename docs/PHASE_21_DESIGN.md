@@ -211,5 +211,6 @@ mypy
 | Design document | Complete (this file) |
 | M1 Quality repair | Merged |
 | M2 Replay CLI | Merged |
-| M3 Inspect CLI | In progress |
-| M4–M10 | Sequential PRs with GitHub auto-merge |
+| M3 Inspect CLI | Merged |
+| M4 Analytics engine | In progress |
+| M5–M10 | Sequential PRs with GitHub auto-merge |

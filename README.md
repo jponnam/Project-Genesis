@@ -105,10 +105,10 @@ civitas run --seed 42 --ticks 100 --agents 10 --name default
 civitas run --seed 42 --ticks 20 --agents 5 -o runs/demo.jsonl
 ```
 
-Available commands today: `version`, `run`, `replay`, `inspect`, and
-`config` (`show`, `fingerprint`). `civitas run` executes a deterministic
-simulation and writes the event stream to JSONL (default:
-`runs/<name>_seed<seed>.jsonl`).
+Available commands today: `version`, `run`, `replay`, `inspect`,
+`metrics`, and `config` (`show`, `fingerprint`). `civitas run` executes
+a deterministic simulation and writes the event stream to JSONL
+(default: `runs/<name>_seed<seed>.jsonl`).
 
 ```bash
 civitas replay runs/demo_seed42.jsonl
@@ -117,6 +117,8 @@ civitas replay runs/demo_seed42.jsonl --from-tick 1 --to-tick 5 --agent 0
 civitas replay runs/demo_seed42.jsonl --final-state --strict
 civitas inspect runs/demo_seed42.jsonl
 civitas inspect runs/demo_seed42.jsonl --format json
+civitas metrics runs/demo_seed42.jsonl
+civitas metrics runs/demo_seed42.jsonl --format json
 ```
 
 ## Roadmap
@@ -147,13 +149,15 @@ civitas inspect runs/demo_seed42.jsonl --format json
 
 ## Current Milestone
 
-**Phase 21 Milestone 3: Run inspection and summary**
+**Phase 21 Milestone 4: Analytics engine**
 
-``civitas inspect PATH`` prints a Rich (or ``--format json``) summary of
-an existing JSONL run: configuration metadata, event-type histogram,
-population/wealth censuses, resource flows, institutions/cities/techs,
-births/deaths, and notable events. Unavailable reconstructions are
-labeled explicitly.
+``civitas.analytics`` computes deterministic offline metrics from JSONL
+event streams (event frequencies, activity, wealth gini/concentration,
+formation rates, tech adoption, trade activity, network density,
+birth/death rates, action entropy, volatility, repeated-behavior
+entropy). ``civitas metrics PATH`` prints Rich or JSON results.
+Unavailable metrics return ``empty`` / ``undefined`` rather than invented
+values.
 
 See also: `docs/CURRENT_STATE_AUDIT.md` (baseline audit) and
 `docs/PHASE_21_DESIGN.md` (phase plan).
