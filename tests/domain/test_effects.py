@@ -115,6 +115,7 @@ from civitas.domain import (
     ENTREPOT_FOOD_GATHER_BONUS,
     FARMSTEAD_FOOD_GATHER_BONUS,
     FIRE_HEARTH_REST_BONUS,
+    FOREST_MANAGEMENT_WOOD_GATHER_BONUS,
     FORESTRY_WOOD_GATHER_BONUS,
     FORGE_WORKS_PRODUCE_ENERGY_DISCOUNT,
     FORUM_TEACHINGS_PER_KNOWER_BONUS,
@@ -224,6 +225,7 @@ from civitas.domain import (
     effective_retrieval_limit,
     effective_socialize_restore,
     effective_teachings_per_knower,
+    forest_management_wood_bonus_for,
     gather_amount_bonus,
     labor_produce_discount_for,
     land_tenure_eat_bonus_for,
@@ -1505,6 +1507,87 @@ def test_timber_rights_stacks_with_sawmill_coppice_scaffold_and_conservation() -
     society_bonus = FORESTRY_WOOD_GATHER_BONUS + CARPENTRY_WOOD_GATHER_BONUS
     seat_bonus = society_bonus + SCAFFOLD_WOOD_GATHER_BONUS
     subject_bonus = CONSERVATION_WOOD_GATHER_BONUS + TIMBER_RIGHTS_WOOD_GATHER_BONUS
+    assert gather_amount_bonus(world, "wood") == society_bonus
+    assert gather_amount_bonus(world, "wood", location_id=agent.location_id) == (
+        seat_bonus
+    )
+    assert effective_gather_amount(world, "wood", agent=agent) == (
+        DEFAULT_GATHER_AMOUNT + seat_bonus + subject_bonus
+    )
+
+
+def test_forest_management_boosts_wood_gather_for_living_subject() -> None:
+    """Active FOREST_MANAGEMENT adds a subject-scoped wood gather bonus."""
+    forest_management = Law.create(
+        0, 0, "Camp Forest Management", LawKind.FOREST_MANAGEMENT
+    )
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(forest_management,),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert forest_management_wood_bonus_for(world, agent) == (
+        FOREST_MANAGEMENT_WOOD_GATHER_BONUS
+    )
+    # gather_amount_bonus stays location-scoped, unaffected by forest management.
+    assert gather_amount_bonus(world, "wood", location_id=agent.location_id) == 0
+    assert effective_gather_amount(world, "wood", agent=agent) == (
+        DEFAULT_GATHER_AMOUNT + FOREST_MANAGEMENT_WOOD_GATHER_BONUS
+    )
+    # Without an agent there is no subject to scope the bonus to.
+    assert effective_gather_amount(world, "wood") == DEFAULT_GATHER_AMOUNT
+
+
+def test_forest_management_stacks_with_wood_bonuses() -> None:
+    """Forest management stacks with sawmill, coppice, scaffold, and law bonuses."""
+    discovered_forestry = CAMP_FORESTRY.model_copy(update={"discovered": True})
+    discovered_carpentry = CAMP_CARPENTRY.model_copy(update={"discovered": True})
+    active_coppice = CAMP_COPPICE.model_copy(update={"active": True})
+    active_sawmill = CAMP_SAWMILL.model_copy(update={"active": True})
+    discovered = {
+        CAMP_FORESTRY.technology_id: discovered_forestry,
+        CAMP_CARPENTRY.technology_id: discovered_carpentry,
+    }
+    active = {
+        CAMP_COPPICE.innovation_id: active_coppice,
+        CAMP_SAWMILL.innovation_id: active_sawmill,
+    }
+    conservation = Law.create(0, 0, "Camp Conservation", LawKind.CONSERVATION)
+    timber_rights = Law.create(1, 0, "Camp Timber Rights", LawKind.TIMBER_RIGHTS)
+    forest_management = Law.create(
+        2, 0, "Camp Forest Management", LawKind.FOREST_MANAGEMENT
+    )
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 0, 0, "Camp Scaffold", InfrastructureKind.SCAFFOLD
+            ),
+        ),
+        laws=(conservation, timber_rights, forest_management),
+        technologies=tuple(
+            discovered.get(item.technology_id, item)
+            for item in default_technologies()
+        ),
+        innovations=tuple(
+            active.get(item.innovation_id, item) for item in default_innovations()
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    society_bonus = FORESTRY_WOOD_GATHER_BONUS + CARPENTRY_WOOD_GATHER_BONUS
+    seat_bonus = society_bonus + SCAFFOLD_WOOD_GATHER_BONUS
+    subject_bonus = (
+        CONSERVATION_WOOD_GATHER_BONUS
+        + TIMBER_RIGHTS_WOOD_GATHER_BONUS
+        + FOREST_MANAGEMENT_WOOD_GATHER_BONUS
+    )
     assert gather_amount_bonus(world, "wood") == society_bonus
     assert gather_amount_bonus(world, "wood", location_id=agent.location_id) == (
         seat_bonus
