@@ -19,7 +19,12 @@ from rich.console import Console
 from rich.table import Table
 
 from civitas import __version__
-from civitas.analytics import MetricsReport, analyze_run
+from civitas.analytics import (
+    EmergenceReport,
+    MetricsReport,
+    analyze_emergence,
+    analyze_run,
+)
 from civitas.domain import CANONICAL_SEED, SimulationConfig
 from civitas.engine import SimulationEngine, SimulationResult
 from civitas.storage import (
@@ -515,6 +520,65 @@ def _render_metrics(report: MetricsReport) -> None:
         table.add_row(metric.name, metric.status, str(metric.value))
     console.print(table)
     console.print(f"[dim]events={report.event_count} path={report.path}[/dim]")
+
+
+def _render_emergence(report: EmergenceReport) -> None:
+    """Print emergence findings as a Rich table."""
+    table = Table(title="Emergence findings", show_header=True, header_style="bold")
+    table.add_column("pattern", style="cyan")
+    table.add_column("strength", justify="right")
+    table.add_column("confidence", justify="right")
+    table.add_column("ticks")
+    table.add_column("explanation")
+    if not report.findings:
+        console.print(
+            "[dim]No emergence patterns matched the explicit rule thresholds "
+            "for this run.[/dim]"
+        )
+    for finding in report.findings:
+        table.add_row(
+            finding.pattern,
+            f"{finding.strength:.2f}",
+            f"{finding.confidence:.2f}",
+            f"{finding.tick_start}-{finding.tick_end}",
+            finding.explanation,
+        )
+    if report.findings:
+        console.print(table)
+    console.print(
+        f"[dim]rules_evaluated={len(report.rules_evaluated)} path={report.path}[/dim]"
+    )
+
+
+@app.command("emergence")
+def emergence_command(
+    path: Annotated[
+        Path,
+        typer.Argument(
+            exists=False,
+            dir_okay=False,
+            readable=True,
+            help="Path to a JSONL event log produced by civitas run.",
+        ),
+    ],
+    output_format: Annotated[
+        Literal["text", "json"],
+        typer.Option(
+            "--format",
+            help="Output format: Rich text table or machine-readable JSON.",
+        ),
+    ] = "text",
+) -> None:
+    """Detect rule-based emergence patterns in a JSONL run."""
+    try:
+        report = analyze_emergence(path)
+    except ReplayError as exc:
+        console.print(f"[red]Emergence failed:[/red] {exc}")
+        raise typer.Exit(code=exc.exit_code) from exc
+    if output_format == "json":
+        console.print_json(json.dumps(report.to_dict()))
+        return
+    _render_emergence(report)
 
 
 @app.command("metrics")

@@ -106,9 +106,9 @@ civitas run --seed 42 --ticks 20 --agents 5 -o runs/demo.jsonl
 ```
 
 Available commands today: `version`, `run`, `replay`, `inspect`,
-`metrics`, and `config` (`show`, `fingerprint`). `civitas run` executes
-a deterministic simulation and writes the event stream to JSONL
-(default: `runs/<name>_seed<seed>.jsonl`).
+`metrics`, `emergence`, and `config` (`show`, `fingerprint`).
+`civitas run` executes a deterministic simulation and writes the event
+stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ```bash
 civitas replay runs/demo_seed42.jsonl
@@ -119,6 +119,8 @@ civitas inspect runs/demo_seed42.jsonl
 civitas inspect runs/demo_seed42.jsonl --format json
 civitas metrics runs/demo_seed42.jsonl
 civitas metrics runs/demo_seed42.jsonl --format json
+civitas emergence runs/demo_seed42.jsonl
+civitas emergence runs/demo_seed42.jsonl --format json
 ```
 
 ## Roadmap
@@ -149,15 +151,14 @@ civitas metrics runs/demo_seed42.jsonl --format json
 
 ## Current Milestone
 
-**Phase 21 Milestone 4: Analytics engine**
+**Phase 21 Milestone 5: Emergence detection**
 
-``civitas.analytics`` computes deterministic offline metrics from JSONL
-event streams (event frequencies, activity, wealth gini/concentration,
-formation rates, tech adoption, trade activity, network density,
-birth/death rates, action entropy, volatility, repeated-behavior
-entropy). ``civitas metrics PATH`` prints Rich or JSON results.
-Unavailable metrics return ``empty`` / ``undefined`` rather than invented
-values.
+Rule-based ``civitas emergence PATH`` detects explicit patterns such as
+persistent inequality, sustained specialization, coordinated behavior,
+institutional clustering, market concentration, technology diffusion,
+urban concentration, stable communities, rapid transitions, and
+resource-collapse signals. Each finding includes strength, confidence,
+evidence, tick range, entities, and metric values — no LLM prose.
 
 See also: `docs/CURRENT_STATE_AUDIT.md` (baseline audit) and
 `docs/PHASE_21_DESIGN.md` (phase plan).
