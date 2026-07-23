@@ -48,6 +48,8 @@ energy discount). Phase 19 Milestone 12 adds ``CityKind.KILN_QUARTER`` as a
 non-capital specialized seat for kilncraft (living residents gain a PRODUCE
 energy discount). Phase 20 Milestone 5 adds ``CityKind.GLASSWORKS`` as a
 non-capital specialized seat for glasscraft (living residents gain a PRODUCE
+energy discount). Phase 20 Milestone 12 adds ``CityKind.CRYSTAL_QUARTER`` as a
+non-capital specialized seat for crystalcraft (living residents gain a PRODUCE
 energy discount).
 Resident
 counts are derived from living agents at the seat. Infrastructure remains a
@@ -55,7 +57,7 @@ separate aggregate. Camp City stays the only seeded settlement capital;
 libraries, forums, sanctuaries, agoras, infirmaries, lazarettos, foundries,
 quarries, harbors, entrepots, farmsteads, pastorals, mill towns,
 emporiums, mining camps, ironworks, timber towns, guildhalls, pottery
-towns, kiln quarters, and glassworks are not seeded.
+towns, kiln quarters, glassworks, and crystal quarters are not seeded.
 """
 
 from __future__ import annotations
@@ -103,6 +105,7 @@ class CityKind(StrEnum):
     POTTERY_TOWN = "pottery_town"
     KILN_QUARTER = "kiln_quarter"
     GLASSWORKS = "glassworks"
+    CRYSTAL_QUARTER = "crystal_quarter"
 
 
 # City kinds that may never be flagged as capital.
@@ -130,6 +133,7 @@ _NON_CAPITAL_KINDS: frozenset[CityKind] = frozenset(
         CityKind.POTTERY_TOWN,
         CityKind.KILN_QUARTER,
         CityKind.GLASSWORKS,
+        CityKind.CRYSTAL_QUARTER,
     }
 )
 
@@ -225,6 +229,7 @@ class CityCensus(BaseModel):
     active_pottery_town_count: NonNegativeInt = 0
     active_kiln_quarter_count: NonNegativeInt = 0
     active_glassworks_count: NonNegativeInt = 0
+    active_crystal_quarter_count: NonNegativeInt = 0
 
 
 def city_by_id(world: World, city_id: CityId | int) -> City | None:
@@ -509,6 +514,18 @@ def glassworks_for(
     )
 
 
+def crystal_quarters_for(
+    world: World,
+    government_id: GovernmentId | int,
+) -> tuple[City, ...]:
+    """Return crystal-quarter cities for ``government_id`` in ascending id order."""
+    return tuple(
+        city
+        for city in cities_for(world, government_id)
+        if city.kind is CityKind.CRYSTAL_QUARTER
+    )
+
+
 def city_at(world: World, location_id: LocationId | int) -> City | None:
     """Return the city seated at ``location_id``, or ``None``."""
     target = (
@@ -588,8 +605,8 @@ def create_city(world: World, city: City) -> World | None:
     Outposts, libraries, forums, sanctuaries, agoras, infirmaries,
     lazarettos, foundries, quarries, harbors, entrepots, farmsteads,
     pastorals, mill towns, emporiums, mining camps, ironworks,
-    timber towns, guildhalls, pottery towns, kiln quarters, and glassworks
-    cannot be capitals.
+    timber towns, guildhalls, pottery towns, kiln quarters, glassworks,
+    and crystal quarters cannot be capitals.
     Settlement capital uniqueness is unchanged:
     at most one active capital per government. Every city still needs a unique
     seat location inside its government jurisdiction.
@@ -732,6 +749,9 @@ def census_cities(world: World) -> CityCensus:
     active_glassworks = sum(
         1 for city in active if city.kind is CityKind.GLASSWORKS
     )
+    active_crystal_quarters = sum(
+        1 for city in active if city.kind is CityKind.CRYSTAL_QUARTER
+    )
     return CityCensus(
         tick=world.tick,
         city_count=len(cities),
@@ -766,4 +786,5 @@ def census_cities(world: World) -> CityCensus:
         active_pottery_town_count=active_pottery_towns,
         active_kiln_quarter_count=active_kiln_quarters,
         active_glassworks_count=active_glassworks,
+        active_crystal_quarter_count=active_crystal_quarters,
     )

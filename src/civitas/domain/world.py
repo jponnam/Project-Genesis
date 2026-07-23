@@ -503,6 +503,7 @@ class World(BaseModel):
                 CityKind.POTTERY_TOWN,
                 CityKind.KILN_QUARTER,
                 CityKind.GLASSWORKS,
+                CityKind.CRYSTAL_QUARTER,
             ):
                 msg = f"{city.kind.value} cities cannot be capitals"
                 raise ValueError(msg)
