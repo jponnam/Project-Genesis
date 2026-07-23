@@ -131,14 +131,15 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 19 Milestone 3: Potter institutions**
+**Phase 19 Milestone 4: Kiln yard infrastructure**
 
-``InstitutionKind.POTTER`` is a craft seat whose living colocated agents
-gain a PRODUCE energy discount. It stacks with the full produce chain:
-guild, workshop, weaver, smelter, joiner, foundry, fulling mill, forge
-works, sawpit, mill town, ironworks, guildhall, tannery, bellows, lathe,
-plane, dovetail, kiln, abacus, pulley, customs, labor, safety codes,
-firing codes, and loom. Potters are not seeded.
+``InfrastructureKind.KILN_YARD`` is a craft infrastructure seat whose
+living colocated agents gain a PRODUCE energy discount. It stacks with
+the full produce chain: guild, workshop, weaver, smelter, joiner, potter,
+foundry, fulling mill, forge works, sawpit, mill town, ironworks,
+guildhall, tannery, bellows, lathe, plane, dovetail, kiln, abacus,
+pulley, customs, labor, safety codes, firing codes, and loom. Kiln yards
+are not seeded.
 
 ### Completed
 
@@ -343,6 +344,7 @@ JSONL storage → `civitas run`
 - Milestone 1: Ceramics technology
 - Milestone 2: Firing codes laws
 - Milestone 3: Potter institutions
+- Milestone 4: Kiln yard infrastructure
 
 ## License
 
