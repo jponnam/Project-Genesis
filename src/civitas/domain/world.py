@@ -201,6 +201,7 @@ class World(BaseModel):
         active_safety_codes_govs: set[int] = set()
         active_timber_rights_govs: set[int] = set()
         active_forest_management_govs: set[int] = set()
+        active_firing_codes_govs: set[int] = set()
         for law in self.laws:
             if law.government_id.value not in known_governments:
                 msg = (
@@ -330,6 +331,12 @@ class World(BaseModel):
                     )
                     raise ValueError(msg)
                 active_forest_management_govs.add(gov_value)
+            if law.active and law.kind == LawKind.FIRING_CODES:
+                gov_value = law.government_id.value
+                if gov_value in active_firing_codes_govs:
+                    msg = "at most one active FIRING_CODES law per government"
+                    raise ValueError(msg)
+                active_firing_codes_govs.add(gov_value)
 
         election_ids = [election.election_id.value for election in self.elections]
         if len(election_ids) != len(set(election_ids)):

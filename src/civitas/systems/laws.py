@@ -87,6 +87,7 @@ class LawSystem:
                     active_forest_management_count=(
                         snap.active_forest_management_count
                     ),
+                    active_firing_codes_count=snap.active_firing_codes_count,
                 )
             )
         return world

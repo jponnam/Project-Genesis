@@ -21,6 +21,7 @@ from civitas.domain import (
     DEFAULT_MOVE_ENERGY_COST,
     DEFAULT_REST_RESTORE,
     DEFAULT_SOCIALIZE_RESTORE,
+    FIRING_CODES_PRODUCE_ENERGY_DISCOUNT,
     HOSPITAL_REST_RESTORE_BONUS,
     HYGIENE_DRINK_RESTORE_BONUS,
     INFIRMARY_REST_RESTORE_BONUS,
@@ -938,6 +939,41 @@ def test_produce_uses_safety_codes_effective_energy_cost() -> None:
         0.05 - (rations_energy_cost - SAFETY_CODES_PRODUCE_ENERGY_DISCOUNT)
     )
 
+
+
+
+def test_produce_uses_firing_codes_effective_energy_cost() -> None:
+    """PRODUCE through ActionExecutor applies firing-codes subject discount."""
+    rations_energy_cost = 0.05
+    agent = Agent.create(agent_id=0, name="A").model_copy(
+        update={
+            "inventory": Inventory(
+                stacks=(
+                    ResourceStack(resource="food", quantity=2),
+                    ResourceStack(resource="water", quantity=1),
+                )
+            ),
+            "needs": Needs(food=1.0, water=1.0, energy=0.05, social=1.0, safety=1.0),
+        }
+    )
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(Law.create(0, 0, "Camp Firing Codes", LawKind.FIRING_CODES),),
+        agents=(agent,),
+    )
+    choice = ActionChoice(
+        agent_id=AgentId(value=0),
+        action=ActionKind.PRODUCE,
+        utility=1.0,
+        target_resource="rations",
+    )
+    updated = ActionExecutor().execute(world, choice)
+    assert updated.agents[0].inventory.quantity("rations") == 1
+    assert updated.agents[0].needs.energy == pytest.approx(
+        0.05 - (rations_energy_cost - FIRING_CODES_PRODUCE_ENERGY_DISCOUNT)
+    )
 
 def test_produce_fails_without_inputs() -> None:
     """PRODUCE fails cleanly when recipe inputs are missing."""
