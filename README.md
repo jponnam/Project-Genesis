@@ -132,10 +132,10 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 20 Milestone 8: Optician institutions**
+**Phase 20 Milestone 9: Lehr infrastructure**
 
-``InstitutionKind.OPTICIAN`` grants a seat-scoped teachings-per-knower bonus
-that stacks with tilewright and the full teaching capacity chain.
+``InfrastructureKind.LEHR`` grants a seat-scoped PRODUCE energy discount
+that stacks with glasshouse, glassblower, and the existing produce chain.
 
 ### Completed
 
@@ -359,6 +359,7 @@ JSONL storage → `civitas run`
 - Milestone 6: Lensmaker institutions
 - Milestone 7: Optics technology
 - Milestone 8: Optician institutions
+- Milestone 9: Lehr infrastructure
 
 ## License
 
