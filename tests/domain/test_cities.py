@@ -29,6 +29,7 @@ from civitas.domain import (
     farmsteads_for,
     forums_for,
     foundries_for,
+    guildhalls_for,
     harbors_for,
     infirmaries_for,
     ironworks_for,
@@ -165,6 +166,7 @@ def test_census_cities_counts_residents() -> None:
     assert snap.active_mining_camp_count == 0
     assert snap.active_ironworks_count == 0
     assert snap.active_timber_town_count == 0
+    assert snap.active_guildhall_count == 0
     assert census_cities(world) == snap
 
 
@@ -291,6 +293,7 @@ def test_factory_still_seeds_one_settlement_capital() -> None:
     assert snap.active_mining_camp_count == 0
     assert snap.active_ironworks_count == 0
     assert snap.active_timber_town_count == 0
+    assert snap.active_guildhall_count == 0
 
 
 def test_create_library_under_camp_government() -> None:
@@ -1941,6 +1944,105 @@ def test_world_rejects_capital_timber_town() -> None:
                     0,
                     "Bad",
                     CityKind.TIMBER_TOWN,
+                    is_capital=True,
+                ),
+            ),
+            agents=(Agent.create(agent_id=0, name="A"),),
+        )
+
+
+def test_create_guildhall_under_camp_government() -> None:
+    """Guildhalls may share a government with the capital on a distinct seat."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map(),
+        governments=(CAMP_GOVERNMENT,),
+        cities=(CAMP_CITY,),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    guildhall = City.create(
+        1,
+        CAMP_GOVERNMENT.government_id.value,
+        1,
+        "Guild Town",
+        CityKind.GUILDHALL,
+    )
+    created = create_city(world, guildhall)
+    assert created is not None
+    assert city_by_id(created, 1) is not None
+    assert city_by_id(created, 1).kind is CityKind.GUILDHALL  # type: ignore[union-attr]
+    assert city_by_id(created, 1).is_capital is False  # type: ignore[union-attr]
+    assert guildhalls_for(created, CAMP_GOVERNMENT.government_id.value) == (
+        guildhall,
+    )
+    snap = census_cities(created)
+    assert snap.active_settlement_count == 1
+    assert snap.active_guildhall_count == 1
+    assert snap.capital_count == 1
+    assert snap.city_count == 2
+
+
+def test_create_rejects_capital_guildhall() -> None:
+    """Guildhalls cannot be capitals."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map(),
+        governments=(CAMP_GOVERNMENT,),
+        cities=(CAMP_CITY,),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert (
+        create_city(
+            world,
+            City.create(
+                1,
+                CAMP_GOVERNMENT.government_id.value,
+                1,
+                "Bad Hall",
+                CityKind.GUILDHALL,
+                is_capital=True,
+            ),
+        )
+        is None
+    )
+
+
+def test_set_capital_rejects_guildhall() -> None:
+    """set_capital cannot promote a guildhall to capital."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map(),
+        governments=(CAMP_GOVERNMENT,),
+        cities=(
+            CAMP_CITY,
+            City.create(
+                1,
+                CAMP_GOVERNMENT.government_id.value,
+                1,
+                "Guild Town",
+                CityKind.GUILDHALL,
+            ),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert set_capital(world, 1, True) is None
+    assert capital_for(world, 0) == CAMP_CITY
+
+
+def test_world_rejects_capital_guildhall() -> None:
+    """World validation rejects guildhalls flagged as capital."""
+    with pytest.raises(ValidationError):
+        World(
+            config=SimulationConfig(agent_count=1, seed=1),
+            locations=default_world_map()[:2],
+            governments=(Government.create(0, "Camp", 0, (0, 1)),),
+            cities=(
+                City.create(
+                    0,
+                    0,
+                    0,
+                    "Bad",
+                    CityKind.GUILDHALL,
                     is_capital=True,
                 ),
             ),

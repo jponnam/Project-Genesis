@@ -123,6 +123,7 @@ from civitas.domain import (
     FULLING_MILL_PRODUCE_ENERGY_DISCOUNT,
     GRANARY_FOOD_GATHER_BONUS,
     GUILD_PRODUCE_ENERGY_DISCOUNT,
+    GUILDHALL_PRODUCE_ENERGY_DISCOUNT,
     HARBOR_MARKET_FEE_DISCOUNT,
     HOSPITAL_REST_RESTORE_BONUS,
     HUSBANDMAN_FOOD_GATHER_BONUS,
@@ -255,6 +256,7 @@ from civitas.domain import (
     location_has_active_fulling_mill,
     location_has_active_granary,
     location_has_active_guild,
+    location_has_active_guildhall,
     location_has_active_harbor,
     location_has_active_hospital,
     location_has_active_husbandman,
@@ -6715,6 +6717,73 @@ def test_ironworks_stacks_with_guild_workshop_smelter_and_forge_works() -> None:
         + IRONWORKS_PRODUCE_ENERGY_DISCOUNT
     )
     assert location_has_active_ironworks(world, agent.location_id) is True
+    assert produce_energy_discount(world, agent) == pytest.approx(expected_discount)
+    expected = DEFAULT_PRODUCE_ENERGY_COST - expected_discount
+    assert effective_produce_energy_cost(
+        world,
+        agent,
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(expected)
+    assert census_effects(world).produce_energy_cost_bps == round(expected * 10_000)
+
+
+def test_guildhall_reduces_produce_energy_for_residents() -> None:
+    """Active guildhall cities discount PRODUCE energy for residents at the seat."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Guildhall", CityKind.GUILDHALL),
+        ),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_guildhall(world, agent.location_id) is True
+    assert effective_produce_energy_cost(
+        world,
+        agent,
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(DEFAULT_PRODUCE_ENERGY_COST - GUILDHALL_PRODUCE_ENERGY_DISCOUNT)
+    assert census_effects(world).produce_energy_cost_bps == round(
+        (DEFAULT_PRODUCE_ENERGY_COST - GUILDHALL_PRODUCE_ENERGY_DISCOUNT) * 10_000
+    )
+    bare = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_guildhall(bare, bare.agents[0].location_id) is False
+
+
+def test_guildhall_stacks_with_guild_workshop_smelter_and_joiner() -> None:
+    """Guildhall seat discount stacks with guild, workshop, smelter, joiner."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Guildhall", CityKind.GUILDHALL),
+        ),
+        institutions=(
+            Institution.create(0, 0, 1, "Camp Guild", InstitutionKind.GUILD),
+            Institution.create(1, 0, 1, "Camp Workshop", InstitutionKind.WORKSHOP),
+            Institution.create(2, 0, 1, "Camp Smelter", InstitutionKind.SMELTER),
+            Institution.create(3, 0, 1, "Camp Joiner", InstitutionKind.JOINER),
+        ),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    agent = world.agents[0]
+    expected_discount = (
+        GUILD_PRODUCE_ENERGY_DISCOUNT
+        + WORKSHOP_PRODUCE_ENERGY_DISCOUNT
+        + SMELTER_PRODUCE_ENERGY_DISCOUNT
+        + JOINER_PRODUCE_ENERGY_DISCOUNT
+        + GUILDHALL_PRODUCE_ENERGY_DISCOUNT
+    )
+    assert location_has_active_guildhall(world, agent.location_id) is True
     assert produce_energy_discount(world, agent) == pytest.approx(expected_discount)
     expected = DEFAULT_PRODUCE_ENERGY_COST - expected_discount
     assert effective_produce_energy_cost(
