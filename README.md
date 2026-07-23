@@ -131,16 +131,13 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 19 Milestone 8: Tilewright institutions**
+**Phase 19 Milestone 9: Clay pit infrastructure**
 
-``InstitutionKind.TILEWRIGHT`` is a gov-attached teaching institution seated
-inside its government's jurisdiction. An active tilewright grants a
-teachings-per-knower bonus at its seat location that stacks with the scribe
-and dialectic society-wide bonuses and the scriptorium, stoa, academy,
-forum, school, collegium, architect, cartographer, agronomist, tailor,
-smith, carver, and curriculum bonuses. Tilewrights are not seeded; the
-institution census and ``InstitutionsObserved`` event report the active
-tilewright count.
+``InfrastructureKind.CLAY_PIT`` is a craft infrastructure seat. Living
+agents colocated with an active clay pit gain a PRODUCE energy discount
+that stacks with kiln yard and the full produce chain. Clay pits are not
+seeded; the infrastructure census and ``InfrastructuresObserved`` event
+report the active clay pit count. Default build cost is 9.
 
 ### Completed
 
@@ -350,6 +347,7 @@ JSONL storage → `civitas run`
 - Milestone 6: Glazer institutions
 - Milestone 7: Glazing technology
 - Milestone 8: Tilewright institutions
+- Milestone 9: Clay pit infrastructure
 
 ## License
 

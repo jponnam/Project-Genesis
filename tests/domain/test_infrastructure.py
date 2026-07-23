@@ -13,6 +13,7 @@ from civitas.domain import (
     DEFAULT_BATHHOUSE_BUILD_COST,
     DEFAULT_BEACON_BUILD_COST,
     DEFAULT_BRIDGE_BUILD_COST,
+    DEFAULT_CLAY_PIT_BUILD_COST,
     DEFAULT_CLINIC_BUILD_COST,
     DEFAULT_DITCH_BUILD_COST,
     DEFAULT_FORGE_WORKS_BUILD_COST,
@@ -224,6 +225,7 @@ def test_census_infrastructure_counts() -> None:
     assert snap.active_lumber_yard_count == 0
     assert snap.active_sawpit_count == 0
     assert snap.active_kiln_yard_count == 0
+    assert snap.active_clay_pit_count == 0
     assert census_infrastructure(world) == snap
 
 
@@ -1037,6 +1039,46 @@ def test_create_and_build_kiln_yard() -> None:
     )
     assert built is not None
     assert built.governments[0].treasury == 20 - DEFAULT_KILN_YARD_BUILD_COST
+
+
+def test_create_and_build_clay_pit() -> None:
+    """CLAY_PIT is a distinct kind with its own catalog build cost."""
+    assert (
+        build_cost_for(InfrastructureKind.CLAY_PIT) == DEFAULT_CLAY_PIT_BUILD_COST
+    )
+    world = _world(
+        Agent.create(agent_id=0, name="A"),
+        governments=(Government.create(0, "Camp", 0, (0,), treasury=20),),
+        infrastructure=(
+            Infrastructure.create(0, 0, 0, 0, "Well", InfrastructureKind.WELL),
+        ),
+    )
+    # Clay pit may coexist with a well at the same seat.
+    created = create_infrastructure(
+        world,
+        Infrastructure.create(
+            1, 0, 0, 0, "Clay Pit", InfrastructureKind.CLAY_PIT
+        ),
+    )
+    assert created is not None
+    assert created.infrastructure[1].kind is InfrastructureKind.CLAY_PIT
+    snap = census_infrastructure(created)
+    assert snap.active_well_count == 1
+    assert snap.active_clay_pit_count == 1
+
+    empty = _world(
+        Agent.create(agent_id=0, name="A"),
+        governments=(Government.create(0, "Camp", 0, (0,), treasury=20),),
+    )
+    built = build_infrastructure(
+        empty,
+        Infrastructure.create(
+            0, 0, 0, 0, "Paid Clay Pit", InfrastructureKind.CLAY_PIT
+        ),
+    )
+    assert built is not None
+    assert built.governments[0].treasury == 20 - DEFAULT_CLAY_PIT_BUILD_COST
+
 
 def test_world_rejects_city_location_mismatch() -> None:
     """Infrastructure location must match its city seat."""
