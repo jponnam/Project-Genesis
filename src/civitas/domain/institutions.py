@@ -13,7 +13,7 @@ Phase 16 Milestone 3 weavers, Milestone 6 dyers, and Milestone 8
 tailors, plus Phase 17 Milestone 3 miners, Milestone 6 smelters, and
 Milestone 8 smiths, plus Phase 18 Milestone 3 woodcutters,
 Milestone 6 joiners, and Milestone 8 carvers, plus Phase 19 Milestone 3
-potters.
+potters and Milestone 6 glazers.
 Institutions are gov-attached civic organizations with a seat location
 inside the government's jurisdiction, an optional officer, and an
 integer budget funded from the parent government treasury. Councils,
@@ -21,7 +21,7 @@ guilds, archives, bureaucracies, academies, temples, schools, lyceums,
 hospitals, apothecaries, collegia, workshops, masons, architects,
 caravans, merchants, cartographers, granaries, husbandmen,
 agronomists, weavers, dyers, tailors, miners, smelters, smiths,
-woodcutters, joiners, carvers, and potters
+woodcutters, joiners, carvers, potters, and glazers
 coexist; this
 package seeds a single ``COUNCIL``. Writing-gated archive creation is
 a later milestone.
@@ -77,6 +77,7 @@ class InstitutionKind(StrEnum):
     JOINER = "joiner"
     CARVER = "carver"
     POTTER = "potter"
+    GLAZER = "glazer"
 
 
 class Institution(BaseModel):
@@ -176,6 +177,7 @@ class InstitutionCensus(BaseModel):
     active_joiner_count: NonNegativeInt = 0
     active_carver_count: NonNegativeInt = 0
     active_potter_count: NonNegativeInt = 0
+    active_glazer_count: NonNegativeInt = 0
     total_budget: NonNegativeInt = 0
     funded_count: NonNegativeInt = 0
 
@@ -540,6 +542,9 @@ def census_institutions(world: World) -> InstitutionCensus:
     active_potters = sum(
         1 for institution in active if institution.kind is InstitutionKind.POTTER
     )
+    active_glazers = sum(
+        1 for institution in active if institution.kind is InstitutionKind.GLAZER
+    )
     total_budget = institution_budget_total(world)
     funded_count = sum(1 for institution in institutions if institution.budget > 0)
     return InstitutionCensus(
@@ -580,6 +585,7 @@ def census_institutions(world: World) -> InstitutionCensus:
         active_joiner_count=active_joiners,
         active_carver_count=active_carvers,
         active_potter_count=active_potters,
+        active_glazer_count=active_glazers,
         total_budget=total_budget,
         funded_count=funded_count,
     )

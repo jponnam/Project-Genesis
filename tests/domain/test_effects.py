@@ -125,6 +125,7 @@ from civitas.domain import (
     FORUM_TEACHINGS_PER_KNOWER_BONUS,
     FOUNDRY_PRODUCE_ENERGY_DISCOUNT,
     FULLING_MILL_PRODUCE_ENERGY_DISCOUNT,
+    GLAZER_PRODUCE_ENERGY_DISCOUNT,
     GRANARY_FOOD_GATHER_BONUS,
     GUILD_PRODUCE_ENERGY_DISCOUNT,
     GUILDHALL_PRODUCE_ENERGY_DISCOUNT,
@@ -262,6 +263,7 @@ from civitas.domain import (
     location_has_active_forum,
     location_has_active_foundry,
     location_has_active_fulling_mill,
+    location_has_active_glazer,
     location_has_active_granary,
     location_has_active_guild,
     location_has_active_guildhall,
@@ -6340,6 +6342,36 @@ def test_potter_reduces_produce_energy_for_colocated_agents() -> None:
         agents=(Agent.create(agent_id=0, name="A"),),
     )
     assert location_has_active_potter(bare, bare.agents[0].location_id) is False
+
+
+
+def test_glazer_reduces_produce_energy_for_colocated_agents() -> None:
+    """Active glazers discount PRODUCE energy at their seat location."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        institutions=(
+            Institution.create(0, 0, 0, "Camp Glazer", InstitutionKind.GLAZER),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_glazer(world, agent.location_id) is True
+    assert effective_produce_energy_cost(
+        world,
+        agent,
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(DEFAULT_PRODUCE_ENERGY_COST - GLAZER_PRODUCE_ENERGY_DISCOUNT)
+    assert census_effects(world).produce_energy_cost_bps == round(
+        (DEFAULT_PRODUCE_ENERGY_COST - GLAZER_PRODUCE_ENERGY_DISCOUNT) * 10_000
+    )
+    bare = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_glazer(bare, bare.agents[0].location_id) is False
 
 
 def test_joiner_stacks_with_guild_workshop_abacus_and_pulley() -> None:
