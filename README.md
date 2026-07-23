@@ -132,11 +132,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 20 Milestone 10: Crystal technology**
+**Phase 20 Milestone 11: Crystal codes laws**
 
-``TechnologyKind.CRYSTAL`` and inactive ``InnovationKind.FACET``. Active
-facet grants a society-wide PRODUCE energy discount that stacks with
-lens, blowpipe, and the existing produce chain.
+``LawKind.CRYSTAL_CODES`` as a subject-scoped statute. Living subjects of a
+government with active crystal codes gain a PRODUCE energy discount that
+stacks with annealing codes and the produce chain.
 
 ### Completed
 
@@ -362,6 +362,7 @@ JSONL storage → `civitas run`
 - Milestone 8: Optician institutions
 - Milestone 9: Lehr infrastructure
 - Milestone 10: Crystal technology
+- Milestone 11: Crystal codes laws
 
 ## License
 
