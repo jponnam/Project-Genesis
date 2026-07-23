@@ -60,6 +60,7 @@ class TechnologyKind(StrEnum):
     CABINETRY = "cabinetry"
     CERAMICS = "ceramics"
     GLAZING = "glazing"
+    PORCELAIN = "porcelain"
 
 
 class Technology(BaseModel):
@@ -339,6 +340,13 @@ CAMP_GLAZING: Technology = Technology.create(
     discovered=False,
     prerequisite_ids=(31,),
 )
+CAMP_PORCELAIN: Technology = Technology.create(
+    33,
+    "Camp Porcelain",
+    TechnologyKind.PORCELAIN,
+    discovered=False,
+    prerequisite_ids=(32,),
+)
 
 
 def default_technologies() -> tuple[Technology, ...]:
@@ -377,6 +385,7 @@ def default_technologies() -> tuple[Technology, ...]:
         CAMP_CABINETRY,
         CAMP_CERAMICS,
         CAMP_GLAZING,
+        CAMP_PORCELAIN,
     )
 
 
@@ -422,6 +431,7 @@ class TechnologyCensus(BaseModel):
     discovered_cabinetry_count: NonNegativeInt = 0
     discovered_ceramics_count: NonNegativeInt = 0
     discovered_glazing_count: NonNegativeInt = 0
+    discovered_porcelain_count: NonNegativeInt = 0
     locked_count: NonNegativeInt
     researchable_count: NonNegativeInt
 
@@ -570,6 +580,7 @@ def census_technologies(world: World) -> TechnologyCensus:
     cabinetry = sum(1 for tech in discovered if tech.kind is TechnologyKind.CABINETRY)
     ceramics = sum(1 for tech in discovered if tech.kind is TechnologyKind.CERAMICS)
     glazing = sum(1 for tech in discovered if tech.kind is TechnologyKind.GLAZING)
+    porcelain = sum(1 for tech in discovered if tech.kind is TechnologyKind.PORCELAIN)
     return TechnologyCensus(
         tick=world.tick,
         technology_count=len(technologies),
@@ -608,6 +619,7 @@ def census_technologies(world: World) -> TechnologyCensus:
         discovered_cabinetry_count=cabinetry,
         discovered_ceramics_count=ceramics,
         discovered_glazing_count=glazing,
+        discovered_porcelain_count=porcelain,
         locked_count=len(locked),
         researchable_count=len(researchable),
     )

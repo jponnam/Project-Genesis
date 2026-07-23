@@ -28,6 +28,7 @@ from civitas.domain import (
     MINING_FACT,
     NAVIGATION_FACT,
     PHILOSOPHY_FACT,
+    PORCELAIN_FACT,
     POTTERY_FACT,
     RHETORIC_FACT,
     SEAFARING_FACT,
@@ -106,6 +107,7 @@ def test_encode_agent_episode_accepts_full_technology_fact_content() -> None:
             MINING_FACT,
             NAVIGATION_FACT,
             PHILOSOPHY_FACT,
+            PORCELAIN_FACT,
             POTTERY_FACT,
             RHETORIC_FACT,
             SEAFARING_FACT,
@@ -121,7 +123,8 @@ def test_encode_agent_episode_accepts_full_technology_fact_content() -> None:
         Agent.create(agent_id=0, name="A", knowledge=Knowledge(facts=all_facts)),
         Tick(value=3),
     )
-    assert len(record.content) == 362
+    assert len(record.content) == 372
+    assert "porcelain" in record.content
     assert (
         "facts=agriculture,anatomy,architecture,astronomy,cabinetry,carpentry,"
         "cartography,ceramics,crop_rotation,dyeing,engineering,fire,forestry,glazing"
