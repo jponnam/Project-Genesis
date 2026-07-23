@@ -274,6 +274,12 @@ potter, glazer, foundry, fulling mill, forge works, sawpit, kiln yard,
 clay pit, mill town, ironworks, guildhall, pottery town, tannery, bellows,
 lathe, plane, dovetail, kiln, glaze, kaolin, abacus, pulley, customs,
 labor, safety codes, firing codes, and loom).
+Phase 20 Milestone 1 adds a global BLOWPIPE produce-energy discount
+society-wide (stacking with guild, workshop, weaver, smelter, joiner,
+potter, glazer, foundry, fulling mill, forge works, sawpit, kiln yard,
+clay pit, mill town, ironworks, guildhall, pottery town, tannery,
+bellows, lathe, plane, dovetail, kiln, glaze, kaolin, abacus, pulley,
+customs, labor, safety codes, firing codes, and loom).
 The action
 executor,
 retrieval
@@ -425,6 +431,7 @@ CABINETRY_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 CERAMICS_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 GLAZING_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 PORCELAIN_PRODUCE_ENERGY_DISCOUNT: float = 0.02
+GLASSMAKING_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 ARCHIVE_RETRIEVAL_LIMIT_BONUS: int = 1
 LIBRARY_RETRIEVAL_LIMIT_BONUS: int = 1
 OBSERVATORY_RETRIEVAL_LIMIT_BONUS: int = 1
@@ -1823,7 +1830,8 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
     society-wide. An active GLAZE innovation contributes
     ``GLAZING_PRODUCE_ENERGY_DISCOUNT`` society-wide. An active KAOLIN
     innovation contributes ``PORCELAIN_PRODUCE_ENERGY_DISCOUNT``
-    society-wide. An active
+    society-wide. An active BLOWPIPE innovation contributes
+    ``GLASSMAKING_PRODUCE_ENERGY_DISCOUNT`` society-wide. An active
     ``LABOR`` statute contributes its subject
     discount. An active ``SAFETY_CODES`` statute contributes its subject
     discount. An active ``FIRING_CODES`` statute contributes its subject
@@ -1894,6 +1902,8 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
         discount += GLAZING_PRODUCE_ENERGY_DISCOUNT
     if innovation_kind_is_active(world, InnovationKind.KAOLIN):
         discount += PORCELAIN_PRODUCE_ENERGY_DISCOUNT
+    if innovation_kind_is_active(world, InnovationKind.BLOWPIPE):
+        discount += GLASSMAKING_PRODUCE_ENERGY_DISCOUNT
     return discount
 
 
@@ -2407,6 +2417,8 @@ def census_effects(world: World) -> EffectsCensus:
         produce_discount += GLAZING_PRODUCE_ENERGY_DISCOUNT
     if innovation_kind_is_active(world, InnovationKind.KAOLIN):
         produce_discount += PORCELAIN_PRODUCE_ENERGY_DISCOUNT
+    if innovation_kind_is_active(world, InnovationKind.BLOWPIPE):
+        produce_discount += GLASSMAKING_PRODUCE_ENERGY_DISCOUNT
     produce_at_guild = clamp_unit(
         max(
             0.0,
