@@ -51,6 +51,7 @@ def test_observe_emits_cities_observed_without_mutating_world() -> None:
     assert events[0].active_pottery_town_count == 0
     assert events[0].active_kiln_quarter_count == 0
     assert events[0].active_glassworks_count == 0
+    assert events[0].active_crystal_quarter_count == 0
 
 
 def test_observe_can_suppress_events() -> None:
@@ -427,6 +428,27 @@ def test_observe_reports_active_glassworks_count() -> None:
     assert len(events) == 1
     assert events[0].active_glassworks_count == 1
     assert events[0].total_residents == 1
+
+
+def test_observe_reports_active_crystal_quarter_count() -> None:
+    """observe publishes the active crystal quarter city count."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Crystal Quarter", CityKind.CRYSTAL_QUARTER),
+        ),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    bus = EventBus()
+    CitySystem().observe(world, bus=bus)
+    events = [event for event in bus.history if isinstance(event, CitiesObserved)]
+    assert len(events) == 1
+    assert events[0].active_crystal_quarter_count == 1
+    assert events[0].total_residents == 1
+
 
 def test_system_wrappers_create_dissolve_and_capital() -> None:
     """System wrappers apply legal city mutations."""
