@@ -8,8 +8,10 @@ simulation policy logic.
 
 from __future__ import annotations
 
+import json
+from dataclasses import fields
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Literal
 
 import typer
 from pydantic import ValidationError
@@ -19,7 +21,14 @@ from rich.table import Table
 from civitas import __version__
 from civitas.domain import CANONICAL_SEED, SimulationConfig
 from civitas.engine import SimulationEngine, SimulationResult
-from civitas.storage import ReplayError, ReplayResult, replay_run, write_events
+from civitas.storage import (
+    ReplayError,
+    ReplayResult,
+    RunInspection,
+    build_inspection,
+    replay_run,
+    write_events,
+)
 from civitas.storage.replay import event_to_brief
 
 console = Console(highlight=False)
@@ -382,6 +391,149 @@ def replay_command(
             console.print(f"[dim]… {remaining} more event(s) omitted[/dim]")
     if strict and result.verification_notes:
         raise typer.Exit(code=1)
+
+
+def _render_inspection(report: RunInspection) -> None:
+    """Print a Rich human-readable inspection summary."""
+    overview = Table(title="Run inspection", show_header=True, header_style="bold")
+    overview.add_column("Field", style="cyan")
+    overview.add_column("Value")
+    overview.add_row("path", report.path)
+    overview.add_row("run_name", str(report.run_name))
+    overview.add_row("seed", str(report.seed))
+    overview.add_row("ticks_configured", str(report.ticks_configured))
+    overview.add_row("ticks_executed", str(report.ticks_executed))
+    overview.add_row("agent_count_configured", str(report.agent_count_configured))
+    overview.add_row("event_count", str(report.event_count))
+    overview.add_row("agents_spawned", str(report.agents_spawned))
+    overview.add_row("births", str(report.births))
+    overview.add_row("deaths", str(report.deaths))
+    overview.add_row("estimated_living", str(report.estimated_living))
+    overview.add_row("trades", str(report.trades))
+    overview.add_row("actions", str(report.actions))
+    overview.add_row("institutions", str(list(report.institutions)))
+    overview.add_row("cities", str(list(report.cities)))
+    overview.add_row(
+        "technologies_discovered",
+        str(list(report.technologies_discovered)),
+    )
+    console.print(overview)
+
+    if report.verification_notes:
+        console.print("[yellow]Verification notes:[/yellow]")
+        for note in report.verification_notes:
+            console.print(f"  - {note}")
+
+    types = Table(title="Event types", show_header=True, header_style="bold")
+    types.add_column("event_type", style="cyan")
+    types.add_column("count", justify="right")
+    for event_type, count in report.event_types.items():
+        types.add_row(event_type, str(count))
+    console.print(types)
+
+    resources = Table(
+        title="Resource flows (not final holdings)",
+        show_header=True,
+        header_style="bold",
+    )
+    resources.add_column("flow", style="cyan")
+    resources.add_column("totals")
+    resources.add_row("gathered", str(report.resources_gathered))
+    resources.add_row("consumed", str(report.resources_consumed))
+    resources.add_row("produced", str(report.resources_produced))
+    resources.add_row("traded", str(report.resources_traded))
+    resources.add_row(
+        "final_holdings_available",
+        str(report.final_resource_holdings_available),
+    )
+    console.print(resources)
+    console.print(
+        "[dim]Final per-agent resource inventories are not stored in the "
+        "event log, so holdings cannot be reconstructed.[/dim]"
+    )
+
+    if report.wealth is not None:
+        wealth = Table(
+            title="Final wealth census",
+            show_header=True,
+            header_style="bold",
+        )
+        wealth.add_column("Field", style="cyan")
+        wealth.add_column("Value")
+        for field_info in fields(report.wealth):
+            wealth.add_row(
+                field_info.name,
+                str(getattr(report.wealth, field_info.name)),
+            )
+        console.print(wealth)
+    else:
+        console.print("[dim]Wealth census: unavailable in this log.[/dim]")
+
+    if report.population is not None:
+        population = Table(
+            title="Final population census",
+            show_header=True,
+            header_style="bold",
+        )
+        population.add_column("Field", style="cyan")
+        population.add_column("Value")
+        population.add_row("total", str(report.population.total))
+        population.add_row("alive", str(report.population.alive))
+        population.add_row("dead", str(report.population.dead))
+        population.add_row(
+            "location_counts",
+            str(list(report.population.location_counts)),
+        )
+        console.print(population)
+
+    social = Table(title="Social changes", show_header=True, header_style="bold")
+    social.add_column("Field", style="cyan")
+    social.add_column("Value")
+    for field_info in fields(report.social):
+        social.add_row(
+            field_info.name,
+            str(getattr(report.social, field_info.name)),
+        )
+    console.print(social)
+
+    if report.notable_events:
+        console.print("[bold]Notable events[/bold]")
+        for notable in report.notable_events:
+            console.print(f"  - {notable}")
+    else:
+        console.print("[dim]Notable events: none beyond routine observations.[/dim]")
+
+
+@app.command("inspect")
+def inspect_command(
+    path: Annotated[
+        Path,
+        typer.Argument(
+            exists=False,
+            dir_okay=False,
+            readable=True,
+            help="Path to a JSONL event log produced by civitas run.",
+        ),
+    ],
+    output_format: Annotated[
+        Literal["text", "json"],
+        typer.Option(
+            "--format",
+            help="Output format: Rich text summary or machine-readable JSON.",
+        ),
+    ] = "text",
+) -> None:
+    """Inspect a JSONL run and print an event-derived summary."""
+    try:
+        report = build_inspection(path)
+    except ReplayError as exc:
+        console.print(f"[red]Inspect failed:[/red] {exc}")
+        raise typer.Exit(code=exc.exit_code) from exc
+
+    if output_format == "json":
+        console.print_json(json.dumps(report.to_dict()))
+        return
+    _render_inspection(report)
 
 
 def main() -> None:
