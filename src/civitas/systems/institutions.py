@@ -111,6 +111,7 @@ class InstitutionSystem:
                     active_glazer_count=snap.active_glazer_count,
                     active_tilewright_count=snap.active_tilewright_count,
                     active_glassblower_count=snap.active_glassblower_count,
+                    active_lensmaker_count=snap.active_lensmaker_count,
                     total_budget=snap.total_budget,
                     funded_count=snap.funded_count,
                 )
