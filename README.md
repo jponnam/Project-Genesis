@@ -128,18 +128,16 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 | **17** | Mining and minerals |
 | **18** | Timber and carpentry |
 | **19** | Ceramics and kilncraft |
+| **20** | Glass and glasscraft |
 
 ## Current Milestone
 
-**Phase 19 Milestone 12: Kiln quarter cities**
+**Phase 20 Milestone 1: Glassmaking technology**
 
-``CityKind.KILN_QUARTER`` is a non-capital specialized city seat for
-kilncraft whose living residents gain a PRODUCE energy discount. It stacks
-with pottery town and the full produce chain, including glaze, kiln, clay
-pit, and kiln yard. Clay codes and firing codes are subject-scoped and are
-not reflected in the society-wide census. Kiln quarters cannot be capitals
-and are not seeded. This milestone closes Phase 19 (Ceramics and
-kilncraft).
+``TechnologyKind.GLASSMAKING`` unlocks the inactive ``BLOWPIPE`` innovation.
+When active, blowpipe grants a society-wide PRODUCE energy discount that
+stacks with the full produce chain, including kaolin, glaze, kiln, clay
+pit, and kiln yard. Glassmaking requires porcelain.
 
 ### Completed
 
@@ -353,6 +351,9 @@ JSONL storage → `civitas run`
 - Milestone 10: Porcelain technology
 - Milestone 11: Clay codes laws
 - Milestone 12: Kiln quarter cities
+
+**Phase 20:**
+- Milestone 1: Glassmaking technology
 
 ## License
 

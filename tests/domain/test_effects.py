@@ -30,6 +30,7 @@ from civitas.domain import (
     CAMP_ASEPSIS,
     CAMP_ASTRONOMY,
     CAMP_BELLOWS,
+    CAMP_BLOWPIPE,
     CAMP_BLUEPRINT,
     CAMP_CABINETRY,
     CAMP_CARPENTRY,
@@ -48,6 +49,7 @@ from civitas.domain import (
     CAMP_FIRE_HEARTH,
     CAMP_FORESTRY,
     CAMP_FORGE,
+    CAMP_GLASSMAKING,
     CAMP_GLAZE,
     CAMP_GLAZING,
     CAMP_HYGIENE,
@@ -131,6 +133,7 @@ from civitas.domain import (
     FORUM_TEACHINGS_PER_KNOWER_BONUS,
     FOUNDRY_PRODUCE_ENERGY_DISCOUNT,
     FULLING_MILL_PRODUCE_ENERGY_DISCOUNT,
+    GLASSMAKING_PRODUCE_ENERGY_DISCOUNT,
     GLAZER_PRODUCE_ENERGY_DISCOUNT,
     GLAZING_PRODUCE_ENERGY_DISCOUNT,
     GRANARY_FOOD_GATHER_BONUS,
@@ -6304,6 +6307,83 @@ def test_kaolin_raises_produce_discount_society_wide() -> None:
     )
     agent = world.agents[0]
     expected = DEFAULT_PRODUCE_ENERGY_COST - PORCELAIN_PRODUCE_ENERGY_DISCOUNT
+    assert effective_produce_energy_cost(
+        world,
+        agent,
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(expected)
+    assert census_effects(world).produce_energy_cost_bps == round(expected * 10_000)
+    bare = _world()
+    assert census_effects(bare).produce_energy_cost_bps == round(
+        DEFAULT_PRODUCE_ENERGY_COST * 10_000
+    )
+
+
+def test_blowpipe_reduces_produce_energy_and_stacks_with_guild_abacus() -> None:
+    """Active blowpipe discounts PRODUCE energy society-wide and stacks."""
+    discovered = tuple(
+        item.model_copy(update={"discovered": True})
+        for item in default_technologies()
+    )
+    active_abacus = CAMP_ABACUS.model_copy(update={"active": True})
+    active_blowpipe = CAMP_BLOWPIPE.model_copy(update={"active": True})
+    innovations = tuple(
+        active_abacus
+        if item.innovation_id == CAMP_ABACUS.innovation_id
+        else active_blowpipe
+        if item.innovation_id == CAMP_BLOWPIPE.innovation_id
+        else item
+        for item in default_innovations()
+    )
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        institutions=(
+            Institution.create(0, 0, 0, "Camp Guild", InstitutionKind.GUILD),
+        ),
+        technologies=discovered,
+        innovations=innovations,
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    expected = (
+        DEFAULT_PRODUCE_ENERGY_COST
+        - GUILD_PRODUCE_ENERGY_DISCOUNT
+        - MATHEMATICS_PRODUCE_ENERGY_DISCOUNT
+        - GLASSMAKING_PRODUCE_ENERGY_DISCOUNT
+    )
+    assert effective_produce_energy_cost(
+        world,
+        agent,
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(expected)
+    assert census_effects(world).produce_energy_cost_bps == round(expected * 10_000)
+
+
+def test_blowpipe_raises_produce_discount_society_wide() -> None:
+    """Active blowpipe discounts PRODUCE energy for every agent society-wide."""
+    discovered_glassmaking = CAMP_GLASSMAKING.model_copy(update={"discovered": True})
+    active_blowpipe = CAMP_BLOWPIPE.model_copy(update={"active": True})
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        technologies=tuple(
+            discovered_glassmaking
+            if item.technology_id == CAMP_GLASSMAKING.technology_id
+            else item
+            for item in default_technologies()
+        ),
+        innovations=tuple(
+            active_blowpipe
+            if item.innovation_id == CAMP_BLOWPIPE.innovation_id
+            else item
+            for item in default_innovations()
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    expected = DEFAULT_PRODUCE_ENERGY_COST - GLASSMAKING_PRODUCE_ENERGY_DISCOUNT
     assert effective_produce_energy_cost(
         world,
         agent,
