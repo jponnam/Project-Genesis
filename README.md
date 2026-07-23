@@ -132,10 +132,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 20 Milestone 9: Lehr infrastructure**
+**Phase 20 Milestone 10: Crystal technology**
 
-``InfrastructureKind.LEHR`` grants a seat-scoped PRODUCE energy discount
-that stacks with glasshouse, glassblower, and the existing produce chain.
+``TechnologyKind.CRYSTAL`` and inactive ``InnovationKind.FACET``. Active
+facet grants a society-wide PRODUCE energy discount that stacks with
+lens, blowpipe, and the existing produce chain.
 
 ### Completed
 
@@ -360,6 +361,7 @@ JSONL storage → `civitas run`
 - Milestone 7: Optics technology
 - Milestone 8: Optician institutions
 - Milestone 9: Lehr infrastructure
+- Milestone 10: Crystal technology
 
 ## License
 

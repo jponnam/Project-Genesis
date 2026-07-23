@@ -111,8 +111,8 @@ def test_run_emits_lifecycle_and_tick_events() -> None:
     assert types.count(InstitutionCreated.__name__) == 1
     assert types.count(CityCreated.__name__) == 1
     assert types.count(InfrastructureCreated.__name__) == 1
-    assert types.count(TechnologyCreated.__name__) == 36
-    assert types.count(InnovationCreated.__name__) == 36
+    assert types.count(TechnologyCreated.__name__) == 37
+    assert types.count(InnovationCreated.__name__) == 37
     assert types.count(AgentSpawned.__name__) == 2
     assert types[1] == LocationCreated.__name__
     assert types[10] == MarketCreated.__name__
@@ -122,8 +122,8 @@ def test_run_emits_lifecycle_and_tick_events() -> None:
     assert types[14] == CityCreated.__name__
     assert types[15] == InfrastructureCreated.__name__
     assert types[16] == TechnologyCreated.__name__
-    assert types[52] == InnovationCreated.__name__
-    assert types[88] == AgentSpawned.__name__
+    assert types[53] == InnovationCreated.__name__
+    assert types[90] == AgentSpawned.__name__
     assert types.count(TickStarted.__name__) == 2
     assert types.count(TickCompleted.__name__) == 2
     assert types[-1] == SimulationCompleted.__name__
@@ -138,9 +138,9 @@ def test_run_emits_lifecycle_and_tick_events() -> None:
     assert len(result.world.institutions) == 1
     assert len(result.world.cities) == 1
     assert len(result.world.infrastructure) == 1
-    assert len(result.world.technologies) == 36
-    assert len(result.world.research_progress) == 35
-    assert len(result.world.innovations) == 36
+    assert len(result.world.technologies) == 37
+    assert len(result.world.research_progress) == 36
+    assert len(result.world.innovations) == 37
 
 
 def test_each_tick_selects_and_executes_actions() -> None:
@@ -667,7 +667,7 @@ def test_technologies_observed_each_tick_including_start() -> None:
     assert len(observed) == 4
     assert observed[0].tick.value == 0
     assert observed[-1].tick.value == 3
-    assert all(event.technology_count == 36 for event in observed)
+    assert all(event.technology_count == 37 for event in observed)
     assert all(event.discovered_fire_count == 1 for event in observed)
     assert all(event.discovered_irrigation_count == 0 for event in observed)
     assert all(event.discovered_metallurgy_count == 0 for event in observed)
@@ -703,6 +703,7 @@ def test_technologies_observed_each_tick_including_start() -> None:
     assert all(event.discovered_porcelain_count == 0 for event in observed)
     assert all(event.discovered_glassmaking_count == 0 for event in observed)
     assert all(event.discovered_optics_count == 0 for event in observed)
+    assert all(event.discovered_crystal_count == 0 for event in observed)
     infra_indexes = [
         i
         for i, event in enumerate(result.events)
@@ -727,7 +728,7 @@ def test_research_observed_each_tick_including_start() -> None:
     assert observed[0].total_points == 0
     assert observed[-1].tick.value == 3
     assert observed[-1].total_points == 3
-    assert all(event.progress_count == 35 for event in observed)
+    assert all(event.progress_count == 36 for event in observed)
     tech_indexes = [
         i
         for i, event in enumerate(result.events)
@@ -758,7 +759,7 @@ def test_innovations_observed_each_tick_including_start() -> None:
     assert len(observed) == 4
     assert observed[0].tick.value == 0
     assert observed[-1].tick.value == 3
-    assert all(event.innovation_count == 36 for event in observed)
+    assert all(event.innovation_count == 37 for event in observed)
     assert all(event.active_fire_hearth_count == 1 for event in observed)
     assert all(event.active_pottery_craft_count == 0 for event in observed)
     assert all(event.active_irrigation_canal_count == 0 for event in observed)
@@ -795,6 +796,7 @@ def test_innovations_observed_each_tick_including_start() -> None:
     assert all(event.active_kaolin_count == 0 for event in observed)
     assert all(event.active_blowpipe_count == 0 for event in observed)
     assert all(event.active_lens_count == 0 for event in observed)
+    assert all(event.active_facet_count == 0 for event in observed)
     research_indexes = [
         i
         for i, event in enumerate(result.events)
@@ -859,6 +861,7 @@ def test_knowledge_observed_each_tick_including_start() -> None:
     assert all(event.porcelain_knower_count == 0 for event in observed)
     assert all(event.glassmaking_knower_count == 0 for event in observed)
     assert all(event.optics_knower_count == 0 for event in observed)
+    assert all(event.crystal_knower_count == 0 for event in observed)
     innovation_indexes = [
         i
         for i, event in enumerate(result.events)

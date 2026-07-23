@@ -130,6 +130,7 @@ class KnowledgeSystem:
                     porcelain_knower_count=snap.porcelain_knower_count,
                     glassmaking_knower_count=snap.glassmaking_knower_count,
                     optics_knower_count=snap.optics_knower_count,
+                    crystal_knower_count=snap.crystal_knower_count,
                     total_fact_instances=snap.total_fact_instances,
                     coverage_bps=snap.coverage_bps,
                 )
