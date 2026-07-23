@@ -85,6 +85,8 @@ def test_ui_compare_page(client: TestClient, sample_run: str, runs_dir: Path) ->
     assert sample_run in response.text
     assert "other_seed7" in response.text
     assert "Seed / run comparison" in response.text
+    assert "Deltas" in response.text
+    assert "identical seeds" in response.text
 
 
 def test_ui_static_assets(client: TestClient) -> None:

@@ -20,10 +20,12 @@ from rich.table import Table
 
 from civitas import __version__
 from civitas.analytics import (
+    ComparisonReport,
     EmergenceReport,
     MetricsReport,
     analyze_emergence,
     analyze_run,
+    compare_runs,
 )
 from civitas.domain import CANONICAL_SEED, SimulationConfig
 from civitas.engine import SimulationEngine, SimulationResult
@@ -548,6 +550,82 @@ def _render_emergence(report: EmergenceReport) -> None:
     console.print(
         f"[dim]rules_evaluated={len(report.rules_evaluated)} path={report.path}[/dim]"
     )
+
+
+def _render_comparison(report: ComparisonReport) -> None:
+    """Print a Rich comparison table."""
+    overview = Table(title="Run comparison", show_header=True, header_style="bold")
+    overview.add_column("Field", style="cyan")
+    overview.add_column("Left")
+    overview.add_column("Right")
+    overview.add_row("path", report.left.path, report.right.path)
+    overview.add_row("seed", str(report.left.seed), str(report.right.seed))
+    overview.add_row("run_name", str(report.left.run_name), str(report.right.run_name))
+    overview.add_row(
+        "event_count",
+        str(report.left.event_count),
+        str(report.right.event_count),
+    )
+    overview.add_row(
+        "estimated_living",
+        str(report.left.estimated_living),
+        str(report.right.estimated_living),
+    )
+    overview.add_row(
+        "wealth_gini_bps",
+        str(report.left.wealth_gini_bps),
+        str(report.right.wealth_gini_bps),
+    )
+    overview.add_row(
+        "actions",
+        str(report.left.actions),
+        str(report.right.actions),
+    )
+    console.print(overview)
+
+    if report.deltas:
+        deltas = Table(title="Deltas", show_header=True, header_style="bold")
+        deltas.add_column("field", style="cyan")
+        deltas.add_column("left")
+        deltas.add_column("right")
+        for delta in report.deltas:
+            deltas.add_row(delta.field, str(delta.left), str(delta.right))
+        console.print(deltas)
+    else:
+        console.print("[dim]No field deltas.[/dim]")
+
+    console.print(f"shared_emergence={list(report.shared_emergence)}")
+    console.print(f"unique_left_emergence={list(report.unique_left_emergence)}")
+    console.print(f"unique_right_emergence={list(report.unique_right_emergence)}")
+    for note in report.notes:
+        console.print(f"[yellow]note:[/yellow] {note}")
+
+
+@app.command("compare")
+def compare_command(
+    left: Annotated[
+        Path,
+        typer.Argument(exists=False, dir_okay=False, help="First JSONL run path."),
+    ],
+    right: Annotated[
+        Path,
+        typer.Argument(exists=False, dir_okay=False, help="Second JSONL run path."),
+    ],
+    output_format: Annotated[
+        Literal["text", "json"],
+        typer.Option("--format", help="Rich text or JSON output."),
+    ] = "text",
+) -> None:
+    """Compare two deterministic simulation runs."""
+    try:
+        report = compare_runs(left, right)
+    except ReplayError as exc:
+        console.print(f"[red]Compare failed:[/red] {exc}")
+        raise typer.Exit(code=exc.exit_code) from exc
+    if output_format == "json":
+        console.print_json(json.dumps(report.to_dict()))
+        return
+    _render_comparison(report)
 
 
 @app.command("serve")

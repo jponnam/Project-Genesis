@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
-from civitas.analytics import analyze_emergence, analyze_run
+from civitas.analytics import analyze_emergence, analyze_run, compare_runs
 from civitas.api.catalog import (
     ReplayError,
     RunNotFoundError,
@@ -169,23 +169,13 @@ def observatory_compare(
         except ReplayError:
             continue
 
-    left_summary = None
-    right_summary = None
-    left_metrics = None
-    right_metrics = None
-    left_emergence = None
-    right_emergence = None
+    comparison = None
     error = None
     if left and right:
         try:
             left_path = resolve_run_path(left)
             right_path = resolve_run_path(right)
-            left_summary = build_inspection(left_path)
-            right_summary = build_inspection(right_path)
-            left_metrics = analyze_run(left_path)
-            right_metrics = analyze_run(right_path)
-            left_emergence = analyze_emergence(left_path)
-            right_emergence = analyze_emergence(right_path)
+            comparison = compare_runs(left_path, right_path)
         except (RunNotFoundError, ReplayError) as exc:
             error = str(exc)
 
@@ -197,12 +187,7 @@ def observatory_compare(
             "runs": runs,
             "left": left,
             "right": right,
-            "left_summary": left_summary,
-            "right_summary": right_summary,
-            "left_metrics": left_metrics,
-            "right_metrics": right_metrics,
-            "left_emergence": left_emergence,
-            "right_emergence": right_emergence,
+            "comparison": comparison,
             "error": error,
         },
     )
