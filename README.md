@@ -131,13 +131,12 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 19 Milestone 9: Clay pit infrastructure**
+**Phase 19 Milestone 10: Porcelain technology**
 
-``InfrastructureKind.CLAY_PIT`` is a craft infrastructure seat. Living
-agents colocated with an active clay pit gain a PRODUCE energy discount
-that stacks with kiln yard and the full produce chain. Clay pits are not
-seeded; the infrastructure census and ``InfrastructuresObserved`` event
-report the active clay pit count. Default build cost is 9.
+``TechnologyKind.PORCELAIN`` unlocks the inactive ``KAOLIN`` innovation.
+When active, kaolin grants a society-wide PRODUCE energy discount that
+stacks with the full produce chain, including glaze, kiln, clay pit, and
+kiln yard. Porcelain requires glazing.
 
 ### Completed
 
@@ -348,6 +347,7 @@ JSONL storage → `civitas run`
 - Milestone 7: Glazing technology
 - Milestone 8: Tilewright institutions
 - Milestone 9: Clay pit infrastructure
+- Milestone 10: Porcelain technology
 
 ## License
 

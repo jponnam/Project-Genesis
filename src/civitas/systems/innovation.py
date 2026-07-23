@@ -127,6 +127,7 @@ class InnovationSystem:
                     active_dovetail_count=snap.active_dovetail_count,
                     active_kiln_count=snap.active_kiln_count,
                     active_glaze_count=snap.active_glaze_count,
+                    active_kaolin_count=snap.active_kaolin_count,
                 )
             )
         return world
