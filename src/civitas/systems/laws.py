@@ -90,6 +90,7 @@ class LawSystem:
                     active_firing_codes_count=snap.active_firing_codes_count,
                     active_clay_codes_count=snap.active_clay_codes_count,
                     active_annealing_codes_count=snap.active_annealing_codes_count,
+                    active_crystal_codes_count=snap.active_crystal_codes_count,
                 )
             )
         return world

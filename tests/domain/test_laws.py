@@ -14,6 +14,7 @@ from civitas.domain import (
     CAMP_POLL_TAX_LAW,
     CLAY_CODES_PRODUCE_ENERGY_DISCOUNT,
     CONSERVATION_WOOD_GATHER_BONUS,
+    CRYSTAL_CODES_PRODUCE_ENERGY_DISCOUNT,
     CUSTOMS_PRODUCE_ENERGY_DISCOUNT,
     ETHICS_MIN_TEACH_TRUST_DELTA,
     FIRING_CODES_PRODUCE_ENERGY_DISCOUNT,
@@ -41,6 +42,7 @@ from civitas.domain import (
     active_calendar_law,
     active_clay_codes_law,
     active_conservation_law,
+    active_crystal_codes_law,
     active_curriculum_law,
     active_customs_law,
     active_ethics_law,
@@ -64,6 +66,7 @@ from civitas.domain import (
     census_laws,
     clay_codes_produce_discount_for,
     conservation_wood_bonus_for,
+    crystal_codes_produce_discount_for,
     curriculum_teachings_bonus_for,
     customs_produce_discount_for,
     default_laws,
@@ -124,6 +127,7 @@ def test_default_laws_seed_camp_poll_tax() -> None:
     assert all(law.kind is not LawKind.FIRING_CODES for law in default_laws())
     assert all(law.kind is not LawKind.CLAY_CODES for law in default_laws())
     assert all(law.kind is not LawKind.ANNEALING_CODES for law in default_laws())
+    assert all(law.kind is not LawKind.CRYSTAL_CODES for law in default_laws())
 
 
 def test_world_rejects_unknown_government_and_duplicate_active_tax() -> None:
@@ -273,6 +277,14 @@ def test_world_rejects_duplicate_active_annealing_codes() -> None:
     left = Law.create(0, 0, "Annealing Codes A", LawKind.ANNEALING_CODES)
     right = Law.create(1, 0, "Annealing Codes B", LawKind.ANNEALING_CODES)
     with pytest.raises(ValidationError, match="ANNEALING_CODES"):
+        _world(Agent.create(agent_id=0, name="A"), laws=(left, right))
+
+
+def test_world_rejects_duplicate_active_crystal_codes() -> None:
+    """At most one active CRYSTAL_CODES law per government."""
+    left = Law.create(0, 0, "Crystal Codes A", LawKind.CRYSTAL_CODES)
+    right = Law.create(1, 0, "Crystal Codes B", LawKind.CRYSTAL_CODES)
+    with pytest.raises(ValidationError, match="CRYSTAL_CODES"):
         _world(Agent.create(agent_id=0, name="A"), laws=(left, right))
 
 
@@ -1429,6 +1441,61 @@ def test_annealing_codes_discount_requires_living_subject() -> None:
     assert annealing_codes_produce_discount_for(bare, bare.agents[0]) == 0.0
 
 
+def test_enact_crystal_codes_and_uniqueness() -> None:
+    """CRYSTAL_CODES enacts once per government; kind alone enables discount."""
+    world = _world(Agent.create(agent_id=0, name="A"))
+    crystal_codes = Law.create(0, 0, "Camp Crystal Codes", LawKind.CRYSTAL_CODES)
+    enacted = enact_law(world, crystal_codes)
+    assert enacted is not None
+    assert active_crystal_codes_law(enacted, 0) == crystal_codes
+    assert crystal_codes_produce_discount_for(enacted, enacted.agents[0]) == (
+        CRYSTAL_CODES_PRODUCE_ENERGY_DISCOUNT
+    )
+    assert CRYSTAL_CODES_PRODUCE_ENERGY_DISCOUNT == 0.02
+    duplicate = Law.create(1, 0, "Other Crystal Codes", LawKind.CRYSTAL_CODES)
+    assert enact_law(enacted, duplicate) is None
+    # Other unique kinds may coexist with CRYSTAL_CODES.
+    safety_codes = Law.create(1, 0, "Camp Safety Codes", LawKind.SAFETY_CODES)
+    with_safety = enact_law(enacted, safety_codes)
+    assert with_safety is not None
+    assert active_crystal_codes_law(with_safety, 0) == crystal_codes
+    assert (
+        crystal_codes_produce_discount_for(
+            with_safety,
+            with_safety.agents[0],
+        )
+        == CRYSTAL_CODES_PRODUCE_ENERGY_DISCOUNT
+    )
+
+
+def test_crystal_codes_discount_requires_living_subject() -> None:
+    """Only living agents under CRYSTAL_CODES receive the produce discount."""
+    crystal_codes = Law.create(0, 0, "Camp Crystal Codes", LawKind.CRYSTAL_CODES)
+    world = _world(Agent.create(agent_id=0, name="A"), laws=(crystal_codes,))
+    assert crystal_codes_produce_discount_for(world, world.agents[0]) == (
+        CRYSTAL_CODES_PRODUCE_ENERGY_DISCOUNT
+    )
+    dead = world.agents[0].model_copy(
+        update={
+            "status": AgentStatus.DEAD,
+            "health": world.agents[0].health.model_copy(update={"vitality": 0.0}),
+        }
+    )
+    assert crystal_codes_produce_discount_for(world, dead) == 0.0
+    ungoverned = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(),
+        laws=(),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert crystal_codes_produce_discount_for(
+        ungoverned, ungoverned.agents[0]
+    ) == 0.0
+    bare = _world(Agent.create(agent_id=0, name="A"))
+    assert crystal_codes_produce_discount_for(bare, bare.agents[0]) == 0.0
+
+
 def test_enact_labor_and_uniqueness() -> None:
     """LABOR enacts once per government; kind alone enables discount."""
     world = _world(Agent.create(agent_id=0, name="A"))
@@ -1637,6 +1704,9 @@ def test_census_laws_counts() -> None:
     annealing_codes = Law.create(
         23, 0, "Annealing Codes", LawKind.ANNEALING_CODES, active=True
     )
+    crystal_codes = Law.create(
+        24, 0, "Crystal Codes", LawKind.CRYSTAL_CODES, active=True
+    )
     world = _world(
         Agent.create(agent_id=0, name="A"),
         laws=(
@@ -1664,11 +1734,12 @@ def test_census_laws_counts() -> None:
             firing_codes,
             clay_codes,
             annealing_codes,
+            crystal_codes,
         ),
     )
     snap = census_laws(world)
-    assert snap.law_count == 24
-    assert snap.active_count == 23
+    assert snap.law_count == 25
+    assert snap.active_count == 24
     assert snap.inactive_count == 1
     assert snap.governments_with_active_laws == 1
     assert snap.active_tax_schedule_count == 1
@@ -1694,6 +1765,7 @@ def test_census_laws_counts() -> None:
     assert snap.active_firing_codes_count == 1
     assert snap.active_clay_codes_count == 1
     assert snap.active_annealing_codes_count == 1
+    assert snap.active_crystal_codes_count == 1
     assert census_laws(world) == snap
 
 

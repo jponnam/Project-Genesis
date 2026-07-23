@@ -339,6 +339,13 @@ kiln yard, clay pit, mill town, ironworks, guildhall, pottery town, kiln
 quarter, glasshouse, glassworks, tannery, bellows, lathe, plane, dovetail,
 kiln, glaze, kaolin, abacus, pulley, customs, labor, safety codes, firing
 codes, clay codes, annealing codes, blowpipe, and lens).
+Phase 20 Milestone 11 adds subject-scoped CRYSTAL_CODES PRODUCE energy
+discounts (stacking with guild, workshop, weaver, smelter, joiner, potter,
+glazer, glassblower, foundry, fulling mill, forge works, sawpit, kiln yard,
+clay pit, mill town, ironworks, guildhall, pottery town, kiln quarter,
+glasshouse, glassworks, lehr, tannery, bellows, lathe, plane, dovetail, kiln,
+glaze, kaolin, abacus, pulley, customs, labor, safety codes, firing codes,
+clay codes, annealing codes, blowpipe, lens, and facet).
 The action
 executor,
 retrieval
@@ -368,6 +375,7 @@ from civitas.domain.laws import (
     calendar_retrieval_bonus_for,
     clay_codes_produce_discount_for,
     conservation_wood_bonus_for,
+    crystal_codes_produce_discount_for,
     curriculum_teachings_bonus_for,
     customs_produce_discount_for,
     firing_codes_produce_discount_for,
@@ -2005,6 +2013,7 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
     discount. An active ``FIRING_CODES`` statute contributes its subject
     discount. An active ``CLAY_CODES`` statute contributes its subject
     discount. An active ``ANNEALING_CODES`` statute contributes its subject
+    discount. An active ``CRYSTAL_CODES`` statute contributes its subject
     discount. All stack when present.
     """
     discount = 0.0
@@ -2060,6 +2069,7 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
     discount += firing_codes_produce_discount_for(world, agent)
     discount += clay_codes_produce_discount_for(world, agent)
     discount += annealing_codes_produce_discount_for(world, agent)
+    discount += crystal_codes_produce_discount_for(world, agent)
     if innovation_kind_is_active(world, InnovationKind.ABACUS):
         discount += MATHEMATICS_PRODUCE_ENERGY_DISCOUNT
     if innovation_kind_is_active(world, InnovationKind.PULLEY):

@@ -111,6 +111,7 @@ from civitas.domain import (
     COLLEGIUM_TEACHINGS_PER_KNOWER_BONUS,
     CONSERVATION_WOOD_GATHER_BONUS,
     CROP_ROTATION_EAT_RESTORE_BONUS,
+    CRYSTAL_CODES_PRODUCE_ENERGY_DISCOUNT,
     CRYSTAL_PRODUCE_ENERGY_DISCOUNT,
     CURRICULUM_TEACHINGS_PER_KNOWER_BONUS,
     CUSTOMS_PRODUCE_ENERGY_DISCOUNT,
@@ -245,6 +246,7 @@ from civitas.domain import (
     census_effects,
     clay_codes_produce_discount_for,
     conservation_wood_bonus_for,
+    crystal_codes_produce_discount_for,
     customs_produce_discount_for,
     default_innovations,
     default_technologies,
@@ -5557,6 +5559,54 @@ def test_annealing_codes_reduces_produce_energy_and_stacks_with_guild() -> None:
         DEFAULT_PRODUCE_ENERGY_COST - ANNEALING_CODES_PRODUCE_ENERGY_DISCOUNT
     )
     # census_effects produce path omits statute discounts (annealing codes).
+    assert census_effects(world).produce_energy_cost_bps == round(
+        (DEFAULT_PRODUCE_ENERGY_COST - GUILD_PRODUCE_ENERGY_DISCOUNT) * 10_000
+    )
+
+
+def test_crystal_codes_reduces_produce_energy_and_stacks_with_guild() -> None:
+    """Crystal-code laws discount PRODUCE energy and stack with guild seats."""
+    law = Law.create(0, 0, "Camp Crystal Codes", LawKind.CRYSTAL_CODES)
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        institutions=(
+            Institution.create(0, 0, 0, "Camp Guild", InstitutionKind.GUILD),
+        ),
+        laws=(law,),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    expected_discount = (
+        GUILD_PRODUCE_ENERGY_DISCOUNT + CRYSTAL_CODES_PRODUCE_ENERGY_DISCOUNT
+    )
+    assert crystal_codes_produce_discount_for(world, agent) == (
+        CRYSTAL_CODES_PRODUCE_ENERGY_DISCOUNT
+    )
+    assert produce_energy_discount(world, agent) == pytest.approx(expected_discount)
+    assert effective_produce_energy_cost(
+        world,
+        agent,
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(
+        DEFAULT_PRODUCE_ENERGY_COST - expected_discount
+    )
+    bare = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        laws=(law,),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert effective_produce_energy_cost(
+        bare,
+        bare.agents[0],
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(
+        DEFAULT_PRODUCE_ENERGY_COST - CRYSTAL_CODES_PRODUCE_ENERGY_DISCOUNT
+    )
+    # census_effects produce path omits statute discounts (crystal codes).
     assert census_effects(world).produce_energy_cost_bps == round(
         (DEFAULT_PRODUCE_ENERGY_COST - GUILD_PRODUCE_ENERGY_DISCOUNT) * 10_000
     )
