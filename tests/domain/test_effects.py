@@ -10,6 +10,7 @@ from civitas.domain import (
     AGRICULTURE_FOOD_GATHER_BONUS,
     AGRONOMIST_TEACHINGS_PER_KNOWER_BONUS,
     ANATOMY_RESEARCH_POINTS_BONUS,
+    ANNEALING_CODES_PRODUCE_ENERGY_DISCOUNT,
     APOTHECARY_DRINK_RESTORE_BONUS,
     ARCHITECT_TEACHINGS_PER_KNOWER_BONUS,
     ARCHITECTURE_RESEARCH_POINTS_BONUS,
@@ -226,6 +227,7 @@ from civitas.domain import (
     LawKind,
     SimulationConfig,
     World,
+    annealing_codes_produce_discount_for,
     assembly_socialize_bonus_for,
     building_codes_move_discount_for,
     census_effects,
@@ -5390,6 +5392,41 @@ def test_clay_codes_reduces_produce_energy_and_stacks_with_guild() -> None:
         DEFAULT_PRODUCE_ENERGY_COST - CLAY_CODES_PRODUCE_ENERGY_DISCOUNT
     )
     # census_effects produce path omits statute discounts (clay codes).
+    assert census_effects(world).produce_energy_cost_bps == round(
+        (DEFAULT_PRODUCE_ENERGY_COST - GUILD_PRODUCE_ENERGY_DISCOUNT) * 10_000
+    )
+
+
+def test_annealing_codes_reduces_produce_energy_and_stacks_with_guild() -> None:
+    """Annealing-code laws discount PRODUCE energy and stack with guild seats."""
+    law = Law.create(0, 0, "Camp Annealing Codes", LawKind.ANNEALING_CODES)
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        institutions=(
+            Institution.create(0, 0, 0, "Camp Guild", InstitutionKind.GUILD),
+        ),
+        laws=(law,),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    agent = world.agents[0]
+    expected_discount = (
+        GUILD_PRODUCE_ENERGY_DISCOUNT + ANNEALING_CODES_PRODUCE_ENERGY_DISCOUNT
+    )
+    assert annealing_codes_produce_discount_for(world, agent) == (
+        ANNEALING_CODES_PRODUCE_ENERGY_DISCOUNT
+    )
+    assert produce_energy_discount(world, agent) == pytest.approx(expected_discount)
+    without_guild = world.model_copy(update={"institutions": ()})
+    assert effective_produce_energy_cost(
+        without_guild,
+        without_guild.agents[0],
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(
+        DEFAULT_PRODUCE_ENERGY_COST - ANNEALING_CODES_PRODUCE_ENERGY_DISCOUNT
+    )
+    # census_effects produce path omits statute discounts (annealing codes).
     assert census_effects(world).produce_energy_cost_bps == round(
         (DEFAULT_PRODUCE_ENERGY_COST - GUILD_PRODUCE_ENERGY_DISCOUNT) * 10_000
     )

@@ -132,12 +132,13 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 20 Milestone 1: Glassmaking technology**
+**Phase 20 Milestone 2: Annealing codes laws**
 
-``TechnologyKind.GLASSMAKING`` unlocks the inactive ``BLOWPIPE`` innovation.
-When active, blowpipe grants a society-wide PRODUCE energy discount that
-stacks with the full produce chain, including kaolin, glaze, kiln, clay
-pit, and kiln yard. Glassmaking requires porcelain.
+``LawKind.ANNEALING_CODES`` is a subject-scoped statute. Living subjects of a
+government with active annealing codes gain a PRODUCE energy discount that
+stacks with clay codes, firing codes, and the existing produce chain,
+including blowpipe, kaolin, glaze, kiln, clay pit, and kiln yard. Annealing
+codes are not seeded.
 
 ### Completed
 
@@ -354,6 +355,7 @@ JSONL storage → `civitas run`
 
 **Phase 20:**
 - Milestone 1: Glassmaking technology
+- Milestone 2: Annealing codes laws
 
 ## License
 
