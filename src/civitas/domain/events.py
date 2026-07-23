@@ -598,6 +598,7 @@ class InstitutionsObserved(DomainEvent):
     active_woodcutter_count: NonNegativeInt = 0
     active_joiner_count: NonNegativeInt = 0
     active_carver_count: NonNegativeInt = 0
+    active_potter_count: NonNegativeInt = 0
     total_budget: NonNegativeInt = 0
     funded_count: NonNegativeInt = 0
 
