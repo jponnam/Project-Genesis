@@ -55,6 +55,7 @@ def test_observe_emits_without_mutating_world() -> None:
     assert events[0].active_forge_works_count == 0
     assert events[0].active_lumber_yard_count == 0
     assert events[0].active_sawpit_count == 0
+    assert events[0].active_kiln_yard_count == 0
 
 
 def test_observe_emits_active_stoa_count() -> None:
@@ -420,6 +421,32 @@ def test_observe_emits_active_sawpit_count() -> None:
     assert len(events) == 1
     assert events[0].active_sawpit_count == 1
     assert events[0].active_forge_works_count == 0
+
+
+
+def test_observe_emits_active_kiln_yard_count() -> None:
+    """observe includes active kiln yard counts in the infrastructure event."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        governments=(Government.create(0, "Camp", 0, (0,)),),
+        cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
+        infrastructure=(
+            Infrastructure.create(
+                0, 0, 0, 0, "Camp Kiln Yard", InfrastructureKind.KILN_YARD
+            ),
+        ),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    bus = EventBus()
+    updated = InfrastructureSystem().observe(world, bus=bus)
+    assert updated == world
+    events = [
+        event for event in bus.history if isinstance(event, InfrastructuresObserved)
+    ]
+    assert len(events) == 1
+    assert events[0].active_kiln_yard_count == 1
+    assert events[0].active_sawpit_count == 0
 
 
 def test_observe_can_suppress_events() -> None:

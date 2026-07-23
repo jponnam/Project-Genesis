@@ -9,7 +9,7 @@ seeds a single ``WELL`` kind; ``STOREHOUSE``, ``ROAD``, ``SCRIPTORIUM``,
 ``STOA``, ``OBSERVATORY``, ``SHRINE``, ``CLINIC``, ``BATHHOUSE``,
 ``BRIDGE``, ``SCAFFOLD``, ``WAYSTATION``, ``BEACON``, ``DITCH``,
 ``TERRACE``, ``FULLING_MILL``, ``WAREHOUSE``, ``MINESHAFT``,
-``FORGE_WORKS``, ``LUMBER_YARD``, and ``SAWPIT`` are
+``FORGE_WORKS``, ``LUMBER_YARD``, ``SAWPIT``, and ``KILN_YARD`` are
 available via free create or paid construction.
 Governments pay via ``build_infrastructure``; institutions pay via
 ``build_infrastructure_from_institution``. Effect wiring applies WELL
@@ -75,6 +75,7 @@ class InfrastructureKind(StrEnum):
     FORGE_WORKS = "forge_works"
     LUMBER_YARD = "lumber_yard"
     SAWPIT = "sawpit"
+    KILN_YARD = "kiln_yard"
 
 
 # Canonical treasury cost to construct each infrastructure kind.
@@ -99,6 +100,7 @@ DEFAULT_MINESHAFT_BUILD_COST: int = 9
 DEFAULT_FORGE_WORKS_BUILD_COST: int = 10
 DEFAULT_LUMBER_YARD_BUILD_COST: int = 9
 DEFAULT_SAWPIT_BUILD_COST: int = 9
+DEFAULT_KILN_YARD_BUILD_COST: int = 9
 INFRASTRUCTURE_BUILD_COSTS: dict[InfrastructureKind, int] = {
     InfrastructureKind.WELL: DEFAULT_WELL_BUILD_COST,
     InfrastructureKind.STOREHOUSE: DEFAULT_STOREHOUSE_BUILD_COST,
@@ -121,6 +123,7 @@ INFRASTRUCTURE_BUILD_COSTS: dict[InfrastructureKind, int] = {
     InfrastructureKind.FORGE_WORKS: DEFAULT_FORGE_WORKS_BUILD_COST,
     InfrastructureKind.LUMBER_YARD: DEFAULT_LUMBER_YARD_BUILD_COST,
     InfrastructureKind.SAWPIT: DEFAULT_SAWPIT_BUILD_COST,
+    InfrastructureKind.KILN_YARD: DEFAULT_KILN_YARD_BUILD_COST,
 }
 
 
@@ -209,6 +212,7 @@ class InfrastructureCensus(BaseModel):
     active_forge_works_count: NonNegativeInt = 0
     active_lumber_yard_count: NonNegativeInt = 0
     active_sawpit_count: NonNegativeInt = 0
+    active_kiln_yard_count: NonNegativeInt = 0
 
 
 def infrastructure_by_id(
@@ -478,6 +482,9 @@ def census_infrastructure(world: World) -> InfrastructureCensus:
     active_sawpits = sum(
         1 for item in active if item.kind is InfrastructureKind.SAWPIT
     )
+    active_kiln_yards = sum(
+        1 for item in active if item.kind is InfrastructureKind.KILN_YARD
+    )
     return InfrastructureCensus(
         tick=world.tick,
         infrastructure_count=len(items),
@@ -506,4 +513,5 @@ def census_infrastructure(world: World) -> InfrastructureCensus:
         active_forge_works_count=active_forge_works,
         active_lumber_yard_count=active_lumber_yards,
         active_sawpit_count=active_sawpits,
+        active_kiln_yard_count=active_kiln_yards,
     )
