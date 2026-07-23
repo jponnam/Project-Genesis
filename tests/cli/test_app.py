@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from typer.testing import CliRunner
@@ -14,14 +15,15 @@ from civitas.storage import JsonlEventStore, write_events
 runner = CliRunner()
 
 
-def test_help_lists_version_config_run_and_replay() -> None:
-    """Root help must advertise version, config, run, and replay commands."""
+def test_help_lists_version_config_run_replay_and_inspect() -> None:
+    """Root help must advertise version, config, run, replay, and inspect."""
     result = runner.invoke(app, ["--help"])
     assert result.exit_code == 0
     assert "version" in result.stdout
     assert "config" in result.stdout
     assert "run" in result.stdout
     assert "replay" in result.stdout
+    assert "inspect" in result.stdout
 
 
 def test_version_command_prints_package_version() -> None:
@@ -270,3 +272,36 @@ def test_replay_strict_fails_on_incomplete_log(tmp_path: Path) -> None:
     result = runner.invoke(app, ["replay", str(bad), "--strict"])
     assert result.exit_code == 1
     assert "Verification notes" in result.stdout
+
+
+def test_inspect_text_summary(tmp_path: Path) -> None:
+    """``civitas inspect`` prints a Rich summary for a valid run."""
+    output = _cli_mini_run(tmp_path)
+    result = runner.invoke(app, ["inspect", str(output)])
+    assert result.exit_code == 0, result.stdout
+    assert "Run inspection" in result.stdout
+    assert "cli_replay" in result.stdout
+    assert "Event types" in result.stdout
+    assert "Final wealth census" in result.stdout
+    assert "final holdings" in result.stdout.lower() or (
+        "Final per-agent resource inventories" in result.stdout
+    )
+
+
+def test_inspect_json_format(tmp_path: Path) -> None:
+    """``civitas inspect --format json`` emits machine-readable JSON."""
+    output = _cli_mini_run(tmp_path)
+    result = runner.invoke(app, ["inspect", str(output), "--format", "json"])
+    assert result.exit_code == 0, result.stdout
+    payload = json.loads(result.stdout)
+    assert payload["seed"] == 42
+    assert payload["run_name"] == "cli_replay"
+    assert payload["event_count"] > 0
+    assert payload["final_resource_holdings_available"] is False
+
+
+def test_inspect_missing_file(tmp_path: Path) -> None:
+    """Missing inspect paths exit with a clear error."""
+    result = runner.invoke(app, ["inspect", str(tmp_path / "missing.jsonl")])
+    assert result.exit_code == 1
+    assert "Inspect failed" in result.stdout

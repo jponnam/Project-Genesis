@@ -105,8 +105,8 @@ civitas run --seed 42 --ticks 100 --agents 10 --name default
 civitas run --seed 42 --ticks 20 --agents 5 -o runs/demo.jsonl
 ```
 
-Available commands today: `version`, `run`, `replay`, and `config`
-(`show`, `fingerprint`). `civitas run` executes a deterministic
+Available commands today: `version`, `run`, `replay`, `inspect`, and
+`config` (`show`, `fingerprint`). `civitas run` executes a deterministic
 simulation and writes the event stream to JSONL (default:
 `runs/<name>_seed<seed>.jsonl`).
 
@@ -115,6 +115,8 @@ civitas replay runs/demo_seed42.jsonl
 civitas replay runs/demo_seed42.jsonl --event-type ActionSelected --list
 civitas replay runs/demo_seed42.jsonl --from-tick 1 --to-tick 5 --agent 0
 civitas replay runs/demo_seed42.jsonl --final-state --strict
+civitas inspect runs/demo_seed42.jsonl
+civitas inspect runs/demo_seed42.jsonl --format json
 ```
 
 ## Roadmap
@@ -145,11 +147,13 @@ civitas replay runs/demo_seed42.jsonl --final-state --strict
 
 ## Current Milestone
 
-**Phase 21 Milestone 2: Replay CLI**
+**Phase 21 Milestone 3: Run inspection and summary**
 
-``civitas replay PATH`` loads existing JSONL event logs, verifies
-lifecycle metadata, filters by tick/agent/event type, and can show a
-partial event-derived final-state summary (not a full ``World`` rebuild).
+``civitas inspect PATH`` prints a Rich (or ``--format json``) summary of
+an existing JSONL run: configuration metadata, event-type histogram,
+population/wealth censuses, resource flows, institutions/cities/techs,
+births/deaths, and notable events. Unavailable reconstructions are
+labeled explicitly.
 
 See also: `docs/CURRENT_STATE_AUDIT.md` (baseline audit) and
 `docs/PHASE_21_DESIGN.md` (phase plan).

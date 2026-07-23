@@ -14,13 +14,16 @@ from civitas.storage.replay import (
     RunMetadata,
     replay_run,
 )
+from civitas.storage.summary import RunInspection, build_inspection
 
 __all__ = [
     "FinalStateSummary",
     "JsonlEventStore",
     "ReplayError",
     "ReplayResult",
+    "RunInspection",
     "RunMetadata",
+    "build_inspection",
     "replay_run",
     "write_events",
 ]
