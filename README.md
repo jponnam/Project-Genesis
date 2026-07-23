@@ -131,12 +131,15 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 19 Milestone 11: Clay codes laws**
+**Phase 19 Milestone 12: Kiln quarter cities**
 
-``LawKind.CLAY_CODES`` is a subject-scoped statute. Living subjects of a
-government with active clay codes gain a PRODUCE energy discount that
-stacks with firing codes and the existing produce chain, including glaze,
-kiln, clay pit, kiln yard, and kaolin. Clay codes are not seeded.
+``CityKind.KILN_QUARTER`` is a non-capital specialized city seat for
+kilncraft whose living residents gain a PRODUCE energy discount. It stacks
+with pottery town and the full produce chain, including glaze, kiln, clay
+pit, and kiln yard. Clay codes and firing codes are subject-scoped and are
+not reflected in the society-wide census. Kiln quarters cannot be capitals
+and are not seeded. This milestone closes Phase 19 (Ceramics and
+kilncraft).
 
 ### Completed
 
@@ -349,6 +352,7 @@ JSONL storage → `civitas run`
 - Milestone 9: Clay pit infrastructure
 - Milestone 10: Porcelain technology
 - Milestone 11: Clay codes laws
+- Milestone 12: Kiln quarter cities
 
 ## License
 

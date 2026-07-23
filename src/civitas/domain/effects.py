@@ -268,6 +268,12 @@ glazer, foundry, fulling mill, forge works, sawpit, kiln yard, clay pit,
 mill town, ironworks, guildhall, pottery town, tannery, bellows, lathe,
 plane, dovetail, kiln, glaze, kaolin, abacus, pulley, customs, labor,
 safety codes, firing codes, and loom).
+Phase 19 Milestone 12 adds KILN_QUARTER city PRODUCE energy discounts at
+the city seat (stacking with guild, workshop, weaver, smelter, joiner,
+potter, glazer, foundry, fulling mill, forge works, sawpit, kiln yard,
+clay pit, mill town, ironworks, guildhall, pottery town, tannery, bellows,
+lathe, plane, dovetail, kiln, glaze, kaolin, abacus, pulley, customs,
+labor, safety codes, firing codes, and loom).
 The action
 executor,
 retrieval
@@ -404,6 +410,7 @@ MILL_TOWN_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 IRONWORKS_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 GUILDHALL_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 POTTERY_TOWN_PRODUCE_ENERGY_DISCOUNT: float = 0.02
+KILN_QUARTER_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 JOINER_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 POTTER_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 GLAZER_PRODUCE_ENERGY_DISCOUNT: float = 0.02
@@ -1502,6 +1509,15 @@ def location_has_active_pottery_town(
     return city is not None and city.active and city.kind is CityKind.POTTERY_TOWN
 
 
+def location_has_active_kiln_quarter(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active KILN_QUARTER city is seated at ``location_id``."""
+    city = city_at(world, location_id)
+    return city is not None and city.active and city.kind is CityKind.KILN_QUARTER
+
+
 def rest_restore_bonus(
     world: World,
     *,
@@ -1781,7 +1797,9 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
     active GUILDHALL city at the agent's location contributes
     ``GUILDHALL_PRODUCE_ENERGY_DISCOUNT``. An active POTTERY_TOWN city at
     the agent's location contributes
-    ``POTTERY_TOWN_PRODUCE_ENERGY_DISCOUNT``. An
+    ``POTTERY_TOWN_PRODUCE_ENERGY_DISCOUNT``. An active KILN_QUARTER city
+    at the agent's location contributes
+    ``KILN_QUARTER_PRODUCE_ENERGY_DISCOUNT``. An
     active JOINER at the agent's location contributes
     ``JOINER_PRODUCE_ENERGY_DISCOUNT``. An active POTTER at the agent's
     location contributes ``POTTER_PRODUCE_ENERGY_DISCOUNT``. An active
@@ -1841,6 +1859,8 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
         discount += GUILDHALL_PRODUCE_ENERGY_DISCOUNT
     if location_has_active_pottery_town(world, agent.location_id):
         discount += POTTERY_TOWN_PRODUCE_ENERGY_DISCOUNT
+    if location_has_active_kiln_quarter(world, agent.location_id):
+        discount += KILN_QUARTER_PRODUCE_ENERGY_DISCOUNT
     if location_has_active_joiner(world, agent.location_id):
         discount += JOINER_PRODUCE_ENERGY_DISCOUNT
     if location_has_active_potter(world, agent.location_id):
@@ -2273,6 +2293,9 @@ def census_effects(world: World) -> EffectsCensus:
     pottery_towns = tuple(
         city for city in active_cities(world) if city.kind is CityKind.POTTERY_TOWN
     )
+    kiln_quarters = tuple(
+        city for city in active_cities(world) if city.kind is CityKind.KILN_QUARTER
+    )
     # Society drink potential at a well seat (bonus available when colocated).
     drink_bonus = WELL_DRINK_RESTORE_BONUS if wells else 0.0
     if innovation_kind_is_active(world, InnovationKind.ASEPSIS):
@@ -2360,6 +2383,8 @@ def census_effects(world: World) -> EffectsCensus:
         produce_discount += GUILDHALL_PRODUCE_ENERGY_DISCOUNT
     if pottery_towns:
         produce_discount += POTTERY_TOWN_PRODUCE_ENERGY_DISCOUNT
+    if kiln_quarters:
+        produce_discount += KILN_QUARTER_PRODUCE_ENERGY_DISCOUNT
     if innovation_kind_is_active(world, InnovationKind.ABACUS):
         produce_discount += MATHEMATICS_PRODUCE_ENERGY_DISCOUNT
     if innovation_kind_is_active(world, InnovationKind.PULLEY):
