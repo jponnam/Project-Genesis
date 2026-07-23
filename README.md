@@ -132,11 +132,10 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 20 Milestone 7: Optics technology**
+**Phase 20 Milestone 8: Optician institutions**
 
-``TechnologyKind.OPTICS`` (prereq glassmaking) and inactive ``InnovationKind.LENS``.
-Active lens grants a society-wide PRODUCE energy discount that stacks with
-the full produce chain including blowpipe.
+``InstitutionKind.OPTICIAN`` grants a seat-scoped teachings-per-knower bonus
+that stacks with tilewright and the full teaching capacity chain.
 
 ### Completed
 
@@ -359,6 +358,7 @@ JSONL storage → `civitas run`
 - Milestone 5: Glassworks cities
 - Milestone 6: Lensmaker institutions
 - Milestone 7: Optics technology
+- Milestone 8: Optician institutions
 
 ## License
 
