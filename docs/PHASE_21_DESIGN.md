@@ -209,5 +209,6 @@ mypy
 | Milestone | Status |
 |---|---|
 | Design document | Complete (this file) |
-| M1 Quality repair | In progress |
-| M2–M10 | Blocked pending approval after each PR |
+| M1 Quality repair | Merged |
+| M2 Replay CLI | In progress |
+| M3–M10 | Sequential PRs with GitHub auto-merge |
