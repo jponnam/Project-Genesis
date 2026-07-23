@@ -632,6 +632,7 @@ class CitiesObserved(DomainEvent):
     active_mining_camp_count: NonNegativeInt = 0
     active_ironworks_count: NonNegativeInt = 0
     active_timber_town_count: NonNegativeInt = 0
+    active_guildhall_count: NonNegativeInt = 0
 
 
 class InfrastructuresObserved(DomainEvent):

@@ -208,7 +208,11 @@ plane, abacus, pulley, customs, labor, safety codes, and loom). Phase 18
 Milestone 10 adds a global DOVETAIL produce-energy discount society-wide
 (stacking with guild, workshop, weaver, smelter, joiner, foundry, fulling
 mill, forge works, mill town, ironworks, tannery, bellows, lathe, plane,
-abacus, pulley, customs, labor, safety codes, and loom).
+abacus, pulley, customs, labor, safety codes, and loom). Phase 18
+Milestone 12 adds GUILDHALL city PRODUCE energy discounts at the city seat
+(stacking with guild, workshop, weaver, smelter, joiner, foundry, fulling
+mill, forge works, mill town, ironworks, sawpit, tannery, bellows, lathe,
+plane, dovetail, abacus, pulley, customs, labor, safety codes, and loom).
 The action
 executor,
 retrieval
@@ -338,6 +342,7 @@ SAWPIT_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 FOUNDRY_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 MILL_TOWN_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 IRONWORKS_PRODUCE_ENERGY_DISCOUNT: float = 0.02
+GUILDHALL_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 JOINER_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 MATHEMATICS_PRODUCE_ENERGY_DISCOUNT: float = 0.02
 ENGINEERING_PRODUCE_ENERGY_DISCOUNT: float = 0.02
@@ -1333,6 +1338,15 @@ def location_has_active_timber_town(
     return city is not None and city.active and city.kind is CityKind.TIMBER_TOWN
 
 
+def location_has_active_guildhall(
+    world: World,
+    location_id: LocationId | int,
+) -> bool:
+    """Return True when an active GUILDHALL city is seated at ``location_id``."""
+    city = city_at(world, location_id)
+    return city is not None and city.active and city.kind is CityKind.GUILDHALL
+
+
 def rest_restore_bonus(
     world: World,
     *,
@@ -1606,6 +1620,8 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
     active MILL_TOWN city at the agent's location contributes
     ``MILL_TOWN_PRODUCE_ENERGY_DISCOUNT``. An active IRONWORKS city at the
     agent's location contributes ``IRONWORKS_PRODUCE_ENERGY_DISCOUNT``. An
+    active GUILDHALL city at the agent's location contributes
+    ``GUILDHALL_PRODUCE_ENERGY_DISCOUNT``. An
     active JOINER at the agent's location contributes
     ``JOINER_PRODUCE_ENERGY_DISCOUNT``. An active ``CUSTOMS`` statute
     contributes its subject discount. An active
@@ -1646,6 +1662,8 @@ def produce_energy_discount(world: World, agent: Agent) -> float:
         discount += MILL_TOWN_PRODUCE_ENERGY_DISCOUNT
     if location_has_active_ironworks(world, agent.location_id):
         discount += IRONWORKS_PRODUCE_ENERGY_DISCOUNT
+    if location_has_active_guildhall(world, agent.location_id):
+        discount += GUILDHALL_PRODUCE_ENERGY_DISCOUNT
     if location_has_active_joiner(world, agent.location_id):
         discount += JOINER_PRODUCE_ENERGY_DISCOUNT
     discount += customs_produce_discount_for(world, agent)
@@ -2038,6 +2056,9 @@ def census_effects(world: World) -> EffectsCensus:
     ironworks = tuple(
         city for city in active_cities(world) if city.kind is CityKind.IRONWORKS
     )
+    guildhalls = tuple(
+        city for city in active_cities(world) if city.kind is CityKind.GUILDHALL
+    )
     # Society drink potential at a well seat (bonus available when colocated).
     drink_bonus = WELL_DRINK_RESTORE_BONUS if wells else 0.0
     if innovation_kind_is_active(world, InnovationKind.ASEPSIS):
@@ -2113,6 +2134,8 @@ def census_effects(world: World) -> EffectsCensus:
         produce_discount += MILL_TOWN_PRODUCE_ENERGY_DISCOUNT
     if ironworks:
         produce_discount += IRONWORKS_PRODUCE_ENERGY_DISCOUNT
+    if guildhalls:
+        produce_discount += GUILDHALL_PRODUCE_ENERGY_DISCOUNT
     if innovation_kind_is_active(world, InnovationKind.ABACUS):
         produce_discount += MATHEMATICS_PRODUCE_ENERGY_DISCOUNT
     if innovation_kind_is_active(world, InnovationKind.PULLEY):

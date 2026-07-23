@@ -130,14 +130,14 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 18 Milestone 11: Forest management laws**
+**Phase 18 Milestone 12: Guildhall cities**
 
-``LawKind.FOREST_MANAGEMENT`` is a subject-scoped statute enacted by a
-government. An active forest management law grants living subjects a +1
-WOOD gather bonus that stacks additively with the sawmill and coppice
-society-wide bonuses, the scaffold seat, the conservation and
-timber-rights subject bonuses, and the pastoral city. At most one active
-forest management law is allowed per government. The law is not seeded.
+``CityKind.GUILDHALL`` is a non-capital specialized city seat for craft
+production whose living residents gain a PRODUCE energy discount. It
+stacks with the full produce chain: guild, workshop, weaver, smelter,
+joiner, foundry, fulling mill, forge works, sawpit, mill town, ironworks,
+tannery, bellows, lathe, plane, dovetail, abacus, pulley, customs, labor,
+safety codes, and loom. Guildhalls cannot be capitals and are not seeded.
 
 ### Completed
 
@@ -336,6 +336,7 @@ JSONL storage → `civitas run`
 - Milestone 9: Sawpit infrastructure
 - Milestone 10: Cabinetry technology
 - Milestone 11: Forest management laws
+- Milestone 12: Guildhall cities
 
 ## License
 
