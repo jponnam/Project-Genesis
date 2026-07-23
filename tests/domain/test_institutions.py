@@ -137,6 +137,9 @@ def test_default_institutions_seed_camp_council() -> None:
     assert all(
         item.kind is not InstitutionKind.LENSMAKER for item in default_institutions()
     )
+    assert all(
+        item.kind is not InstitutionKind.OPTICIAN for item in default_institutions()
+    )
 
 
 def test_create_and_lookup_institution() -> None:
@@ -2039,6 +2042,82 @@ def test_create_lensmaker_alongside_other_kinds() -> None:
     )
 
 
+
+def test_create_optician_alongside_other_kinds() -> None:
+    """Opticians coexist with other kinds; census counts each kind."""
+    world = _world(
+        Agent.create(agent_id=0, name="A"),
+        institutions=(
+            Institution.create(0, 0, 0, "Council", InstitutionKind.COUNCIL),
+            Institution.create(1, 0, 0, "Camp Guild", InstitutionKind.GUILD),
+            Institution.create(2, 0, 0, "Camp Archive", InstitutionKind.ARCHIVE),
+            Institution.create(
+                3, 0, 0, "Camp Bureaucracy", InstitutionKind.BUREAUCRACY
+            ),
+            Institution.create(4, 0, 0, "Camp Academy", InstitutionKind.ACADEMY),
+            Institution.create(5, 0, 0, "Camp Temple", InstitutionKind.TEMPLE),
+            Institution.create(6, 0, 0, "Camp School", InstitutionKind.SCHOOL),
+            Institution.create(7, 0, 0, "Camp Lyceum", InstitutionKind.LYCEUM),
+            Institution.create(8, 0, 0, "Camp Hospital", InstitutionKind.HOSPITAL),
+            Institution.create(9, 0, 0, "Camp Apothecary", InstitutionKind.APOTHECARY),
+            Institution.create(10, 0, 0, "Camp Collegium", InstitutionKind.COLLEGIUM),
+            Institution.create(11, 0, 0, "Camp Workshop", InstitutionKind.WORKSHOP),
+            Institution.create(12, 0, 0, "Camp Mason", InstitutionKind.MASON),
+            Institution.create(13, 0, 0, "Camp Architect", InstitutionKind.ARCHITECT),
+            Institution.create(14, 0, 0, "Camp Caravan", InstitutionKind.CARAVAN),
+            Institution.create(15, 0, 0, "Camp Merchant", InstitutionKind.MERCHANT),
+            Institution.create(
+                16, 0, 0, "Camp Cartographer", InstitutionKind.CARTOGRAPHER
+            ),
+            Institution.create(17, 0, 0, "Camp Granary", InstitutionKind.GRANARY),
+            Institution.create(
+                18, 0, 0, "Camp Husbandman", InstitutionKind.HUSBANDMAN
+            ),
+            Institution.create(
+                19, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST
+            ),
+            Institution.create(20, 0, 0, "Camp Weaver", InstitutionKind.WEAVER),
+            Institution.create(21, 0, 0, "Camp Dyer", InstitutionKind.DYER),
+            Institution.create(22, 0, 0, "Camp Tailor", InstitutionKind.TAILOR),
+            Institution.create(23, 0, 0, "Camp Miner", InstitutionKind.MINER),
+            Institution.create(24, 0, 0, "Camp Smelter", InstitutionKind.SMELTER),
+            Institution.create(25, 0, 0, "Camp Smith", InstitutionKind.SMITH),
+            Institution.create(
+                26, 0, 0, "Camp Woodcutter", InstitutionKind.WOODCUTTER
+            ),
+            Institution.create(27, 0, 0, "Camp Joiner", InstitutionKind.JOINER),
+            Institution.create(28, 0, 0, "Camp Carver", InstitutionKind.CARVER),
+            Institution.create(29, 0, 0, "Camp Potter", InstitutionKind.POTTER),
+            Institution.create(30, 0, 0, "Camp Glazer", InstitutionKind.GLAZER),
+            Institution.create(31, 0, 0, "Camp Tilewright", InstitutionKind.TILEWRIGHT),
+            Institution.create(
+                32, 0, 0, "Camp Glassblower", InstitutionKind.GLASSBLOWER
+            ),
+            Institution.create(33, 0, 0, "Camp Lensmaker", InstitutionKind.LENSMAKER),
+        ),
+    )
+    with_optician = create_institution(
+        world,
+        Institution.create(34, 0, 0, "Camp Optician", InstitutionKind.OPTICIAN),
+    )
+    assert with_optician is not None
+    assert with_optician.institutions[34].kind is InstitutionKind.OPTICIAN
+    snap = census_institutions(with_optician)
+    assert snap.active_council_count == 1
+    assert snap.active_lensmaker_count == 1
+    assert snap.active_optician_count == 1
+    assert snap.active_count == 35
+    assert (
+        create_institution(
+            with_optician,
+            Institution.create(
+                35, 0, 0, "Second Optician", InstitutionKind.OPTICIAN
+            ),
+        )
+        is None
+    )
+
+
 def test_dissolve_and_reactivate() -> None:
     """Soft dissolve frees the active-kind slot for reactivation."""
     world = _world(
@@ -2131,6 +2210,7 @@ def test_census_institutions_counts() -> None:
     assert snap.active_tilewright_count == 0
     assert snap.active_glassblower_count == 0
     assert snap.active_lensmaker_count == 0
+    assert snap.active_optician_count == 0
     assert snap.total_budget == 0
     assert snap.funded_count == 0
     assert census_institutions(world) == snap

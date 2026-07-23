@@ -605,6 +605,7 @@ class InstitutionsObserved(DomainEvent):
     active_tilewright_count: NonNegativeInt = 0
     active_glassblower_count: NonNegativeInt = 0
     active_lensmaker_count: NonNegativeInt = 0
+    active_optician_count: NonNegativeInt = 0
     total_budget: NonNegativeInt = 0
     funded_count: NonNegativeInt = 0
 

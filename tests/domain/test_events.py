@@ -847,6 +847,7 @@ def test_institution_created_and_observed_round_trips() -> None:
         active_tilewright_count=1,
         active_glassblower_count=1,
         active_lensmaker_count=1,
+        active_optician_count=1,
         total_budget=3,
         funded_count=1,
     )
@@ -887,6 +888,7 @@ def test_institution_created_and_observed_round_trips() -> None:
     assert restored.active_tilewright_count == 1
     assert restored.active_glassblower_count == 1
     assert restored.active_lensmaker_count == 1
+    assert restored.active_optician_count == 1
     assert restored.total_budget == 3
     assert restored.funded_count == 1
 
