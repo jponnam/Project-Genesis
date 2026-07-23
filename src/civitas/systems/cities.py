@@ -91,6 +91,7 @@ class CitySystem:
                     active_ironworks_count=snap.active_ironworks_count,
                     active_timber_town_count=snap.active_timber_town_count,
                     active_guildhall_count=snap.active_guildhall_count,
+                    active_pottery_town_count=snap.active_pottery_town_count,
                 )
             )
         return world

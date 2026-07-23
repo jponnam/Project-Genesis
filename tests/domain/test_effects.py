@@ -162,6 +162,7 @@ from civitas.domain import (
     PASTORAL_WOOD_GATHER_BONUS,
     PHILOSOPHY_TEACHINGS_PER_KNOWER_BONUS,
     POTTER_PRODUCE_ENERGY_DISCOUNT,
+    POTTERY_TOWN_PRODUCE_ENERGY_DISCOUNT,
     POTTERY_WATER_GATHER_BONUS,
     QUARANTINE_REST_RESTORE_BONUS,
     QUARRY_STONE_GATHER_BONUS,
@@ -284,6 +285,7 @@ from civitas.domain import (
     location_has_active_observatory,
     location_has_active_pastoral,
     location_has_active_potter,
+    location_has_active_pottery_town,
     location_has_active_quarry,
     location_has_active_road,
     location_has_active_sanctuary,
@@ -6949,6 +6951,39 @@ def test_guildhall_reduces_produce_energy_for_residents() -> None:
         agents=(Agent.create(agent_id=0, name="A"),),
     )
     assert location_has_active_guildhall(bare, bare.agents[0].location_id) is False
+
+
+
+def test_pottery_town_reduces_produce_energy_for_residents() -> None:
+    """Active pottery towns discount PRODUCE energy for residents at the seat."""
+    world = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=default_world_map()[:2],
+        governments=(Government.create(0, "Camp", 0, (0, 1)),),
+        cities=(
+            City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),
+            City.create(1, 0, 1, "Camp Pottery Town", CityKind.POTTERY_TOWN),
+        ),
+        agents=(Agent.create(agent_id=0, name="A", location_id=1),),
+    )
+    agent = world.agents[0]
+    assert location_has_active_pottery_town(world, agent.location_id) is True
+    assert effective_produce_energy_cost(
+        world,
+        agent,
+        base=DEFAULT_PRODUCE_ENERGY_COST,
+    ) == pytest.approx(
+        DEFAULT_PRODUCE_ENERGY_COST - POTTERY_TOWN_PRODUCE_ENERGY_DISCOUNT
+    )
+    assert census_effects(world).produce_energy_cost_bps == round(
+        (DEFAULT_PRODUCE_ENERGY_COST - POTTERY_TOWN_PRODUCE_ENERGY_DISCOUNT) * 10_000
+    )
+    bare = World(
+        config=SimulationConfig(agent_count=1, seed=1),
+        locations=(CAMP_LOCATION,),
+        agents=(Agent.create(agent_id=0, name="A"),),
+    )
+    assert location_has_active_pottery_town(bare, bare.agents[0].location_id) is False
 
 
 def test_guildhall_stacks_with_guild_workshop_smelter_and_joiner() -> None:
