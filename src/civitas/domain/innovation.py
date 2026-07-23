@@ -41,6 +41,7 @@ from civitas.domain.technology import (
     CAMP_METALLURGY,
     CAMP_MINING,
     CAMP_NAVIGATION,
+    CAMP_OPTICS,
     CAMP_PHILOSOPHY,
     CAMP_PORCELAIN,
     CAMP_POTTERY,
@@ -99,6 +100,7 @@ class InnovationKind(StrEnum):
     GLAZE = "glaze"
     KAOLIN = "kaolin"
     BLOWPIPE = "blowpipe"
+    LENS = "lens"
 
 
 class Innovation(BaseModel):
@@ -412,6 +414,14 @@ CAMP_BLOWPIPE: Innovation = Innovation.create(
     active=False,
 )
 
+CAMP_LENS: Innovation = Innovation.create(
+    35,
+    CAMP_OPTICS.technology_id.value,
+    "Camp Lens",
+    InnovationKind.LENS,
+    active=False,
+)
+
 
 def default_innovations() -> tuple[Innovation, ...]:
     """Return the canonical initial innovation set."""
@@ -451,6 +461,7 @@ def default_innovations() -> tuple[Innovation, ...]:
         CAMP_GLAZE,
         CAMP_KAOLIN,
         CAMP_BLOWPIPE,
+        CAMP_LENS,
     )
 
 
@@ -498,6 +509,7 @@ class InnovationCensus(BaseModel):
     active_glaze_count: NonNegativeInt = 0
     active_kaolin_count: NonNegativeInt = 0
     active_blowpipe_count: NonNegativeInt = 0
+    active_lens_count: NonNegativeInt = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -680,6 +692,7 @@ def census_innovations(world: World) -> InnovationCensus:
     glaze = sum(1 for item in active if item.kind is InnovationKind.GLAZE)
     kaolin = sum(1 for item in active if item.kind is InnovationKind.KAOLIN)
     blowpipe = sum(1 for item in active if item.kind is InnovationKind.BLOWPIPE)
+    lens = sum(1 for item in active if item.kind is InnovationKind.LENS)
     return InnovationCensus(
         tick=world.tick,
         innovation_count=len(innovations),
@@ -720,4 +733,5 @@ def census_innovations(world: World) -> InnovationCensus:
         active_glaze_count=glaze,
         active_kaolin_count=kaolin,
         active_blowpipe_count=blowpipe,
+        active_lens_count=lens,
     )

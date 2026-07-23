@@ -129,6 +129,7 @@ class InnovationSystem:
                     active_glaze_count=snap.active_glaze_count,
                     active_kaolin_count=snap.active_kaolin_count,
                     active_blowpipe_count=snap.active_blowpipe_count,
+                    active_lens_count=snap.active_lens_count,
                 )
             )
         return world

@@ -132,16 +132,11 @@ stream to JSONL (default: `runs/<name>_seed<seed>.jsonl`).
 
 ## Current Milestone
 
-**Phase 20 Milestone 6: Lensmaker institutions**
+**Phase 20 Milestone 7: Optics technology**
 
-``InstitutionKind.LENSMAKER`` is a craft seat whose living colocated
-agents gain a PRODUCE energy discount. It stacks with the full produce
-chain: guild, workshop, weaver, smelter, joiner, potter, glazer,
-glassblower, foundry, fulling mill, forge works, sawpit, kiln yard, mill
-town, ironworks, guildhall, pottery town, tannery, bellows, lathe, plane,
-dovetail, kiln, abacus, pulley, customs, labor, safety codes, firing codes,
-clay codes, annealing codes, blowpipe, kaolin, glaze, clay pit, kiln
-quarter, glasshouse, glassworks, and loom. Lensmakers are not seeded.
+``TechnologyKind.OPTICS`` (prereq glassmaking) and inactive ``InnovationKind.LENS``.
+Active lens grants a society-wide PRODUCE energy discount that stacks with
+the full produce chain including blowpipe.
 
 ### Completed
 
@@ -363,6 +358,7 @@ JSONL storage → `civitas run`
 - Milestone 4: Glasshouse infrastructure
 - Milestone 5: Glassworks cities
 - Milestone 6: Lensmaker institutions
+- Milestone 7: Optics technology
 
 ## License
 
