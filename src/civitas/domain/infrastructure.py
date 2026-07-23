@@ -492,9 +492,7 @@ def census_infrastructure(world: World) -> InfrastructureCensus:
     active_lumber_yards = sum(
         1 for item in active if item.kind is InfrastructureKind.LUMBER_YARD
     )
-    active_sawpits = sum(
-        1 for item in active if item.kind is InfrastructureKind.SAWPIT
-    )
+    active_sawpits = sum(1 for item in active if item.kind is InfrastructureKind.SAWPIT)
     active_kiln_yards = sum(
         1 for item in active if item.kind is InfrastructureKind.KILN_YARD
     )

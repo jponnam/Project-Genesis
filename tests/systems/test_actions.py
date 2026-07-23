@@ -940,8 +940,6 @@ def test_produce_uses_safety_codes_effective_energy_cost() -> None:
     )
 
 
-
-
 def test_produce_uses_firing_codes_effective_energy_cost() -> None:
     """PRODUCE through ActionExecutor applies firing-codes subject discount."""
     rations_energy_cost = 0.05
@@ -974,6 +972,7 @@ def test_produce_uses_firing_codes_effective_energy_cost() -> None:
     assert updated.agents[0].needs.energy == pytest.approx(
         0.05 - (rations_energy_cost - FIRING_CODES_PRODUCE_ENERGY_DISCOUNT)
     )
+
 
 def test_produce_fails_without_inputs() -> None:
     """PRODUCE fails cleanly when recipe inputs are missing."""

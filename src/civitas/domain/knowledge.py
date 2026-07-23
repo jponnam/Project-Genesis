@@ -398,15 +398,9 @@ def census_knowledge(world: World) -> KnowledgeCensus:
     textiles_knowers = sum(
         1 for agent in living if agent.knowledge.knows(TEXTILES_FACT)
     )
-    dyeing_knowers = sum(
-        1 for agent in living if agent.knowledge.knows(DYEING_FACT)
-    )
-    tanning_knowers = sum(
-        1 for agent in living if agent.knowledge.knows(TANNING_FACT)
-    )
-    mining_knowers = sum(
-        1 for agent in living if agent.knowledge.knows(MINING_FACT)
-    )
+    dyeing_knowers = sum(1 for agent in living if agent.knowledge.knows(DYEING_FACT))
+    tanning_knowers = sum(1 for agent in living if agent.knowledge.knows(TANNING_FACT))
+    mining_knowers = sum(1 for agent in living if agent.knowledge.knows(MINING_FACT))
     smithing_knowers = sum(
         1 for agent in living if agent.knowledge.knows(SMITHING_FACT)
     )
@@ -416,30 +410,22 @@ def census_knowledge(world: World) -> KnowledgeCensus:
     carpentry_knowers = sum(
         1 for agent in living if agent.knowledge.knows(CARPENTRY_FACT)
     )
-    joinery_knowers = sum(
-        1 for agent in living if agent.knowledge.knows(JOINERY_FACT)
-    )
+    joinery_knowers = sum(1 for agent in living if agent.knowledge.knows(JOINERY_FACT))
     cabinetry_knowers = sum(
         1 for agent in living if agent.knowledge.knows(CABINETRY_FACT)
     )
     ceramics_knowers = sum(
         1 for agent in living if agent.knowledge.knows(CERAMICS_FACT)
     )
-    glazing_knowers = sum(
-        1 for agent in living if agent.knowledge.knows(GLAZING_FACT)
-    )
+    glazing_knowers = sum(1 for agent in living if agent.knowledge.knows(GLAZING_FACT))
     porcelain_knowers = sum(
         1 for agent in living if agent.knowledge.knows(PORCELAIN_FACT)
     )
     glassmaking_knowers = sum(
         1 for agent in living if agent.knowledge.knows(GLASSMAKING_FACT)
     )
-    optics_knowers = sum(
-        1 for agent in living if agent.knowledge.knows(OPTICS_FACT)
-    )
-    crystal_knowers = sum(
-        1 for agent in living if agent.knowledge.knows(CRYSTAL_FACT)
-    )
+    optics_knowers = sum(1 for agent in living if agent.knowledge.knows(OPTICS_FACT))
+    crystal_knowers = sum(1 for agent in living if agent.knowledge.knows(CRYSTAL_FACT))
     total_fact_instances = 0
     for agent in living:
         total_fact_instances += sum(

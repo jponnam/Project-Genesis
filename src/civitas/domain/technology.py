@@ -602,9 +602,7 @@ def census_technologies(world: World) -> TechnologyCensus:
     tanning = sum(1 for tech in discovered if tech.kind is TechnologyKind.TANNING)
     mining = sum(1 for tech in discovered if tech.kind is TechnologyKind.MINING)
     smithing = sum(1 for tech in discovered if tech.kind is TechnologyKind.SMITHING)
-    toolmaking = sum(
-        1 for tech in discovered if tech.kind is TechnologyKind.TOOLMAKING
-    )
+    toolmaking = sum(1 for tech in discovered if tech.kind is TechnologyKind.TOOLMAKING)
     carpentry = sum(1 for tech in discovered if tech.kind is TechnologyKind.CARPENTRY)
     joinery = sum(1 for tech in discovered if tech.kind is TechnologyKind.JOINERY)
     cabinetry = sum(1 for tech in discovered if tech.kind is TechnologyKind.CABINETRY)

@@ -110,9 +110,7 @@ def test_default_institutions_seed_camp_council() -> None:
     assert all(
         item.kind is not InstitutionKind.WEAVER for item in default_institutions()
     )
-    assert all(
-        item.kind is not InstitutionKind.DYER for item in default_institutions()
-    )
+    assert all(item.kind is not InstitutionKind.DYER for item in default_institutions())
     assert all(
         item.kind is not InstitutionKind.TAILOR for item in default_institutions()
     )
@@ -1121,9 +1119,7 @@ def test_create_agronomist_alongside_other_kinds() -> None:
                 16, 0, 0, "Camp Cartographer", InstitutionKind.CARTOGRAPHER
             ),
             Institution.create(17, 0, 0, "Camp Granary", InstitutionKind.GRANARY),
-            Institution.create(
-                18, 0, 0, "Camp Husbandman", InstitutionKind.HUSBANDMAN
-            ),
+            Institution.create(18, 0, 0, "Camp Husbandman", InstitutionKind.HUSBANDMAN),
         ),
     )
     with_agronomist = create_institution(
@@ -1176,12 +1172,8 @@ def test_create_weaver_alongside_other_kinds() -> None:
                 16, 0, 0, "Camp Cartographer", InstitutionKind.CARTOGRAPHER
             ),
             Institution.create(17, 0, 0, "Camp Granary", InstitutionKind.GRANARY),
-            Institution.create(
-                18, 0, 0, "Camp Husbandman", InstitutionKind.HUSBANDMAN
-            ),
-            Institution.create(
-                19, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST
-            ),
+            Institution.create(18, 0, 0, "Camp Husbandman", InstitutionKind.HUSBANDMAN),
+            Institution.create(19, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST),
         ),
     )
     with_weaver = create_institution(
@@ -1231,12 +1223,8 @@ def test_create_dyer_alongside_other_kinds() -> None:
                 16, 0, 0, "Camp Cartographer", InstitutionKind.CARTOGRAPHER
             ),
             Institution.create(17, 0, 0, "Camp Granary", InstitutionKind.GRANARY),
-            Institution.create(
-                18, 0, 0, "Camp Husbandman", InstitutionKind.HUSBANDMAN
-            ),
-            Institution.create(
-                19, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST
-            ),
+            Institution.create(18, 0, 0, "Camp Husbandman", InstitutionKind.HUSBANDMAN),
+            Institution.create(19, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST),
             Institution.create(20, 0, 0, "Camp Weaver", InstitutionKind.WEAVER),
         ),
     )
@@ -1287,12 +1275,8 @@ def test_create_tailor_alongside_other_kinds() -> None:
                 16, 0, 0, "Camp Cartographer", InstitutionKind.CARTOGRAPHER
             ),
             Institution.create(17, 0, 0, "Camp Granary", InstitutionKind.GRANARY),
-            Institution.create(
-                18, 0, 0, "Camp Husbandman", InstitutionKind.HUSBANDMAN
-            ),
-            Institution.create(
-                19, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST
-            ),
+            Institution.create(18, 0, 0, "Camp Husbandman", InstitutionKind.HUSBANDMAN),
+            Institution.create(19, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST),
             Institution.create(20, 0, 0, "Camp Weaver", InstitutionKind.WEAVER),
             Institution.create(21, 0, 0, "Camp Dyer", InstitutionKind.DYER),
         ),
@@ -1344,12 +1328,8 @@ def test_create_miner_alongside_other_kinds() -> None:
                 16, 0, 0, "Camp Cartographer", InstitutionKind.CARTOGRAPHER
             ),
             Institution.create(17, 0, 0, "Camp Granary", InstitutionKind.GRANARY),
-            Institution.create(
-                18, 0, 0, "Camp Husbandman", InstitutionKind.HUSBANDMAN
-            ),
-            Institution.create(
-                19, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST
-            ),
+            Institution.create(18, 0, 0, "Camp Husbandman", InstitutionKind.HUSBANDMAN),
+            Institution.create(19, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST),
             Institution.create(20, 0, 0, "Camp Weaver", InstitutionKind.WEAVER),
             Institution.create(21, 0, 0, "Camp Dyer", InstitutionKind.DYER),
             Institution.create(22, 0, 0, "Camp Tailor", InstitutionKind.TAILOR),
@@ -1403,12 +1383,8 @@ def test_create_smelter_alongside_other_kinds() -> None:
                 16, 0, 0, "Camp Cartographer", InstitutionKind.CARTOGRAPHER
             ),
             Institution.create(17, 0, 0, "Camp Granary", InstitutionKind.GRANARY),
-            Institution.create(
-                18, 0, 0, "Camp Husbandman", InstitutionKind.HUSBANDMAN
-            ),
-            Institution.create(
-                19, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST
-            ),
+            Institution.create(18, 0, 0, "Camp Husbandman", InstitutionKind.HUSBANDMAN),
+            Institution.create(19, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST),
             Institution.create(20, 0, 0, "Camp Weaver", InstitutionKind.WEAVER),
             Institution.create(21, 0, 0, "Camp Dyer", InstitutionKind.DYER),
             Institution.create(22, 0, 0, "Camp Tailor", InstitutionKind.TAILOR),
@@ -1463,12 +1439,8 @@ def test_create_smith_alongside_other_kinds() -> None:
                 16, 0, 0, "Camp Cartographer", InstitutionKind.CARTOGRAPHER
             ),
             Institution.create(17, 0, 0, "Camp Granary", InstitutionKind.GRANARY),
-            Institution.create(
-                18, 0, 0, "Camp Husbandman", InstitutionKind.HUSBANDMAN
-            ),
-            Institution.create(
-                19, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST
-            ),
+            Institution.create(18, 0, 0, "Camp Husbandman", InstitutionKind.HUSBANDMAN),
+            Institution.create(19, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST),
             Institution.create(20, 0, 0, "Camp Weaver", InstitutionKind.WEAVER),
             Institution.create(21, 0, 0, "Camp Dyer", InstitutionKind.DYER),
             Institution.create(22, 0, 0, "Camp Tailor", InstitutionKind.TAILOR),
@@ -1524,12 +1496,8 @@ def test_create_woodcutter_alongside_other_kinds() -> None:
                 16, 0, 0, "Camp Cartographer", InstitutionKind.CARTOGRAPHER
             ),
             Institution.create(17, 0, 0, "Camp Granary", InstitutionKind.GRANARY),
-            Institution.create(
-                18, 0, 0, "Camp Husbandman", InstitutionKind.HUSBANDMAN
-            ),
-            Institution.create(
-                19, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST
-            ),
+            Institution.create(18, 0, 0, "Camp Husbandman", InstitutionKind.HUSBANDMAN),
+            Institution.create(19, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST),
             Institution.create(20, 0, 0, "Camp Weaver", InstitutionKind.WEAVER),
             Institution.create(21, 0, 0, "Camp Dyer", InstitutionKind.DYER),
             Institution.create(22, 0, 0, "Camp Tailor", InstitutionKind.TAILOR),
@@ -1587,21 +1555,15 @@ def test_create_joiner_alongside_other_kinds() -> None:
                 16, 0, 0, "Camp Cartographer", InstitutionKind.CARTOGRAPHER
             ),
             Institution.create(17, 0, 0, "Camp Granary", InstitutionKind.GRANARY),
-            Institution.create(
-                18, 0, 0, "Camp Husbandman", InstitutionKind.HUSBANDMAN
-            ),
-            Institution.create(
-                19, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST
-            ),
+            Institution.create(18, 0, 0, "Camp Husbandman", InstitutionKind.HUSBANDMAN),
+            Institution.create(19, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST),
             Institution.create(20, 0, 0, "Camp Weaver", InstitutionKind.WEAVER),
             Institution.create(21, 0, 0, "Camp Dyer", InstitutionKind.DYER),
             Institution.create(22, 0, 0, "Camp Tailor", InstitutionKind.TAILOR),
             Institution.create(23, 0, 0, "Camp Miner", InstitutionKind.MINER),
             Institution.create(24, 0, 0, "Camp Smelter", InstitutionKind.SMELTER),
             Institution.create(25, 0, 0, "Camp Smith", InstitutionKind.SMITH),
-            Institution.create(
-                26, 0, 0, "Camp Woodcutter", InstitutionKind.WOODCUTTER
-            ),
+            Institution.create(26, 0, 0, "Camp Woodcutter", InstitutionKind.WOODCUTTER),
         ),
     )
     with_joiner = create_institution(
@@ -1651,21 +1613,15 @@ def test_create_carver_alongside_other_kinds() -> None:
                 16, 0, 0, "Camp Cartographer", InstitutionKind.CARTOGRAPHER
             ),
             Institution.create(17, 0, 0, "Camp Granary", InstitutionKind.GRANARY),
-            Institution.create(
-                18, 0, 0, "Camp Husbandman", InstitutionKind.HUSBANDMAN
-            ),
-            Institution.create(
-                19, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST
-            ),
+            Institution.create(18, 0, 0, "Camp Husbandman", InstitutionKind.HUSBANDMAN),
+            Institution.create(19, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST),
             Institution.create(20, 0, 0, "Camp Weaver", InstitutionKind.WEAVER),
             Institution.create(21, 0, 0, "Camp Dyer", InstitutionKind.DYER),
             Institution.create(22, 0, 0, "Camp Tailor", InstitutionKind.TAILOR),
             Institution.create(23, 0, 0, "Camp Miner", InstitutionKind.MINER),
             Institution.create(24, 0, 0, "Camp Smelter", InstitutionKind.SMELTER),
             Institution.create(25, 0, 0, "Camp Smith", InstitutionKind.SMITH),
-            Institution.create(
-                26, 0, 0, "Camp Woodcutter", InstitutionKind.WOODCUTTER
-            ),
+            Institution.create(26, 0, 0, "Camp Woodcutter", InstitutionKind.WOODCUTTER),
             Institution.create(27, 0, 0, "Camp Joiner", InstitutionKind.JOINER),
         ),
     )
@@ -1687,7 +1643,6 @@ def test_create_carver_alongside_other_kinds() -> None:
         )
         is None
     )
-
 
 
 def test_create_potter_alongside_other_kinds() -> None:
@@ -1717,21 +1672,15 @@ def test_create_potter_alongside_other_kinds() -> None:
                 16, 0, 0, "Camp Cartographer", InstitutionKind.CARTOGRAPHER
             ),
             Institution.create(17, 0, 0, "Camp Granary", InstitutionKind.GRANARY),
-            Institution.create(
-                18, 0, 0, "Camp Husbandman", InstitutionKind.HUSBANDMAN
-            ),
-            Institution.create(
-                19, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST
-            ),
+            Institution.create(18, 0, 0, "Camp Husbandman", InstitutionKind.HUSBANDMAN),
+            Institution.create(19, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST),
             Institution.create(20, 0, 0, "Camp Weaver", InstitutionKind.WEAVER),
             Institution.create(21, 0, 0, "Camp Dyer", InstitutionKind.DYER),
             Institution.create(22, 0, 0, "Camp Tailor", InstitutionKind.TAILOR),
             Institution.create(23, 0, 0, "Camp Miner", InstitutionKind.MINER),
             Institution.create(24, 0, 0, "Camp Smelter", InstitutionKind.SMELTER),
             Institution.create(25, 0, 0, "Camp Smith", InstitutionKind.SMITH),
-            Institution.create(
-                26, 0, 0, "Camp Woodcutter", InstitutionKind.WOODCUTTER
-            ),
+            Institution.create(26, 0, 0, "Camp Woodcutter", InstitutionKind.WOODCUTTER),
             Institution.create(27, 0, 0, "Camp Joiner", InstitutionKind.JOINER),
             Institution.create(28, 0, 0, "Camp Carver", InstitutionKind.CARVER),
         ),
@@ -1755,7 +1704,6 @@ def test_create_potter_alongside_other_kinds() -> None:
         )
         is None
     )
-
 
 
 def test_create_glazer_alongside_other_kinds() -> None:
@@ -1785,21 +1733,15 @@ def test_create_glazer_alongside_other_kinds() -> None:
                 16, 0, 0, "Camp Cartographer", InstitutionKind.CARTOGRAPHER
             ),
             Institution.create(17, 0, 0, "Camp Granary", InstitutionKind.GRANARY),
-            Institution.create(
-                18, 0, 0, "Camp Husbandman", InstitutionKind.HUSBANDMAN
-            ),
-            Institution.create(
-                19, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST
-            ),
+            Institution.create(18, 0, 0, "Camp Husbandman", InstitutionKind.HUSBANDMAN),
+            Institution.create(19, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST),
             Institution.create(20, 0, 0, "Camp Weaver", InstitutionKind.WEAVER),
             Institution.create(21, 0, 0, "Camp Dyer", InstitutionKind.DYER),
             Institution.create(22, 0, 0, "Camp Tailor", InstitutionKind.TAILOR),
             Institution.create(23, 0, 0, "Camp Miner", InstitutionKind.MINER),
             Institution.create(24, 0, 0, "Camp Smelter", InstitutionKind.SMELTER),
             Institution.create(25, 0, 0, "Camp Smith", InstitutionKind.SMITH),
-            Institution.create(
-                26, 0, 0, "Camp Woodcutter", InstitutionKind.WOODCUTTER
-            ),
+            Institution.create(26, 0, 0, "Camp Woodcutter", InstitutionKind.WOODCUTTER),
             Institution.create(27, 0, 0, "Camp Joiner", InstitutionKind.JOINER),
             Institution.create(28, 0, 0, "Camp Carver", InstitutionKind.CARVER),
             Institution.create(29, 0, 0, "Camp Potter", InstitutionKind.POTTER),
@@ -1823,7 +1765,6 @@ def test_create_glazer_alongside_other_kinds() -> None:
         )
         is None
     )
-
 
 
 def test_create_tilewright_alongside_other_kinds() -> None:
@@ -1853,21 +1794,15 @@ def test_create_tilewright_alongside_other_kinds() -> None:
                 16, 0, 0, "Camp Cartographer", InstitutionKind.CARTOGRAPHER
             ),
             Institution.create(17, 0, 0, "Camp Granary", InstitutionKind.GRANARY),
-            Institution.create(
-                18, 0, 0, "Camp Husbandman", InstitutionKind.HUSBANDMAN
-            ),
-            Institution.create(
-                19, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST
-            ),
+            Institution.create(18, 0, 0, "Camp Husbandman", InstitutionKind.HUSBANDMAN),
+            Institution.create(19, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST),
             Institution.create(20, 0, 0, "Camp Weaver", InstitutionKind.WEAVER),
             Institution.create(21, 0, 0, "Camp Dyer", InstitutionKind.DYER),
             Institution.create(22, 0, 0, "Camp Tailor", InstitutionKind.TAILOR),
             Institution.create(23, 0, 0, "Camp Miner", InstitutionKind.MINER),
             Institution.create(24, 0, 0, "Camp Smelter", InstitutionKind.SMELTER),
             Institution.create(25, 0, 0, "Camp Smith", InstitutionKind.SMITH),
-            Institution.create(
-                26, 0, 0, "Camp Woodcutter", InstitutionKind.WOODCUTTER
-            ),
+            Institution.create(26, 0, 0, "Camp Woodcutter", InstitutionKind.WOODCUTTER),
             Institution.create(27, 0, 0, "Camp Joiner", InstitutionKind.JOINER),
             Institution.create(28, 0, 0, "Camp Carver", InstitutionKind.CARVER),
             Institution.create(29, 0, 0, "Camp Potter", InstitutionKind.POTTER),
@@ -1894,7 +1829,6 @@ def test_create_tilewright_alongside_other_kinds() -> None:
         )
         is None
     )
-
 
 
 def test_create_glassblower_alongside_other_kinds() -> None:
@@ -1924,21 +1858,15 @@ def test_create_glassblower_alongside_other_kinds() -> None:
                 16, 0, 0, "Camp Cartographer", InstitutionKind.CARTOGRAPHER
             ),
             Institution.create(17, 0, 0, "Camp Granary", InstitutionKind.GRANARY),
-            Institution.create(
-                18, 0, 0, "Camp Husbandman", InstitutionKind.HUSBANDMAN
-            ),
-            Institution.create(
-                19, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST
-            ),
+            Institution.create(18, 0, 0, "Camp Husbandman", InstitutionKind.HUSBANDMAN),
+            Institution.create(19, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST),
             Institution.create(20, 0, 0, "Camp Weaver", InstitutionKind.WEAVER),
             Institution.create(21, 0, 0, "Camp Dyer", InstitutionKind.DYER),
             Institution.create(22, 0, 0, "Camp Tailor", InstitutionKind.TAILOR),
             Institution.create(23, 0, 0, "Camp Miner", InstitutionKind.MINER),
             Institution.create(24, 0, 0, "Camp Smelter", InstitutionKind.SMELTER),
             Institution.create(25, 0, 0, "Camp Smith", InstitutionKind.SMITH),
-            Institution.create(
-                26, 0, 0, "Camp Woodcutter", InstitutionKind.WOODCUTTER
-            ),
+            Institution.create(26, 0, 0, "Camp Woodcutter", InstitutionKind.WOODCUTTER),
             Institution.create(27, 0, 0, "Camp Joiner", InstitutionKind.JOINER),
             Institution.create(28, 0, 0, "Camp Carver", InstitutionKind.CARVER),
             Institution.create(29, 0, 0, "Camp Potter", InstitutionKind.POTTER),
@@ -1995,21 +1923,15 @@ def test_create_lensmaker_alongside_other_kinds() -> None:
                 16, 0, 0, "Camp Cartographer", InstitutionKind.CARTOGRAPHER
             ),
             Institution.create(17, 0, 0, "Camp Granary", InstitutionKind.GRANARY),
-            Institution.create(
-                18, 0, 0, "Camp Husbandman", InstitutionKind.HUSBANDMAN
-            ),
-            Institution.create(
-                19, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST
-            ),
+            Institution.create(18, 0, 0, "Camp Husbandman", InstitutionKind.HUSBANDMAN),
+            Institution.create(19, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST),
             Institution.create(20, 0, 0, "Camp Weaver", InstitutionKind.WEAVER),
             Institution.create(21, 0, 0, "Camp Dyer", InstitutionKind.DYER),
             Institution.create(22, 0, 0, "Camp Tailor", InstitutionKind.TAILOR),
             Institution.create(23, 0, 0, "Camp Miner", InstitutionKind.MINER),
             Institution.create(24, 0, 0, "Camp Smelter", InstitutionKind.SMELTER),
             Institution.create(25, 0, 0, "Camp Smith", InstitutionKind.SMITH),
-            Institution.create(
-                26, 0, 0, "Camp Woodcutter", InstitutionKind.WOODCUTTER
-            ),
+            Institution.create(26, 0, 0, "Camp Woodcutter", InstitutionKind.WOODCUTTER),
             Institution.create(27, 0, 0, "Camp Joiner", InstitutionKind.JOINER),
             Institution.create(28, 0, 0, "Camp Carver", InstitutionKind.CARVER),
             Institution.create(29, 0, 0, "Camp Potter", InstitutionKind.POTTER),
@@ -2034,13 +1956,10 @@ def test_create_lensmaker_alongside_other_kinds() -> None:
     assert (
         create_institution(
             with_lensmaker,
-            Institution.create(
-                34, 0, 0, "Second Lensmaker", InstitutionKind.LENSMAKER
-            ),
+            Institution.create(34, 0, 0, "Second Lensmaker", InstitutionKind.LENSMAKER),
         )
         is None
     )
-
 
 
 def test_create_optician_alongside_other_kinds() -> None:
@@ -2070,21 +1989,15 @@ def test_create_optician_alongside_other_kinds() -> None:
                 16, 0, 0, "Camp Cartographer", InstitutionKind.CARTOGRAPHER
             ),
             Institution.create(17, 0, 0, "Camp Granary", InstitutionKind.GRANARY),
-            Institution.create(
-                18, 0, 0, "Camp Husbandman", InstitutionKind.HUSBANDMAN
-            ),
-            Institution.create(
-                19, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST
-            ),
+            Institution.create(18, 0, 0, "Camp Husbandman", InstitutionKind.HUSBANDMAN),
+            Institution.create(19, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST),
             Institution.create(20, 0, 0, "Camp Weaver", InstitutionKind.WEAVER),
             Institution.create(21, 0, 0, "Camp Dyer", InstitutionKind.DYER),
             Institution.create(22, 0, 0, "Camp Tailor", InstitutionKind.TAILOR),
             Institution.create(23, 0, 0, "Camp Miner", InstitutionKind.MINER),
             Institution.create(24, 0, 0, "Camp Smelter", InstitutionKind.SMELTER),
             Institution.create(25, 0, 0, "Camp Smith", InstitutionKind.SMITH),
-            Institution.create(
-                26, 0, 0, "Camp Woodcutter", InstitutionKind.WOODCUTTER
-            ),
+            Institution.create(26, 0, 0, "Camp Woodcutter", InstitutionKind.WOODCUTTER),
             Institution.create(27, 0, 0, "Camp Joiner", InstitutionKind.JOINER),
             Institution.create(28, 0, 0, "Camp Carver", InstitutionKind.CARVER),
             Institution.create(29, 0, 0, "Camp Potter", InstitutionKind.POTTER),
@@ -2110,9 +2023,7 @@ def test_create_optician_alongside_other_kinds() -> None:
     assert (
         create_institution(
             with_optician,
-            Institution.create(
-                35, 0, 0, "Second Optician", InstitutionKind.OPTICIAN
-            ),
+            Institution.create(35, 0, 0, "Second Optician", InstitutionKind.OPTICIAN),
         )
         is None
     )

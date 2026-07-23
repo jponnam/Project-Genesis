@@ -1005,7 +1005,6 @@ def repeal_law(world: World, law_id: LawId | int) -> World | None:
     return set_law_active(world, law_id, False)
 
 
-
 def active_firing_codes_law(
     world: World,
     government_id: GovernmentId | int,
@@ -1146,35 +1145,23 @@ def census_laws(world: World) -> LawCensus:
     active_passage = sum(1 for law in active if law.kind == LawKind.PASSAGE)
     active_customs = sum(1 for law in active if law.kind == LawKind.CUSTOMS)
     active_land_tenure = sum(1 for law in active if law.kind == LawKind.LAND_TENURE)
-    active_conservation = sum(
-        1 for law in active if law.kind == LawKind.CONSERVATION
-    )
+    active_conservation = sum(1 for law in active if law.kind == LawKind.CONSERVATION)
     active_labor = sum(1 for law in active if law.kind == LawKind.LABOR)
     active_sumptuary = sum(1 for law in active if law.kind == LawKind.SUMPTUARY)
     active_mineral_rights = sum(
         1 for law in active if law.kind == LawKind.MINERAL_RIGHTS
     )
-    active_safety_codes = sum(
-        1 for law in active if law.kind == LawKind.SAFETY_CODES
-    )
-    active_timber_rights = sum(
-        1 for law in active if law.kind == LawKind.TIMBER_RIGHTS
-    )
+    active_safety_codes = sum(1 for law in active if law.kind == LawKind.SAFETY_CODES)
+    active_timber_rights = sum(1 for law in active if law.kind == LawKind.TIMBER_RIGHTS)
     active_forest_management = sum(
         1 for law in active if law.kind == LawKind.FOREST_MANAGEMENT
     )
-    active_firing_codes = sum(
-        1 for law in active if law.kind == LawKind.FIRING_CODES
-    )
-    active_clay_codes = sum(
-        1 for law in active if law.kind == LawKind.CLAY_CODES
-    )
+    active_firing_codes = sum(1 for law in active if law.kind == LawKind.FIRING_CODES)
+    active_clay_codes = sum(1 for law in active if law.kind == LawKind.CLAY_CODES)
     active_annealing_codes = sum(
         1 for law in active if law.kind == LawKind.ANNEALING_CODES
     )
-    active_crystal_codes = sum(
-        1 for law in active if law.kind == LawKind.CRYSTAL_CODES
-    )
+    active_crystal_codes = sum(1 for law in active if law.kind == LawKind.CRYSTAL_CODES)
     return LawCensus(
         tick=world.tick,
         law_count=len(laws),

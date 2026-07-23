@@ -1200,9 +1200,7 @@ def test_coppice_raises_wood_gather_society_wide() -> None:
             for item in default_technologies()
         ),
         innovations=tuple(
-            active_coppice
-            if item.innovation_id == CAMP_COPPICE.innovation_id
-            else item
+            active_coppice if item.innovation_id == CAMP_COPPICE.innovation_id else item
             for item in default_innovations()
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
@@ -1240,9 +1238,7 @@ def test_coppice_stacks_with_scaffold_wood_gather() -> None:
             for item in default_technologies()
         ),
         innovations=tuple(
-            active_coppice
-            if item.innovation_id == CAMP_COPPICE.innovation_id
-            else item
+            active_coppice if item.innovation_id == CAMP_COPPICE.innovation_id else item
             for item in default_innovations()
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
@@ -1273,9 +1269,7 @@ def test_sawmill_raises_wood_gather_society_wide() -> None:
             for item in default_technologies()
         ),
         innovations=tuple(
-            active_sawmill
-            if item.innovation_id == CAMP_SAWMILL.innovation_id
-            else item
+            active_sawmill if item.innovation_id == CAMP_SAWMILL.innovation_id else item
             for item in default_innovations()
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
@@ -1310,8 +1304,7 @@ def test_sawmill_stacks_with_coppice_society_wide_wood_gather() -> None:
         config=SimulationConfig(agent_count=1, seed=1),
         locations=(CAMP_LOCATION,),
         technologies=tuple(
-            discovered.get(item.technology_id, item)
-            for item in default_technologies()
+            discovered.get(item.technology_id, item) for item in default_technologies()
         ),
         innovations=tuple(
             active.get(item.innovation_id, item) for item in default_innovations()
@@ -1346,9 +1339,7 @@ def test_sawmill_stacks_with_scaffold_wood_gather() -> None:
             for item in default_technologies()
         ),
         innovations=tuple(
-            active_sawmill
-            if item.innovation_id == CAMP_SAWMILL.innovation_id
-            else item
+            active_sawmill if item.innovation_id == CAMP_SAWMILL.innovation_id else item
             for item in default_innovations()
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
@@ -1409,9 +1400,7 @@ def test_conservation_stacks_with_coppice_and_scaffold_wood_gather() -> None:
             for item in default_technologies()
         ),
         innovations=tuple(
-            active_coppice
-            if item.innovation_id == CAMP_COPPICE.innovation_id
-            else item
+            active_coppice if item.innovation_id == CAMP_COPPICE.innovation_id else item
             for item in default_innovations()
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
@@ -1476,9 +1465,7 @@ def test_pastoral_stacks_with_coppice_scaffold_and_conservation_wood_gather() ->
             for item in default_technologies()
         ),
         innovations=tuple(
-            active_coppice
-            if item.innovation_id == CAMP_COPPICE.innovation_id
-            else item
+            active_coppice if item.innovation_id == CAMP_COPPICE.innovation_id else item
             for item in default_innovations()
         ),
         agents=(Agent.create(agent_id=0, name="A", location_id=1),),
@@ -1551,8 +1538,7 @@ def test_timber_rights_stacks_with_sawmill_coppice_scaffold_and_conservation() -
         ),
         laws=(conservation, timber_rights),
         technologies=tuple(
-            discovered.get(item.technology_id, item)
-            for item in default_technologies()
+            discovered.get(item.technology_id, item) for item in default_technologies()
         ),
         innovations=tuple(
             active.get(item.innovation_id, item) for item in default_innovations()
@@ -1628,8 +1614,7 @@ def test_forest_management_stacks_with_wood_bonuses() -> None:
         ),
         laws=(conservation, timber_rights, forest_management),
         technologies=tuple(
-            discovered.get(item.technology_id, item)
-            for item in default_technologies()
+            discovered.get(item.technology_id, item) for item in default_technologies()
         ),
         innovations=tuple(
             active.get(item.innovation_id, item) for item in default_innovations()
@@ -1708,8 +1693,7 @@ def test_woodcutter_stacks_with_sawmill_coppice_scaffold_timber_and_pastoral() -
         ),
         laws=(timber_rights,),
         technologies=tuple(
-            discovered.get(item.technology_id, item)
-            for item in default_technologies()
+            discovered.get(item.technology_id, item) for item in default_technologies()
         ),
         innovations=tuple(
             active.get(item.innovation_id, item) for item in default_innovations()
@@ -1795,8 +1779,7 @@ def test_lumber_yard_stacks_with_sawmill_coppice_scaffold_woodcutter_pastoral() 
         ),
         laws=(timber_rights,),
         technologies=tuple(
-            discovered.get(item.technology_id, item)
-            for item in default_technologies()
+            discovered.get(item.technology_id, item) for item in default_technologies()
         ),
         innovations=tuple(
             active.get(item.innovation_id, item) for item in default_innovations()
@@ -1881,8 +1864,7 @@ def test_timber_town_stacks_with_sawmill_coppice_scaffold_woodcutter_lumber() ->
         ),
         laws=(timber_rights,),
         technologies=tuple(
-            discovered.get(item.technology_id, item)
-            for item in default_technologies()
+            discovered.get(item.technology_id, item) for item in default_technologies()
         ),
         innovations=tuple(
             active.get(item.innovation_id, item) for item in default_innovations()
@@ -2106,9 +2088,7 @@ def test_pickaxe_boosts_stone_gather_society_wide() -> None:
             for item in default_technologies()
         ),
         innovations=tuple(
-            active_pickaxe
-            if item.innovation_id == CAMP_PICKAXE.innovation_id
-            else item
+            active_pickaxe if item.innovation_id == CAMP_PICKAXE.innovation_id else item
             for item in default_innovations()
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
@@ -2124,8 +2104,7 @@ def test_pickaxe_boosts_stone_gather_society_wide() -> None:
 def test_pickaxe_stacks_with_forge_mason_and_quarry_stone_gather() -> None:
     """Pickaxe stone bonus stacks with forge, mason seat, and quarry city."""
     discovered = tuple(
-        item.model_copy(update={"discovered": True})
-        for item in default_technologies()
+        item.model_copy(update={"discovered": True}) for item in default_technologies()
     )
     active_forge = CAMP_FORGE.model_copy(update={"active": True})
     active_pickaxe = CAMP_PICKAXE.model_copy(update={"active": True})
@@ -2195,8 +2174,7 @@ def test_mineral_rights_boosts_stone_gather_for_living_subject() -> None:
 def test_mineral_rights_stacks_with_pickaxe_forge_mason_and_quarry() -> None:
     """Mineral rights stone bonus stacks with pickaxe, forge, mason, quarry."""
     discovered = tuple(
-        item.model_copy(update={"discovered": True})
-        for item in default_technologies()
+        item.model_copy(update={"discovered": True}) for item in default_technologies()
     )
     active_forge = CAMP_FORGE.model_copy(update={"active": True})
     active_pickaxe = CAMP_PICKAXE.model_copy(update={"active": True})
@@ -2310,8 +2288,7 @@ def test_miner_stacks_with_forge_stone_gather() -> None:
 def test_miner_stacks_with_pickaxe_forge_mason_and_quarry_stone_gather() -> None:
     """Miner seat bonus stacks with pickaxe, forge, mason seat, and quarry."""
     discovered = tuple(
-        item.model_copy(update={"discovered": True})
-        for item in default_technologies()
+        item.model_copy(update={"discovered": True}) for item in default_technologies()
     )
     active_forge = CAMP_FORGE.model_copy(update={"active": True})
     active_pickaxe = CAMP_PICKAXE.model_copy(update={"active": True})
@@ -2386,8 +2363,7 @@ def test_mineshaft_boosts_stone_gather_for_colocated_agents() -> None:
 def test_mineshaft_stacks_with_pickaxe_forge_seats_and_quarry_stone_gather() -> None:
     """Mineshaft bonus stacks with pickaxe, forge, mason/miner seats, quarry."""
     discovered = tuple(
-        item.model_copy(update={"discovered": True})
-        for item in default_technologies()
+        item.model_copy(update={"discovered": True}) for item in default_technologies()
     )
     active_forge = CAMP_FORGE.model_copy(update={"active": True})
     active_pickaxe = CAMP_PICKAXE.model_copy(update={"active": True})
@@ -2467,8 +2443,7 @@ def test_mining_camp_boosts_stone_gather_for_residents() -> None:
 def test_mining_camp_stacks_with_pickaxe_forge_seats_and_mineshaft() -> None:
     """Mining camp bonus stacks with pickaxe, forge, mason/miner, mineshaft."""
     discovered = tuple(
-        item.model_copy(update={"discovered": True})
-        for item in default_technologies()
+        item.model_copy(update={"discovered": True}) for item in default_technologies()
     )
     active_forge = CAMP_FORGE.model_copy(update={"active": True})
     active_pickaxe = CAMP_PICKAXE.model_copy(update={"active": True})
@@ -2745,9 +2720,7 @@ def test_collegium_stacks_with_all_teaching_bonuses() -> None:
             Institution.create(
                 4, 0, 1, "Forum Cartographer", InstitutionKind.CARTOGRAPHER
             ),
-            Institution.create(
-                5, 0, 1, "Forum Agronomist", InstitutionKind.AGRONOMIST
-            ),
+            Institution.create(5, 0, 1, "Forum Agronomist", InstitutionKind.AGRONOMIST),
             Institution.create(6, 0, 1, "Forum Tailor", InstitutionKind.TAILOR),
             Institution.create(7, 0, 1, "Forum Smith", InstitutionKind.SMITH),
             Institution.create(8, 0, 1, "Forum Carver", InstitutionKind.CARVER),
@@ -3360,9 +3333,7 @@ def test_agronomist_boosts_teachings_and_stacks_with_cartographer() -> None:
             Institution.create(
                 4, 0, 0, "Camp Cartographer", InstitutionKind.CARTOGRAPHER
             ),
-            Institution.create(
-                5, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST
-            ),
+            Institution.create(5, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST),
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
     )
@@ -3394,9 +3365,7 @@ def test_agronomist_boosts_teachings_and_stacks_with_cartographer() -> None:
         locations=(CAMP_LOCATION,),
         governments=(Government.create(0, "Camp", 0, (0,)),),
         institutions=(
-            Institution.create(
-                0, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST
-            ),
+            Institution.create(0, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST),
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
     )
@@ -3460,9 +3429,7 @@ def test_tailor_boosts_teachings_and_stacks_with_agronomist() -> None:
             Institution.create(
                 4, 0, 0, "Camp Cartographer", InstitutionKind.CARTOGRAPHER
             ),
-            Institution.create(
-                5, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST
-            ),
+            Institution.create(5, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST),
             Institution.create(6, 0, 0, "Camp Tailor", InstitutionKind.TAILOR),
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
@@ -3560,9 +3527,7 @@ def test_smith_boosts_teachings_and_stacks_with_tailor() -> None:
             Institution.create(
                 4, 0, 0, "Camp Cartographer", InstitutionKind.CARTOGRAPHER
             ),
-            Institution.create(
-                5, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST
-            ),
+            Institution.create(5, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST),
             Institution.create(6, 0, 0, "Camp Tailor", InstitutionKind.TAILOR),
             Institution.create(7, 0, 0, "Camp Smith", InstitutionKind.SMITH),
         ),
@@ -3662,9 +3627,7 @@ def test_carver_boosts_teachings_and_stacks_with_smith() -> None:
             Institution.create(
                 4, 0, 0, "Camp Cartographer", InstitutionKind.CARTOGRAPHER
             ),
-            Institution.create(
-                5, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST
-            ),
+            Institution.create(5, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST),
             Institution.create(6, 0, 0, "Camp Tailor", InstitutionKind.TAILOR),
             Institution.create(7, 0, 0, "Camp Smith", InstitutionKind.SMITH),
             Institution.create(8, 0, 0, "Camp Carver", InstitutionKind.CARVER),
@@ -3719,7 +3682,6 @@ def test_carver_boosts_teachings_and_stacks_with_smith() -> None:
     assert location_has_active_carver(bare, bare.agents[0].location_id) is False
 
 
-
 def test_tilewright_boosts_teachings_and_stacks_with_carver() -> None:
     """Active tilewright seat bonus stacks with carver and prior sources."""
     discovered_pottery = CAMP_POTTERY.model_copy(update={"discovered": True})
@@ -3767,9 +3729,7 @@ def test_tilewright_boosts_teachings_and_stacks_with_carver() -> None:
             Institution.create(
                 4, 0, 0, "Camp Cartographer", InstitutionKind.CARTOGRAPHER
             ),
-            Institution.create(
-                5, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST
-            ),
+            Institution.create(5, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST),
             Institution.create(6, 0, 0, "Camp Tailor", InstitutionKind.TAILOR),
             Institution.create(7, 0, 0, "Camp Smith", InstitutionKind.SMITH),
             Institution.create(8, 0, 0, "Camp Carver", InstitutionKind.CARVER),
@@ -3826,7 +3786,6 @@ def test_tilewright_boosts_teachings_and_stacks_with_carver() -> None:
     assert location_has_active_tilewright(bare, bare.agents[0].location_id) is False
 
 
-
 def test_optician_boosts_teachings_and_stacks_with_tilewright() -> None:
     """Active optician seat bonus stacks with tilewright and prior sources."""
     discovered_pottery = CAMP_POTTERY.model_copy(update={"discovered": True})
@@ -3874,9 +3833,7 @@ def test_optician_boosts_teachings_and_stacks_with_tilewright() -> None:
             Institution.create(
                 4, 0, 0, "Camp Cartographer", InstitutionKind.CARTOGRAPHER
             ),
-            Institution.create(
-                5, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST
-            ),
+            Institution.create(5, 0, 0, "Camp Agronomist", InstitutionKind.AGRONOMIST),
             Institution.create(6, 0, 0, "Camp Tailor", InstitutionKind.TAILOR),
             Institution.create(7, 0, 0, "Camp Smith", InstitutionKind.SMITH),
             Institution.create(8, 0, 0, "Camp Carver", InstitutionKind.CARVER),
@@ -5448,7 +5405,6 @@ def test_safety_codes_reduces_produce_energy_and_stacks_with_guild() -> None:
     )
 
 
-
 def test_firing_codes_reduces_produce_energy_and_stacks_with_guild() -> None:
     """Firing-code laws discount PRODUCE energy and stack with guild seats."""
     law = Law.create(0, 0, "Camp Firing Codes", LawKind.FIRING_CODES)
@@ -5522,9 +5478,7 @@ def test_clay_codes_reduces_produce_energy_and_stacks_with_guild() -> None:
         without_guild,
         without_guild.agents[0],
         base=DEFAULT_PRODUCE_ENERGY_COST,
-    ) == pytest.approx(
-        DEFAULT_PRODUCE_ENERGY_COST - CLAY_CODES_PRODUCE_ENERGY_DISCOUNT
-    )
+    ) == pytest.approx(DEFAULT_PRODUCE_ENERGY_COST - CLAY_CODES_PRODUCE_ENERGY_DISCOUNT)
     # census_effects produce path omits statute discounts (clay codes).
     assert census_effects(world).produce_energy_cost_bps == round(
         (DEFAULT_PRODUCE_ENERGY_COST - GUILD_PRODUCE_ENERGY_DISCOUNT) * 10_000
@@ -5591,9 +5545,7 @@ def test_crystal_codes_reduces_produce_energy_and_stacks_with_guild() -> None:
         world,
         agent,
         base=DEFAULT_PRODUCE_ENERGY_COST,
-    ) == pytest.approx(
-        DEFAULT_PRODUCE_ENERGY_COST - expected_discount
-    )
+    ) == pytest.approx(DEFAULT_PRODUCE_ENERGY_COST - expected_discount)
     bare = World(
         config=SimulationConfig(agent_count=1, seed=1),
         locations=(CAMP_LOCATION,),
@@ -5817,8 +5769,7 @@ def test_pulley_reduces_produce_energy_and_stacks_with_guild_and_abacus() -> Non
 def test_loom_reduces_produce_energy_and_stacks_with_guild_abacus_pulley() -> None:
     """Active loom discounts PRODUCE energy society-wide and stacks."""
     discovered = tuple(
-        item.model_copy(update={"discovered": True})
-        for item in default_technologies()
+        item.model_copy(update={"discovered": True}) for item in default_technologies()
     )
     active_abacus = CAMP_ABACUS.model_copy(update={"active": True})
     active_pulley = CAMP_PULLEY.model_copy(update={"active": True})
@@ -5874,9 +5825,7 @@ def test_loom_raises_produce_discount_society_wide() -> None:
             for item in default_technologies()
         ),
         innovations=tuple(
-            active_loom
-            if item.innovation_id == CAMP_LOOM.innovation_id
-            else item
+            active_loom if item.innovation_id == CAMP_LOOM.innovation_id else item
             for item in default_innovations()
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
@@ -5898,8 +5847,7 @@ def test_loom_raises_produce_discount_society_wide() -> None:
 def test_tannery_reduces_produce_energy_and_stacks_with_guild_abacus_loom() -> None:
     """Active tannery discounts PRODUCE energy society-wide and stacks."""
     discovered = tuple(
-        item.model_copy(update={"discovered": True})
-        for item in default_technologies()
+        item.model_copy(update={"discovered": True}) for item in default_technologies()
     )
     active_abacus = CAMP_ABACUS.model_copy(update={"active": True})
     active_pulley = CAMP_PULLEY.model_copy(update={"active": True})
@@ -5959,9 +5907,7 @@ def test_tannery_raises_produce_discount_society_wide() -> None:
             for item in default_technologies()
         ),
         innovations=tuple(
-            active_tannery
-            if item.innovation_id == CAMP_TANNERY.innovation_id
-            else item
+            active_tannery if item.innovation_id == CAMP_TANNERY.innovation_id else item
             for item in default_innovations()
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
@@ -5983,8 +5929,7 @@ def test_tannery_raises_produce_discount_society_wide() -> None:
 def test_bellows_reduces_produce_energy_and_stacks_with_guild_abacus() -> None:
     """Active bellows discounts PRODUCE energy society-wide and stacks."""
     discovered = tuple(
-        item.model_copy(update={"discovered": True})
-        for item in default_technologies()
+        item.model_copy(update={"discovered": True}) for item in default_technologies()
     )
     active_abacus = CAMP_ABACUS.model_copy(update={"active": True})
     active_bellows = CAMP_BELLOWS.model_copy(update={"active": True})
@@ -6036,9 +5981,7 @@ def test_bellows_raises_produce_discount_society_wide() -> None:
             for item in default_technologies()
         ),
         innovations=tuple(
-            active_bellows
-            if item.innovation_id == CAMP_BELLOWS.innovation_id
-            else item
+            active_bellows if item.innovation_id == CAMP_BELLOWS.innovation_id else item
             for item in default_innovations()
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
@@ -6060,8 +6003,7 @@ def test_bellows_raises_produce_discount_society_wide() -> None:
 def test_lathe_reduces_produce_energy_and_stacks_with_guild_abacus() -> None:
     """Active lathe discounts PRODUCE energy society-wide and stacks."""
     discovered = tuple(
-        item.model_copy(update={"discovered": True})
-        for item in default_technologies()
+        item.model_copy(update={"discovered": True}) for item in default_technologies()
     )
     active_abacus = CAMP_ABACUS.model_copy(update={"active": True})
     active_bellows = CAMP_BELLOWS.model_copy(update={"active": True})
@@ -6117,9 +6059,7 @@ def test_lathe_raises_produce_discount_society_wide() -> None:
             for item in default_technologies()
         ),
         innovations=tuple(
-            active_lathe
-            if item.innovation_id == CAMP_LATHE.innovation_id
-            else item
+            active_lathe if item.innovation_id == CAMP_LATHE.innovation_id else item
             for item in default_innovations()
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
@@ -6141,8 +6081,7 @@ def test_lathe_raises_produce_discount_society_wide() -> None:
 def test_plane_reduces_produce_energy_and_stacks_with_guild_abacus() -> None:
     """Active plane discounts PRODUCE energy society-wide and stacks."""
     discovered = tuple(
-        item.model_copy(update={"discovered": True})
-        for item in default_technologies()
+        item.model_copy(update={"discovered": True}) for item in default_technologies()
     )
     active_abacus = CAMP_ABACUS.model_copy(update={"active": True})
     active_lathe = CAMP_LATHE.model_copy(update={"active": True})
@@ -6198,9 +6137,7 @@ def test_plane_raises_produce_discount_society_wide() -> None:
             for item in default_technologies()
         ),
         innovations=tuple(
-            active_plane
-            if item.innovation_id == CAMP_PLANE.innovation_id
-            else item
+            active_plane if item.innovation_id == CAMP_PLANE.innovation_id else item
             for item in default_innovations()
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
@@ -6222,8 +6159,7 @@ def test_plane_raises_produce_discount_society_wide() -> None:
 def test_dovetail_reduces_produce_energy_and_stacks_with_guild_abacus() -> None:
     """Active dovetail discounts PRODUCE energy society-wide and stacks."""
     discovered = tuple(
-        item.model_copy(update={"discovered": True})
-        for item in default_technologies()
+        item.model_copy(update={"discovered": True}) for item in default_technologies()
     )
     active_abacus = CAMP_ABACUS.model_copy(update={"active": True})
     active_lathe = CAMP_LATHE.model_copy(update={"active": True})
@@ -6304,12 +6240,10 @@ def test_dovetail_raises_produce_discount_society_wide() -> None:
     )
 
 
-
 def test_kiln_reduces_produce_energy_and_stacks_with_guild_abacus() -> None:
     """Active kiln discounts PRODUCE energy society-wide and stacks."""
     discovered = tuple(
-        item.model_copy(update={"discovered": True})
-        for item in default_technologies()
+        item.model_copy(update={"discovered": True}) for item in default_technologies()
     )
     active_abacus = CAMP_ABACUS.model_copy(update={"active": True})
     active_kiln = CAMP_KILN.model_copy(update={"active": True})
@@ -6361,9 +6295,7 @@ def test_kiln_raises_produce_discount_society_wide() -> None:
             for item in default_technologies()
         ),
         innovations=tuple(
-            active_kiln
-            if item.innovation_id == CAMP_KILN.innovation_id
-            else item
+            active_kiln if item.innovation_id == CAMP_KILN.innovation_id else item
             for item in default_innovations()
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
@@ -6382,13 +6314,10 @@ def test_kiln_raises_produce_discount_society_wide() -> None:
     )
 
 
-
-
 def test_glaze_reduces_produce_energy_and_stacks_with_guild_abacus() -> None:
     """Active glaze discounts PRODUCE energy society-wide and stacks."""
     discovered = tuple(
-        item.model_copy(update={"discovered": True})
-        for item in default_technologies()
+        item.model_copy(update={"discovered": True}) for item in default_technologies()
     )
     active_abacus = CAMP_ABACUS.model_copy(update={"active": True})
     active_glaze = CAMP_GLAZE.model_copy(update={"active": True})
@@ -6440,9 +6369,7 @@ def test_glaze_raises_produce_discount_society_wide() -> None:
             for item in default_technologies()
         ),
         innovations=tuple(
-            active_glaze
-            if item.innovation_id == CAMP_GLAZE.innovation_id
-            else item
+            active_glaze if item.innovation_id == CAMP_GLAZE.innovation_id else item
             for item in default_innovations()
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
@@ -6464,8 +6391,7 @@ def test_glaze_raises_produce_discount_society_wide() -> None:
 def test_kaolin_reduces_produce_energy_and_stacks_with_guild_abacus() -> None:
     """Active kaolin discounts PRODUCE energy society-wide and stacks."""
     discovered = tuple(
-        item.model_copy(update={"discovered": True})
-        for item in default_technologies()
+        item.model_copy(update={"discovered": True}) for item in default_technologies()
     )
     active_abacus = CAMP_ABACUS.model_copy(update={"active": True})
     active_kaolin = CAMP_KAOLIN.model_copy(update={"active": True})
@@ -6517,9 +6443,7 @@ def test_kaolin_raises_produce_discount_society_wide() -> None:
             for item in default_technologies()
         ),
         innovations=tuple(
-            active_kaolin
-            if item.innovation_id == CAMP_KAOLIN.innovation_id
-            else item
+            active_kaolin if item.innovation_id == CAMP_KAOLIN.innovation_id else item
             for item in default_innovations()
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
@@ -6541,8 +6465,7 @@ def test_kaolin_raises_produce_discount_society_wide() -> None:
 def test_blowpipe_reduces_produce_energy_and_stacks_with_guild_abacus() -> None:
     """Active blowpipe discounts PRODUCE energy society-wide and stacks."""
     discovered = tuple(
-        item.model_copy(update={"discovered": True})
-        for item in default_technologies()
+        item.model_copy(update={"discovered": True}) for item in default_technologies()
     )
     active_abacus = CAMP_ABACUS.model_copy(update={"active": True})
     active_blowpipe = CAMP_BLOWPIPE.model_copy(update={"active": True})
@@ -6618,8 +6541,7 @@ def test_blowpipe_raises_produce_discount_society_wide() -> None:
 def test_lens_reduces_produce_energy_and_stacks_with_guild_abacus() -> None:
     """Active lens discounts PRODUCE energy society-wide and stacks."""
     discovered = tuple(
-        item.model_copy(update={"discovered": True})
-        for item in default_technologies()
+        item.model_copy(update={"discovered": True}) for item in default_technologies()
     )
     active_abacus = CAMP_ABACUS.model_copy(update={"active": True})
     active_lens = CAMP_LENS.model_copy(update={"active": True})
@@ -6671,9 +6593,7 @@ def test_lens_raises_produce_discount_society_wide() -> None:
             for item in default_technologies()
         ),
         innovations=tuple(
-            active_lens
-            if item.innovation_id == CAMP_LENS.innovation_id
-            else item
+            active_lens if item.innovation_id == CAMP_LENS.innovation_id else item
             for item in default_innovations()
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
@@ -6706,9 +6626,7 @@ def test_facet_raises_produce_discount_society_wide() -> None:
             for item in default_technologies()
         ),
         innovations=tuple(
-            active_facet
-            if item.innovation_id == CAMP_FACET.innovation_id
-            else item
+            active_facet if item.innovation_id == CAMP_FACET.innovation_id else item
             for item in default_innovations()
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
@@ -7046,7 +6964,6 @@ def test_joiner_reduces_produce_energy_for_colocated_agents() -> None:
     assert location_has_active_joiner(bare, bare.agents[0].location_id) is False
 
 
-
 def test_potter_reduces_produce_energy_for_colocated_agents() -> None:
     """Active potters discount PRODUCE energy at their seat location."""
     world = World(
@@ -7076,7 +6993,6 @@ def test_potter_reduces_produce_energy_for_colocated_agents() -> None:
     assert location_has_active_potter(bare, bare.agents[0].location_id) is False
 
 
-
 def test_glazer_reduces_produce_energy_for_colocated_agents() -> None:
     """Active glazers discount PRODUCE energy at their seat location."""
     world = World(
@@ -7104,7 +7020,6 @@ def test_glazer_reduces_produce_energy_for_colocated_agents() -> None:
         agents=(Agent.create(agent_id=0, name="A"),),
     )
     assert location_has_active_glazer(bare, bare.agents[0].location_id) is False
-
 
 
 def test_glassblower_reduces_produce_energy_for_colocated_agents() -> None:
@@ -7157,9 +7072,7 @@ def test_lensmaker_reduces_produce_energy_for_colocated_agents() -> None:
         world,
         agent,
         base=DEFAULT_PRODUCE_ENERGY_COST,
-    ) == pytest.approx(
-        DEFAULT_PRODUCE_ENERGY_COST - LENSMAKER_PRODUCE_ENERGY_DISCOUNT
-    )
+    ) == pytest.approx(DEFAULT_PRODUCE_ENERGY_COST - LENSMAKER_PRODUCE_ENERGY_DISCOUNT)
     assert census_effects(world).produce_energy_cost_bps == round(
         (DEFAULT_PRODUCE_ENERGY_COST - LENSMAKER_PRODUCE_ENERGY_DISCOUNT) * 10_000
     )
@@ -7403,9 +7316,7 @@ def test_sawpit_reduces_produce_energy_for_colocated_agents() -> None:
         governments=(Government.create(0, "Camp", 0, (0,)),),
         cities=(City.create(0, 0, 0, "Camp", CityKind.SETTLEMENT, is_capital=True),),
         infrastructure=(
-            Infrastructure.create(
-                0, 0, 0, 0, "Camp Sawpit", InfrastructureKind.SAWPIT
-            ),
+            Infrastructure.create(0, 0, 0, 0, "Camp Sawpit", InfrastructureKind.SAWPIT),
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
     )
@@ -7415,9 +7326,7 @@ def test_sawpit_reduces_produce_energy_for_colocated_agents() -> None:
         world,
         agent,
         base=DEFAULT_PRODUCE_ENERGY_COST,
-    ) == pytest.approx(
-        DEFAULT_PRODUCE_ENERGY_COST - SAWPIT_PRODUCE_ENERGY_DISCOUNT
-    )
+    ) == pytest.approx(DEFAULT_PRODUCE_ENERGY_COST - SAWPIT_PRODUCE_ENERGY_DISCOUNT)
     assert census_effects(world).produce_energy_cost_bps == round(
         (DEFAULT_PRODUCE_ENERGY_COST - SAWPIT_PRODUCE_ENERGY_DISCOUNT) * 10_000
     )
@@ -7427,7 +7336,6 @@ def test_sawpit_reduces_produce_energy_for_colocated_agents() -> None:
         agents=(Agent.create(agent_id=0, name="A"),),
     )
     assert location_has_active_sawpit(bare, bare.agents[0].location_id) is False
-
 
 
 def test_kiln_yard_reduces_produce_energy_for_colocated_agents() -> None:
@@ -7450,9 +7358,7 @@ def test_kiln_yard_reduces_produce_energy_for_colocated_agents() -> None:
         world,
         agent,
         base=DEFAULT_PRODUCE_ENERGY_COST,
-    ) == pytest.approx(
-        DEFAULT_PRODUCE_ENERGY_COST - KILN_YARD_PRODUCE_ENERGY_DISCOUNT
-    )
+    ) == pytest.approx(DEFAULT_PRODUCE_ENERGY_COST - KILN_YARD_PRODUCE_ENERGY_DISCOUNT)
     assert census_effects(world).produce_energy_cost_bps == round(
         (DEFAULT_PRODUCE_ENERGY_COST - KILN_YARD_PRODUCE_ENERGY_DISCOUNT) * 10_000
     )
@@ -7462,7 +7368,6 @@ def test_kiln_yard_reduces_produce_energy_for_colocated_agents() -> None:
         agents=(Agent.create(agent_id=0, name="A"),),
     )
     assert location_has_active_kiln_yard(bare, bare.agents[0].location_id) is False
-
 
 
 def test_clay_pit_reduces_produce_energy_for_colocated_agents() -> None:
@@ -7485,9 +7390,7 @@ def test_clay_pit_reduces_produce_energy_for_colocated_agents() -> None:
         world,
         agent,
         base=DEFAULT_PRODUCE_ENERGY_COST,
-    ) == pytest.approx(
-        DEFAULT_PRODUCE_ENERGY_COST - CLAY_PIT_PRODUCE_ENERGY_DISCOUNT
-    )
+    ) == pytest.approx(DEFAULT_PRODUCE_ENERGY_COST - CLAY_PIT_PRODUCE_ENERGY_DISCOUNT)
     assert census_effects(world).produce_energy_cost_bps == round(
         (DEFAULT_PRODUCE_ENERGY_COST - CLAY_PIT_PRODUCE_ENERGY_DISCOUNT) * 10_000
     )
@@ -7519,9 +7422,7 @@ def test_glasshouse_reduces_produce_energy_for_colocated_agents() -> None:
         world,
         agent,
         base=DEFAULT_PRODUCE_ENERGY_COST,
-    ) == pytest.approx(
-        DEFAULT_PRODUCE_ENERGY_COST - GLASSHOUSE_PRODUCE_ENERGY_DISCOUNT
-    )
+    ) == pytest.approx(DEFAULT_PRODUCE_ENERGY_COST - GLASSHOUSE_PRODUCE_ENERGY_DISCOUNT)
     assert census_effects(world).produce_energy_cost_bps == round(
         (DEFAULT_PRODUCE_ENERGY_COST - GLASSHOUSE_PRODUCE_ENERGY_DISCOUNT) * 10_000
     )
@@ -7551,9 +7452,7 @@ def test_lehr_reduces_produce_energy_for_colocated_agents() -> None:
         world,
         agent,
         base=DEFAULT_PRODUCE_ENERGY_COST,
-    ) == pytest.approx(
-        DEFAULT_PRODUCE_ENERGY_COST - LEHR_PRODUCE_ENERGY_DISCOUNT
-    )
+    ) == pytest.approx(DEFAULT_PRODUCE_ENERGY_COST - LEHR_PRODUCE_ENERGY_DISCOUNT)
     assert census_effects(world).produce_energy_cost_bps == round(
         (DEFAULT_PRODUCE_ENERGY_COST - LEHR_PRODUCE_ENERGY_DISCOUNT) * 10_000
     )
@@ -7635,7 +7534,6 @@ def test_clay_pit_stacks_with_kiln_yard_and_potter() -> None:
     assert census_effects(world).produce_energy_cost_bps == round(expected * 10_000)
 
 
-
 def test_sawpit_stacks_with_guild_workshop_weaver_and_forge_works() -> None:
     """Sawpit seat discount stacks with guild/workshop/weaver/forge works."""
     world = World(
@@ -7652,9 +7550,7 @@ def test_sawpit_stacks_with_guild_workshop_weaver_and_forge_works() -> None:
             Infrastructure.create(
                 0, 0, 0, 0, "Camp Forge Works", InfrastructureKind.FORGE_WORKS
             ),
-            Infrastructure.create(
-                1, 0, 0, 0, "Camp Sawpit", InfrastructureKind.SAWPIT
-            ),
+            Infrastructure.create(1, 0, 0, 0, "Camp Sawpit", InfrastructureKind.SAWPIT),
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
     )
@@ -7954,7 +7850,6 @@ def test_guildhall_reduces_produce_energy_for_residents() -> None:
     assert location_has_active_guildhall(bare, bare.agents[0].location_id) is False
 
 
-
 def test_pottery_town_reduces_produce_energy_for_residents() -> None:
     """Active pottery towns discount PRODUCE energy for residents at the seat."""
     world = World(
@@ -8037,9 +7932,7 @@ def test_glassworks_reduces_produce_energy_for_residents() -> None:
         world,
         agent,
         base=DEFAULT_PRODUCE_ENERGY_COST,
-    ) == pytest.approx(
-        DEFAULT_PRODUCE_ENERGY_COST - GLASSWORKS_PRODUCE_ENERGY_DISCOUNT
-    )
+    ) == pytest.approx(DEFAULT_PRODUCE_ENERGY_COST - GLASSWORKS_PRODUCE_ENERGY_DISCOUNT)
     assert census_effects(world).produce_energy_cost_bps == round(
         (DEFAULT_PRODUCE_ENERGY_COST - GLASSWORKS_PRODUCE_ENERGY_DISCOUNT) * 10_000
     )
@@ -8209,8 +8102,7 @@ def test_customs_stacks_with_guild_workshop_foundry_abacus_and_pulley() -> None:
 def test_labor_stacks_with_craft_seats_customs_abacus_pulley_and_loom() -> None:
     """Labor PRODUCE discount stacks with craft seats, customs, and tech."""
     discovered = tuple(
-        item.model_copy(update={"discovered": True})
-        for item in default_technologies()
+        item.model_copy(update={"discovered": True}) for item in default_technologies()
     )
     active_abacus = CAMP_ABACUS.model_copy(update={"active": True})
     active_pulley = CAMP_PULLEY.model_copy(update={"active": True})
@@ -9399,9 +9291,7 @@ def test_dyer_discounts_market_fee_at_seat() -> None:
         locations=(CAMP_LOCATION,),
         governments=(Government.create(0, "Camp", 0, (0,)),),
         laws=(Law.create(0, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=2),),
-        institutions=(
-            Institution.create(0, 0, 0, "Camp Dyer", InstitutionKind.DYER),
-        ),
+        institutions=(Institution.create(0, 0, 0, "Camp Dyer", InstitutionKind.DYER),),
         agents=(Agent.create(agent_id=0, name="A"),),
     )
     assert location_has_active_dyer(world, 0) is True
@@ -9412,9 +9302,7 @@ def test_dyer_discounts_market_fee_at_seat() -> None:
         locations=(CAMP_LOCATION,),
         governments=(Government.create(0, "Camp", 0, (0,)),),
         laws=(Law.create(0, 0, "Stall Fee", LawKind.MARKET_FEE, flat_amount=1),),
-        institutions=(
-            Institution.create(0, 0, 0, "Camp Dyer", InstitutionKind.DYER),
-        ),
+        institutions=(Institution.create(0, 0, 0, "Camp Dyer", InstitutionKind.DYER),),
         agents=(Agent.create(agent_id=0, name="A"),),
     )
     assert effective_market_fee(floored, 0) == 0
@@ -9465,15 +9353,11 @@ def test_mordant_discounts_market_fee_society_wide() -> None:
     discovered_dyeing = CAMP_DYEING.model_copy(update={"discovered": True})
     active_mordant = CAMP_MORDANT.model_copy(update={"active": True})
     technologies = tuple(
-        discovered_dyeing
-        if item.technology_id == CAMP_DYEING.technology_id
-        else item
+        discovered_dyeing if item.technology_id == CAMP_DYEING.technology_id else item
         for item in default_technologies()
     )
     innovations = tuple(
-        active_mordant
-        if item.innovation_id == CAMP_MORDANT.innovation_id
-        else item
+        active_mordant if item.innovation_id == CAMP_MORDANT.innovation_id else item
         for item in default_innovations()
     )
     world = World(
@@ -9533,9 +9417,7 @@ def test_mordant_stacks_with_bureaucracy_harbor_merchant_and_dyer() -> None:
             for item in default_technologies()
         ),
         innovations=tuple(
-            active_mordant
-            if item.innovation_id == CAMP_MORDANT.innovation_id
-            else item
+            active_mordant if item.innovation_id == CAMP_MORDANT.innovation_id else item
             for item in default_innovations()
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
@@ -9627,9 +9509,7 @@ def test_warehouse_stacks_with_all_market_fee_discounts() -> None:
             for item in default_technologies()
         ),
         innovations=tuple(
-            active_mordant
-            if item.innovation_id == CAMP_MORDANT.innovation_id
-            else item
+            active_mordant if item.innovation_id == CAMP_MORDANT.innovation_id else item
             for item in default_innovations()
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
@@ -9683,9 +9563,7 @@ def test_sumptuary_stacks_with_all_market_fee_discounts() -> None:
             for item in default_technologies()
         ),
         innovations=tuple(
-            active_mordant
-            if item.innovation_id == CAMP_MORDANT.innovation_id
-            else item
+            active_mordant if item.innovation_id == CAMP_MORDANT.innovation_id else item
             for item in default_innovations()
         ),
         agents=(Agent.create(agent_id=0, name="A"),),
@@ -9772,9 +9650,7 @@ def test_emporium_stacks_with_all_market_fee_discounts() -> None:
             for item in default_technologies()
         ),
         innovations=tuple(
-            active_mordant
-            if item.innovation_id == CAMP_MORDANT.innovation_id
-            else item
+            active_mordant if item.innovation_id == CAMP_MORDANT.innovation_id else item
             for item in default_innovations()
         ),
         agents=(Agent.create(agent_id=0, name="A"),),

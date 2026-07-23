@@ -139,8 +139,7 @@ def test_encode_agent_episode_accepts_full_technology_fact_content() -> None:
         "cartography,ceramics,crop_rotation,crystal,dyeing,engineering,fire,forestry,glassmaking,"
         "glazing,hygiene,irrigation,joinery,logic,mathematics,medicine,metallurgy,mining,"
         "navigation,optics,philosophy,porcelain,pottery,rhetoric,seafaring,smithing,"
-        "surveying,tanning,textiles,toolmaking,writing"
-        in record.content
+        "surveying,tanning,textiles,toolmaking,writing" in record.content
     )
 
 

@@ -368,8 +368,6 @@ def test_observe_reports_active_guildhall_count() -> None:
     assert events[0].total_residents == 1
 
 
-
-
 def test_observe_reports_active_pottery_town_count() -> None:
     """observe publishes the active pottery town city count."""
     world = World(

@@ -1235,9 +1235,7 @@ def test_enact_forest_management_and_uniqueness() -> None:
         FOREST_MANAGEMENT_WOOD_GATHER_BONUS
     )
     assert FOREST_MANAGEMENT_WOOD_GATHER_BONUS == 1
-    duplicate = Law.create(
-        1, 0, "Other Forest Management", LawKind.FOREST_MANAGEMENT
-    )
+    duplicate = Law.create(1, 0, "Other Forest Management", LawKind.FOREST_MANAGEMENT)
     assert enact_law(enacted, duplicate) is None
     # Other unique kinds may coexist with FOREST_MANAGEMENT.
     timber_rights = Law.create(1, 0, "Camp Timber Rights", LawKind.TIMBER_RIGHTS)
@@ -1269,9 +1267,7 @@ def test_forest_management_bonus_requires_living_subject() -> None:
         laws=(),
         agents=(Agent.create(agent_id=0, name="A"),),
     )
-    assert forest_management_wood_bonus_for(
-        ungoverned, ungoverned.agents[0]
-    ) == 0
+    assert forest_management_wood_bonus_for(ungoverned, ungoverned.agents[0]) == 0
     bare = _world(Agent.create(agent_id=0, name="A"))
     assert forest_management_wood_bonus_for(bare, bare.agents[0]) == 0
 
@@ -1324,9 +1320,7 @@ def test_firing_codes_discount_requires_living_subject() -> None:
         laws=(),
         agents=(Agent.create(agent_id=0, name="A"),),
     )
-    assert firing_codes_produce_discount_for(
-        ungoverned, ungoverned.agents[0]
-    ) == 0.0
+    assert firing_codes_produce_discount_for(ungoverned, ungoverned.agents[0]) == 0.0
     bare = _world(Agent.create(agent_id=0, name="A"))
     assert firing_codes_produce_discount_for(bare, bare.agents[0]) == 0.0
 
@@ -1379,9 +1373,7 @@ def test_clay_codes_discount_requires_living_subject() -> None:
         laws=(),
         agents=(Agent.create(agent_id=0, name="A"),),
     )
-    assert clay_codes_produce_discount_for(
-        ungoverned, ungoverned.agents[0]
-    ) == 0.0
+    assert clay_codes_produce_discount_for(ungoverned, ungoverned.agents[0]) == 0.0
     bare = _world(Agent.create(agent_id=0, name="A"))
     assert clay_codes_produce_discount_for(bare, bare.agents[0]) == 0.0
 
@@ -1434,9 +1426,7 @@ def test_annealing_codes_discount_requires_living_subject() -> None:
         laws=(),
         agents=(Agent.create(agent_id=0, name="A"),),
     )
-    assert annealing_codes_produce_discount_for(
-        ungoverned, ungoverned.agents[0]
-    ) == 0.0
+    assert annealing_codes_produce_discount_for(ungoverned, ungoverned.agents[0]) == 0.0
     bare = _world(Agent.create(agent_id=0, name="A"))
     assert annealing_codes_produce_discount_for(bare, bare.agents[0]) == 0.0
 
@@ -1489,9 +1479,7 @@ def test_crystal_codes_discount_requires_living_subject() -> None:
         laws=(),
         agents=(Agent.create(agent_id=0, name="A"),),
     )
-    assert crystal_codes_produce_discount_for(
-        ungoverned, ungoverned.agents[0]
-    ) == 0.0
+    assert crystal_codes_produce_discount_for(ungoverned, ungoverned.agents[0]) == 0.0
     bare = _world(Agent.create(agent_id=0, name="A"))
     assert crystal_codes_produce_discount_for(bare, bare.agents[0]) == 0.0
 
@@ -1597,9 +1585,7 @@ def test_safety_codes_discount_requires_living_subject() -> None:
         laws=(),
         agents=(Agent.create(agent_id=0, name="A"),),
     )
-    assert safety_codes_produce_discount_for(
-        ungoverned, ungoverned.agents[0]
-    ) == 0.0
+    assert safety_codes_produce_discount_for(ungoverned, ungoverned.agents[0]) == 0.0
     bare = _world(Agent.create(agent_id=0, name="A"))
     assert safety_codes_produce_discount_for(bare, bare.agents[0]) == 0.0
 

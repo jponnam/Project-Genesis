@@ -329,9 +329,7 @@ class World(BaseModel):
             if law.active and law.kind == LawKind.FOREST_MANAGEMENT:
                 gov_value = law.government_id.value
                 if gov_value in active_forest_management_govs:
-                    msg = (
-                        "at most one active FOREST_MANAGEMENT law per government"
-                    )
+                    msg = "at most one active FOREST_MANAGEMENT law per government"
                     raise ValueError(msg)
                 active_forest_management_govs.add(gov_value)
             if law.active and law.kind == LawKind.FIRING_CODES:

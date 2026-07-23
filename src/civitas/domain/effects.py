@@ -1125,7 +1125,6 @@ def location_has_active_potter(
     )
 
 
-
 def location_has_active_glazer(
     world: World,
     location_id: LocationId | int,
@@ -1172,6 +1171,7 @@ def location_has_active_lensmaker(
         item.kind is InstitutionKind.LENSMAKER and item.location_id == target
         for item in active_institutions(world)
     )
+
 
 def location_has_active_architect(
     world: World,

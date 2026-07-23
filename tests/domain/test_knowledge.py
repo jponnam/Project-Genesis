@@ -2231,9 +2231,7 @@ def test_bootstrap_uses_glassmaking_technology_fact() -> None:
         updated = discover_technology(current, technology.technology_id)
         assert updated is not None
         current = updated
-    with_glassmaking = discover_technology(
-        current, CAMP_GLASSMAKING.technology_id
-    )
+    with_glassmaking = discover_technology(current, CAMP_GLASSMAKING.technology_id)
     assert with_glassmaking is not None
     world, gains = bootstrap_discovered_knowledge(with_glassmaking)
     assert len(gains) == 1
