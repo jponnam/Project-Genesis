@@ -67,6 +67,7 @@ uv pip install -e ".[dev]"
 
 civitas version
 civitas run --seed 42 --ticks 20 --agents 6 --name demo
+civitas run --seed 42 --ticks 20 --agents 6 --name craft --preset early_craft
 civitas inspect runs/demo_seed42.jsonl
 civitas metrics runs/demo_seed42.jsonl
 ```
@@ -176,10 +177,10 @@ FastAPI + Jinja2 + uvicorn via `.[observatory]` (included in `.[dev]`).
 
 ## Current milestone
 
-**Phase 22 Milestone 1: Design + gap inventory** — publish
-[`docs/PHASE_22_DESIGN.md`](docs/PHASE_22_DESIGN.md) and point the roadmap at
-presets, executable scenarios/campaigns, stock census/metrics, and a
-deterministic projector. No simulation behavior changes in M1.
+**Phase 22 Milestone 2: World presets / bootstrap overlays** — named presets
+(`camp_minimal`, `early_craft`, `civic_dense`) unlock existing catalog entities
+at world construction. Use ``civitas run --preset early_craft``. See
+[`docs/PHASE_22_DESIGN.md`](docs/PHASE_22_DESIGN.md).
 
 ### Completed (summary)
 

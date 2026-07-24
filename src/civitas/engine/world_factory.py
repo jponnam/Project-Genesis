@@ -43,6 +43,7 @@ from civitas.domain import (
 )
 from civitas.domain.ids import AgentId
 from civitas.domain.location import CAMP_LOCATION, default_world_map
+from civitas.domain.presets import apply_bootstrap_overlay
 from civitas.engine.rng import SeededRNG
 
 if TYPE_CHECKING:
@@ -92,19 +93,33 @@ class WorldFactory:
         12. For each ``agent_id`` in ``0 .. agent_count-1``, spawn a child
            RNG stream and sample personality + starting money at camp.
         13. Optionally publish ``AgentSpawned`` for each agent in id order.
+
+        Named ``config.preset`` overlays may unlock existing catalog entities
+        before create-events are published (Phase 22).
         """
         root_rng = SeededRNG.from_config(config)
         locations = default_world_map()
         markets = default_markets()
         governments = default_governments()
-        laws = default_laws()
         elections = default_elections()
-        institutions = default_institutions()
-        cities = default_cities()
-        infrastructure = default_infrastructure()
-        technologies = default_technologies()
-        research_progress = default_research_progress()
-        innovations = default_innovations()
+        catalog = apply_bootstrap_overlay(
+            preset=config.preset,
+            technologies=default_technologies(),
+            innovations=default_innovations(),
+            laws=default_laws(),
+            institutions=default_institutions(),
+            cities=default_cities(),
+            infrastructure=default_infrastructure(),
+            research_progress=default_research_progress(),
+            founder_knowledge=FOUNDER_KNOWLEDGE,
+        )
+        laws = catalog.laws
+        institutions = catalog.institutions
+        cities = catalog.cities
+        infrastructure = catalog.infrastructure
+        technologies = catalog.technologies
+        research_progress = catalog.research_progress
+        innovations = catalog.innovations
         agents: list[Agent] = []
 
         if bus is not None:
@@ -225,7 +240,11 @@ class WorldFactory:
                 )
 
         for agent_id in range(config.agent_count):
-            agent = self._build_agent(root_rng=root_rng, agent_id=agent_id)
+            agent = self._build_agent(
+                root_rng=root_rng,
+                agent_id=agent_id,
+                knowledge=catalog.founder_knowledge,
+            )
             agents.append(agent)
             if bus is not None:
                 bus.publish(
@@ -254,7 +273,12 @@ class WorldFactory:
             agents=tuple(agents),
         )
 
-    def _build_agent(self, root_rng: SeededRNG, agent_id: int) -> Agent:
+    def _build_agent(
+        self,
+        root_rng: SeededRNG,
+        agent_id: int,
+        knowledge: Knowledge | None = None,
+    ) -> Agent:
         """Sample one agent from a child stream keyed by ``agent_id``."""
         rng = root_rng.spawn(agent_id)
         personality = Personality(
@@ -272,5 +296,5 @@ class WorldFactory:
             money=money,
             birth_tick=0,
             personality=personality,
-            knowledge=FOUNDER_KNOWLEDGE,
+            knowledge=FOUNDER_KNOWLEDGE if knowledge is None else knowledge,
         )

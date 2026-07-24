@@ -27,6 +27,7 @@ class Scenario:
     observable_signals: tuple[str, ...]
     limitations: tuple[str, ...]
     path: str
+    preset: str = "camp_minimal"
 
     def to_dict(self) -> dict[str, Any]:
         """Return a JSON-serializable mapping."""
@@ -83,6 +84,7 @@ def _parse_scenario(path: Path) -> Scenario:
         observable_signals=tuple(str(item) for item in raw["observable_signals"]),
         limitations=tuple(str(item) for item in raw["limitations"]),
         path=str(path),
+        preset=str(raw.get("preset", "camp_minimal")),
     )
 
 

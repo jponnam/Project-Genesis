@@ -38,6 +38,7 @@ def test_list_scenarios_contains_expected_ids() -> None:
         assert scenario.seed >= 0
         assert scenario.ticks >= 1
         assert scenario.agents >= 1
+        assert scenario.preset == "camp_minimal"
 
 
 def test_load_scenario_round_trip() -> None:

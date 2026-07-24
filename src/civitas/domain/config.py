@@ -7,7 +7,8 @@ Determinism contract
 --------------------
 ``seed`` is the sole source of stochasticity for a run. Identical
 ``SimulationConfig`` values must produce identical simulations once the
-engine and systems are fully wired (Phase 1 completion).
+engine and systems are fully wired (Phase 1 completion). ``preset`` changes
+the initial catalog overlay but does not feed the RNG.
 """
 
 from __future__ import annotations
@@ -16,6 +17,7 @@ from typing import Annotated, Any, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from civitas.domain.presets import WorldPreset
 from civitas.domain.types import NonEmptyStr, NonNegativeInt
 
 # Canonical seed used across research reproducibility tests.
@@ -33,6 +35,7 @@ class SimulationConfig(BaseModel):
         ticks: Number of discrete ticks to advance the clock.
         agent_count: Initial agent population created by the world factory.
         run_name: Human-readable label for the run (not used in RNG).
+        preset: Named world bootstrap overlay (affects initial catalogs).
     """
 
     model_config = ConfigDict(
@@ -58,6 +61,13 @@ class SimulationConfig(BaseModel):
         default="default",
         description="Label for the run; does not affect determinism.",
     )
+    preset: WorldPreset = Field(
+        default=WorldPreset.CAMP_MINIMAL,
+        description=(
+            "Named world bootstrap overlay. Changes initial catalogs; "
+            "included in fingerprint; does not feed the RNG."
+        ),
+    )
 
     @field_validator("run_name")
     @classmethod
@@ -67,6 +77,21 @@ class SimulationConfig(BaseModel):
             msg = "run_name must not be blank"
             raise ValueError(msg)
         return value
+
+    @field_validator("preset", mode="before")
+    @classmethod
+    def preset_must_be_known(cls, value: Any) -> Any:
+        """Coerce/validate preset names to ``WorldPreset``."""
+        if isinstance(value, WorldPreset):
+            return value
+        if value is None:
+            return WorldPreset.CAMP_MINIMAL
+        try:
+            return WorldPreset(str(value).strip())
+        except ValueError as exc:
+            known = ", ".join(item.value for item in WorldPreset)
+            msg = f"unknown world preset {value!r}; expected one of: {known}"
+            raise ValueError(msg) from exc
 
     @classmethod
     def research_default(cls) -> Self:
@@ -83,11 +108,13 @@ class SimulationConfig(BaseModel):
 
         The fingerprint includes every field that affects simulation
         outcomes. ``run_name`` is included for operator traceability but
-        does not influence RNG behavior.
+        does not influence RNG behavior. ``preset`` is included because it
+        changes the initial world catalogs.
         """
         return (
             f"seed={self.seed}"
             f"|ticks={self.ticks}"
             f"|agents={self.agent_count}"
             f"|name={self.run_name}"
+            f"|preset={self.preset.value}"
         )
