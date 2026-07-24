@@ -114,7 +114,10 @@ def test_identical_configs_compare_equal() -> None:
 def test_fingerprint_is_stable_and_descriptive() -> None:
     """Fingerprint must encode all config fields stably."""
     config = SimulationConfig(seed=42, ticks=100, agent_count=10, run_name="default")
-    assert config.fingerprint() == "seed=42|ticks=100|agents=10|name=default"
+    assert (
+        config.fingerprint()
+        == "seed=42|ticks=100|agents=10|name=default|preset=camp_minimal"
+    )
 
 
 def test_different_seeds_produce_different_fingerprints() -> None:

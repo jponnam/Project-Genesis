@@ -795,6 +795,12 @@ from civitas.domain.population import (
     population_dead,
     population_total,
 )
+from civitas.domain.presets import (
+    CatalogBundle,
+    WorldPreset,
+    apply_bootstrap_overlay,
+    parse_world_preset,
+)
 from civitas.domain.prices import (
     PriceCensus,
     PriceQuote,
@@ -1416,6 +1422,7 @@ __all__ = [
     "Ballot",
     "Belief",
     "Beliefs",
+    "CatalogBundle",
     "CitiesObserved",
     "City",
     "CityCensus",
@@ -1567,6 +1574,7 @@ __all__ = [
     "WealthObserved",
     "WorkingMemory",
     "World",
+    "WorldPreset",
     "activate_due_innovations",
     "activate_innovation",
     "active_annealing_codes_law",
@@ -1609,6 +1617,7 @@ __all__ = [
     "agoras_for",
     "annealing_codes_produce_discount_for",
     "apply_birth",
+    "apply_bootstrap_overlay",
     "apply_death",
     "apply_drink",
     "apply_eat",
@@ -1897,6 +1906,7 @@ __all__ = [
     "officer_is_active",
     "outposts_for",
     "parent_of",
+    "parse_world_preset",
     "passage_move_discount_for",
     "pastorals_for",
     "plan_goal_for_agent",

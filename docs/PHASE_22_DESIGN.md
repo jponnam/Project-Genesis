@@ -197,8 +197,8 @@ mypy
 | Milestone | Status |
 |---|---|
 | Design document | Complete (this file) |
-| M1 Design + gap inventory | In progress |
-| M2 World presets | Pending |
+| M1 Design + gap inventory | Merged |
+| M2 World presets | In progress |
 | M3 Scenarios run | Pending |
 | M4 Stock census events | Pending |
 | M5 Stock metrics | Pending |

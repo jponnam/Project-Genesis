@@ -53,7 +53,9 @@ def test_config_show_defaults_to_research_config() -> None:
     result = runner.invoke(app, ["config", "show"])
     assert result.exit_code == 0
     assert str(CANONICAL_SEED) in result.stdout
-    assert "seed=42|ticks=100|agents=10|name=default" in result.stdout
+    assert (
+        "seed=42|ticks=100|agents=10|name=default|preset=camp_minimal" in result.stdout
+    )
     assert "SimulationConfig" in result.stdout
 
 
@@ -75,7 +77,7 @@ def test_config_show_accepts_overrides() -> None:
         ],
     )
     assert result.exit_code == 0
-    assert "seed=7|ticks=25|agents=3|name=trial" in result.stdout
+    assert "seed=7|ticks=25|agents=3|name=trial|preset=camp_minimal" in result.stdout
     assert "trial" in result.stdout
 
 
@@ -86,7 +88,10 @@ def test_config_fingerprint_is_script_friendly() -> None:
         ["config", "fingerprint", "--seed", "42", "--ticks", "100"],
     )
     assert result.exit_code == 0
-    assert result.stdout.strip() == "seed=42|ticks=100|agents=10|name=default"
+    assert (
+        result.stdout.strip()
+        == "seed=42|ticks=100|agents=10|name=default|preset=camp_minimal"
+    )
 
 
 def test_config_show_rejects_invalid_seed() -> None:
@@ -106,6 +111,23 @@ def test_config_show_rejects_zero_ticks() -> None:
 def test_config_fingerprint_rejects_blank_name() -> None:
     """Blank run names must fail validation through the CLI."""
     result = runner.invoke(app, ["config", "fingerprint", "--name", "   "])
+    assert result.exit_code == 1
+    assert "Invalid configuration" in result.stdout
+
+
+def test_config_fingerprint_includes_preset() -> None:
+    """``--preset`` is reflected in the fingerprint line."""
+    result = runner.invoke(
+        app,
+        ["config", "fingerprint", "--preset", "early_craft"],
+    )
+    assert result.exit_code == 0
+    assert result.stdout.strip().endswith("|preset=early_craft")
+
+
+def test_config_show_rejects_unknown_preset() -> None:
+    """Unknown presets fail validation through the CLI."""
+    result = runner.invoke(app, ["config", "show", "--preset", "glass_town"])
     assert result.exit_code == 1
     assert "Invalid configuration" in result.stdout
 
@@ -159,7 +181,7 @@ def test_run_writes_jsonl_and_summary(tmp_path: Path) -> None:
     assert result.exit_code == 0, result.stdout
     assert output.is_file()
     assert "Simulation Run" in result.stdout
-    assert "seed=42|ticks=2|agents=3|name=cli" in result.stdout
+    assert "seed=42|ticks=2|agents=3|name=cli|preset=camp_minimal" in result.stdout
     assert "ticks_executed" in result.stdout
     events = JsonlEventStore(output).read_all()
     assert len(events) > 0

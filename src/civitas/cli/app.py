@@ -27,7 +27,7 @@ from civitas.analytics import (
     analyze_run,
     compare_runs,
 )
-from civitas.domain import CANONICAL_SEED, SimulationConfig
+from civitas.domain import CANONICAL_SEED, SimulationConfig, WorldPreset
 from civitas.engine import SimulationEngine, SimulationResult
 from civitas.scenarios import ScenarioNotFoundError, list_scenarios, load_scenario
 from civitas.storage import (
@@ -85,6 +85,16 @@ NameOpt = Annotated[
         help="Human-readable run label (does not affect RNG).",
     ),
 ]
+PresetOpt = Annotated[
+    str,
+    typer.Option(
+        "--preset",
+        help=(
+            "World bootstrap preset: camp_minimal (default), early_craft, "
+            "or civic_dense. Affects initial catalogs; included in fingerprint."
+        ),
+    ),
+]
 
 
 def build_config(
@@ -92,6 +102,7 @@ def build_config(
     ticks: int,
     agent_count: int,
     run_name: str,
+    preset: str = WorldPreset.CAMP_MINIMAL.value,
 ) -> SimulationConfig:
     """Validate CLI options into an immutable ``SimulationConfig``.
 
@@ -99,13 +110,15 @@ def build_config(
         typer.Exit: If validation fails (exit code 1).
     """
     try:
+        resolved_preset = WorldPreset(preset)
         return SimulationConfig(
             seed=seed,
             ticks=ticks,
             agent_count=agent_count,
             run_name=run_name,
+            preset=resolved_preset,
         )
-    except ValidationError as exc:
+    except (ValidationError, ValueError) as exc:
         console.print(f"[red]Invalid configuration:[/red]\n{exc}")
         raise typer.Exit(code=1) from exc
 
@@ -124,6 +137,7 @@ def render_config_table(config: SimulationConfig) -> None:
     table.add_row("ticks", str(config.ticks))
     table.add_row("agent_count", str(config.agent_count))
     table.add_row("run_name", config.run_name)
+    table.add_row("preset", config.preset.value)
     table.add_row("fingerprint", config.fingerprint())
     console.print(table)
 
@@ -181,6 +195,7 @@ def run_command(
     ticks: TicksOpt = 100,
     agent_count: AgentsOpt = 10,
     run_name: NameOpt = "default",
+    preset: PresetOpt = WorldPreset.CAMP_MINIMAL.value,
     output: Annotated[
         Path | None,
         typer.Option(
@@ -194,7 +209,7 @@ def run_command(
     ] = None,
 ) -> None:
     """Run a deterministic simulation and write events to JSONL."""
-    config = build_config(seed, ticks, agent_count, run_name)
+    config = build_config(seed, ticks, agent_count, run_name, preset=preset)
     output_path = output if output is not None else default_events_path(config)
     result = SimulationEngine().run(config)
     write_events(output_path, result.events)
@@ -207,9 +222,10 @@ def config_show(
     ticks: TicksOpt = 100,
     agent_count: AgentsOpt = 10,
     run_name: NameOpt = "default",
+    preset: PresetOpt = WorldPreset.CAMP_MINIMAL.value,
 ) -> None:
     """Validate options and display the resulting configuration."""
-    config = build_config(seed, ticks, agent_count, run_name)
+    config = build_config(seed, ticks, agent_count, run_name, preset=preset)
     render_config_table(config)
 
 
@@ -219,9 +235,10 @@ def config_fingerprint(
     ticks: TicksOpt = 100,
     agent_count: AgentsOpt = 10,
     run_name: NameOpt = "default",
+    preset: PresetOpt = WorldPreset.CAMP_MINIMAL.value,
 ) -> None:
     """Print only the configuration fingerprint (script-friendly)."""
-    config = build_config(seed, ticks, agent_count, run_name)
+    config = build_config(seed, ticks, agent_count, run_name, preset=preset)
     console.print(config.fingerprint())
 
 
@@ -659,6 +676,7 @@ def scenarios_show_command(
     table.add_row("ticks", str(scenario.ticks))
     table.add_row("agents", str(scenario.agents))
     table.add_row("run_name", scenario.run_name)
+    table.add_row("preset", scenario.preset)
     table.add_row("command", scenario.command)
     console.print(table)
     console.print("[bold]Observable signals[/bold]")
