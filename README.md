@@ -158,8 +158,8 @@ ruff format --check .
 mypy
 ```
 
-Phase 21 Milestone 10 baseline on this branch: **1307** tests passing;
-coverage typically ~**89%** under `pytest --cov` (see CI / local run).
+Phase 21 complete baseline: **1307** tests passing; coverage typically
+~**89%** under `pytest --cov` (see CI / local run).
 
 ## Tech stack
 
@@ -172,13 +172,14 @@ FastAPI + Jinja2 + uvicorn via `.[observatory]` (included in `.[dev]`).
 |---|---|
 | **1–20** | Engine through glass/crystal civilization catalogs (complete on `main`) |
 | **21** | Simulation observatory and emergence analytics (**complete** — no new catalogs) |
-| Next | Portfolio polish, deeper research tooling, or catalog work only if requested |
+| **22** | Open simulation depth and research campaigns (no new catalogs) |
 
 ## Current milestone
 
-**Phase 21 Milestone 10: Portfolio documentation** — README, architecture /
-event / analytics / emergence / observatory / reproducibility / demo guides,
-and real Observatory screenshots. See `docs/PHASE_21_DESIGN.md`.
+**Phase 22 Milestone 1: Design + gap inventory** — publish
+[`docs/PHASE_22_DESIGN.md`](docs/PHASE_22_DESIGN.md) and point the roadmap at
+presets, executable scenarios/campaigns, stock census/metrics, and a
+deterministic projector. No simulation behavior changes in M1.
 
 ### Completed (summary)
 
@@ -188,9 +189,8 @@ progression through glasscraft. Phase **21** M1–M10 delivered quality repair,
 replay/inspect, analytics, emergence, research API, Observatory UI, seed
 comparison, demonstration scenarios, and portfolio documentation.
 
-Detailed milestone lists for Phases 1–20 remain in git history and prior
-release notes; the living design for Phase 21 is
-[`docs/PHASE_21_DESIGN.md`](docs/PHASE_21_DESIGN.md).
+Living designs: [`docs/PHASE_21_DESIGN.md`](docs/PHASE_21_DESIGN.md),
+[`docs/PHASE_22_DESIGN.md`](docs/PHASE_22_DESIGN.md).
 
 ## License
 
