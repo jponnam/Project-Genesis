@@ -218,4 +218,4 @@ mypy
 | M7 Observatory UI | Merged |
 | M8 Seed comparison | Merged |
 | M9 Demo scenarios | Merged |
-| M10 Portfolio docs | Complete (this PR) |
+| M10 Portfolio docs | Merged |
