@@ -45,16 +45,17 @@ civitas compare runs/portfolio_demo_seed42.jsonl runs/portfolio_alt_seed7.jsonl
 
 ```bash
 export CIVITAS_RUNS_DIR=$PWD/runs
-civitas serve --host 127.0.0.1 --port 8765
+civitas serve --host 127.0.0.1 --port 8000
 ```
 
 Browse:
 
-- Home: `http://127.0.0.1:8765/ui/`
-- Run: `http://127.0.0.1:8765/ui/runs/portfolio_demo_seed42`
-- Compare: `http://127.0.0.1:8765/ui/compare`
+- Overview: `http://127.0.0.1:8000/ui/`
+- Runs: `http://127.0.0.1:8000/ui/runs`
+- Run: `http://127.0.0.1:8000/ui/runs/portfolio_demo_seed42`
+- Compare: `http://127.0.0.1:8000/ui/compare`
 
-API docs: `http://127.0.0.1:8765/docs`
+API docs: `http://127.0.0.1:8000/docs`
 
 ## Phase 22 depth + campaign demo
 

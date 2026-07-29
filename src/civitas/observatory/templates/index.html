@@ -1,56 +1,71 @@
 {% extends "base.html" %}
+{% from "macros.html" import page_header, stat_card, badge, empty_state, icon %}
 {% block content %}
-<section class="hero" data-reveal>
-  <h1>Simulation Observatory</h1>
-  <p>
-    Inspect deterministic Civitas runs already written to JSONL.
-    No live LLM provider is used here — analytics and emergence findings are
-    rule-based over persisted events.
-  </p>
+{% call page_header("Research overview", "Monitor deterministic simulation artifacts, launch controlled experiments, and inspect event-derived analytics.") %}
+  <a class="button button--secondary" href="/ui/compare">{{ icon("compare") }} Compare runs</a>
+  <a class="button" href="/ui/scenarios">{{ icon("scenario") }} Run scenario</a>
+{% endcall %}
+
+<section class="stats-grid" aria-label="Observatory summary">
+  {{ stat_card("Available runs", runs|length, readable_count ~ " readable", "accent") }}
+  {{ stat_card("Persisted events", "{:,}".format(total_events), "Across readable runs") }}
+  {{ stat_card("Scenarios", scenario_count, "Executable manifests", "positive") }}
+  {{ stat_card("Campaigns", campaign_count, "Seed-sweep manifests", "warning") }}
 </section>
 
-<section class="panel" data-reveal>
-  <h2>Run selector</h2>
-  {% if not runs_available %}
-    <div class="empty">
-      No JSONL runs found. Generate one with
-      <code>civitas run --seed 42 --ticks 20 --agents 5 --name demo</code>
-      then restart <code>civitas serve</code>.
+<div class="grid">
+  <section class="panel span-8">
+    <div class="section-heading">
+      <div><h2>Recent activity</h2><p>Latest artifacts by filesystem modification time</p></div>
+      <a class="row-action" href="/ui/runs">View all runs {{ icon("arrow") }}</a>
     </div>
-  {% else %}
-    <form class="inline" action="/ui/open/" method="get" onsubmit="event.preventDefault(); const v=this.run_id.value; if(v) location.href='/ui/runs/'+encodeURIComponent(v);">
-      <label>Choose a run
-        <select name="run_id" required>
-          {% for run in runs %}
-            <option value="{{ run.run_id }}">
-              {{ run.run_id }}
-              {% if run.seed is not none %}· seed {{ run.seed }}{% endif %}
-              {% if run.event_count is not none %}· {{ run.event_count }} events{% endif %}
-            </option>
-          {% endfor %}
-        </select>
-      </label>
-      <button type="submit">Open dashboard</button>
-      <a class="button secondary" href="/ui/compare">Compare seeds</a>
-    </form>
-    <table style="margin-top:1rem">
-      <thead>
-        <tr>
-          <th>Run</th><th>Seed</th><th>Name</th><th>Ticks</th><th>Events</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for run in runs %}
-        <tr>
-          <td><a href="/ui/runs/{{ run.run_id }}">{{ run.run_id }}</a></td>
-          <td>{{ run.seed if run.seed is not none else "unavailable" }}</td>
-          <td>{{ run.run_name or "unavailable" }}</td>
-          <td>{{ run.ticks_executed if run.ticks_executed is not none else "unavailable" }}</td>
-          <td>{{ run.event_count if run.event_count is not none else "unavailable" }}</td>
-        </tr>
+    {% if run_rows %}
+    <div class="table-wrap">
+      <table>
+        <caption class="sr-only">Most recently modified simulation runs</caption>
+        <thead><tr><th scope="col">Run</th><th scope="col">Status</th><th scope="col">Seed</th><th scope="col">Events</th><th scope="col">Modified</th></tr></thead>
+        <tbody>
+        {% for row in run_rows[:6] %}
+          {% set run = row.run %}
+          <tr>
+            <td><a class="table-primary mono" href="/ui/runs/{{ run.run_id }}">{{ run.run_id }}</a><span class="table-secondary">{{ run.run_name or "metadata unavailable" }}</span></td>
+            <td>{% if row.readable %}{{ badge("Complete" if run.ticks_executed is not none else "Partial", "positive" if run.ticks_executed is not none else "warning") }}{% else %}{{ badge("Unreadable", "danger") }}{% endif %}</td>
+            <td class="numeric">{{ run.seed if run.seed is not none else "—" }}</td>
+            <td class="numeric">{{ "{:,}".format(run.event_count) if run.event_count is not none else "—" }}</td>
+            <td><time datetime="{{ row.modified_at.isoformat() }}">{{ row.modified_at.strftime("%b %d, %H:%M UTC") }}</time></td>
+          </tr>
         {% endfor %}
-      </tbody>
-    </table>
-  {% endif %}
-</section>
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      {{ empty_state("No simulation runs yet", "Generate a deterministic artifact with civitas scenarios run early_craft_depth.", "/ui/scenarios", "Browse scenarios") }}
+    {% endif %}
+  </section>
+
+  <aside class="span-4 stack">
+    <section class="panel">
+      <div class="section-heading"><div><h2>Run selector</h2><p>Open an existing dashboard</p></div></div>
+      {% if runs_available %}
+      <form class="stack" action="/ui/open" method="get" data-run-selector>
+        <label for="overview-run">Simulation run</label>
+        <select id="overview-run" name="run_id" required>
+          {% for run in runs %}<option value="{{ run.run_id }}">{{ run.run_id }}{% if run.seed is not none %} · seed {{ run.seed }}{% endif %}</option>{% endfor %}
+        </select>
+        <button type="submit">Open dashboard {{ icon("arrow") }}</button>
+      </form>
+      {% else %}<p class="muted">No runs are currently available.</p>{% endif %}
+    </section>
+    <a class="card card-link" href="/ui/campaigns">
+      <span class="badge badge--accent">Seed sweeps</span>
+      <h2>Research campaigns</h2>
+      <p>Execute controlled multi-seed experiments and compare real outcomes.</p>
+    </a>
+    <a class="card card-link" href="/docs">
+      <span class="badge">Developer surface</span>
+      <h2>Research API</h2>
+      <p>Explore typed JSON endpoints and the generated OpenAPI contract.</p>
+    </a>
+  </aside>
+</div>
 {% endblock %}

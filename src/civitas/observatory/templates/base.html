@@ -4,22 +4,57 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{{ title }} · Civitas Observatory</title>
+  <meta name="theme-color" content="#090b10" />
+  <link rel="icon" href="/ui/static/favicon.svg" type="image/svg+xml" />
+  <script>
+    (() => { const t = localStorage.getItem("civitas-theme"); if (t) document.documentElement.dataset.theme = t; })();
+  </script>
   <link rel="stylesheet" href="/ui/static/styles.css" />
 </head>
 <body>
-  <div class="shell">
-    <header class="topbar">
-      <div class="brand">Civitas <span>Observatory</span></div>
-      <nav class="nav">
-        <a href="/ui/">Runs</a>
-        <a href="/ui/compare">Compare</a>
-        <a href="/ui/scenarios">Scenarios</a>
-        <a href="/ui/campaigns">Campaigns</a>
-        <a href="/docs" target="_blank" rel="noreferrer">API docs</a>
+  {% from "macros.html" import icon %}
+  {% set path = request.url.path %}
+  <a class="skip-link" href="#main-content">Skip to content</a>
+  <div class="app-shell">
+    <div class="drawer-backdrop" data-drawer-backdrop hidden></div>
+    <aside class="sidebar" id="app-sidebar" data-drawer aria-label="Application navigation">
+      <a class="brand" href="/ui/" aria-label="Civitas Lab overview">
+        <span class="brand__mark">CL</span>
+        <span><strong>Civitas Lab</strong><small>Simulation Observatory</small></span>
+      </a>
+      <nav class="sidebar-nav" aria-label="Primary">
+        <span class="nav-label">Observe</span>
+        <a href="/ui/" class="nav-item {% if path == '/ui/' %}is-active{% endif %}" {% if path == '/ui/' %}aria-current="page"{% endif %}>{{ icon("overview") }}<span>Overview</span></a>
+        <a href="/ui/runs" class="nav-item {% if path == '/ui/runs' or '/ui/runs/' in path %}is-active{% endif %}" {% if path == '/ui/runs' or '/ui/runs/' in path %}aria-current="page"{% endif %}>{{ icon("runs") }}<span>Runs</span></a>
+        <a href="/ui/compare" class="nav-item {% if '/ui/compare' in path %}is-active{% endif %}" {% if '/ui/compare' in path %}aria-current="page"{% endif %}>{{ icon("compare") }}<span>Compare</span></a>
+        <span class="nav-label">Execute</span>
+        <a href="/ui/scenarios" class="nav-item {% if '/ui/scenarios' in path %}is-active{% endif %}" {% if '/ui/scenarios' in path %}aria-current="page"{% endif %}>{{ icon("scenario") }}<span>Scenarios</span></a>
+        <a href="/ui/campaigns" class="nav-item {% if '/ui/campaigns' in path %}is-active{% endif %}" {% if '/ui/campaigns' in path %}aria-current="page"{% endif %}>{{ icon("campaign") }}<span>Campaigns</span></a>
       </nav>
-    </header>
-    {% block content %}{% endblock %}
+      <div class="sidebar-footer">
+        <div class="status-line"><span class="status-dot"></span><span>Server operational</span></div>
+        <a class="nav-item" href="/docs" target="_blank" rel="noreferrer">{{ icon("api") }}<span>API documentation</span>{{ icon("external") }}</a>
+        <a class="nav-item" href="https://github.com/jponnam/Project-Genesis" target="_blank" rel="noreferrer">{{ icon("external") }}<span>Repository</span></a>
+      </div>
+    </aside>
+    <div class="main-column" data-main-column>
+      <header class="top-header">
+        <button class="icon-button mobile-menu" type="button" data-drawer-trigger aria-controls="app-sidebar" aria-expanded="false" aria-label="Open navigation">{{ icon("menu") }}</button>
+        <div class="top-header__context">
+          <strong>{{ title }}</strong>
+          <span>Deterministic simulation research</span>
+        </div>
+        <div class="top-header__actions">
+          <a class="header-link" href="/docs">API docs</a>
+          <button class="icon-button" type="button" data-theme-toggle aria-label="Switch color theme" title="Switch color theme">{{ icon("sun") }}</button>
+        </div>
+      </header>
+      <main id="main-content" class="content" tabindex="-1">
+        {% block content %}{% endblock %}
+      </main>
+    </div>
   </div>
+  <div class="toast-region" aria-live="polite" aria-atomic="true" data-toast-region></div>
   <script src="/ui/static/app.js"></script>
 </body>
 </html>

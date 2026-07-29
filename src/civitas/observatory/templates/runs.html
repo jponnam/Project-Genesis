@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% from "macros.html" import page_header, badge, empty_state, icon %}
+{% block content %}
+{% call page_header("Simulation runs", "Search and inspect persisted JSONL artifacts. All metadata is read from the actual run files.") %}
+  <a class="button button--secondary" href="/ui/compare">{{ icon("compare") }} Compare</a>
+  <a class="button" href="/ui/scenarios">{{ icon("scenario") }} New run</a>
+{% endcall %}
+
+<section class="panel">
+  <div class="section-heading">
+    <div><h2>Run catalog</h2><p>{{ runs|length }} artifact{{ "" if runs|length == 1 else "s" }} under CIVITAS_RUNS_DIR</p></div>
+    {% if runs_available %}
+    <label class="search-field" for="run-search">
+      <span class="sr-only">Search runs</span>
+      {{ icon("runs") }}
+      <input id="run-search" type="search" placeholder="Search run, seed, or name…" data-table-search="#runs-table" autocomplete="off" />
+    </label>
+    {% endif %}
+  </div>
+  {% if runs_available %}
+  <div class="table-wrap">
+    <table id="runs-table">
+      <caption class="sr-only">Available deterministic simulation runs</caption>
+      <thead>
+        <tr>
+          <th scope="col"><button class="sort-button" type="button" data-sort-table data-column="0">Run</button></th>
+          <th scope="col">Status</th>
+          <th scope="col"><button class="sort-button" type="button" data-sort-table data-column="2">Seed</button></th>
+          <th scope="col"><button class="sort-button" type="button" data-sort-table data-column="3">Ticks</button></th>
+          <th scope="col">Agents</th>
+          <th scope="col"><button class="sort-button" type="button" data-sort-table data-column="5">Events</button></th>
+          <th scope="col">Modified</th><th scope="col"><span class="sr-only">Action</span></th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for row in run_rows %}
+        {% set run = row.run %}
+        <tr>
+          <td data-sort-value="{{ run.run_id }}"><a class="table-primary mono" href="/ui/runs/{{ run.run_id }}">{{ run.run_id }}</a><span class="table-secondary">{{ run.run_name or "No run name" }} · {{ (run.size_bytes / 1024)|round(1) }} KiB</span></td>
+          <td>{% if row.readable %}{{ badge("Complete" if run.ticks_executed is not none else "Partial", "positive" if run.ticks_executed is not none else "warning") }}{% else %}{{ badge("Unreadable", "danger") }}{% endif %}</td>
+          <td class="numeric" data-sort-value="{{ run.seed if run.seed is not none else -1 }}">{{ run.seed if run.seed is not none else "—" }}</td>
+          <td class="numeric" data-sort-value="{{ run.ticks_executed if run.ticks_executed is not none else -1 }}">{{ run.ticks_executed if run.ticks_executed is not none else "—" }}</td>
+          <td class="numeric">{{ run.agent_count if run.agent_count is not none else "—" }}</td>
+          <td class="numeric" data-sort-value="{{ run.event_count if run.event_count is not none else -1 }}">{{ "{:,}".format(run.event_count) if run.event_count is not none else "—" }}</td>
+          <td><time datetime="{{ row.modified_at.isoformat() }}">{{ row.modified_at.strftime("%b %d, %H:%M") }}</time></td>
+          <td><a class="row-action" href="/ui/runs/{{ run.run_id }}">View {{ icon("arrow") }}</a></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    {{ empty_state("No runs found", "Create a run from an executable scenario. The artifact will appear here automatically.", "/ui/scenarios", "Browse scenarios") }}
+  {% endif %}
+</section>
+{% endblock %}

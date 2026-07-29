@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
+import os
 import re
+import shutil
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, cast
@@ -85,6 +87,16 @@ def execute_campaign(campaign_id: str, *, compare: bool = True) -> dict[str, Any
     report = run_campaign(campaign, output_dir=output_dir, compare=compare)
     payload = report.to_dict()
     payload["execution_id"] = execution_id
+    for run in payload["runs"]:
+        source = Path(run["path"])
+        run_id = f"{source.stem}_{execution_id}"
+        catalog_path = _under_runs(Path(f"{run_id}.jsonl"))
+        try:
+            os.link(source, catalog_path)
+        except OSError:
+            shutil.copy2(source, catalog_path)
+        run["run_id"] = run_id
+        run["path"] = str(catalog_path)
     report_path = output_dir / "report.json"
     report_path.write_text(
         json.dumps(payload, indent=2, sort_keys=True) + "\n",

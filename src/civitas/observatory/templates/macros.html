@@ -1,0 +1,60 @@
+{% macro icon(name) -%}
+<svg class="icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+  {% if name == "overview" %}<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+  {% elif name == "runs" %}<path d="M4 7h16M4 12h16M4 17h16"/><circle cx="7" cy="7" r=".6" fill="currentColor"/><circle cx="7" cy="12" r=".6" fill="currentColor"/><circle cx="7" cy="17" r=".6" fill="currentColor"/>
+  {% elif name == "compare" %}<path d="M7 3v14m0 0-3-3m3 3 3-3M17 21V7m0 0-3 3m3-3 3 3"/>
+  {% elif name == "scenario" %}<path d="M5 3h14v18H5zM8 8h8M8 12h8M8 16h5"/>
+  {% elif name == "campaign" %}<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><path d="M12 2v4M22 12h-4M12 22v-4M2 12h4"/>
+  {% elif name == "api" %}<path d="m8 9-4 3 4 3m8-6 4 3-4 3M14 5l-4 14"/>
+  {% elif name == "sun" %}<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
+  {% elif name == "menu" %}<path d="M4 7h16M4 12h16M4 17h16"/>
+  {% elif name == "external" %}<path d="M14 4h6v6M20 4l-9 9"/><path d="M18 13v6H5V6h6"/>
+  {% elif name == "copy" %}<rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V5H5v11h3"/>
+  {% elif name == "arrow" %}<path d="m9 18 6-6-6-6"/>
+  {% elif name == "check" %}<path d="m5 12 4 4L19 6"/>
+  {% else %}<circle cx="12" cy="12" r="8"/>
+  {% endif %}
+</svg>
+{%- endmacro %}
+
+{% macro badge(label, tone="neutral") -%}
+<span class="badge badge--{{ tone }}">{{ label }}</span>
+{%- endmacro %}
+
+{% macro empty_state(title, description, action_href=none, action_label=none) -%}
+<div class="empty-state">
+  <span class="empty-state__icon">{{ icon("runs") }}</span>
+  <strong>{{ title }}</strong>
+  <p>{{ description }}</p>
+  {% if action_href and action_label %}<a class="button button--secondary" href="{{ action_href }}">{{ action_label }}</a>{% endif %}
+</div>
+{%- endmacro %}
+
+{% macro stat_card(label, value, detail="", tone="neutral") -%}
+<article class="stat-card stat-card--{{ tone }}">
+  <span class="stat-card__label">{{ label }}</span>
+  <strong class="stat-card__value">{{ value }}</strong>
+  {% if detail %}<span class="stat-card__detail">{{ detail }}</span>{% endif %}
+</article>
+{%- endmacro %}
+
+{% macro bar_row(label, value, width, suffix="") -%}
+<div class="bar-row">
+  <span class="bar-label" title="{{ label }}">{{ label }}</span>
+  <span class="bar-track" role="meter" aria-label="{{ label }}: {{ value }}{{ suffix }}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ width }}">
+    <span class="bar-fill" data-width="{{ width }}"></span>
+  </span>
+  <span class="bar-value">{{ value }}{{ suffix }}</span>
+</div>
+{%- endmacro %}
+
+{% macro page_header(title, description, eyebrow="Research observatory") -%}
+<header class="page-heading">
+  <div>
+    <span class="eyebrow">{{ eyebrow }}</span>
+    <h1>{{ title }}</h1>
+    <p>{{ description }}</p>
+  </div>
+  {% if caller %}<div class="page-heading__actions">{{ caller() }}</div>{% endif %}
+</header>
+{%- endmacro %}

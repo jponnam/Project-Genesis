@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% from "macros.html" import page_header, empty_state %}
+{% block content %}
+{{ page_header("Request unavailable", "The Observatory could not render this research surface.", "Error " ~ status_code) }}
+{{ empty_state("Something went wrong", detail, "/ui/", "Return to overview") }}
+{% endblock %}

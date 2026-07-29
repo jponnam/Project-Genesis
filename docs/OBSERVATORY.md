@@ -9,22 +9,27 @@ actions may create new artifacts under `CIVITAS_RUNS_DIR`.
 ```bash
 pip install -e ".[observatory]"
 export CIVITAS_RUNS_DIR=/path/to/runs   # directory of *.jsonl
-civitas serve --host 127.0.0.1 --port 8765
+civitas serve --host 127.0.0.1 --port 8000
 ```
 
-Open `http://127.0.0.1:8765/ui/`.
+Open `http://127.0.0.1:8000/ui/`.
 
 ## UI routes
 
 | Path | Purpose |
 |------|---------|
-| `/ui/` | Home — list runs under `CIVITAS_RUNS_DIR` |
+| `/ui/` | Research overview and recent activity |
+| `/ui/runs` | Searchable/sortable run catalog |
 | `/ui/runs/{run_id}` | Run detail — summary, metrics, emergence |
 | `/ui/compare` | Side-by-side seed / run comparison |
 | `/ui/scenarios` | List and launch scenario manifests |
 | `/ui/campaigns` | Launch seed sweeps and view persisted aggregates |
 
-Static assets live in `civitas/observatory/static/`; templates in `civitas/observatory/templates/`.
+The desktop UI uses a persistent research sidebar; tablet/mobile use an
+accessible drawer. Dark mode is default and the header theme control persists
+an optional light theme. Static assets live in
+`civitas/observatory/static/`; templates and shared macros live in
+`civitas/observatory/templates/`.
 
 ## API (selected)
 
@@ -44,19 +49,18 @@ OpenAPI: `/docs` when the server is running.
 
 ## Screenshots
 
-Real captures from local demo runs (Phase 21 Milestone 10):
+Current production-dashboard redesign:
 
-![Observatory home](images/observatory_home.png)
+![Research overview](images/observatory_redesign_overview.png)
 
-![Run detail](images/observatory_run.png)
+![Run analytics dashboard](images/observatory_redesign_run.png)
 
-![Compare](images/observatory_compare.png)
+![Campaign results](images/observatory_redesign_campaign.png)
 
-Phase 22 depth/campaign captures:
+![Optional light theme](images/observatory_redesign_light.png)
 
-![Civic-depth run with stock metrics](images/observatory_depth_run.png)
-
-![Campaign aggregate results](images/observatory_campaign.png)
+UI architecture and redesign decisions:
+[`OBSERVATORY_UI_ARCHITECTURE.md`](OBSERVATORY_UI_ARCHITECTURE.md).
 
 ## Limits
 
