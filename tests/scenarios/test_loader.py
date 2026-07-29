@@ -49,6 +49,17 @@ def test_load_scenario_round_trip() -> None:
     assert "InstitutionCreated" in joined or "council" in joined.lower()
 
 
+def test_scenario_to_config_uses_recipe_fields() -> None:
+    """Scenario.to_config maps seed/ticks/agents/name/preset into SimulationConfig."""
+    scenario = load_scenario("institutional_formation")
+    config = scenario.to_config()
+    assert config.seed == scenario.seed
+    assert config.ticks == scenario.ticks
+    assert config.agent_count == scenario.agents
+    assert config.run_name == scenario.run_name
+    assert config.preset.value == scenario.preset
+
+
 def test_load_scenario_missing() -> None:
     """Unknown ids raise ScenarioNotFoundError."""
     with pytest.raises(ScenarioNotFoundError):

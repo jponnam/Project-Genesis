@@ -58,7 +58,7 @@ app.add_typer(config_app, name="config")
 
 scenarios_app = typer.Typer(
     name="scenarios",
-    help="List and inspect data-driven demonstration scenarios.",
+    help="List, inspect, and execute data-driven demonstration scenarios.",
     no_args_is_help=True,
 )
 app.add_typer(scenarios_app, name="scenarios")
@@ -685,6 +685,63 @@ def scenarios_show_command(
     console.print("[bold]Limitations[/bold]")
     for item in scenario.limitations:
         console.print(f"  - {item}")
+
+
+@scenarios_app.command("run")
+def scenarios_run_command(
+    scenario_id: Annotated[str, typer.Argument(help="Scenario id to execute.")],
+    output: Annotated[
+        Path | None,
+        typer.Option(
+            "--output",
+            "-o",
+            help="JSONL path for the event stream "
+            "(default: runs/<run_name>_seed<seed>.jsonl).",
+            dir_okay=False,
+            writable=True,
+        ),
+    ] = None,
+    analyze: Annotated[
+        bool,
+        typer.Option(
+            "--analyze/--no-analyze",
+            help="After the run, print inspect, metrics, and emergence summaries.",
+        ),
+    ] = False,
+) -> None:
+    """Execute a demonstration scenario end-to-end into a JSONL run."""
+    try:
+        scenario = load_scenario(scenario_id)
+        config = scenario.to_config()
+    except ScenarioNotFoundError as exc:
+        console.print(f"[red]Scenario failed:[/red] {exc}")
+        raise typer.Exit(code=1) from exc
+    except (ValidationError, ValueError) as exc:
+        console.print(f"[red]Invalid scenario configuration:[/red]\n{exc}")
+        raise typer.Exit(code=1) from exc
+
+    output_path = output if output is not None else default_events_path(config)
+    console.print(
+        f"[bold]Running scenario[/bold] {scenario.id} "
+        f"(preset={config.preset.value}, seed={config.seed}, "
+        f"ticks={config.ticks}, agents={config.agent_count})"
+    )
+    result = SimulationEngine().run(config)
+    write_events(output_path, result.events)
+    render_run_summary(result, output_path)
+
+    if not analyze:
+        return
+    try:
+        inspection = build_inspection(output_path)
+        metrics = analyze_run(output_path)
+        emergence = analyze_emergence(output_path)
+    except ReplayError as exc:
+        console.print(f"[red]Scenario analysis failed:[/red] {exc}")
+        raise typer.Exit(code=exc.exit_code) from exc
+    _render_inspection(inspection)
+    _render_metrics(metrics)
+    _render_emergence(emergence)
 
 
 @app.command("compare")

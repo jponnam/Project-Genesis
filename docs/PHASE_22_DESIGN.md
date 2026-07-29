@@ -198,8 +198,8 @@ mypy
 |---|---|
 | Design document | Complete (this file) |
 | M1 Design + gap inventory | Merged |
-| M2 World presets | In progress |
-| M3 Scenarios run | Pending |
+| M2 World presets | Merged |
+| M3 Scenarios run | In progress |
 | M4 Stock census events | Pending |
 | M5 Stock metrics | Pending |
 | M6 World projector | Pending |

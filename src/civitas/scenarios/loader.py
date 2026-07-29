@@ -7,6 +7,9 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
+from civitas.domain.config import SimulationConfig
+from civitas.domain.presets import WorldPreset
+
 
 class ScenarioNotFoundError(LookupError):
     """Raised when a scenario id cannot be resolved."""
@@ -32,6 +35,16 @@ class Scenario:
     def to_dict(self) -> dict[str, Any]:
         """Return a JSON-serializable mapping."""
         return asdict(self)
+
+    def to_config(self) -> SimulationConfig:
+        """Build a ``SimulationConfig`` from this scenario recipe."""
+        return SimulationConfig(
+            seed=self.seed,
+            ticks=self.ticks,
+            agent_count=self.agents,
+            run_name=self.run_name,
+            preset=WorldPreset(self.preset),
+        )
 
 
 def default_scenarios_dir() -> Path:

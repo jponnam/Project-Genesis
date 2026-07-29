@@ -116,6 +116,8 @@ civitas emergence runs/portfolio_demo_seed42.jsonl
 civitas compare runs/portfolio_demo_seed42.jsonl runs/portfolio_alt_seed7.jsonl
 civitas scenarios list
 civitas scenarios show wealth_concentration
+civitas scenarios run institutional_formation
+civitas scenarios run wealth_concentration --analyze
 ```
 
 ## Documentation
@@ -130,13 +132,14 @@ civitas scenarios show wealth_concentration
 | [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md) | Seeds and verification |
 | [`docs/DEMO_GUIDE.md`](docs/DEMO_GUIDE.md) | Portfolio demo path |
 | [`docs/PHASE_21_DESIGN.md`](docs/PHASE_21_DESIGN.md) | Phase 21 plan |
+| [`docs/PHASE_22_DESIGN.md`](docs/PHASE_22_DESIGN.md) | Phase 22 plan |
 | [`scenarios/README.md`](scenarios/README.md) | Demonstration recipes |
 
 ## Capabilities
 
 - Deterministic multi-agent simulation through Phases 1–20 civilization catalogs
 - Append-only JSONL event logs with typed round-trip persistence
-- CLI: `run`, `replay`, `inspect`, `metrics`, `emergence`, `compare`, `scenarios`, `serve`, `config`
+- CLI: `run`, `replay`, `inspect`, `metrics`, `emergence`, `compare`, `scenarios list|show|run`, `serve`, `config`
 - Offline analytics and explicit emergence rules over persisted events
 - Read-only FastAPI research API and Jinja2 Observatory UI
 - Seed / run comparison for counterfactual research
@@ -177,9 +180,8 @@ FastAPI + Jinja2 + uvicorn via `.[observatory]` (included in `.[dev]`).
 
 ## Current milestone
 
-**Phase 22 Milestone 2: World presets / bootstrap overlays** — named presets
-(`camp_minimal`, `early_craft`, `civic_dense`) unlock existing catalog entities
-at world construction. Use ``civitas run --preset early_craft``. See
+**Phase 22 Milestone 3: ``civitas scenarios run``** — execute a demonstration
+scenario TOML end-to-end (JSONL + optional inspect/metrics/emergence). See
 [`docs/PHASE_22_DESIGN.md`](docs/PHASE_22_DESIGN.md).
 
 ### Completed (summary)

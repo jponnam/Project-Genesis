@@ -15,9 +15,10 @@ pip install -e ".[dev]"
 ```bash
 civitas scenarios list
 civitas scenarios show wealth_concentration
+civitas scenarios run institutional_formation --analyze
 ```
 
-Scenarios are TOML under `scenarios/` (research questions, exact run commands, signals, limitations).
+Scenarios are TOML under `scenarios/` (research questions, exact run commands, signals, limitations). Prefer `civitas scenarios run <id>` to execute a recipe end-to-end.
 
 ## 3. Run two seeds
 
@@ -27,7 +28,7 @@ civitas run --seed 42 --ticks 20 --agents 6 --name portfolio_demo
 civitas run --seed 7 --ticks 20 --agents 6 --name portfolio_alt
 ```
 
-Or copy the printed command from `civitas scenarios show <id>` for a recipe-driven demo.
+Or use `civitas scenarios run <id> -o runs/...jsonl` / copy the printed command from `civitas scenarios show <id>`.
 
 ## 4. CLI research loop
 
