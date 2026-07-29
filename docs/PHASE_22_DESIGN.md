@@ -1,6 +1,6 @@
 # Phase 22 — Open Simulation Depth and Research Campaigns
 
-**Status:** Design approved for sequential milestone delivery  
+**Status:** Complete (M1–M10 merged or in final M10 PR)  
 **Constraint:** No new domain catalogs (`TechnologyKind` / `LawKind` / `InstitutionKind` / `InfrastructureKind` / `CityKind`)  
 **Base revision:** `main` @ Phase 21 Milestone 10 (`ca57fd9`)  
 **Primary objective:** Make existing Phases 9–20 civilization content exerciseable in open deterministic runs, close event-ledger gaps that block honest stock analytics, and turn scenarios/observatory into an executable research campaign loop.
@@ -205,5 +205,5 @@ mypy
 | M6 World projector | Merged |
 | M7 Research campaigns | Merged |
 | M8 Observatory campaigns | Merged |
-| M9 Depth emergence | In progress |
-| M10 Depth demos + docs | Pending |
+| M9 Depth emergence | Merged |
+| M10 Depth demos + docs | Complete (this PR) |

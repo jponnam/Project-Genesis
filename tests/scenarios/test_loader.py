@@ -31,6 +31,8 @@ def test_list_scenarios_contains_expected_ids() -> None:
     assert "wealth_concentration" in ids
     assert "technological_diffusion" in ids
     assert "scarcity_and_cooperation" in ids
+    assert "early_craft_depth" in ids
+    assert "civic_density" in ids
     for scenario in scenarios:
         assert scenario.command.startswith("civitas run")
         assert scenario.observable_signals
@@ -38,7 +40,7 @@ def test_list_scenarios_contains_expected_ids() -> None:
         assert scenario.seed >= 0
         assert scenario.ticks >= 1
         assert scenario.agents >= 1
-        assert scenario.preset == "camp_minimal"
+        assert scenario.preset in {"camp_minimal", "early_craft", "civic_dense"}
 
 
 def test_load_scenario_round_trip() -> None:

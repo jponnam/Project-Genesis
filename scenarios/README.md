@@ -19,6 +19,8 @@ civitas scenarios show technological_diffusion
 civitas scenarios run wealth_concentration
 civitas scenarios run wealth_concentration --analyze
 civitas scenarios run institutional_formation -o runs/inst.jsonl
+civitas scenarios run early_craft_depth --analyze
+civitas scenarios run civic_density --analyze
 ```
 
 `scenarios run` builds a ``SimulationConfig`` from the recipe (including
@@ -36,3 +38,13 @@ civitas inspect runs/wealth_conc_seed42.jsonl
 civitas metrics runs/wealth_conc_seed42.jsonl
 civitas emergence runs/wealth_conc_seed42.jsonl
 ```
+
+## Phase 22 depth demos
+
+- `early_craft_depth` uses `preset = "early_craft"` so pottery and irrigation
+  are deterministically active and `mid_tree_activation` is observable.
+- `civic_density` uses `preset = "civic_dense"` so multiple existing
+  institutions/cities are present and `civic_densification` is observable.
+
+These are bootstrap-overlay experiments, not claims that the entities formed
+organically during the run.

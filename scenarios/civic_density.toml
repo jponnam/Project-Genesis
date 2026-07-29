@@ -1,0 +1,24 @@
+id = "civic_density"
+title = "Civic density"
+research_question = "What observable patterns arise when a deterministic world begins with multiple existing civic institutions, cities, laws, and infrastructure?"
+
+seed = 7
+ticks = 20
+agents = 6
+run_name = "civic_density"
+preset = "civic_dense"
+
+command = "civitas run --seed 7 --ticks 20 --agents 6 --name civic_density --preset civic_dense"
+
+observable_signals = [
+  "InstitutionCreated includes council, guild, archive, bureaucracy, and workshop",
+  "CityCreated includes settlement, outpost, and forum",
+  "civic_densification emergence fires from active institution/city counts",
+  "mid_tree_activation fires because pottery and irrigation are active",
+]
+
+limitations = [
+  "Civic entities are explicit bootstrap overlays, not organically founded outcomes",
+  "The preset uses only existing catalog kinds and does not add new domain content",
+  "Institution activity does not imply every institution-specific action occurs",
+]
