@@ -15,6 +15,14 @@ Emergence in Civitas Lab is **explicit and rule-based**, not a black-box classif
 
 A finding is a named rule that fired because thresholds or patterns in the event-derived metrics were met — for example sustained inequality movement, knowledge diffusion spikes, or governance activity clusters. Rules cite the signals they used so researchers can audit them.
 
+Phase 22 adds depth-oriented rules:
+
+- `mid_tree_activation` — at least two non-fire technologies active/discovered
+- `civic_densification` — at least three active institutions and two cities
+- `craft_stock_specialization` — repeated production plus metric-derived
+  resource-stock inequality (uses `resource_inequality` and
+  `final_resource_holdings`)
+
 ## Honesty constraints
 
 - No claim of open-ended “AI discovered civilization patterns” without a listed rule.

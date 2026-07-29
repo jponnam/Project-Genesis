@@ -180,9 +180,9 @@ FastAPI + Jinja2 + uvicorn via `.[observatory]` (included in `.[dev]`).
 
 ## Current milestone
 
-**Phase 22 Milestone 8: Observatory campaign surface** — safely launch
-scenario/campaign manifests under `CIVITAS_RUNS_DIR` and inspect persisted
-aggregate results through API/UI. See
+**Phase 22 Milestone 9: Depth-oriented emergence** — explicit rules for
+mid-tree activation, civic densification, and metric-backed craft stock
+specialization. See
 [`docs/PHASE_22_DESIGN.md`](docs/PHASE_22_DESIGN.md).
 
 ### Completed (summary)

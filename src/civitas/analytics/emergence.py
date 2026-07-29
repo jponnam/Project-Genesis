@@ -26,7 +26,9 @@ from civitas.domain import (
     NetworksObserved,
     PopulationObserved,
     ResourceGathered,
+    ResourceProduced,
     ResourceTraded,
+    TechnologyCreated,
     TechnologyDiscovered,
     WealthObserved,
 )
@@ -544,6 +546,127 @@ def detect_resource_collapse(
     )
 
 
+def detect_mid_tree_activation(
+    events: tuple[DomainEvent, ...],
+) -> EmergenceFinding | None:
+    """Multiple non-fire technologies are active/discovered in the run."""
+    discovered: dict[str, tuple[int, str]] = {}
+    for event in events:
+        if (isinstance(event, TechnologyCreated) and event.discovered) or isinstance(
+            event, TechnologyDiscovered
+        ):
+            discovered[str(event.kind)] = (_tick(event), str(event.name))
+    discovered.pop("fire", None)
+    if len(discovered) < 2:
+        return None
+    ordered = sorted(discovered.items(), key=lambda item: (item[1][0], item[0]))
+    ticks = [value[0] for _kind, value in ordered]
+    kinds = [kind for kind, _value in ordered]
+    return EmergenceFinding(
+        pattern="mid_tree_activation",
+        strength=_clamp01(0.45 + len(kinds) / 10),
+        confidence=_clamp01(0.65 + len(kinds) / 20),
+        explanation=(
+            f"{len(kinds)} non-fire technologies were active or discovered: "
+            f"{', '.join(kinds)}."
+        ),
+        evidence=tuple(
+            f"t{tick}: {kind} ({name})" for kind, (tick, name) in ordered[:10]
+        ),
+        tick_start=min(ticks),
+        tick_end=max(ticks),
+        entities=tuple(f"technology:{kind}" for kind in kinds),
+        metrics_used={"non_fire_technology_count": len(kinds)},
+    )
+
+
+def detect_civic_densification(
+    events: tuple[DomainEvent, ...],
+) -> EmergenceFinding | None:
+    """Several active institutions and cities coexist in the event record."""
+    institutions = [
+        event
+        for event in events
+        if isinstance(event, InstitutionCreated) and event.active
+    ]
+    cities = [
+        event for event in events if isinstance(event, CityCreated) and event.active
+    ]
+    if len(institutions) < 3 or len(cities) < 2:
+        return None
+    all_events: list[DomainEvent] = [*institutions, *cities]
+    entities = tuple(
+        [f"institution:{event.kind}" for event in institutions]
+        + [f"city:{event.kind}" for event in cities]
+    )
+    return EmergenceFinding(
+        pattern="civic_densification",
+        strength=_clamp01(0.45 + (len(institutions) + len(cities)) / 16),
+        confidence=0.9,
+        explanation=(
+            f"{len(institutions)} active institutions and {len(cities)} active "
+            "cities coexist, exceeding the civic-density threshold."
+        ),
+        evidence=tuple(
+            [f"institution={event.kind}:{event.name}" for event in institutions]
+            + [f"city={event.kind}:{event.name}" for event in cities]
+        ),
+        tick_start=min(_tick(event) for event in all_events),
+        tick_end=max(_tick(event) for event in all_events),
+        entities=entities,
+        metrics_used={
+            "active_institution_count": len(institutions),
+            "active_city_count": len(cities),
+        },
+    )
+
+
+def detect_craft_stock_specialization(
+    events: tuple[DomainEvent, ...],
+    metrics: MetricsReport,
+) -> EmergenceFinding | None:
+    """Production plus concentrated resource stocks indicates craft specialization."""
+    inequality = metrics.by_name().get("resource_inequality")
+    holdings = metrics.by_name().get("final_resource_holdings")
+    produced = [event for event in events if isinstance(event, ResourceProduced)]
+    if (
+        inequality is None
+        or inequality.status != "ok"
+        or holdings is None
+        or holdings.status != "ok"
+        or len(produced) < 2
+    ):
+        return None
+    gini = int(inequality.value)
+    resources = dict(holdings.value)
+    if gini < 2500 or not resources:
+        return None
+    recipes = Counter(str(event.recipe_id) for event in produced)
+    return EmergenceFinding(
+        pattern="craft_stock_specialization",
+        strength=_clamp01(0.45 + (gini - 2500) / 7500),
+        confidence=_clamp01(0.6 + len(produced) / 20),
+        explanation=(
+            f"Craft production occurred {len(produced)} times while final "
+            f"resource-stock inequality reached {gini} bps."
+        ),
+        evidence=(
+            f"production_events={len(produced)}",
+            f"recipes={dict(sorted(recipes.items()))}",
+            f"final_holdings={resources}",
+            f"resource_gini_bps={gini}",
+        ),
+        tick_start=_tick(produced[0]),
+        tick_end=_tick(produced[-1]),
+        entities=tuple(f"recipe:{recipe}" for recipe in sorted(recipes)),
+        metrics_used={
+            "resource_inequality": gini,
+            "final_resource_holdings": resources,
+            "production_event_count": len(produced),
+        },
+    )
+
+
 RuleFn = Callable[[tuple[DomainEvent, ...]], EmergenceFinding | None]
 
 RULES: tuple[RuleFn, ...] = (
@@ -557,7 +680,16 @@ RULES: tuple[RuleFn, ...] = (
     detect_stable_social_communities,
     detect_rapid_systemic_transition,
     detect_resource_collapse,
+    detect_mid_tree_activation,
+    detect_civic_densification,
 )
+
+MetricRuleFn = Callable[
+    [tuple[DomainEvent, ...], MetricsReport],
+    EmergenceFinding | None,
+]
+
+METRIC_RULES: tuple[MetricRuleFn, ...] = (detect_craft_stock_specialization,)
 
 
 def detect_emergence(
@@ -568,16 +700,20 @@ def detect_emergence(
 ) -> EmergenceReport:
     """Evaluate all emergence rules and return deterministic findings.
 
-    ``metrics`` is accepted for API symmetry/future rules; current rules
-    read events directly so results stay explicit and auditable.
+    Event rules and metric-composed rules remain explicit and auditable.
     """
-    del metrics  # reserved for future metric-backed rules
     ordered = tuple(events)
+    metric_report = metrics or compute_metrics(ordered, path=path)
     findings: list[EmergenceFinding] = []
     rule_names: list[str] = []
     for rule in RULES:
         rule_names.append(rule.__name__.removeprefix("detect_"))
         finding = rule(ordered)
+        if finding is not None:
+            findings.append(finding)
+    for metric_rule in METRIC_RULES:
+        rule_names.append(metric_rule.__name__.removeprefix("detect_"))
+        finding = metric_rule(ordered, metric_report)
         if finding is not None:
             findings.append(finding)
     findings.sort(key=lambda item: (-item.strength, item.pattern, item.tick_start))
