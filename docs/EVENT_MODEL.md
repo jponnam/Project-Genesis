@@ -5,32 +5,31 @@ Every meaningful simulation change is recorded as a typed **domain event**. Even
 ## Lifecycle
 
 1. Systems and executors construct a concrete `DomainEvent` subclass.
-2. The event bus publishes it during the tick.
+2. The event bus publishes it during the tick (stamping `sequence`).
 3. `DomainEvent.to_record()` serializes to a JSON-friendly dict.
 4. `JsonlEventStore` appends one JSON object per line.
 5. Readers use `event_from_record` / `EVENT_TYPE_REGISTRY` to rehydrate typed events.
 
 ## Record shape (persistence)
 
-Typical fields on each JSONL line:
+Each JSONL line is a flat mapping produced by `to_record()`:
 
 | Field | Meaning |
 |-------|---------|
-| `schema_version` | Event schema version for forward compatibility |
-| `event_id` | Stable unique id |
-| `tick` | Simulation tick when emitted |
-| `event_type` | Registry key (e.g. `agent_born`, `trade_executed`) |
-| `payload` | Type-specific fields |
-| timestamps / metadata | As defined by the base event contract |
+| `event_type` | Concrete class name (registry key), e.g. `WealthObserved`, `ResourcesObserved` |
+| `sequence` | Total order index within the run |
+| `tick` | Simulation tick (`{"value": N}` after JSON dump) |
+| … | Type-specific fields at the top level (not nested under `payload`) |
 
-Exact keys are defined in `civitas.domain.events` and verified by round-trip tests.
+There is **no** separate `schema_version` field today. Unknown `event_type` strings fail decode with `ValueError`. Exact keys are defined in `civitas.domain.events` and verified by round-trip tests.
 
 ## Coverage
 
-There are **65** concrete `DomainEvent` types registered for persistence. Categories include:
+There are **66** concrete `DomainEvent` types registered for persistence. Categories include:
 
 - Lifecycle: birth, death, population census
 - Needs & resources: gather, consume, produce, energy/water/food
+- Resource stocks: `ResourcesObserved` (agent inventories + market escrow)
 - Economy: trade, prices, wealth census (includes Gini / top-share bps)
 - Social: relationships, trust, reputation, families, networks
 - Governance: laws, votes, institutions, taxes, treasury
@@ -39,9 +38,14 @@ There are **65** concrete `DomainEvent` types registered for persistence. Catego
 
 Bootstrap seed worlds also emit foundational placement events (fire, fire hearth, tax schedule, council, well, settlement).
 
-## What events do *not* give you
+## Holdings reconstruction
 
-- Full final **resource holdings** per agent (only flows and some census snapshots).
+Final per-agent **resource holdings** are available when the log contains at least one `ResourcesObserved` census (emitted at tick 0 and after every tick). Inspect/summary tooling copies the **last** census — it does not integrate gather/consume/produce/trade flows (those omit production inputs and escrow).
+
+Monetary stocks remain on `WealthObserved` (not duplicated into `ResourcesObserved`).
+
+## What events still do *not* give you
+
 - A byte-identical in-memory `World` object without re-running the engine from the same config and seed.
 - Guarantees about events from future schema versions without a migration path.
 

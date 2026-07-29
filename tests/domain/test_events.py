@@ -70,6 +70,7 @@ from civitas.domain import (
     ResourceConsumed,
     ResourceGathered,
     ResourceProduced,
+    ResourcesObserved,
     ResourceTraded,
     RetrievalObserved,
     SimulationCompleted,
@@ -503,6 +504,27 @@ def test_wealth_observed_round_trips() -> None:
     assert restored.society_total == 27
     assert restored.gini_bps == 2000
     assert restored.median_alive == 5
+
+
+def test_resources_observed_round_trips() -> None:
+    """ResourcesObserved serializes stock census fields losslessly."""
+    event = ResourcesObserved(
+        sequence=9,
+        tick=Tick(value=2),
+        alive_count=2,
+        agent_holdings=((0, "food", 3), (1, "water", 1)),
+        alive_totals=(("food", 3), ("water", 1)),
+        dead_totals=(),
+        escrow_totals=(("wood", 2),),
+        stack_count=2,
+        distinct_resources=2,
+    )
+    restored = event_from_record(event.to_record())
+    assert isinstance(restored, ResourcesObserved)
+    assert restored.agent_holdings == ((0, "food", 3), (1, "water", 1))
+    assert restored.alive_totals == (("food", 3), ("water", 1))
+    assert restored.escrow_totals == (("wood", 2),)
+    assert restored.stack_count == 2
 
 
 def test_relationship_updated_round_trips() -> None:

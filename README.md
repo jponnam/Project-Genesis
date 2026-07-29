@@ -148,7 +148,7 @@ civitas scenarios run wealth_concentration --analyze
 ## Limitations
 
 - No live LLM provider — mock adapter only
-- Final per-agent resource **holdings** are not reconstructed from JSONL (flows and census snapshots are)
+- Final per-agent resource **holdings** come from the last `ResourcesObserved` census (not by integrating flow events)
 - Observatory is local/read-only; it does not launch or mutate simulations
 - Analytics omit metrics that cannot be honestly derived from events
 - Not a multiplayer game client or production SaaS stack
@@ -180,8 +180,8 @@ FastAPI + Jinja2 + uvicorn via `.[observatory]` (included in `.[dev]`).
 
 ## Current milestone
 
-**Phase 22 Milestone 3: ``civitas scenarios run``** — execute a demonstration
-scenario TOML end-to-end (JSONL + optional inspect/metrics/emergence). See
+**Phase 22 Milestone 4: Resource stock census events** — emit
+``ResourcesObserved`` each tick so final holdings are event-derivable. See
 [`docs/PHASE_22_DESIGN.md`](docs/PHASE_22_DESIGN.md).
 
 ### Completed (summary)

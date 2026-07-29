@@ -27,6 +27,7 @@ from civitas.domain import (
     ResourceConsumed,
     ResourceGathered,
     ResourceProduced,
+    ResourcesObserved,
     ResourceTraded,
     TechnologyDiscovered,
     WealthObserved,
@@ -37,6 +38,18 @@ from civitas.storage.replay import (
     load_events,
     verify_metadata,
 )
+
+
+@dataclass(frozen=True, slots=True)
+class ResourceHoldingsSnapshot:
+    """Last ``ResourcesObserved`` stock census, when present."""
+
+    alive_totals: tuple[tuple[str, int], ...]
+    agent_holdings: tuple[tuple[int, str, int], ...]
+    escrow_totals: tuple[tuple[str, int], ...]
+    dead_totals: tuple[tuple[str, int], ...]
+    stack_count: int
+    distinct_resources: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -103,6 +116,7 @@ class RunInspection:
     resources_produced: dict[str, int]
     resources_traded: dict[str, int]
     final_resource_holdings_available: bool
+    resource_holdings: ResourceHoldingsSnapshot | None
     wealth: WealthSnapshot | None
     population: PopulationSnapshot | None
     institutions: tuple[str, ...]
@@ -216,6 +230,30 @@ def build_inspection(path: Path | str) -> RunInspection:
             zero_count=int(wealth_event.zero_count),
         )
 
+    resources_event = _last_of_type(events, ResourcesObserved)
+    resource_holdings: ResourceHoldingsSnapshot | None = None
+    if isinstance(resources_event, ResourcesObserved):
+        resource_holdings = ResourceHoldingsSnapshot(
+            alive_totals=tuple(
+                (str(resource), int(amount))
+                for resource, amount in resources_event.alive_totals
+            ),
+            agent_holdings=tuple(
+                (int(agent_id), str(resource), int(amount))
+                for agent_id, resource, amount in resources_event.agent_holdings
+            ),
+            escrow_totals=tuple(
+                (str(resource), int(amount))
+                for resource, amount in resources_event.escrow_totals
+            ),
+            dead_totals=tuple(
+                (str(resource), int(amount))
+                for resource, amount in resources_event.dead_totals
+            ),
+            stack_count=int(resources_event.stack_count),
+            distinct_resources=int(resources_event.distinct_resources),
+        )
+
     pop_event = _last_of_type(events, PopulationObserved)
     population: PopulationSnapshot | None = None
     if isinstance(pop_event, PopulationObserved):
@@ -299,7 +337,8 @@ def build_inspection(path: Path | str) -> RunInspection:
             ResourceTraded,
             amount_attr="quantity",
         ),
-        final_resource_holdings_available=False,
+        final_resource_holdings_available=resources_event is not None,
+        resource_holdings=resource_holdings,
         wealth=wealth,
         population=population,
         institutions=institutions,
@@ -313,6 +352,7 @@ def build_inspection(path: Path | str) -> RunInspection:
 __all__ = [
     "PopulationSnapshot",
     "ReplayError",
+    "ResourceHoldingsSnapshot",
     "RunInspection",
     "SocialSnapshot",
     "WealthSnapshot",

@@ -54,12 +54,12 @@ def test_ui_home_lists_runs(client: TestClient, sample_run: str) -> None:
 
 
 def test_ui_run_dashboard(client: TestClient, sample_run: str) -> None:
-    """Run dashboard includes overview sections and unavailable labels."""
+    """Run dashboard includes overview sections and holdings census."""
     response = client.get(f"/ui/runs/{sample_run}")
     assert response.status_code == 200
     assert "Event-type frequency" in response.text
     assert "Emergence findings" in response.text
-    assert "Final per-agent holdings unavailable" in response.text
+    assert "alive totals" in response.text
     assert "Agents" in response.text
 
 

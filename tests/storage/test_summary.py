@@ -38,7 +38,8 @@ def test_build_inspection_includes_core_fields(tmp_path: Path) -> None:
     assert report.agents_spawned == 3
     assert any(item.startswith("council:") for item in report.institutions)
     assert any(item.startswith("settlement:") for item in report.cities)
-    assert report.final_resource_holdings_available is False
+    assert report.final_resource_holdings_available is True
+    assert report.resource_holdings is not None
     assert report.wealth is not None
     assert report.population is not None
     assert report.population.alive == report.estimated_living
