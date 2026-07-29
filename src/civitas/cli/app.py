@@ -31,10 +31,12 @@ from civitas.domain import CANONICAL_SEED, SimulationConfig, WorldPreset
 from civitas.engine import SimulationEngine, SimulationResult
 from civitas.scenarios import ScenarioNotFoundError, list_scenarios, load_scenario
 from civitas.storage import (
+    ProjectedState,
     ReplayError,
     ReplayResult,
     RunInspection,
     build_inspection,
+    project_run,
     replay_run,
     write_events,
 )
@@ -929,6 +931,72 @@ def inspect_command(
         console.print_json(json.dumps(report.to_dict()))
         return
     _render_inspection(report)
+
+
+def _render_projection(state: ProjectedState) -> None:
+    """Print a Rich table for a projected partial world state."""
+    table = Table(title="Projected state", show_header=True, header_style="bold")
+    table.add_column("Field", style="cyan")
+    table.add_column("Value")
+    table.add_row("path", str(state.path))
+    table.add_row("seed", str(state.seed))
+    table.add_row("run_name", str(state.run_name))
+    table.add_row("ticks_configured", str(state.ticks_configured))
+    table.add_row("ticks_executed", str(state.ticks_executed))
+    table.add_row("event_count", str(state.event_count))
+    table.add_row("estimated_living_ids", str(list(state.estimated_living_ids)))
+    table.add_row("institutions", str(list(state.institutions)))
+    table.add_row("cities", str(list(state.cities)))
+    table.add_row(
+        "technologies_discovered",
+        str(list(state.technologies_discovered)),
+    )
+    table.add_row("last_wealth_alive_total", str(state.last_wealth_alive_total))
+    table.add_row("last_wealth_gini_bps", str(state.last_wealth_gini_bps))
+    table.add_row("last_population_alive", str(state.last_population_alive))
+    table.add_row(
+        "resource_holdings_available",
+        str(state.resource_holdings_available),
+    )
+    table.add_row("resource_alive_totals", str(list(state.resource_alive_totals)))
+    table.add_row(
+        "resource_agent_holdings",
+        str(list(state.resource_agent_holdings)),
+    )
+    table.add_row("unavailable", str(list(state.unavailable)))
+    console.print(table)
+    console.print("[dim]Partial projection only — not a full World rebuild.[/dim]")
+
+
+@app.command("project")
+def project_command(
+    path: Annotated[
+        Path,
+        typer.Argument(
+            exists=False,
+            dir_okay=False,
+            readable=True,
+            help="Path to a JSONL event log produced by civitas run.",
+        ),
+    ],
+    output_format: Annotated[
+        Literal["text", "json"],
+        typer.Option(
+            "--format",
+            help="Output format: Rich text table or machine-readable JSON.",
+        ),
+    ] = "text",
+) -> None:
+    """Project a partial world state from a JSONL event log."""
+    try:
+        state = project_run(path)
+    except ReplayError as exc:
+        console.print(f"[red]Project failed:[/red] {exc}")
+        raise typer.Exit(code=exc.exit_code) from exc
+    if output_format == "json":
+        console.print_json(json.dumps(state.to_dict()))
+        return
+    _render_projection(state)
 
 
 def main() -> None:

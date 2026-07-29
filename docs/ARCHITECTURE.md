@@ -45,7 +45,7 @@ Bootstrap of a seed world emits foundational events (fire, hearth, tax schedule,
 
 | Surface | Package | Purpose |
 |---------|---------|---------|
-| Replay / inspect | `civitas.storage` | Stream and summarize JSONL |
+| Replay / inspect / project | `civitas.storage` | Stream, summarize, and partially project JSONL |
 | Metrics / emergence / compare | `civitas.analytics` | Offline research metrics |
 | HTTP API | `civitas.api` | Read-only FastAPI app |
 | UI | `civitas.observatory` | Server-rendered Jinja2 + light JS |
