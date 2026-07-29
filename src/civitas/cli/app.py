@@ -27,6 +27,13 @@ from civitas.analytics import (
     analyze_run,
     compare_runs,
 )
+from civitas.campaigns import (
+    CampaignNotFoundError,
+    CampaignReport,
+    list_campaigns,
+    load_campaign,
+    run_campaign,
+)
 from civitas.domain import CANONICAL_SEED, SimulationConfig, WorldPreset
 from civitas.engine import SimulationEngine, SimulationResult
 from civitas.scenarios import ScenarioNotFoundError, list_scenarios, load_scenario
@@ -64,6 +71,13 @@ scenarios_app = typer.Typer(
     no_args_is_help=True,
 )
 app.add_typer(scenarios_app, name="scenarios")
+
+campaign_app = typer.Typer(
+    name="campaign",
+    help="List, inspect, and execute research campaign seed sweeps.",
+    no_args_is_help=True,
+)
+app.add_typer(campaign_app, name="campaign")
 
 SeedOpt = Annotated[
     int,
@@ -770,6 +784,148 @@ def scenarios_run_command(
     _render_inspection(inspection)
     _render_metrics(metrics)
     _render_emergence(emergence)
+
+
+@campaign_app.command("list")
+def campaign_list_command() -> None:
+    """List available research campaigns."""
+    campaigns = list_campaigns()
+    if not campaigns:
+        console.print("[yellow]No campaigns found.[/yellow]")
+        raise typer.Exit(code=1)
+    table = Table(title="Campaigns", show_header=True, header_style="bold")
+    table.add_column("id", style="cyan")
+    table.add_column("title")
+    table.add_column("seeds", justify="right")
+    table.add_column("ticks", justify="right")
+    table.add_column("preset")
+    for campaign in campaigns:
+        table.add_row(
+            campaign.id,
+            campaign.title,
+            str(len(campaign.seeds)),
+            str(campaign.ticks),
+            campaign.preset,
+        )
+    console.print(table)
+
+
+@campaign_app.command("show")
+def campaign_show_command(
+    campaign_id: Annotated[str, typer.Argument(help="Campaign id.")],
+    output_format: Annotated[
+        Literal["text", "json"],
+        typer.Option("--format", help="Rich text or JSON."),
+    ] = "text",
+) -> None:
+    """Show one research campaign manifest."""
+    try:
+        campaign = load_campaign(campaign_id)
+    except CampaignNotFoundError as exc:
+        console.print(f"[red]Campaign failed:[/red] {exc}")
+        raise typer.Exit(code=1) from exc
+    if output_format == "json":
+        console.print_json(json.dumps(campaign.to_dict()))
+        return
+    table = Table(title=campaign.title, show_header=True, header_style="bold")
+    table.add_column("Field", style="cyan")
+    table.add_column("Value")
+    table.add_row("id", campaign.id)
+    table.add_row("research_question", campaign.research_question)
+    table.add_row("seeds", str(list(campaign.seeds)))
+    table.add_row("ticks", str(campaign.ticks))
+    table.add_row("agents", str(campaign.agents))
+    table.add_row("preset", campaign.preset)
+    table.add_row("run_name_prefix", campaign.run_name_prefix)
+    console.print(table)
+    console.print("[bold]Limitations[/bold]")
+    for item in campaign.limitations:
+        console.print(f"  - {item}")
+
+
+def _render_campaign_report(report: CampaignReport) -> None:
+    """Print campaign execution and pairwise compare summaries."""
+    table = Table(title=f"Campaign {report.campaign_id}", show_header=True)
+    table.add_column("seed", justify="right", style="cyan")
+    table.add_column("events", justify="right")
+    table.add_column("living", justify="right")
+    table.add_column("gini_bps", justify="right")
+    table.add_column("path")
+    for item in report.runs:
+        snap = item.snapshot
+        table.add_row(
+            str(item.seed),
+            str(item.event_count),
+            str(snap.estimated_living),
+            str(snap.wealth_gini_bps),
+            item.path,
+        )
+    console.print(table)
+    for note in report.notes:
+        console.print(f"[dim]{note}[/dim]")
+    if report.comparisons:
+        console.print(
+            f"[bold]Pair comparisons[/bold]: {len(report.comparisons)} "
+            "(consecutive seeds)"
+        )
+        for comparison in report.comparisons:
+            console.print(
+                f"  - seed {comparison.left.seed} vs {comparison.right.seed}: "
+                f"deltas={len(comparison.deltas)} "
+                f"shared_emergence={list(comparison.shared_emergence)}"
+            )
+
+
+@campaign_app.command("run")
+def campaign_run_command(
+    campaign_id: Annotated[str, typer.Argument(help="Campaign id to execute.")],
+    output_dir: Annotated[
+        Path | None,
+        typer.Option(
+            "--output-dir",
+            "-o",
+            help="Directory for campaign JSONL outputs (default: runs/campaigns/<id>).",
+            file_okay=False,
+            writable=True,
+        ),
+    ] = None,
+    compare: Annotated[
+        bool,
+        typer.Option(
+            "--compare/--no-compare",
+            help="Build consecutive-pair comparison reports after the sweep.",
+        ),
+    ] = True,
+    output_format: Annotated[
+        Literal["text", "json"],
+        typer.Option("--format", help="Rich text or JSON report."),
+    ] = "text",
+) -> None:
+    """Execute a research campaign seed sweep into JSONL runs."""
+    try:
+        campaign = load_campaign(campaign_id)
+    except CampaignNotFoundError as exc:
+        console.print(f"[red]Campaign failed:[/red] {exc}")
+        raise typer.Exit(code=1) from exc
+    except (ValidationError, ValueError) as exc:
+        console.print(f"[red]Invalid campaign configuration:[/red]\n{exc}")
+        raise typer.Exit(code=1) from exc
+
+    destination = (
+        output_dir
+        if output_dir is not None
+        else Path("runs") / "campaigns" / campaign.id
+    )
+    if output_format != "json":
+        console.print(
+            f"[bold]Running campaign[/bold] {campaign.id} "
+            f"({len(campaign.seeds)} seeds, preset={campaign.preset})"
+        )
+    report = run_campaign(campaign, output_dir=destination, compare=compare)
+    if output_format == "json":
+        console.print_json(json.dumps(report.to_dict()))
+        return
+    _render_campaign_report(report)
 
 
 @app.command("compare")

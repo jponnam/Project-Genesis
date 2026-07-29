@@ -445,6 +445,26 @@ def test_scenarios_run_unknown_id_fails() -> None:
     assert "Scenario failed" in result.stdout
 
 
+def test_campaign_list_show_and_run(tmp_path: Path) -> None:
+    """Campaign CLI lists, shows, and executes a seed sweep."""
+    listed = runner.invoke(app, ["campaign", "list"])
+    assert listed.exit_code == 0, listed.stdout
+    assert "seed_sweep_demo" in listed.stdout
+    shown = runner.invoke(app, ["campaign", "show", "seed_sweep_demo"])
+    assert shown.exit_code == 0, shown.stdout
+    assert "early_craft" in shown.stdout
+    out = tmp_path / "camp"
+    ran = runner.invoke(
+        app,
+        ["campaign", "run", "seed_sweep_demo", "-o", str(out), "--format", "json"],
+    )
+    assert ran.exit_code == 0, ran.stdout
+    payload = json.loads(ran.stdout)
+    assert payload["campaign_id"] == "seed_sweep_demo"
+    assert len(payload["runs"]) == 3
+    assert len(list(out.glob("*.jsonl"))) == 3
+
+
 def test_compare_command_json(tmp_path: Path) -> None:
     """``civitas compare`` emits a deterministic JSON comparison."""
     left = _cli_mini_run(tmp_path)

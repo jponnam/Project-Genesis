@@ -1,0 +1,15 @@
+id = "seed_sweep_demo"
+title = "Seed sweep demo"
+research_question = "How do short early_craft runs diverge across seeds on event counts, wealth inequality, and emergence patterns?"
+
+seeds = [42, 7, 99]
+ticks = 8
+agents = 4
+preset = "early_craft"
+run_name_prefix = "seed_sweep_demo"
+
+limitations = [
+  "Short tick horizon — for CI and workflow demos, not deep civilization trajectories",
+  "Uses early_craft preset so pottery/irrigation start unlocked; not a discovery race",
+  "Pairwise compare_many reports consecutive seed pairs only",
+]
