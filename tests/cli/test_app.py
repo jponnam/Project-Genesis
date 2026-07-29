@@ -373,7 +373,7 @@ def test_emergence_command_json(tmp_path: Path) -> None:
     assert result.exit_code == 0, result.stdout
     payload = json.loads(result.stdout)
     assert "findings" in payload
-    assert len(payload["rules_evaluated"]) == 10
+    assert len(payload["rules_evaluated"]) == 13
 
 
 def test_scenarios_list_and_show() -> None:

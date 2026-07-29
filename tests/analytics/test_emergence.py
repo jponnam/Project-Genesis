@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from civitas.analytics import compute_metrics
 from civitas.analytics.emergence import (
     detect_coordinated_group_behavior,
+    detect_craft_stock_specialization,
     detect_emergence,
     detect_persistent_inequality,
     detect_sustained_specialization,
@@ -13,11 +15,14 @@ from civitas.domain import (
     ActionSelected,
     AgentId,
     KnowledgeLearned,
+    ResourceProduced,
+    ResourcesObserved,
     SimulationConfig,
     TechnologyDiscovered,
     TechnologyId,
     Tick,
     WealthObserved,
+    WorldPreset,
 )
 from civitas.engine import SimulationEngine
 
@@ -160,9 +165,59 @@ def test_live_run_emergence_report_is_structured() -> None:
     )
     report = detect_emergence(result.events, path="memory")
     assert report.path == "memory"
-    assert len(report.rules_evaluated) == 10
+    assert len(report.rules_evaluated) == 13
     for finding in report.findings:
         assert 0.0 <= finding.strength <= 1.0
         assert 0.0 <= finding.confidence <= 1.0
         assert finding.explanation
         assert finding.evidence
+
+
+def test_depth_presets_trigger_activation_and_civic_rules() -> None:
+    """civic_dense bootstrap produces explicit depth findings."""
+    result = SimulationEngine().run(
+        SimulationConfig(
+            seed=42,
+            ticks=1,
+            agent_count=3,
+            preset=WorldPreset.CIVIC_DENSE,
+        )
+    )
+    report = detect_emergence(result.events)
+    patterns = {finding.pattern for finding in report.findings}
+    assert "mid_tree_activation" in patterns
+    assert "civic_densification" in patterns
+
+
+def test_craft_specialization_composes_stock_metrics() -> None:
+    """Craft rule consumes resource inequality/holdings metric outputs."""
+    events = (
+        ResourcesObserved(
+            sequence=0,
+            tick=Tick(value=2),
+            alive_count=2,
+            agent_holdings=((0, "tools", 9), (1, "tools", 1)),
+            alive_totals=(("tools", 10),),
+            stack_count=2,
+            distinct_resources=1,
+        ),
+        ResourceProduced(
+            sequence=1,
+            tick=Tick(value=1),
+            agent_id=AgentId(value=0),
+            recipe_id="tools",
+            outputs=(("tools", 1),),
+        ),
+        ResourceProduced(
+            sequence=2,
+            tick=Tick(value=2),
+            agent_id=AgentId(value=0),
+            recipe_id="tools",
+            outputs=(("tools", 1),),
+        ),
+    )
+    metrics = compute_metrics(events)
+    finding = detect_craft_stock_specialization(events, metrics)
+    assert finding is not None
+    assert finding.pattern == "craft_stock_specialization"
+    assert finding.metrics_used["resource_inequality"] == 4000

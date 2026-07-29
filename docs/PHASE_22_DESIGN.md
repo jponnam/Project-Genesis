@@ -204,6 +204,6 @@ mypy
 | M5 Stock metrics | Merged |
 | M6 World projector | Merged |
 | M7 Research campaigns | Merged |
-| M8 Observatory campaigns | In progress |
-| M9 Depth emergence | Pending |
+| M8 Observatory campaigns | Merged |
+| M9 Depth emergence | In progress |
 | M10 Depth demos + docs | Pending |
