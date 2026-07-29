@@ -1,0 +1,24 @@
+id = "early_craft_depth"
+title = "Early craft depth"
+research_question = "How do resource stocks, inequality, and behavior evolve when pottery and irrigation are deterministically available from bootstrap?"
+
+seed = 42
+ticks = 30
+agents = 6
+run_name = "early_craft_depth"
+preset = "early_craft"
+
+command = "civitas run --seed 42 --ticks 30 --agents 6 --name early_craft_depth --preset early_craft"
+
+observable_signals = [
+  "TechnologyCreated records mark fire, pottery, and irrigation discovered at tick 0",
+  "InnovationCreated records mark pottery_craft and irrigation_canal active",
+  "mid_tree_activation emergence fires from two non-fire technologies",
+  "ResourcesObserved enables final holdings and resource inequality metrics",
+]
+
+limitations = [
+  "Pottery and irrigation are preset bootstrap facts, not discoveries earned during this run",
+  "Later technologies remain governed by research prerequisites and seeded RNG",
+  "A short run may not produce every craft recipe",
+]

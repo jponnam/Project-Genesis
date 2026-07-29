@@ -16,6 +16,8 @@ pip install -e ".[dev]"
 civitas scenarios list
 civitas scenarios show wealth_concentration
 civitas scenarios run institutional_formation --analyze
+civitas scenarios run early_craft_depth --analyze
+civitas scenarios run civic_density --analyze
 ```
 
 Scenarios are TOML under `scenarios/` (research questions, exact run commands, signals, limitations). Prefer `civitas scenarios run <id>` to execute a recipe end-to-end.
@@ -54,6 +56,21 @@ Browse:
 
 API docs: `http://127.0.0.1:8765/docs`
 
+## Phase 22 depth + campaign demo
+
+```bash
+civitas scenarios run early_craft_depth --analyze
+civitas scenarios run civic_density --analyze
+civitas campaign run seed_sweep_demo -o runs/campaigns/seed_sweep_demo
+```
+
+In the Observatory:
+
+- `/ui/runs/civic_density_seed7` shows resource stock census metrics.
+- `/ui/campaigns/seed_sweep_demo` launches a fresh seed sweep and displays
+  event/living/Gini comparisons.
+- Existing logs remain immutable; each web launch creates a fresh artifact.
+
 ## 6. Quality gate (contributors)
 
 ```bash
@@ -69,4 +86,5 @@ Text inspect summarizes ticks, event counts, population signals, and notes when 
 
 ## Portfolio screenshots
 
-See [OBSERVATORY.md](OBSERVATORY.md) for captured UI images from this flow.
+See [OBSERVATORY.md](OBSERVATORY.md) for captured UI images from this flow,
+including the campaign and civic-depth dashboards.

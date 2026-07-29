@@ -49,6 +49,7 @@ Bootstrap of a seed world emits foundational events (fire, hearth, tax schedule,
 | Metrics / emergence / compare | `civitas.analytics` | Offline research metrics |
 | HTTP API | `civitas.api` | Read-only FastAPI app |
 | UI | `civitas.observatory` | Server-rendered Jinja2 + light JS |
+| Campaigns | `civitas.campaigns` | TOML seed sweeps + aggregate comparisons |
 
 Install extras: `pip install -e ".[observatory]"` (included in `.[dev]`).
 
@@ -56,5 +57,8 @@ Install extras: `pip install -e ".[observatory]"` (included in `.[dev]`).
 
 - Metrics and emergence rules must be **derivable from persisted events**.
 - No full `World` rebuild from JSONL for analytics.
+- `ProjectedState` is explicitly partial and labels unavailable fields.
+- Scenario/campaign web launches create fresh artifacts under
+  `CIVITAS_RUNS_DIR`; existing logs are immutable.
 - UI is intentionally not a React SPA.
 - LLM providers remain **mock-only** in this repository; do not claim live model integration.

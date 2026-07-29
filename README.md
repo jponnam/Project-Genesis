@@ -87,6 +87,10 @@ civitas serve --host 127.0.0.1 --port 8000
 
 ![Seed comparison](docs/images/observatory_compare.png)
 
+![Civic-depth run](docs/images/observatory_depth_run.png)
+
+![Research campaign results](docs/images/observatory_campaign.png)
+
 ## Sample session
 
 ```bash
@@ -116,6 +120,9 @@ civitas emergence runs/portfolio_demo_seed42.jsonl
 civitas compare runs/portfolio_demo_seed42.jsonl runs/portfolio_alt_seed7.jsonl
 civitas scenarios list
 civitas scenarios show wealth_concentration
+civitas scenarios run early_craft_depth --analyze
+civitas scenarios run civic_density --analyze
+civitas campaign run seed_sweep_demo
 civitas scenarios run institutional_formation
 civitas scenarios run wealth_concentration --analyze
 ```
@@ -144,6 +151,8 @@ civitas scenarios run wealth_concentration --analyze
 - FastAPI research API and Jinja2 Observatory UI with scoped scenario/campaign launch
 - Seed / run comparison for counterfactual research
 - Data-driven demonstration scenarios (TOML)
+- Named bootstrap presets and executable seed-sweep campaigns
+- Event-derived resource stocks, stock inequality, and partial world projection
 
 ## Limitations
 
@@ -162,7 +171,7 @@ ruff format --check .
 mypy
 ```
 
-Phase 21 complete baseline: **1307** tests passing; coverage typically
+Phase 22 Milestone 10 baseline: **1347** tests passing; coverage typically
 ~**89%** under `pytest --cov` (see CI / local run).
 
 ## Tech stack
@@ -180,9 +189,9 @@ FastAPI + Jinja2 + uvicorn via `.[observatory]` (included in `.[dev]`).
 
 ## Current milestone
 
-**Phase 22 Milestone 9: Depth-oriented emergence** — explicit rules for
-mid-tree activation, civic densification, and metric-backed craft stock
-specialization. See
+**Phase 22 Milestone 10: Depth demos + portfolio docs** — deterministic
+early-craft/civic scenarios, campaign and stock-metric screenshots, and final
+Phase 22 documentation. See
 [`docs/PHASE_22_DESIGN.md`](docs/PHASE_22_DESIGN.md).
 
 ### Completed (summary)
@@ -192,6 +201,9 @@ governance, knowledge, cognition ports (mock), and civilization catalog
 progression through glasscraft. Phase **21** M1–M10 delivered quality repair,
 replay/inspect, analytics, emergence, research API, Observatory UI, seed
 comparison, demonstration scenarios, and portfolio documentation.
+Phase **22** M1–M10 added named world presets, executable scenarios, resource
+stock censuses/metrics, a labeled partial projector, seed-sweep campaigns,
+scoped Observatory execution, depth emergence rules, and reproducible demos.
 
 Living designs: [`docs/PHASE_21_DESIGN.md`](docs/PHASE_21_DESIGN.md),
 [`docs/PHASE_22_DESIGN.md`](docs/PHASE_22_DESIGN.md).

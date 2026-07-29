@@ -7,13 +7,22 @@ Civitas Lab aims for **seed-deterministic** trajectories: the same configuration
 | Knob | Effect |
 |------|--------|
 | `seed` in config / CLI | Initializes `SeededRNG`; all draws go through it |
+| `preset` | Deterministic bootstrap overlay; included in config fingerprint |
 | Config TOML | Catalog unlocks, tick count, agent setup, economy knobs |
 | Package version | Event schemas and system order must match to compare logs bit-for-bit |
 
 Re-run:
 
 ```bash
-civitas run --config path/to/config.toml --seed 42 --ticks 20 --output runs/demo.jsonl
+civitas run --seed 42 --ticks 20 --agents 6 --name demo --preset early_craft
+```
+
+For the implemented CLI, scenario/campaign manifests are the supported TOML
+entry points:
+
+```bash
+civitas scenarios run early_craft_depth
+civitas campaign run seed_sweep_demo
 ```
 
 Byte-identical JSONL is expected when version, config, seed, and tick count match. Cross-version comparisons should use analytics/`civitas compare`, not raw file hashes alone.
@@ -48,3 +57,5 @@ Or Observatory `GET /compare` / `/ui/compare` with two run ids under `CIVITAS_RU
 1. Record package version, config path, seed, and ticks with every published run.
 2. Prefer scenario TOMLs under `scenarios/` for shared demos.
 3. Do not claim LLM-driven decisions unless a real provider is wired (this repo ships mock-only).
+4. Record the world preset (`camp_minimal`, `early_craft`, or `civic_dense`);
+   equal seeds with different presets are intentionally different experiments.

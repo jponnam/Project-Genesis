@@ -52,6 +52,12 @@ Real captures from local demo runs (Phase 21 Milestone 10):
 
 ![Compare](images/observatory_compare.png)
 
+Phase 22 depth/campaign captures:
+
+![Civic-depth run with stock metrics](images/observatory_depth_run.png)
+
+![Campaign aggregate results](images/observatory_campaign.png)
+
 ## Limits
 
 - Existing JSONL logs cannot be edited or deleted; launch actions only create
