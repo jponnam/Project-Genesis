@@ -381,6 +381,56 @@ def test_scenarios_list_and_show() -> None:
     assert payload["seed"] == 42
 
 
+def test_scenarios_run_writes_jsonl(tmp_path: Path) -> None:
+    """``civitas scenarios run`` executes a recipe into JSONL."""
+    output = tmp_path / "scenario.jsonl"
+    result = runner.invoke(
+        app,
+        [
+            "scenarios",
+            "run",
+            "institutional_formation",
+            "--output",
+            str(output),
+        ],
+    )
+    assert result.exit_code == 0, result.stdout
+    assert output.is_file()
+    assert "Running scenario" in result.stdout
+    assert "institutional_formation" in result.stdout
+    assert "Simulation Run" in result.stdout
+    events = JsonlEventStore(output).read_all()
+    assert events[0].event_type == "SimulationStarted"
+    assert events[-1].event_type == "SimulationCompleted"
+
+
+def test_scenarios_run_analyze_prints_summaries(tmp_path: Path) -> None:
+    """``--analyze`` appends inspect/metrics/emergence after the run."""
+    output = tmp_path / "analyzed.jsonl"
+    result = runner.invoke(
+        app,
+        [
+            "scenarios",
+            "run",
+            "institutional_formation",
+            "--output",
+            str(output),
+            "--analyze",
+        ],
+    )
+    assert result.exit_code == 0, result.stdout
+    assert "Run inspection" in result.stdout or "inspection" in result.stdout.lower()
+    assert "Analytics metrics" in result.stdout or "metrics" in result.stdout.lower()
+    assert "Emergence" in result.stdout or "emergence" in result.stdout.lower()
+
+
+def test_scenarios_run_unknown_id_fails() -> None:
+    """Unknown scenario ids exit with code 1."""
+    result = runner.invoke(app, ["scenarios", "run", "not_a_real_scenario"])
+    assert result.exit_code == 1
+    assert "Scenario failed" in result.stdout
+
+
 def test_compare_command_json(tmp_path: Path) -> None:
     """``civitas compare`` emits a deterministic JSON comparison."""
     left = _cli_mini_run(tmp_path)
