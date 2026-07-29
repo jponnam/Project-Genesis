@@ -336,6 +336,21 @@ def test_inspect_missing_file(tmp_path: Path) -> None:
     assert "Inspect failed" in result.stdout
 
 
+def test_project_command_text_and_json(tmp_path: Path) -> None:
+    """``civitas project`` emits a labeled partial world projection."""
+    output = _cli_mini_run(tmp_path)
+    text = runner.invoke(app, ["project", str(output)])
+    assert text.exit_code == 0, text.stdout
+    assert "Projected state" in text.stdout
+    assert "unavailable" in text.stdout.lower()
+    raw = runner.invoke(app, ["project", str(output), "--format", "json"])
+    assert raw.exit_code == 0, raw.stdout
+    payload = json.loads(raw.stdout)
+    assert payload["seed"] == 42
+    assert payload["resource_holdings_available"] is True
+    assert "full_world_identity" in payload["unavailable"]
+
+
 def test_metrics_text_and_json(tmp_path: Path) -> None:
     """``civitas metrics`` supports Rich and JSON output."""
     output = _cli_mini_run(tmp_path)

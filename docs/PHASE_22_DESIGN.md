@@ -201,8 +201,8 @@ mypy
 | M2 World presets | Merged |
 | M3 Scenarios run | Merged |
 | M4 Stock census events | Merged |
-| M5 Stock metrics | In progress |
-| M6 World projector | Pending |
+| M5 Stock metrics | Merged |
+| M6 World projector | In progress |
 | M7 Research campaigns | Pending |
 | M8 Observatory campaigns | Pending |
 | M9 Depth emergence | Pending |

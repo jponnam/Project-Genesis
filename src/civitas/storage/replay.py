@@ -1,9 +1,8 @@
 """Event-stream replay helpers for JSONL simulation runs.
 
 Replay reads persisted ``DomainEvent`` records via ``JsonlEventStore``.
-It does not re-execute the tick loop or reconstruct a full ``World``
-aggregate (that projector does not exist). Final summaries are derived
-only from event fields that are present in the log.
+It does not re-execute the tick loop. For a richer partial projection
+(still not a full ``World`` rebuild), see ``civitas.storage.projector``.
 """
 
 from __future__ import annotations
