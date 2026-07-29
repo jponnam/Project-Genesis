@@ -180,8 +180,8 @@ FastAPI + Jinja2 + uvicorn via `.[observatory]` (included in `.[dev]`).
 
 ## Current milestone
 
-**Phase 22 Milestone 4: Resource stock census events** — emit
-``ResourcesObserved`` each tick so final holdings are event-derivable. See
+**Phase 22 Milestone 5: Stock metrics** — offline analytics for resource
+holdings, resource inequality, and money series from censuses. See
 [`docs/PHASE_22_DESIGN.md`](docs/PHASE_22_DESIGN.md).
 
 ### Completed (summary)

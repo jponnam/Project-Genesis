@@ -51,6 +51,9 @@
     {% if resource_holdings_available and resource_holdings %}
       <p>alive totals {{ resource_holdings.alive_totals }}</p>
       <p class="muted">escrow {{ resource_holdings.escrow_totals }} · stacks {{ resource_holdings.stack_count }}</p>
+      {% if resource_inequality %}
+        <p class="muted">stock gini_bps {{ resource_inequality.value }} · top1_share_bps {{ resource_inequality.details.top1_share_bps }}</p>
+      {% endif %}
     {% else %}
       <div class="empty">Final per-agent holdings unavailable. Showing flows only.</div>
     {% endif %}

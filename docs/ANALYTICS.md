@@ -16,13 +16,14 @@ Offline metrics are computed by streaming JSONL runs — no live `World` rebuild
 Metrics are event-derivable aggregates, including:
 
 - **Population** — births, deaths, alive counts from census / lifecycle events
-- **Economy** — trades, production/consumption flows, wealth census fields (`gini_bps`, share bps)
+- **Economy** — trades, production/consumption flows, wealth census fields (`gini_bps`, share bps), `money_alive_series`
+- **Resource stocks** — `final_resource_holdings`, `resource_holdings_series`, `resource_inequality` from `ResourcesObserved`
 - **Social** — relationship / trust / reputation activity present in the log
 - **Governance** — law, vote, institution, tax/treasury signals
 - **Knowledge** — research, innovation, diffusion, teaching events
 - **Built form** — infrastructure and city-related events when present
 
-Exact field names live in `civitas.analytics.types` and are stable for JSON consumers.
+Exact field names live in `civitas.analytics.types` / metric `name` keys and are stable for JSON consumers.
 
 ## Design rules
 
@@ -31,7 +32,9 @@ Exact field names live in `civitas.analytics.types` and are stable for JSON cons
 3. Label unavailable reconstructions rather than guessing.
 4. Keep computation streaming / single-pass friendly where possible.
 
-Stock inequality / per-resource holding series are Phase 22 Milestone 5 candidates now that `ResourcesObserved` exists.
+Stock metrics (`final_resource_holdings`, `resource_holdings_series`,
+`resource_inequality`, `money_alive_series`) are available once the corresponding
+censuses appear in the log; otherwise they report `status=empty`.
 
 ## Related
 

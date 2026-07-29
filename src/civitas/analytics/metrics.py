@@ -23,10 +23,13 @@ from civitas.domain import (
     InstitutionCreated,
     KnowledgeLearned,
     NetworksObserved,
+    ResourcesObserved,
     ResourceTraded,
     SimulationStarted,
     TechnologyDiscovered,
     WealthObserved,
+    gini_bps,
+    share_bps,
 )
 
 
@@ -456,6 +459,137 @@ def repeated_behavior_entropy(events: tuple[DomainEvent, ...]) -> MetricResult:
     )
 
 
+def _agent_stock_balances(event: ResourcesObserved) -> list[int]:
+    """Per-living-agent total inventory quantities (zeros padded to alive_count)."""
+    totals: Counter[int] = Counter()
+    for agent_id, _resource, quantity in event.agent_holdings:
+        totals[int(agent_id)] += int(quantity)
+    balances = list(totals.values())
+    missing = max(0, int(event.alive_count) - len(balances))
+    if missing:
+        balances.extend([0] * missing)
+    return balances
+
+
+def final_resource_holdings(events: tuple[DomainEvent, ...]) -> MetricResult:
+    """Last ResourcesObserved alive/escrow totals."""
+    definition = (
+        "Final living-agent resource stocks from the last ResourcesObserved "
+        "census (alive_totals). Escrow and dead totals are in details. "
+        "Unavailable when no ResourcesObserved events exist."
+    )
+    observations = [event for event in events if isinstance(event, ResourcesObserved)]
+    if not observations:
+        return MetricResult(
+            name="final_resource_holdings",
+            definition=definition,
+            value=None,
+            status="empty",
+        )
+    last = observations[-1]
+    return MetricResult(
+        name="final_resource_holdings",
+        definition=definition,
+        value=dict(last.alive_totals),
+        details={
+            "escrow_totals": dict(last.escrow_totals),
+            "dead_totals": dict(last.dead_totals),
+            "stack_count": int(last.stack_count),
+            "distinct_resources": int(last.distinct_resources),
+            "tick": _tick(last),
+        },
+    )
+
+
+def resource_holdings_series(events: tuple[DomainEvent, ...]) -> MetricResult:
+    """Per-tick alive resource totals from ResourcesObserved."""
+    definition = (
+        "Time series of ResourcesObserved.alive_totals keyed by tick "
+        "(resource -> quantity). Primary value is the full series map."
+    )
+    observations = [event for event in events if isinstance(event, ResourcesObserved)]
+    if not observations:
+        return MetricResult(
+            name="resource_holdings_series",
+            definition=definition,
+            value={},
+            status="empty",
+        )
+    series = {str(_tick(event)): dict(event.alive_totals) for event in observations}
+    return MetricResult(
+        name="resource_holdings_series",
+        definition=definition,
+        value=series,
+        details={"observation_count": len(observations)},
+    )
+
+
+def resource_inequality(events: tuple[DomainEvent, ...]) -> MetricResult:
+    """Gini of per-agent total inventory from the last ResourcesObserved."""
+    definition = (
+        "Resource-stock inequality among living agents using the last "
+        "ResourcesObserved census. Each living agent contributes their total "
+        "inventory quantity (sum across resources); agents with no stacks are "
+        "treated as zero up to alive_count. Primary value is gini_bps; "
+        "details include top1_share_bps."
+    )
+    observations = [event for event in events if isinstance(event, ResourcesObserved)]
+    if not observations:
+        return MetricResult(
+            name="resource_inequality",
+            definition=definition,
+            value=None,
+            status="empty",
+        )
+    last = observations[-1]
+    if int(last.alive_count) < 1:
+        return MetricResult(
+            name="resource_inequality",
+            definition=definition,
+            value=None,
+            status="undefined",
+            details={"alive_count": 0},
+        )
+    balances = _agent_stock_balances(last)
+    total_stock = sum(balances)
+    top1 = 0 if not balances else share_bps(max(balances), total_stock)
+    return MetricResult(
+        name="resource_inequality",
+        definition=definition,
+        value=gini_bps(balances),
+        details={
+            "top1_share_bps": top1,
+            "alive_count": int(last.alive_count),
+            "total_stock": total_stock,
+            "tick": _tick(last),
+        },
+    )
+
+
+def money_alive_series(events: tuple[DomainEvent, ...]) -> MetricResult:
+    """Alive money totals over time from WealthObserved."""
+    definition = (
+        "Time series of WealthObserved.alive_total keyed by tick. "
+        "Primary value is the final alive_total; details.series lists "
+        "(tick, alive_total)."
+    )
+    observations = [event for event in events if isinstance(event, WealthObserved)]
+    if not observations:
+        return MetricResult(
+            name="money_alive_series",
+            definition=definition,
+            value=None,
+            status="empty",
+        )
+    series = [(_tick(event), int(event.alive_total)) for event in observations]
+    return MetricResult(
+        name="money_alive_series",
+        definition=definition,
+        value=series[-1][1],
+        details={"series": series, "observation_count": len(series)},
+    )
+
+
 MetricFn = Callable[[tuple[DomainEvent, ...]], MetricResult]
 
 ALL_METRICS: tuple[MetricFn, ...] = (
@@ -464,6 +598,10 @@ ALL_METRICS: tuple[MetricFn, ...] = (
     agent_activity_distribution,
     wealth_gini_bps,
     wealth_concentration,
+    final_resource_holdings,
+    resource_holdings_series,
+    resource_inequality,
+    money_alive_series,
     institution_formation_rate,
     city_formation_rate,
     technology_adoption_rate,
