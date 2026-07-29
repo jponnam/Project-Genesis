@@ -1,21 +1,24 @@
 {% extends "base.html" %}
+{% from "macros.html" import page_header, badge, empty_state, icon %}
 {% block content %}
-<section class="hero" data-reveal>
-  <h1>Executable scenarios</h1>
-  <p>Launch a manifest as a new JSONL artifact under the configured runs directory.</p>
+{% call page_header("Scenarios", "Curated deterministic research configurations with explicit questions, signals, and limitations.", "Experiment library") %}
+  <a class="button button--secondary" href="/ui/runs">{{ icon("runs") }} View runs</a>
+{% endcall %}
+{% if scenarios %}
+<section class="manifest-grid">
+  {% for scenario in scenarios %}
+  <article class="card manifest-card">
+    <div class="cluster">{{ badge(scenario.preset, "accent") }}{{ badge("seed " ~ scenario.seed) }}</div>
+    <h2>{{ scenario.title }}</h2><p>{{ scenario.research_question }}</p>
+    <div class="manifest-card__meta"><span class="badge">{{ scenario.ticks }} ticks</span><span class="badge">{{ scenario.agents }} agents</span></div>
+    <div class="manifest-card__actions">
+      <a class="button button--secondary" href="/ui/scenarios/{{ scenario.id }}">View details</a>
+      <form method="post" action="/ui/scenarios/{{ scenario.id }}/run" data-submit-state>
+        <button type="submit" data-loading-label="Running…">{{ icon("scenario") }} Run</button>
+      </form>
+    </div>
+  </article>
+  {% endfor %}
 </section>
-<section class="panel" data-reveal>
-  <table>
-    <thead><tr><th>Scenario</th><th>Preset</th><th>Seed</th><th>Ticks</th><th>Agents</th></tr></thead>
-    <tbody>
-    {% for scenario in scenarios %}
-      <tr>
-        <td><a href="/ui/scenarios/{{ scenario.id }}">{{ scenario.title }}</a></td>
-        <td>{{ scenario.preset }}</td><td>{{ scenario.seed }}</td>
-        <td>{{ scenario.ticks }}</td><td>{{ scenario.agents }}</td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
-</section>
+{% else %}{{ empty_state("No scenarios found", "Set CIVITAS_SCENARIOS_DIR to a directory containing valid scenario TOML manifests.") }}{% endif %}
 {% endblock %}

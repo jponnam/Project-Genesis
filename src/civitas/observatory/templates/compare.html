@@ -1,81 +1,64 @@
 {% extends "base.html" %}
+{% from "macros.html" import page_header, badge, empty_state, icon, stat_card %}
 {% block content %}
-<section class="hero" data-reveal>
-  <h1>Seed / run comparison</h1>
-  <p>Deterministic side-by-side comparison of two JSONL runs.</p>
-</section>
+{% call page_header("Seed / run comparison", "Inspect deterministic differences without assigning normative better-or-worse meaning.", "Comparative analysis") %}
+  <a class="button button--secondary" href="/ui/runs">{{ icon("runs") }} Browse runs</a>
+{% endcall %}
 
-<section class="panel" data-reveal>
-  <form class="inline" method="get">
-    <label>Left run
-      <select name="left" required>
-        <option value="">Select…</option>
-        {% for run in runs %}
-          <option value="{{ run.run_id }}" {% if left == run.run_id %}selected{% endif %}>{{ run.run_id }}</option>
-        {% endfor %}
-      </select>
-    </label>
-    <label>Right run
-      <select name="right" required>
-        <option value="">Select…</option>
-        {% for run in runs %}
-          <option value="{{ run.run_id }}" {% if right == run.run_id %}selected{% endif %}>{{ run.run_id }}</option>
-        {% endfor %}
-      </select>
-    </label>
-    <button type="submit">Compare</button>
+<section class="panel mb-4">
+  <div class="section-heading"><div><h2>Select runs</h2><p>Choose two distinct artifacts for a structured comparison.</p></div></div>
+  <form class="toolbar" method="get">
+    <label>Left run<select name="left" required><option value="">Select a run…</option>{% for run in runs %}<option value="{{ run.run_id }}" {% if left == run.run_id %}selected{% endif %}>{{ run.run_id }}{% if run.seed is not none %} · seed {{ run.seed }}{% endif %}</option>{% endfor %}</select></label>
+    <button class="button button--secondary" type="button" data-swap-runs aria-label="Swap selected runs">{{ icon("compare") }} Swap</button>
+    <label>Right run<select name="right" required><option value="">Select a run…</option>{% for run in runs %}<option value="{{ run.run_id }}" {% if right == run.run_id %}selected{% endif %}>{{ run.run_id }}{% if run.seed is not none %} · seed {{ run.seed }}{% endif %}</option>{% endfor %}</select></label>
+    <button type="submit">Compare runs</button>
   </form>
-  {% if error %}<div class="empty">{{ error }}</div>{% endif %}
-  {% if not runs %}<div class="empty">No runs available to compare.</div>{% endif %}
+  {% if error %}<div class="empty mt-4"><strong>Comparison unavailable</strong><p>{{ error }}</p></div>{% endif %}
+  {% if not runs %}{{ empty_state("No runs available", "Generate two scenario runs before opening the comparison workspace.", "/ui/scenarios", "Run a scenario") }}{% endif %}
 </section>
 
 {% if comparison %}
-<section class="panel" data-reveal>
-  <h3>Overview</h3>
-  <p>
-    identical seeds: {{ comparison.identical_seeds }} ·
-    identical event counts: {{ comparison.identical_event_counts }}
-  </p>
-  {% for note in comparison.notes %}
-    <span class="chip warn">{{ note }}</span>
+<section class="stats-grid">
+  {{ stat_card("Event delta", comparison.right.event_count - comparison.left.event_count, comparison.left.event_count ~ " → " ~ comparison.right.event_count, "accent") }}
+  {{ stat_card("Living delta", comparison.right.estimated_living - comparison.left.estimated_living, comparison.left.estimated_living ~ " → " ~ comparison.right.estimated_living) }}
+  {{ stat_card("Gini delta", (comparison.right.wealth_gini_bps or 0) - (comparison.left.wealth_gini_bps or 0), (comparison.left.wealth_gini_bps or "—") ~ " → " ~ (comparison.right.wealth_gini_bps or "—"), "warning") }}
+  {{ stat_card("Field changes", comparison.deltas|length, "Structured deltas") }}
+</section>
+<p class="muted">identical seeds: {{ comparison.identical_seeds }} · identical event counts: {{ comparison.identical_event_counts }}</p>
+
+<div class="comparison-grid mb-4">
+  {% for side in [comparison.left, comparison.right] %}
+  <article class="panel">
+    <div class="section-heading"><div><span class="eyebrow">{{ "Left" if loop.first else "Right" }} run</span><h2 class="mono">{{ side.run_name or side.path }}</h2></div>{{ badge("seed " ~ side.seed, "accent") }}</div>
+    <dl class="definition-grid">
+      <div><dt>Events</dt><dd>{{ "{:,}".format(side.event_count) }}</dd></div>
+      <div><dt>Living</dt><dd>{{ side.estimated_living }}</dd></div>
+      <div><dt>Births / deaths</dt><dd>{{ side.births }} / {{ side.deaths }}</dd></div>
+      <div><dt>Trades</dt><dd>{{ side.trades }}</dd></div>
+      <div><dt>Wealth Gini</dt><dd>{{ side.wealth_gini_bps if side.wealth_gini_bps is not none else "—" }}</dd></div>
+      <div><dt>Network density</dt><dd>{{ side.relationship_network_density_bps if side.relationship_network_density_bps is not none else "—" }}</dd></div>
+    </dl>
+    <details class="mt-4"><summary>State sets and action counts</summary><pre class="code-block">{{ {"actions": side.actions, "institutions": side.institutions, "cities": side.cities, "technologies": side.technologies_discovered, "emergence": side.emergence_patterns}|tojson(indent=2) }}</pre></details>
+  </article>
   {% endfor %}
-  <table>
-    <thead><tr><th>Field</th><th>Left</th><th>Right</th></tr></thead>
-    <tbody>
-      <tr><td>path</td><td>{{ comparison.left.path }}</td><td>{{ comparison.right.path }}</td></tr>
-      <tr><td>seed</td><td>{{ comparison.left.seed }}</td><td>{{ comparison.right.seed }}</td></tr>
-      <tr><td>events</td><td>{{ comparison.left.event_count }}</td><td>{{ comparison.right.event_count }}</td></tr>
-      <tr><td>living</td><td>{{ comparison.left.estimated_living }}</td><td>{{ comparison.right.estimated_living }}</td></tr>
-      <tr><td>gini_bps</td><td>{{ comparison.left.wealth_gini_bps }}</td><td>{{ comparison.right.wealth_gini_bps }}</td></tr>
-      <tr><td>actions</td><td>{{ comparison.left.actions }}</td><td>{{ comparison.right.actions }}</td></tr>
-      <tr><td>institutions</td><td>{{ comparison.left.institutions|list }}</td><td>{{ comparison.right.institutions|list }}</td></tr>
-      <tr><td>technologies</td><td>{{ comparison.left.technologies_discovered|list }}</td><td>{{ comparison.right.technologies_discovered|list }}</td></tr>
-      <tr><td>emergence</td><td>{{ comparison.left.emergence_patterns|list }}</td><td>{{ comparison.right.emergence_patterns|list }}</td></tr>
-    </tbody>
-  </table>
+</div>
+
+<section class="panel mb-4">
+  <div class="section-heading"><div><h2>Deltas</h2><p>Added, removed, or changed fields between left and right.</p></div>{{ badge(comparison.deltas|length ~ " changed", "warning" if comparison.deltas else "positive") }}</div>
+  {% if comparison.deltas %}
+  <div class="table-wrap"><table><caption class="sr-only">Field-level comparison deltas</caption><thead><tr><th scope="col">Field</th><th scope="col">Left</th><th scope="col">Right</th><th scope="col">Change</th></tr></thead><tbody>
+    {% for delta in comparison.deltas %}<tr><td class="table-primary">{{ delta.field|replace("_", " ")|title }}</td><td class="mono">{{ delta.left }}</td><td class="mono">{{ delta.right }}</td><td><span class="badge badge--warning">Changed</span>{% if delta.note %}<span class="table-secondary">{{ delta.note }}</span>{% endif %}</td></tr>{% endfor %}
+  </tbody></table></div>
+  {% else %}{{ empty_state("No field-level deltas", "The comparable snapshot fields are identical.") }}{% endif %}
 </section>
 
-<section class="panel" data-reveal>
-  <h3>Deltas</h3>
-  {% if comparison.deltas %}
-    <table>
-      <thead><tr><th>Field</th><th>Left</th><th>Right</th></tr></thead>
-      <tbody>
-        {% for delta in comparison.deltas %}
-        <tr>
-          <td>{{ delta.field }}</td>
-          <td>{{ delta.left }}</td>
-          <td>{{ delta.right }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  {% else %}
-    <div class="empty">No field-level deltas.</div>
-  {% endif %}
-  <p class="muted">shared emergence: {{ comparison.shared_emergence|list }}</p>
-  <p class="muted">unique left: {{ comparison.unique_left_emergence|list }}</p>
-  <p class="muted">unique right: {{ comparison.unique_right_emergence|list }}</p>
+<section class="panel">
+  <div class="section-heading"><div><h2>Emergence set comparison</h2><p>Shared and run-unique explicit rule findings.</p></div></div>
+  <div class="grid">
+    <div class="span-4"><h3>Shared</h3><div class="cluster">{% for item in comparison.shared_emergence %}{{ badge(item|replace("_", " "), "positive") }}{% else %}<span class="muted">None</span>{% endfor %}</div></div>
+    <div class="span-4"><h3>Left only</h3><div class="cluster">{% for item in comparison.unique_left_emergence %}{{ badge(item|replace("_", " "), "accent") }}{% else %}<span class="muted">None</span>{% endfor %}</div></div>
+    <div class="span-4"><h3>Right only</h3><div class="cluster">{% for item in comparison.unique_right_emergence %}{{ badge(item|replace("_", " "), "warning") }}{% else %}<span class="muted">None</span>{% endfor %}</div></div>
+  </div>
 </section>
 {% endif %}
 {% endblock %}

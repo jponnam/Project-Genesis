@@ -51,6 +51,21 @@ def test_ui_home_lists_runs(client: TestClient, sample_run: str) -> None:
     assert "Run selector" in response.text
     assert sample_run in response.text
     assert "Civitas Observatory" in response.text
+    assert "Research overview" in response.text
+    assert 'href="#main-content"' in response.text
+    assert 'aria-label="Primary"' in response.text
+    assert "data-theme-toggle" in response.text
+
+
+def test_ui_runs_catalog_is_searchable(client: TestClient, sample_run: str) -> None:
+    """Dedicated runs page exposes semantic search/sort controls."""
+    response = client.get("/ui/runs")
+    assert response.status_code == 200
+    assert sample_run in response.text
+    assert "Run catalog" in response.text
+    assert "data-table-search" in response.text
+    assert "data-sort-table" in response.text
+    assert 'aria-current="page"' in response.text
 
 
 def test_ui_run_dashboard(client: TestClient, sample_run: str) -> None:
@@ -97,6 +112,11 @@ def test_ui_static_assets(client: TestClient) -> None:
     assert "--accent" in css.text
     assert js.status_code == 200
     assert "bar-fill" in js.text
+    assert "civitas-theme" in js.text
+    assert "data-drawer" in js.text
+    favicon = client.get("/favicon.ico", follow_redirects=True)
+    assert favicon.status_code == 200
+    assert "<svg" in favicon.text
 
 
 def test_ui_scenario_and_campaign_surfaces(
@@ -135,3 +155,21 @@ def test_root_redirects_to_ui(client: TestClient) -> None:
     response = client.get("/", follow_redirects=False)
     assert response.status_code == 307
     assert response.headers["location"] == "/ui/"
+
+
+def test_ui_compare_rejects_same_run(client: TestClient, sample_run: str) -> None:
+    """Same-run comparisons show a meaningful inline message."""
+    response = client.get(
+        "/ui/compare",
+        params={"left": sample_run, "right": sample_run},
+    )
+    assert response.status_code == 200
+    assert "Select two different runs" in response.text
+
+
+def test_ui_404_uses_branded_error_state(client: TestClient) -> None:
+    """UI errors render the shared application shell instead of JSON."""
+    response = client.get("/ui/runs/does-not-exist")
+    assert response.status_code == 404
+    assert "Request unavailable" in response.text
+    assert "Return to overview" in response.text

@@ -1,18 +1,35 @@
 {% extends "base.html" %}
+{% from "macros.html" import page_header, badge, icon %}
 {% block content %}
-<section class="hero" data-reveal>
-  <h1>{{ scenario.title }}</h1>
-  <p>{{ scenario.research_question }}</p>
-</section>
-<section class="panel" data-reveal>
-  <p>seed {{ scenario.seed }} · {{ scenario.ticks }} ticks · {{ scenario.agents }} agents · preset {{ scenario.preset }}</p>
-  <form method="post" action="/ui/scenarios/{{ scenario.id }}/run">
-    <button type="submit">Run scenario</button>
-  </form>
-  <p class="muted">Creates a new artifact; existing JSONL logs are never overwritten.</p>
-  <h3>Observable signals</h3>
-  {% for item in scenario.observable_signals %}<span class="chip">{{ item }}</span>{% endfor %}
-  <h3>Limitations</h3>
-  {% for item in scenario.limitations %}<p class="muted">{{ item }}</p>{% endfor %}
-</section>
+{% call page_header(scenario.title, scenario.research_question, "Scenario manifest") %}
+  <a class="button button--secondary" href="/ui/scenarios">Back to scenarios</a>
+{% endcall %}
+<div class="grid">
+  <section class="panel span-8">
+    <div class="section-heading"><div><h2>Configuration</h2><p>Deterministic inputs loaded from the manifest.</p></div>{{ badge(scenario.preset, "accent") }}</div>
+    <dl class="definition-grid">
+      <div><dt>Scenario ID</dt><dd id="scenario-id">{{ scenario.id }}</dd></div><div><dt>Run name</dt><dd>{{ scenario.run_name }}</dd></div>
+      <div><dt>Seed</dt><dd>{{ scenario.seed }}</dd></div><div><dt>Ticks</dt><dd>{{ scenario.ticks }}</dd></div>
+      <div><dt>Initial agents</dt><dd>{{ scenario.agents }}</dd></div><div><dt>Preset</dt><dd>{{ scenario.preset }}</dd></div>
+    </dl>
+    <div class="section-heading mt-4"><div><h2>Exact command</h2><p>Equivalent CLI execution for reproducibility.</p></div><button class="button button--secondary copy-button" type="button" data-copy="#scenario-command">{{ icon("copy") }} Copy</button></div>
+    <pre id="scenario-command" class="code-block">{{ scenario.command }}</pre>
+  </section>
+  <aside class="panel span-4">
+    <div class="section-heading"><div><h2>Observable signals</h2><p>Evidence to inspect after execution.</p></div></div>
+    <ul class="timeline">{% for item in scenario.observable_signals %}<li>{{ item }}</li>{% endfor %}</ul>
+  </aside>
+  <section class="panel span-8">
+    <div class="section-heading"><div><h2>Limitations</h2><p>Interpretation boundaries declared by the scenario.</p></div></div>
+    <ul>{% for item in scenario.limitations %}<li class="text-secondary">{{ item }}</li>{% endfor %}</ul>
+  </section>
+  <aside class="span-4">
+    <div class="action-callout">
+      <div><strong>Run this scenario</strong><p>Creates a fresh JSONL artifact. Existing logs are never overwritten.</p></div>
+      <form method="post" action="/ui/scenarios/{{ scenario.id }}/run" data-submit-state>
+        <button type="submit" data-loading-label="Running…">{{ icon("scenario") }} Run scenario</button>
+      </form>
+    </div>
+  </aside>
+</div>
 {% endblock %}

@@ -1,35 +1,70 @@
 {% extends "base.html" %}
+{% from "macros.html" import page_header, badge, stat_card, empty_state, icon, bar_row %}
 {% block content %}
-<section class="hero" data-reveal>
-  <h1>{{ campaign.title }}</h1>
-  <p>{{ campaign.research_question }}</p>
-</section>
-<section class="panel" data-reveal>
-  <p>seeds {{ campaign.seeds|list }} · {{ campaign.ticks }} ticks · {{ campaign.agents }} agents · preset {{ campaign.preset }}</p>
-  <form method="post" action="/ui/campaigns/{{ campaign.id }}/run">
-    <button type="submit">Run fresh campaign</button>
+{% call page_header(campaign.title, campaign.research_question, "Campaign manifest") %}
+  <a class="button button--secondary" href="/ui/campaigns">Back to campaigns</a>
+  <form method="post" action="/ui/campaigns/{{ campaign.id }}/run" data-submit-state data-confirm="Run {{ campaign.seeds|length }} deterministic simulations?">
+    <button type="submit" data-loading-label="Running campaign…">{{ icon("campaign") }} Run fresh campaign</button>
   </form>
-  <p class="muted">Each launch gets a new execution directory under CIVITAS_RUNS_DIR.</p>
+{% endcall %}
+
+<section class="panel mb-4">
+  <div class="section-heading"><div><h2>Campaign configuration</h2><p>Immutable manifest inputs for every seed member.</p></div>{{ badge(campaign.preset, "accent") }}</div>
+  <dl class="definition-grid">
+    <div><dt>Seeds</dt><dd>{{ campaign.seeds|list }}</dd></div><div><dt>Seed count</dt><dd>{{ campaign.seeds|length }}</dd></div>
+    <div><dt>Ticks</dt><dd>{{ campaign.ticks }}</dd></div><div><dt>Initial agents</dt><dd>{{ campaign.agents }}</dd></div>
+    <div><dt>Run prefix</dt><dd>{{ campaign.run_name_prefix }}</dd></div><div><dt>Persisted executions</dt><dd>{{ executions|length }}</dd></div>
+  </dl>
+  <details class="mt-4"><summary>Interpretation limitations</summary><ul>{% for item in campaign.limitations %}<li>{{ item }}</li>{% endfor %}</ul></details>
 </section>
+
+{% if executions %}
+<form class="toolbar mb-4" action="/ui/campaigns/{{ campaign.id }}/results" method="get">
+  <label>Execution<select name="execution_id">{% for execution in executions %}<option value="{{ execution }}" {% if report and report.execution_id == execution %}selected{% endif %}>{{ execution }}</option>{% endfor %}</select></label>
+  <button class="button button--secondary" type="submit">Load persisted results</button>
+</form>
+{% endif %}
+
 {% if report %}
-<section class="panel" data-reveal>
-  <h3>Campaign results · {{ report.execution_id }}</h3>
-  <table>
-    <thead><tr><th>Seed</th><th>Events</th><th>Living</th><th>Gini bps</th><th>Artifact</th></tr></thead>
-    <tbody>
-    {% for run in report.runs %}
-      <tr>
-        <td>{{ run.seed }}</td><td>{{ run.event_count }}</td>
-        <td>{{ run.snapshot.estimated_living }}</td>
-        <td>{{ run.snapshot.wealth_gini_bps }}</td>
-        <td>{{ run.path }}</td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
-  <p class="muted">{{ report.comparisons|length }} consecutive-pair comparisons.</p>
+<h2 class="sr-only">Campaign results</h2>
+<section class="stats-grid" aria-label="Campaign result summary">
+  {{ stat_card("Runs", report.runs|length, "Seeds completed", "positive") }}
+  {{ stat_card("Total events", "{:,}".format(report.runs|sum(attribute="event_count")), "Across campaign") }}
+  {{ stat_card("Comparisons", report.comparisons|length, "Consecutive pairs", "accent") }}
+  {{ stat_card("Execution", report.execution_id[-9:-1], "UTC identifier") }}
 </section>
-{% elif executions %}
-<section class="panel"><a href="/ui/campaigns/{{ campaign.id }}/results">View latest results</a></section>
+
+<div class="grid">
+  <section class="panel span-7">
+    <div class="section-heading"><div><h2>Outcomes by seed</h2><p>Real event count, final living population, and wealth Gini.</p></div></div>
+    {% set max_events = report.runs|map(attribute="event_count")|max %}
+    <h3>Events</h3><div class="bar-list">{% for run in report.runs %}{{ bar_row("Seed " ~ run.seed, "{:,}".format(run.event_count), run.event_count / max_events * 100 if max_events else 0) }}{% endfor %}</div>
+    {% set max_gini = report.runs|map(attribute="snapshot.wealth_gini_bps")|max %}
+    <h3 class="mt-4">Wealth Gini</h3><div class="bar-list">{% for run in report.runs %}{{ bar_row("Seed " ~ run.seed, run.snapshot.wealth_gini_bps or 0, (run.snapshot.wealth_gini_bps or 0) / 100) }}{% endfor %}</div>
+  </section>
+  <section class="panel span-5">
+    <div class="section-heading"><div><h2>Execution notes</h2><p>Runner-generated report metadata</p></div></div>
+    <ul class="timeline">{% for note in report.notes %}<li>{{ note }}</li>{% endfor %}</ul>
+  </section>
+
+  <section class="panel span-12">
+    <div class="section-heading"><div><h2>Individual runs</h2><p>Inspect each generated artifact directly.</p></div>{{ badge(report.runs|length ~ " complete", "positive") }}</div>
+    <div class="table-wrap"><table><caption class="sr-only">Campaign member runs</caption><thead><tr><th scope="col">Seed</th><th scope="col">Events</th><th scope="col">Living</th><th scope="col">Gini</th><th scope="col">Emergence</th><th scope="col"></th></tr></thead><tbody>
+      {% for run in report.runs %}<tr><td class="numeric">{{ run.seed }}</td><td class="numeric">{{ "{:,}".format(run.event_count) }}</td><td class="numeric">{{ run.snapshot.estimated_living }}</td><td class="numeric">{{ run.snapshot.wealth_gini_bps if run.snapshot.wealth_gini_bps is not none else "—" }}</td><td><div class="cluster">{% for pattern in run.snapshot.emergence_patterns %}{{ badge(pattern|replace("_", " ")) }}{% else %}<span class="muted">No matches</span>{% endfor %}</div></td><td>{% if run.run_id is defined %}<a class="row-action" href="/ui/runs/{{ run.run_id }}">View run {{ icon("arrow") }}</a>{% else %}<details><summary>Path</summary><code>{{ run.path }}</code></details>{% endif %}</td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+
+  <section class="panel span-12">
+    <div class="section-heading"><div><h2>Pair comparisons</h2><p>Structured deltas between consecutive campaign seeds.</p></div></div>
+    {% for comparison in report.comparisons %}
+    <details class="finding" {% if loop.first %}open{% endif %}>
+      <summary>Seed {{ comparison.left.seed }} → {{ comparison.right.seed }} · {{ comparison.deltas|length }} deltas</summary>
+      <div class="table-wrap mt-4"><table><caption class="sr-only">Campaign pair deltas</caption><thead><tr><th scope="col">Field</th><th scope="col">Left</th><th scope="col">Right</th></tr></thead><tbody>{% for delta in comparison.deltas %}<tr><td>{{ delta.field }}</td><td class="mono">{{ delta.left }}</td><td class="mono">{{ delta.right }}</td></tr>{% endfor %}</tbody></table></div>
+    </details>
+    {% else %}{{ empty_state("No pair comparisons", "Run at least two campaign seeds with comparison enabled.") }}{% endfor %}
+  </section>
+</div>
+{% else %}
+{{ empty_state("No campaign results yet", "Run this campaign to create fresh artifacts and an aggregate comparison report.") }}
 {% endif %}
 {% endblock %}

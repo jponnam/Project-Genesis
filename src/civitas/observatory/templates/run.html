@@ -1,167 +1,131 @@
 {% extends "base.html" %}
+{% from "macros.html" import page_header, stat_card, badge, bar_row, empty_state, icon %}
 {% block content %}
-<section class="hero" data-reveal>
-  <h1>{{ run.run_id }}</h1>
-  <p>
-    seed {{ run.seed if run.seed is not none else "unavailable" }} ·
-    {{ run.ticks_executed if run.ticks_executed is not none else "?" }} ticks ·
-    {{ run.event_count if run.event_count is not none else "?" }} events ·
-    name {{ run.run_name or "unavailable" }}
-  </p>
-  {% for note in run.verification_notes %}
-    <span class="chip warn">{{ note }}</span>
-  {% endfor %}
+{% call page_header(run.run_id, "Detailed event-derived state, analytics, agents, and emergence findings.", "Simulation run") %}
+  <button class="button button--secondary copy-button" type="button" data-copy-value="{{ run.run_id }}">{{ icon("copy") }} Copy ID</button>
+  <a class="button button--secondary" href="/ui/compare?left={{ run.run_id }}">{{ icon("compare") }} Compare</a>
+{% endcall %}
+
+<div class="cluster mb-4" aria-label="Run metadata">
+  {{ badge("Complete" if run.has_completed else "Partial", "positive" if run.has_completed else "warning") }}
+  <span class="badge mono">seed {{ run.seed if run.seed is not none else "—" }}</span>
+  <span class="badge">{{ run.run_name or "unnamed" }}</span>
+  <span class="badge mono">{{ run.ticks_executed if run.ticks_executed is not none else "?" }} ticks</span>
+  {% for note in run.verification_notes %}{{ badge(note, "warning") }}{% endfor %}
+</div>
+
+<nav class="section-nav" aria-label="Run sections">
+  <a href="#overview">Overview</a><a href="#activity">Activity</a><a href="#society">Society</a>
+  <a href="#emergence">Emergence</a><a href="#agents">Agents</a><a href="#events">Events</a>
+</nav>
+
+<section id="overview" class="stats-grid" aria-label="Run summary">
+  {{ stat_card("Events", "{:,}".format(run.event_count or 0), (summary.event_types|length) ~ " event types", "accent") }}
+  {{ stat_card("Population", summary.estimated_living, summary.births ~ " births · " ~ summary.deaths ~ " deaths", "positive") }}
+  {{ stat_card("Wealth Gini", wealth.gini_bps if wealth else "—", "basis points" if wealth else "Census unavailable", "warning") }}
+  {{ stat_card("Resource stocks", resource_holdings.stack_count if resource_holdings else "—", (resource_holdings.distinct_resources ~ " resource kinds") if resource_holdings else "Census unavailable") }}
 </section>
 
-<section class="panel" data-reveal>
-  <h2>Filters</h2>
-  <form class="inline" method="get">
+<section class="panel mb-4" aria-labelledby="filters-title">
+  <div class="section-heading"><div><h2 id="filters-title">Event filters</h2><p>Filter the structured timeline without changing the underlying run.</p></div></div>
+  <form class="toolbar" method="get">
     <label>From tick<input type="number" name="from_tick" min="0" value="{{ filters.from_tick if filters.from_tick is not none else '' }}"></label>
     <label>To tick<input type="number" name="to_tick" min="0" value="{{ filters.to_tick if filters.to_tick is not none else '' }}"></label>
-    <label>Agent id<input type="number" name="agent_id" min="0" value="{{ filters.agent_id if filters.agent_id is not none else '' }}"></label>
-    <label>Event type<input type="text" name="event_type" value="{{ filters.event_type or '' }}" placeholder="ActionSelected"></label>
-    <button type="submit">Apply</button>
-    <a class="button secondary" href="/ui/runs/{{ run.run_id }}">Clear</a>
+    <label>Agent ID<input type="number" name="agent_id" min="0" value="{{ filters.agent_id if filters.agent_id is not none else '' }}"></label>
+    <label>Event type<select name="event_type"><option value="">All event types</option>{% for type in event_types %}<option value="{{ type }}" {% if filters.event_type == type %}selected{% endif %}>{{ type }}</option>{% endfor %}</select></label>
+    <div class="form-actions"><button type="submit">Apply filters</button><a class="button button--secondary" href="/ui/runs/{{ run.run_id }}">Clear</a></div>
   </form>
 </section>
 
 <div class="grid">
-  <section class="panel third" data-reveal>
-    <h3>Population</h3>
-    {% if summary.population %}
-      <p>alive {{ summary.population.alive }} · dead {{ summary.population.dead }} · total {{ summary.population.total }}</p>
-      <p class="muted">births {{ summary.births }} · deaths {{ summary.deaths }}</p>
-    {% else %}
-      <div class="empty">Population census unavailable in this log.</div>
-    {% endif %}
+  <section id="activity" class="panel span-8">
+    <div class="section-heading"><div><h2>Event activity over time</h2><p>Persisted event count per simulation tick</p></div></div>
+    {% if event_series_points %}
+    <svg class="sparkline" viewBox="0 0 600 120" role="img" aria-labelledby="event-chart-title event-chart-desc">
+      <title id="event-chart-title">Events per tick</title><desc id="event-chart-desc">{{ event_series|length }} observed ticks; values range from {{ event_series|map(attribute=1)|min }} to {{ event_series|map(attribute=1)|max }} events.</desc>
+      <path class="grid-line" d="M0 114H600M0 60H600M0 6H600"/><polyline points="{{ event_series_points }}"/>
+    </svg>
+    <div class="chart-caption"><span>tick {{ event_series[0][0] }}</span><span>{{ event_series|length }} observations</span><span>tick {{ event_series[-1][0] }}</span></div>
+    {% else %}{{ empty_state("No activity series", "This log does not contain enough tick data for a timeline.") }}{% endif %}
+  </section>
+  <section class="panel span-4">
+    <div class="section-heading"><div><h2>Economy signals</h2><p>Real wealth census series</p></div></div>
+    {% if gini_series_points %}
+    <svg class="sparkline" viewBox="0 0 600 120" role="img" aria-label="Wealth Gini basis points over time"><path class="grid-line" d="M0 114H600M0 60H600M0 6H600"/><polyline points="{{ gini_series_points }}"/></svg>
+    <div class="chart-caption"><span>Gini {{ gini_series[0][1] }}</span><span>→</span><span>{{ gini_series[-1][1] }} bps</span></div>
+    {% else %}<p class="muted">Wealth series unavailable.</p>{% endif %}
+    {% if money_series %}<p class="mt-4"><span class="muted">Alive money</span><br><strong class="numeric">{{ money_series[-1][1] }}</strong> <span class="muted">final total</span></p>{% endif %}
   </section>
 
-  <section class="panel third" data-reveal>
-    <h3>Wealth</h3>
-    {% if wealth %}
-      <p>total {{ wealth.total }} · mean alive {{ '%.2f'|format(wealth.mean_alive) }}</p>
-      <p class="muted">gini_bps {{ wealth.gini_bps }} · top1_share_bps {{ wealth.top1_share_bps }}</p>
-    {% else %}
-      <div class="empty">Wealth census unavailable in this log.</div>
-    {% endif %}
-  </section>
-
-  <section class="panel third" data-reveal>
-    <h3>Resources</h3>
-    {% if resource_holdings_available and resource_holdings %}
-      <p>alive totals {{ resource_holdings.alive_totals }}</p>
-      <p class="muted">escrow {{ resource_holdings.escrow_totals }} · stacks {{ resource_holdings.stack_count }}</p>
-      {% if resource_inequality %}
-        <p class="muted">stock gini_bps {{ resource_inequality.value }} · top1_share_bps {{ resource_inequality.details.top1_share_bps }}</p>
-      {% endif %}
-    {% else %}
-      <div class="empty">Final per-agent holdings unavailable. Showing flows only.</div>
-    {% endif %}
-    <p class="muted">gathered {{ summary.resources_gathered }}</p>
-    <p class="muted">consumed {{ summary.resources_consumed }}</p>
-  </section>
-
-  <section class="panel half" data-reveal>
-    <h3>Event-type frequency</h3>
+  <section class="panel span-6">
+    <div class="section-heading"><div><h2>Event-type frequency</h2><p>Most common persisted event categories</p></div></div>
     {% if event_frequency %}
-      {% set counts = event_frequency.values()|list %}
-      {% set max_count = counts|max %}
-      {% for name, count in event_frequency.items() %}
-        <div class="bar-row">
-          <div>{{ name }}</div>
-          <div class="bar-track"><div class="bar-fill" data-width="{{ (count / max_count * 100) if max_count else 0 }}"></div></div>
-          <div>{{ count }}</div>
-        </div>
-      {% endfor %}
-    {% else %}
-      <div class="empty">Event frequency unavailable.</div>
-    {% endif %}
+      {% set max_count = event_frequency.values()|max %}
+      <div class="bar-list">{% for name, count in event_frequency.items() %}{{ bar_row(name, count, (count / max_count * 100) if max_count else 0) }}{% endfor %}</div>
+    {% else %}{{ empty_state("No event frequency", "No persisted events were available for this metric.") }}{% endif %}
+  </section>
+  <section class="panel span-6">
+    <div class="section-heading"><div><h2>Agent activity</h2><p>Share of ActionSelected events by agent</p></div></div>
+    {% if activity %}<div class="bar-list">{% for agent, share in activity.items() %}{{ bar_row("Agent " ~ agent, "%.0f"|format(share * 100), share * 100, "%") }}{% endfor %}</div>
+    {% else %}{{ empty_state("No agent activity", "No ActionSelected events were present.") }}{% endif %}
   </section>
 
-  <section class="panel half" data-reveal>
-    <h3>Agent activity</h3>
-    {% if activity %}
-      {% for agent, share in activity.items() %}
-        <div class="bar-row">
-          <div>agent {{ agent }}</div>
-          <div class="bar-track"><div class="bar-fill" data-width="{{ share * 100 }}"></div></div>
-          <div>{{ '%.0f'|format(share * 100) }}%</div>
-        </div>
-      {% endfor %}
-    {% else %}
-      <div class="empty">No ActionSelected events for activity distribution.</div>
-    {% endif %}
+  <section id="society" class="panel span-6">
+    <div class="section-heading"><div><h2>Society state</h2><p>Governance and built-form records</p></div></div>
+    <dl class="definition-grid">
+      <div><dt>Governments</dt><dd>{{ governments|join(", ") or "None recorded" }}</dd></div>
+      <div><dt>Institutions</dt><dd>{{ summary.institutions|join(", ") or "None recorded" }}</dd></div>
+      <div><dt>Laws</dt><dd>{{ laws|join(", ") or "None recorded" }}</dd></div>
+      <div><dt>Cities</dt><dd>{{ summary.cities|join(", ") or "None recorded" }}</dd></div>
+      <div><dt>Infrastructure</dt><dd>{{ infrastructure|join(", ") or "None recorded" }}</dd></div>
+      <div><dt>Technologies discovered</dt><dd>{{ summary.technologies_discovered|join(", ") or "None during run" }}</dd></div>
+    </dl>
+  </section>
+  <section class="panel span-6">
+    <div class="section-heading"><div><h2>Resource state</h2><p>Last ResourcesObserved census and flows</p></div></div>
+    {% if resource_holdings_available and resource_holdings %}
+      <dl class="definition-grid">
+        <div><dt>alive totals</dt><dd>{{ resource_holdings.alive_totals|list }}</dd></div>
+        <div><dt>Escrow</dt><dd>{{ resource_holdings.escrow_totals|list }}</dd></div>
+        <div><dt>Stock Gini</dt><dd>{{ resource_inequality.value if resource_inequality else "—" }}</dd></div>
+        <div><dt>Top holder share</dt><dd>{{ resource_inequality.details.top1_share_bps if resource_inequality else "—" }} bps</dd></div>
+      </dl>
+    {% else %}{{ empty_state("Stock census unavailable", "Showing only event-derived resource flows.") }}{% endif %}
+    <details class="mt-4"><summary>Resource flow details</summary><pre class="code-block">{{ {"gathered": summary.resources_gathered, "consumed": summary.resources_consumed, "produced": summary.resources_produced, "traded": summary.resources_traded}|tojson(indent=2) }}</pre></details>
   </section>
 
-  <section class="panel half" data-reveal>
-    <h3>Institutions · Cities · Technologies</h3>
-    <p><strong>Institutions</strong>: {{ summary.institutions|list or "none recorded" }}</p>
-    <p><strong>Cities</strong>: {{ summary.cities|list or "none recorded" }}</p>
-    <p><strong>Technologies discovered</strong>: {{ summary.technologies_discovered|list or "none recorded" }}</p>
-  </section>
-
-  <section class="panel half" data-reveal>
-    <h3>Emergence findings</h3>
+  <section id="emergence" class="panel span-12">
+    <div class="section-heading"><div><h2>Emergence findings</h2><p>Explicit threshold rules over persisted events and metrics</p></div><span class="badge badge--accent">{{ emergence.findings|length }} matched</span></div>
     {% if emergence.findings %}
       {% for finding in emergence.findings %}
-        <div class="finding">
-          <strong>{{ finding.pattern }}</strong>
-          <span class="chip">strength {{ '%.2f'|format(finding.strength) }}</span>
-          <span class="chip">confidence {{ '%.2f'|format(finding.confidence) }}</span>
-          <p>{{ finding.explanation }}</p>
-          <p class="muted">ticks {{ finding.tick_start }}–{{ finding.tick_end }}</p>
-        </div>
+      <article class="finding">
+        <div class="finding__header"><h3>{{ finding.pattern|replace("_", " ")|title }}</h3><div class="cluster">{{ badge("strength %.2f"|format(finding.strength), "accent") }}{{ badge("confidence %.2f"|format(finding.confidence)) }}</div></div>
+        <p>{{ finding.explanation }}</p><span class="muted">Ticks {{ finding.tick_start }}–{{ finding.tick_end }}</span>
+        <details><summary>Evidence and metric inputs</summary><pre class="code-block">{{ {"evidence": finding.evidence, "entities": finding.entities, "metrics_used": finding.metrics_used}|tojson(indent=2) }}</pre></details>
+      </article>
       {% endfor %}
-    {% else %}
-      <div class="empty">No rule thresholds matched for this run.</div>
-    {% endif %}
+    {% else %}{{ empty_state("No rules matched", "This means configured emergence thresholds did not fire; it is not a claim that nothing interesting occurred.") }}{% endif %}
   </section>
 
-  <section class="panel" data-reveal>
-    <h3>Agents</h3>
-    <table>
-      <thead><tr><th>ID</th><th>Name</th><th>Status</th><th>Location</th><th>Actions</th></tr></thead>
-      <tbody>
-        {% for agent in agents %}
-        <tr>
-          <td><a href="/ui/runs/{{ run.run_id }}/agents/{{ agent.agent_id }}">{{ agent.agent_id }}</a></td>
-          <td>{{ agent.name or "unavailable" }}</td>
-          <td>{% if agent.died %}dead ({{ agent.death_cause }}){% else %}alive{% endif %}</td>
-          <td>{{ agent.last_location_id if agent.last_location_id is not none else "unavailable" }}</td>
-          <td>{{ agent.action_counts }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  <section id="agents" class="panel span-12">
+    <div class="section-heading"><div><h2>Agents</h2><p>Lifecycle, latest location, and action summaries</p></div><span class="badge">{{ agents|length }} observed</span></div>
+    <div class="table-wrap"><table><caption class="sr-only">Agents observed in this run</caption><thead><tr><th scope="col">Agent</th><th scope="col">Status</th><th scope="col">Location</th><th scope="col">Action distribution</th><th scope="col"></th></tr></thead><tbody>
+      {% for agent in agents %}<tr><td><span class="table-primary">{{ agent.name or "Agent " ~ agent.agent_id }}</span><span class="table-secondary mono">ID {{ agent.agent_id }}</span></td><td>{{ badge("Dead", "danger") if agent.died else badge("Alive", "positive") }}</td><td class="numeric">{{ agent.last_location_id if agent.last_location_id is not none else "—" }}</td><td class="mono">{{ agent.action_counts or "none recorded" }}</td><td><a class="row-action" href="/ui/runs/{{ run.run_id }}/agents/{{ agent.agent_id }}">Inspect {{ icon("arrow") }}</a></td></tr>{% endfor %}
+    </tbody></table></div>
   </section>
 
-  <section class="panel" data-reveal>
-    <h3>Timeline / filtered events</h3>
-    <p class="muted">Showing {{ event_page|length }} of {{ event_total }} matched events.</p>
-    {% if summary.notable_events %}
-      <h4>Notable</h4>
-      <ul>
-        {% for item in summary.notable_events %}
-          <li>{{ item }}</li>
-        {% endfor %}
-      </ul>
-    {% endif %}
-    <table>
-      <thead><tr><th>Seq</th><th>Tick</th><th>Type</th><th>Detail</th></tr></thead>
-      <tbody>
-        {% for event in event_page %}
-        <tr>
-          <td>{{ event.sequence }}</td>
-          <td>{{ event.tick.value if event.tick is mapping else event.tick }}</td>
-          <td>{{ event.event_type }}</td>
-          <td class="muted">
-            {% if event.action is defined %}action={{ event.action }}{% endif %}
-            {% if event.agent_id is defined %} agent={{ event.agent_id.value if event.agent_id is mapping else event.agent_id }}{% endif %}
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  <section id="events" class="panel span-12">
+    <div class="section-heading"><div><h2>Structured event timeline</h2><p>Showing {{ event_page|length }} of {{ event_total }} matched events</p></div><a class="button button--secondary" href="/runs/{{ run.run_id }}/events">Open JSON API</a></div>
+    {% if summary.notable_events %}<ol class="timeline mb-4">{% for item in summary.notable_events %}<li>{{ item }}</li>{% endfor %}</ol>{% endif %}
+    {% if event_page %}
+    <div class="table-wrap"><table><caption class="sr-only">Filtered simulation events</caption><thead><tr><th scope="col">Sequence</th><th scope="col">Tick</th><th scope="col">Type</th><th scope="col">Summary</th><th scope="col">Raw details</th></tr></thead><tbody>
+      {% for event in event_page %}<tr><td class="numeric">{{ event.sequence }}</td><td class="numeric">{{ event.tick.value if event.tick is mapping else event.tick }}</td><td><span class="badge">{{ event.event_type }}</span></td><td>{% if event.action is defined %}Action {{ event.action }}{% elif event.name is defined %}{{ event.name }}{% elif event.pattern is defined %}{{ event.pattern }}{% else %}<span class="muted">Structured event</span>{% endif %}{% if event.agent_id is defined %}<span class="table-secondary">Agent {{ event.agent_id.value if event.agent_id is mapping else event.agent_id }}</span>{% endif %}</td><td><details><summary>JSON</summary><pre class="code-block">{{ event|tojson(indent=2) }}</pre></details></td></tr>{% endfor %}
+    </tbody></table></div>
+    <div class="cluster mt-4">
+      {% if filters.offset > 0 %}<a class="button button--secondary" href="?offset={{ [filters.offset - filters.limit, 0]|max }}&limit={{ filters.limit }}{% if filters.from_tick is not none %}&from_tick={{ filters.from_tick }}{% endif %}{% if filters.to_tick is not none %}&to_tick={{ filters.to_tick }}{% endif %}{% if filters.agent_id is not none %}&agent_id={{ filters.agent_id }}{% endif %}{% if filters.event_type %}&event_type={{ filters.event_type }}{% endif %}">Previous</a>{% endif %}
+      {% if filters.offset + filters.limit < event_total %}<a class="button button--secondary" href="?offset={{ filters.offset + filters.limit }}&limit={{ filters.limit }}{% if filters.from_tick is not none %}&from_tick={{ filters.from_tick }}{% endif %}{% if filters.to_tick is not none %}&to_tick={{ filters.to_tick }}{% endif %}{% if filters.agent_id is not none %}&agent_id={{ filters.agent_id }}{% endif %}{% if filters.event_type %}&event_type={{ filters.event_type }}{% endif %}">Next</a>{% endif %}
+    </div>
+    {% else %}{{ empty_state("No matching events", "Adjust or clear the event filters to inspect this timeline.") }}{% endif %}
   </section>
 </div>
 {% endblock %}
