@@ -397,6 +397,7 @@ from civitas.domain.events import (
     ResourceConsumed,
     ResourceGathered,
     ResourceProduced,
+    ResourcesObserved,
     ResourceTraded,
     RetrievalObserved,
     SimulationCompleted,
@@ -452,6 +453,7 @@ from civitas.domain.governments import (
     set_leader,
     subject_count,
 )
+from civitas.domain.holdings import ResourceCensus, census_resources
 from civitas.domain.ids import (
     AgentId,
     CityId,
@@ -1541,12 +1543,14 @@ __all__ = [
     "ResearchObserved",
     "ResearchProgress",
     "ResearchProgressed",
+    "ResourceCensus",
     "ResourceConsumed",
     "ResourceGathered",
     "ResourceKind",
     "ResourceProduced",
     "ResourceStack",
     "ResourceTraded",
+    "ResourcesObserved",
     "RetrievalCensus",
     "RetrievalHit",
     "RetrievalObserved",
@@ -1677,6 +1681,7 @@ __all__ = [
     "census_relationships",
     "census_reputation",
     "census_research",
+    "census_resources",
     "census_retrieval",
     "census_technologies",
     "census_wealth",

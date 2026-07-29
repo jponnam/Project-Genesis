@@ -48,8 +48,9 @@
 
   <section class="panel third" data-reveal>
     <h3>Resources</h3>
-    {% if resource_holdings_available %}
-      <p>Final holdings available.</p>
+    {% if resource_holdings_available and resource_holdings %}
+      <p>alive totals {{ resource_holdings.alive_totals }}</p>
+      <p class="muted">escrow {{ resource_holdings.escrow_totals }} · stacks {{ resource_holdings.stack_count }}</p>
     {% else %}
       <div class="empty">Final per-agent holdings unavailable. Showing flows only.</div>
     {% endif %}

@@ -38,6 +38,7 @@ from civitas.systems import (
     RelationshipSystem,
     ReputationSystem,
     ResearchSystem,
+    ResourcesSystem,
     RetrievalSystem,
     TaxSystem,
     TechSystem,
@@ -88,29 +89,30 @@ class SimulationEngine:
     15. Publish ``TickCompleted``
     16. ``PopulationSystem.observe``
     17. ``EconomySystem.observe``
-    18. ``MarketSystem.observe``
-    19. ``PriceSystem.observe``
-    20. ``RelationshipSystem.observe``
-    21. ``ReputationSystem.observe``
-    22. ``FamilySystem.observe``
-    23. ``NetworkSystem.observe``
-    24. ``GovernmentSystem.observe``
-    25. ``LawSystem.observe``
-    26. ``VoteSystem.observe``
-    27. ``InstitutionSystem.observe``
-    28. ``CitySystem.observe``
-    29. ``InfrastructureSystem.observe``
-    30. ``TechSystem.observe``
-    31. ``ResearchSystem.observe``
-    32. ``InnovationSystem.observe``
-    33. ``EffectsSystem.observe``
-    34. ``KnowledgeSystem.observe``
-    35. ``CognitionSystem.observe``
-    36. ``PlanningSystem.observe``
-    37. ``RetrievalSystem.observe``
+    18. ``ResourcesSystem.observe``
+    19. ``MarketSystem.observe``
+    20. ``PriceSystem.observe``
+    21. ``RelationshipSystem.observe``
+    22. ``ReputationSystem.observe``
+    23. ``FamilySystem.observe``
+    24. ``NetworkSystem.observe``
+    25. ``GovernmentSystem.observe``
+    26. ``LawSystem.observe``
+    27. ``VoteSystem.observe``
+    28. ``InstitutionSystem.observe``
+    29. ``CitySystem.observe``
+    30. ``InfrastructureSystem.observe``
+    31. ``TechSystem.observe``
+    32. ``ResearchSystem.observe``
+    33. ``InnovationSystem.observe``
+    34. ``EffectsSystem.observe``
+    35. ``KnowledgeSystem.observe``
+    36. ``CognitionSystem.observe``
+    37. ``PlanningSystem.observe``
+    38. ``RetrievalSystem.observe``
 
-    Initial population, wealth, market, price, relationship, reputation,
-    family, network, government, law, election, institution, city,
+    Initial population, wealth, resources, market, price, relationship,
+    reputation, family, network, government, law, election, institution, city,
     infrastructure, technology, research, innovation, effects, knowledge,
     cognition, planning, and retrieval censuses are also observed at tick 0
     immediately after world creation. Death runs after actions (recovery
@@ -167,6 +169,7 @@ class SimulationEngine:
         tax_system: TaxSystem | None = None,
         population_system: PopulationSystem | None = None,
         economy_system: EconomySystem | None = None,
+        resources_system: ResourcesSystem | None = None,
         market_system: MarketSystem | None = None,
         price_system: PriceSystem | None = None,
         relationship_system: RelationshipSystem | None = None,
@@ -202,6 +205,9 @@ class SimulationEngine:
         )
         self._economy_system = (
             economy_system if economy_system is not None else EconomySystem()
+        )
+        self._resources_system = (
+            resources_system if resources_system is not None else ResourcesSystem()
         )
         self._market_system = (
             market_system if market_system is not None else MarketSystem()
@@ -274,6 +280,7 @@ class SimulationEngine:
         world = self._world_factory.create(config, bus=event_bus)
         world = self._population_system.observe(world, bus=event_bus)
         world = self._economy_system.observe(world, bus=event_bus)
+        world = self._resources_system.observe(world, bus=event_bus)
         world = self._market_system.observe(world, bus=event_bus)
         world = self._price_system.observe(world, bus=event_bus)
         world = self._relationship_system.observe(world, bus=event_bus)
@@ -313,6 +320,7 @@ class SimulationEngine:
             event_bus.publish(TickCompleted(tick=tick))
             world = self._population_system.observe(world, bus=event_bus)
             world = self._economy_system.observe(world, bus=event_bus)
+            world = self._resources_system.observe(world, bus=event_bus)
             world = self._market_system.observe(world, bus=event_bus)
             world = self._price_system.observe(world, bus=event_bus)
             world = self._relationship_system.observe(world, bus=event_bus)

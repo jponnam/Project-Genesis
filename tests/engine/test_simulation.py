@@ -41,6 +41,7 @@ from civitas.domain import (
     ResearchProgressed,
     ResourceConsumed,
     ResourceGathered,
+    ResourcesObserved,
     RetrievalObserved,
     SimulationCompleted,
     SimulationConfig,
@@ -314,6 +315,18 @@ def test_wealth_observed_each_tick_including_start() -> None:
     assert observed[-1].tick.value == 3
     assert all(event.alive_count == 5 for event in observed)
     assert observed[0].total == sum(agent.money for agent in result.world.agents)
+
+
+def test_resources_observed_each_tick_including_start() -> None:
+    """Engine emits an initial resource census plus one per executed tick."""
+    result = SimulationEngine().run(SimulationConfig(seed=42, ticks=3, agent_count=5))
+    observed = [
+        event for event in result.events if isinstance(event, ResourcesObserved)
+    ]
+    assert len(observed) == 4  # tick 0 + ticks 1..3
+    assert observed[0].tick.value == 0
+    assert observed[-1].tick.value == 3
+    assert all(event.alive_count == 5 for event in observed)
 
 
 def test_market_observed_each_tick_including_start() -> None:

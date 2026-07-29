@@ -465,7 +465,7 @@ def _render_inspection(report: RunInspection) -> None:
     console.print(types)
 
     resources = Table(
-        title="Resource flows (not final holdings)",
+        title="Resource flows",
         show_header=True,
         header_style="bold",
     )
@@ -480,10 +480,36 @@ def _render_inspection(report: RunInspection) -> None:
         str(report.final_resource_holdings_available),
     )
     console.print(resources)
-    console.print(
-        "[dim]Final per-agent resource inventories are not stored in the "
-        "event log, so holdings cannot be reconstructed.[/dim]"
-    )
+    if report.resource_holdings is not None:
+        holdings = Table(
+            title="Final resource holdings census",
+            show_header=True,
+            header_style="bold",
+        )
+        holdings.add_column("Field", style="cyan")
+        holdings.add_column("Value")
+        holdings.add_row(
+            "alive_totals", str(list(report.resource_holdings.alive_totals))
+        )
+        holdings.add_row(
+            "escrow_totals", str(list(report.resource_holdings.escrow_totals))
+        )
+        holdings.add_row("dead_totals", str(list(report.resource_holdings.dead_totals)))
+        holdings.add_row("stack_count", str(report.resource_holdings.stack_count))
+        holdings.add_row(
+            "distinct_resources",
+            str(report.resource_holdings.distinct_resources),
+        )
+        holdings.add_row(
+            "agent_holdings",
+            str(list(report.resource_holdings.agent_holdings)),
+        )
+        console.print(holdings)
+    else:
+        console.print(
+            "[dim]Final per-agent resource inventories unavailable in this "
+            "log (no ResourcesObserved census).[/dim]"
+        )
 
     if report.wealth is not None:
         wealth = Table(

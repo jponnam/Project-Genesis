@@ -419,6 +419,25 @@ class WealthObserved(DomainEvent):
     zero_count: NonNegativeInt = 0
 
 
+class ResourcesObserved(DomainEvent):
+    """Emitted when an agent inventory / resource-stock census is taken.
+
+    Money is intentionally omitted; use ``WealthObserved`` for monetary stocks.
+    """
+
+    alive_count: NonNegativeInt
+    # Living non-zero stacks: (agent_id, resource, quantity), sorted.
+    agent_holdings: tuple[tuple[int, str, int], ...] = ()
+    # Society totals among living agents: (resource, quantity), sorted.
+    alive_totals: tuple[tuple[str, int], ...] = ()
+    # Residual on dead agents: (resource, quantity), sorted.
+    dead_totals: tuple[tuple[str, int], ...] = ()
+    # Open-book escrow not in agent inventories: (resource, quantity).
+    escrow_totals: tuple[tuple[str, int], ...] = ()
+    stack_count: NonNegativeInt = 0
+    distinct_resources: NonNegativeInt = 0
+
+
 class RelationshipUpdated(DomainEvent):
     """Emitted when a directed relationship bond is created or updated."""
 
@@ -1000,6 +1019,7 @@ CONCRETE_EVENT_TYPES: tuple[type[DomainEvent], ...] = (
     MarketObserved,
     PriceObserved,
     WealthObserved,
+    ResourcesObserved,
     RelationshipUpdated,
     RelationshipsObserved,
     ReputationObserved,

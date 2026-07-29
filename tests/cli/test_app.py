@@ -313,9 +313,7 @@ def test_inspect_text_summary(tmp_path: Path) -> None:
     assert "cli_replay" in result.stdout
     assert "Event types" in result.stdout
     assert "Final wealth census" in result.stdout
-    assert "final holdings" in result.stdout.lower() or (
-        "Final per-agent resource inventories" in result.stdout
-    )
+    assert "Final resource holdings census" in result.stdout
 
 
 def test_inspect_json_format(tmp_path: Path) -> None:
@@ -327,7 +325,8 @@ def test_inspect_json_format(tmp_path: Path) -> None:
     assert payload["seed"] == 42
     assert payload["run_name"] == "cli_replay"
     assert payload["event_count"] > 0
-    assert payload["final_resource_holdings_available"] is False
+    assert payload["final_resource_holdings_available"] is True
+    assert payload["resource_holdings"] is not None
 
 
 def test_inspect_missing_file(tmp_path: Path) -> None:

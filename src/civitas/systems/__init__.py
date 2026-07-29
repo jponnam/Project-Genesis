@@ -39,6 +39,7 @@ from civitas.systems.production import ProductionConfig, ProductionSystem
 from civitas.systems.relationships import RelationshipConfig, RelationshipSystem
 from civitas.systems.reputation import ReputationConfig, ReputationSystem
 from civitas.systems.research import ResearchConfig, ResearchSystem
+from civitas.systems.resources import ResourcesConfig, ResourcesSystem
 from civitas.systems.retrieval import RetrievalConfig, RetrievalSystem
 from civitas.systems.taxes import TaxConfig, TaxSystem
 from civitas.systems.technology import TechConfig, TechSystem
@@ -105,6 +106,8 @@ __all__ = [
     "ReputationSystem",
     "ResearchConfig",
     "ResearchSystem",
+    "ResourcesConfig",
+    "ResourcesSystem",
     "RetrievalConfig",
     "RetrievalSystem",
     "TaxConfig",

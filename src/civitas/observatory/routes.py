@@ -115,6 +115,7 @@ def observatory_run(
             "activity": activity.value if activity and activity.status == "ok" else {},
             "wealth": wealth,
             "resource_holdings_available": summary.final_resource_holdings_available,
+            "resource_holdings": summary.resource_holdings,
         },
     )
 

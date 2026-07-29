@@ -27,9 +27,11 @@ Exact field names live in `civitas.analytics.types` and are stable for JSON cons
 ## Design rules
 
 1. Every metric must be justified by events in the log.
-2. Prefer census snapshots already emitted by the engine (e.g. wealth Gini) over inventing stock levels.
-3. Label unavailable reconstructions (e.g. final holdings) rather than guessing.
+2. Prefer census snapshots already emitted by the engine (e.g. wealth Gini, `ResourcesObserved`) over inventing stock levels.
+3. Label unavailable reconstructions rather than guessing.
 4. Keep computation streaming / single-pass friendly where possible.
+
+Stock inequality / per-resource holding series are Phase 22 Milestone 5 candidates now that `ResourcesObserved` exists.
 
 ## Related
 
