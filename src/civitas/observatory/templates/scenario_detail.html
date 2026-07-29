@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero" data-reveal>
+  <h1>{{ scenario.title }}</h1>
+  <p>{{ scenario.research_question }}</p>
+</section>
+<section class="panel" data-reveal>
+  <p>seed {{ scenario.seed }} · {{ scenario.ticks }} ticks · {{ scenario.agents }} agents · preset {{ scenario.preset }}</p>
+  <form method="post" action="/ui/scenarios/{{ scenario.id }}/run">
+    <button type="submit">Run scenario</button>
+  </form>
+  <p class="muted">Creates a new artifact; existing JSONL logs are never overwritten.</p>
+  <h3>Observable signals</h3>
+  {% for item in scenario.observable_signals %}<span class="chip">{{ item }}</span>{% endfor %}
+  <h3>Limitations</h3>
+  {% for item in scenario.limitations %}<p class="muted">{{ item }}</p>{% endfor %}
+</section>
+{% endblock %}

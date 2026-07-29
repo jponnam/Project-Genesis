@@ -21,7 +21,16 @@ from civitas.api.catalog import (
     paginate_events,
     resolve_run_path,
 )
+from civitas.api.executions import (
+    ExecutionNotFoundError,
+    execute_campaign,
+    execute_scenario,
+    list_campaign_executions,
+    load_campaign_results,
+)
 from civitas.api.models import RunListItem
+from civitas.campaigns import CampaignNotFoundError, list_campaigns, load_campaign
+from civitas.scenarios import ScenarioNotFoundError, list_scenarios, load_scenario
 from civitas.storage.summary import build_inspection
 
 PACKAGE_DIR = Path(__file__).resolve().parent
@@ -51,6 +60,112 @@ def observatory_home(request: Request) -> HTMLResponse:
             "title": "Civitas Observatory",
             "runs": runs,
             "runs_available": bool(runs),
+        },
+    )
+
+
+@router.get("/scenarios", response_class=HTMLResponse)
+def observatory_scenarios(request: Request) -> HTMLResponse:
+    """List executable scenario manifests."""
+    return templates.TemplateResponse(
+        request,
+        "scenarios.html",
+        {"title": "Scenarios", "scenarios": list_scenarios()},
+    )
+
+
+@router.get("/scenarios/{scenario_id}", response_class=HTMLResponse)
+def observatory_scenario(request: Request, scenario_id: str) -> HTMLResponse:
+    """Show one scenario and its run action."""
+    try:
+        scenario = load_scenario(scenario_id)
+    except ScenarioNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return templates.TemplateResponse(
+        request,
+        "scenario_detail.html",
+        {"title": scenario.title, "scenario": scenario},
+    )
+
+
+@router.post("/scenarios/{scenario_id}/run")
+def observatory_scenario_run(scenario_id: str) -> RedirectResponse:
+    """Create a scenario artifact and redirect to its dashboard."""
+    try:
+        result = execute_scenario(scenario_id)
+    except ScenarioNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return RedirectResponse(url=f"/ui/runs/{result['run_id']}", status_code=303)
+
+
+@router.get("/campaigns", response_class=HTMLResponse)
+def observatory_campaigns(request: Request) -> HTMLResponse:
+    """List campaign manifests and persisted execution counts."""
+    campaigns = list_campaigns()
+    counts = {
+        campaign.id: len(list_campaign_executions(campaign.id))
+        for campaign in campaigns
+    }
+    return templates.TemplateResponse(
+        request,
+        "campaigns.html",
+        {"title": "Campaigns", "campaigns": campaigns, "counts": counts},
+    )
+
+
+@router.get("/campaigns/{campaign_id}", response_class=HTMLResponse)
+def observatory_campaign(request: Request, campaign_id: str) -> HTMLResponse:
+    """Show one campaign and latest aggregate results when present."""
+    try:
+        campaign = load_campaign(campaign_id)
+        executions = list_campaign_executions(campaign_id)
+        latest = (
+            load_campaign_results(campaign_id, executions[0]) if executions else None
+        )
+    except CampaignNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return templates.TemplateResponse(
+        request,
+        "campaign_detail.html",
+        {
+            "title": campaign.title,
+            "campaign": campaign,
+            "executions": executions,
+            "report": latest,
+        },
+    )
+
+
+@router.post("/campaigns/{campaign_id}/run")
+def observatory_campaign_run(campaign_id: str) -> RedirectResponse:
+    """Create a campaign execution and redirect to its aggregate view."""
+    try:
+        execute_campaign(campaign_id)
+    except CampaignNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return RedirectResponse(url=f"/ui/campaigns/{campaign_id}", status_code=303)
+
+
+@router.get("/campaigns/{campaign_id}/results", response_class=HTMLResponse)
+def observatory_campaign_results(
+    request: Request,
+    campaign_id: str,
+    execution_id: str | None = None,
+) -> HTMLResponse:
+    """Render persisted campaign results without re-running simulations."""
+    try:
+        campaign = load_campaign(campaign_id)
+        report = load_campaign_results(campaign_id, execution_id)
+    except (CampaignNotFoundError, ExecutionNotFoundError) as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return templates.TemplateResponse(
+        request,
+        "campaign_detail.html",
+        {
+            "title": campaign.title,
+            "campaign": campaign,
+            "executions": list_campaign_executions(campaign_id),
+            "report": report,
         },
     )
 

@@ -203,7 +203,7 @@ mypy
 | M4 Stock census events | Merged |
 | M5 Stock metrics | Merged |
 | M6 World projector | Merged |
-| M7 Research campaigns | In progress |
-| M8 Observatory campaigns | Pending |
+| M7 Research campaigns | Merged |
+| M8 Observatory campaigns | In progress |
 | M9 Depth emergence | Pending |
 | M10 Depth demos + docs | Pending |
