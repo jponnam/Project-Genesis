@@ -454,3 +454,11 @@ def observatory_compare(
 def open_run(run_id: str) -> RedirectResponse:
     """Convenience redirect used by the run selector form."""
     return RedirectResponse(url=f"/ui/runs/{run_id}", status_code=303)
+
+
+@router.get("/open")
+def open_selected_run(
+    run_id: Annotated[str, Query(min_length=1)],
+) -> RedirectResponse:
+    """No-JavaScript redirect helper for the overview selector."""
+    return RedirectResponse(url=f"/ui/runs/{run_id}", status_code=303)
