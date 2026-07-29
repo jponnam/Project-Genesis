@@ -10,8 +10,9 @@ from pathlib import Path
 from typing import Annotated, Any
 
 from fastapi import FastAPI, HTTPException, Query, Request
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from civitas import __version__
 from civitas.analytics import analyze_emergence, analyze_run, compare_runs
@@ -50,7 +51,12 @@ from civitas.campaigns import (
     list_campaigns,
     load_campaign,
 )
-from civitas.observatory.routes import router as observatory_router
+from civitas.observatory.routes import (
+    router as observatory_router,
+)
+from civitas.observatory.routes import (
+    templates as observatory_templates,
+)
 from civitas.scenarios import ScenarioNotFoundError, list_scenarios, load_scenario
 from civitas.storage.summary import build_inspection
 
@@ -77,6 +83,12 @@ app.include_router(observatory_router, prefix="/ui")
 def root_redirect() -> RedirectResponse:
     """Send browsers to the observatory home page."""
     return RedirectResponse(url="/ui/", status_code=307)
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon_redirect() -> RedirectResponse:
+    """Avoid browser favicon 404s while serving the packaged SVG asset."""
+    return RedirectResponse(url="/ui/static/favicon.svg", status_code=307)
 
 
 def _http_error(status_code: int, detail: str) -> HTTPException:
@@ -121,6 +133,26 @@ async def _invalid_execution_handler(
     exc: InvalidExecutionIdError,
 ) -> JSONResponse:
     return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+
+@app.exception_handler(StarletteHTTPException)
+async def _http_exception_handler(
+    request: Request,
+    exc: StarletteHTTPException,
+) -> HTMLResponse | JSONResponse:
+    """Render branded UI errors while preserving API JSON error contracts."""
+    if request.url.path.startswith("/ui/"):
+        return observatory_templates.TemplateResponse(
+            request,
+            "error.html",
+            {
+                "title": f"Error {exc.status_code}",
+                "status_code": exc.status_code,
+                "detail": str(exc.detail),
+            },
+            status_code=exc.status_code,
+        )
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
 
 
 @app.get("/health", response_model=HealthResponse, tags=["system"])
