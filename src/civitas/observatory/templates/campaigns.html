@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero" data-reveal>
+  <h1>Research campaigns</h1>
+  <p>Run deterministic seed sweeps and inspect persisted aggregate comparisons.</p>
+</section>
+<section class="panel" data-reveal>
+  <table>
+    <thead><tr><th>Campaign</th><th>Preset</th><th>Seeds</th><th>Ticks</th><th>Executions</th></tr></thead>
+    <tbody>
+    {% for campaign in campaigns %}
+      <tr>
+        <td><a href="/ui/campaigns/{{ campaign.id }}">{{ campaign.title }}</a></td>
+        <td>{{ campaign.preset }}</td>
+        <td>{{ campaign.seeds|list }}</td>
+        <td>{{ campaign.ticks }}</td>
+        <td>{{ counts[campaign.id] }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

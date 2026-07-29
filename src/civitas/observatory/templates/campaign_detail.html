@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero" data-reveal>
+  <h1>{{ campaign.title }}</h1>
+  <p>{{ campaign.research_question }}</p>
+</section>
+<section class="panel" data-reveal>
+  <p>seeds {{ campaign.seeds|list }} · {{ campaign.ticks }} ticks · {{ campaign.agents }} agents · preset {{ campaign.preset }}</p>
+  <form method="post" action="/ui/campaigns/{{ campaign.id }}/run">
+    <button type="submit">Run fresh campaign</button>
+  </form>
+  <p class="muted">Each launch gets a new execution directory under CIVITAS_RUNS_DIR.</p>
+</section>
+{% if report %}
+<section class="panel" data-reveal>
+  <h3>Campaign results · {{ report.execution_id }}</h3>
+  <table>
+    <thead><tr><th>Seed</th><th>Events</th><th>Living</th><th>Gini bps</th><th>Artifact</th></tr></thead>
+    <tbody>
+    {% for run in report.runs %}
+      <tr>
+        <td>{{ run.seed }}</td><td>{{ run.event_count }}</td>
+        <td>{{ run.snapshot.estimated_living }}</td>
+        <td>{{ run.snapshot.wealth_gini_bps }}</td>
+        <td>{{ run.path }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <p class="muted">{{ report.comparisons|length }} consecutive-pair comparisons.</p>
+</section>
+{% elif executions %}
+<section class="panel"><a href="/ui/campaigns/{{ campaign.id }}/results">View latest results</a></section>
+{% endif %}
+{% endblock %}

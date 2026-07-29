@@ -47,7 +47,7 @@ src/civitas/
 ├── llm/           # Protocol + mock adapters (no live provider)
 ├── storage/       # JSONL persistence, replay, inspect summaries
 ├── analytics/     # offline metrics, emergence, seed compare
-├── api/           # read-only FastAPI research API
+├── api/           # FastAPI research API + scoped local execution
 ├── observatory/   # Jinja2 UI + static assets
 ├── scenarios/     # demonstration recipe loader
 └── cli/           # Typer entrypoint (`civitas`)
@@ -141,7 +141,7 @@ civitas scenarios run wealth_concentration --analyze
 - Append-only JSONL event logs with typed round-trip persistence
 - CLI: `run`, `replay`, `inspect`, `project`, `metrics`, `emergence`, `compare`, `scenarios`, `campaign`, `serve`, `config`
 - Offline analytics and explicit emergence rules over persisted events
-- Read-only FastAPI research API and Jinja2 Observatory UI
+- FastAPI research API and Jinja2 Observatory UI with scoped scenario/campaign launch
 - Seed / run comparison for counterfactual research
 - Data-driven demonstration scenarios (TOML)
 
@@ -149,7 +149,7 @@ civitas scenarios run wealth_concentration --analyze
 
 - No live LLM provider — mock adapter only
 - Final per-agent resource **holdings** come from the last `ResourcesObserved` census (not by integrating flow events)
-- Observatory is local/read-only; it does not launch or mutate simulations
+- Observatory is local; it creates fresh scenario/campaign artifacts but never edits existing logs
 - Analytics omit metrics that cannot be honestly derived from events
 - Not a multiplayer game client or production SaaS stack
 
@@ -180,10 +180,10 @@ FastAPI + Jinja2 + uvicorn via `.[observatory]` (included in `.[dev]`).
 
 ## Current milestone
 
-**Phase 22 Milestone 7: Research campaigns** — TOML seed×preset sweeps via
-``civitas campaign list|show|run`` with aggregate compare reports. See
-[`docs/PHASE_22_DESIGN.md`](docs/PHASE_22_DESIGN.md) and
-[`campaigns/README.md`](campaigns/README.md).
+**Phase 22 Milestone 8: Observatory campaign surface** — safely launch
+scenario/campaign manifests under `CIVITAS_RUNS_DIR` and inspect persisted
+aggregate results through API/UI. See
+[`docs/PHASE_22_DESIGN.md`](docs/PHASE_22_DESIGN.md).
 
 ### Completed (summary)
 

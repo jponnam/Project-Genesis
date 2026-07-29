@@ -1,7 +1,7 @@
-"""Read-only FastAPI application for inspecting local Civitas runs.
+"""FastAPI application for inspecting and launching local Civitas runs.
 
-The API never mutates JSONL files. It only discovers and analyzes existing
-run artifacts under ``CIVITAS_RUNS_DIR`` (default: ``runs/``).
+Existing JSONL files are never mutated. Scenario/campaign POST routes only
+create new artifacts under ``CIVITAS_RUNS_DIR`` (default: ``runs/``).
 """
 
 from __future__ import annotations
@@ -28,6 +28,14 @@ from civitas.api.catalog import (
     resolve_run_path,
     summary_dict,
 )
+from civitas.api.executions import (
+    ExecutionNotFoundError,
+    InvalidExecutionIdError,
+    execute_campaign,
+    execute_scenario,
+    list_campaign_executions,
+    load_campaign_results,
+)
 from civitas.api.models import (
     AgentListResponse,
     ErrorResponse,
@@ -37,14 +45,20 @@ from civitas.api.models import (
     RunListItem,
     TimelineResponse,
 )
+from civitas.campaigns import (
+    CampaignNotFoundError,
+    list_campaigns,
+    load_campaign,
+)
 from civitas.observatory.routes import router as observatory_router
+from civitas.scenarios import ScenarioNotFoundError, list_scenarios, load_scenario
 from civitas.storage.summary import build_inspection
 
 app = FastAPI(
     title="Civitas Lab Research API",
     description=(
-        "Read-only HTTP API over local JSONL simulation runs. "
-        "Does not execute or modify simulations. "
+        "Research API over local JSONL simulation runs. Existing logs are immutable; "
+        "scoped POST routes create new scenario/campaign artifacts under the runs dir. "
         "Observatory UI is served under /ui/."
     ),
     version=__version__,
@@ -89,6 +103,24 @@ async def _replay_error_handler(
         status_code=400,
         content=ErrorResponse(detail=str(exc)).model_dump(),
     )
+
+
+@app.exception_handler(CampaignNotFoundError)
+@app.exception_handler(ScenarioNotFoundError)
+@app.exception_handler(ExecutionNotFoundError)
+async def _manifest_not_found_handler(
+    _request: Request,
+    exc: CampaignNotFoundError | ScenarioNotFoundError | ExecutionNotFoundError,
+) -> JSONResponse:
+    return JSONResponse(status_code=404, content={"detail": str(exc)})
+
+
+@app.exception_handler(InvalidExecutionIdError)
+async def _invalid_execution_handler(
+    _request: Request,
+    exc: InvalidExecutionIdError,
+) -> JSONResponse:
+    return JSONResponse(status_code=400, content={"detail": str(exc)})
 
 
 @app.get("/health", response_model=HealthResponse, tags=["system"])
@@ -236,6 +268,77 @@ def compare_run_ids(
     left_path = resolve_run_path(left)
     right_path = resolve_run_path(right)
     return compare_runs(left_path, right_path).to_dict()
+
+
+@app.get("/scenarios", response_model=list[dict[str, Any]], tags=["executions"])
+def get_scenarios() -> list[dict[str, Any]]:
+    """List scenario manifests available to the local server."""
+    return [scenario.to_dict() for scenario in list_scenarios()]
+
+
+@app.get("/scenarios/{scenario_id}", response_model=dict[str, Any], tags=["executions"])
+def get_scenario(scenario_id: str) -> dict[str, Any]:
+    """Return one scenario manifest."""
+    return load_scenario(scenario_id).to_dict()
+
+
+@app.post(
+    "/scenarios/{scenario_id}/run",
+    response_model=dict[str, Any],
+    tags=["executions"],
+    status_code=201,
+)
+def post_scenario_run(scenario_id: str) -> dict[str, Any]:
+    """Create one new scenario JSONL under ``CIVITAS_RUNS_DIR``."""
+    return execute_scenario(scenario_id)
+
+
+@app.get("/campaigns", response_model=list[dict[str, Any]], tags=["executions"])
+def get_campaigns() -> list[dict[str, Any]]:
+    """List campaign manifests available to the local server."""
+    return [campaign.to_dict() for campaign in list_campaigns()]
+
+
+@app.get("/campaigns/{campaign_id}", response_model=dict[str, Any], tags=["executions"])
+def get_campaign(campaign_id: str) -> dict[str, Any]:
+    """Return one campaign manifest."""
+    return load_campaign(campaign_id).to_dict()
+
+
+@app.post(
+    "/campaigns/{campaign_id}/run",
+    response_model=dict[str, Any],
+    tags=["executions"],
+    status_code=201,
+)
+def post_campaign_run(campaign_id: str, compare: bool = True) -> dict[str, Any]:
+    """Create a fresh campaign execution and persisted aggregate report."""
+    return execute_campaign(campaign_id, compare=compare)
+
+
+@app.get(
+    "/campaigns/{campaign_id}/executions",
+    response_model=list[str],
+    tags=["executions"],
+)
+def get_campaign_executions(campaign_id: str) -> list[str]:
+    """List persisted execution ids for one campaign."""
+    _ = load_campaign(campaign_id)
+    return list_campaign_executions(campaign_id)
+
+
+@app.get(
+    "/campaigns/{campaign_id}/results",
+    response_model=dict[str, Any],
+    tags=["executions"],
+)
+def get_campaign_results(
+    campaign_id: str,
+    execution_id: str | None = None,
+) -> dict[str, Any]:
+    """Load latest or selected persisted campaign results."""
+    _ = load_campaign(campaign_id)
+    return load_campaign_results(campaign_id, execution_id)
 
 
 def create_app() -> FastAPI:

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero" data-reveal>
+  <h1>Executable scenarios</h1>
+  <p>Launch a manifest as a new JSONL artifact under the configured runs directory.</p>
+</section>
+<section class="panel" data-reveal>
+  <table>
+    <thead><tr><th>Scenario</th><th>Preset</th><th>Seed</th><th>Ticks</th><th>Agents</th></tr></thead>
+    <tbody>
+    {% for scenario in scenarios %}
+      <tr>
+        <td><a href="/ui/scenarios/{{ scenario.id }}">{{ scenario.title }}</a></td>
+        <td>{{ scenario.preset }}</td><td>{{ scenario.seed }}</td>
+        <td>{{ scenario.ticks }}</td><td>{{ scenario.agents }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

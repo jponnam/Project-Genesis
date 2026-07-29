@@ -99,6 +99,37 @@ def test_ui_static_assets(client: TestClient) -> None:
     assert "bar-fill" in js.text
 
 
+def test_ui_scenario_and_campaign_surfaces(
+    client: TestClient,
+    runs_dir: Path,
+) -> None:
+    """UI lists manifests and launches fresh local artifacts."""
+    scenarios = client.get("/ui/scenarios")
+    assert scenarios.status_code == 200
+    assert "Institutional formation" in scenarios.text
+    scenario_detail = client.get("/ui/scenarios/institutional_formation")
+    assert "Run scenario" in scenario_detail.text
+    launched = client.post(
+        "/ui/scenarios/institutional_formation/run",
+        follow_redirects=False,
+    )
+    assert launched.status_code == 303
+    assert launched.headers["location"].startswith("/ui/runs/")
+
+    campaigns = client.get("/ui/campaigns")
+    assert campaigns.status_code == 200
+    assert "Seed sweep demo" in campaigns.text
+    campaign_detail = client.get("/ui/campaigns/seed_sweep_demo")
+    assert "Run fresh campaign" in campaign_detail.text
+    campaign_run = client.post(
+        "/ui/campaigns/seed_sweep_demo/run",
+        follow_redirects=True,
+    )
+    assert campaign_run.status_code == 200
+    assert "Campaign results" in campaign_run.text
+    assert (runs_dir / "campaigns" / "seed_sweep_demo").is_dir()
+
+
 def test_root_redirects_to_ui(client: TestClient) -> None:
     """API root redirects browsers to the observatory."""
     response = client.get("/", follow_redirects=False)
