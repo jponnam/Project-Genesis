@@ -81,15 +81,11 @@ civitas serve --host 127.0.0.1 --port 8000
 # OpenAPI: http://127.0.0.1:8000/docs
 ```
 
-![Observatory home](docs/images/observatory_home.png)
+![Observatory research overview](docs/images/observatory_redesign_overview.png)
 
-![Run dashboard](docs/images/observatory_run.png)
+![Run analytics dashboard](docs/images/observatory_redesign_run.png)
 
-![Seed comparison](docs/images/observatory_compare.png)
-
-![Civic-depth run](docs/images/observatory_depth_run.png)
-
-![Research campaign results](docs/images/observatory_campaign.png)
+![Research campaign results](docs/images/observatory_redesign_campaign.png)
 
 ## Sample session
 

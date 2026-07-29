@@ -47,12 +47,12 @@
     <section class="panel">
       <div class="section-heading"><div><h2>Run selector</h2><p>Open an existing dashboard</p></div></div>
       {% if runs_available %}
-      <form class="stack" data-run-selector>
+      <form class="stack" action="/ui/open" method="get" data-run-selector>
         <label for="overview-run">Simulation run</label>
         <select id="overview-run" name="run_id" required>
           {% for run in runs %}<option value="{{ run.run_id }}">{{ run.run_id }}{% if run.seed is not none %} · seed {{ run.seed }}{% endif %}</option>{% endfor %}
         </select>
-        <button type="button" data-open-selected>Open dashboard {{ icon("arrow") }}</button>
+        <button type="submit">Open dashboard {{ icon("arrow") }}</button>
       </form>
       {% else %}<p class="muted">No runs are currently available.</p>{% endif %}
     </section>
