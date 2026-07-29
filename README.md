@@ -139,7 +139,7 @@ civitas scenarios run wealth_concentration --analyze
 
 - Deterministic multi-agent simulation through Phases 1–20 civilization catalogs
 - Append-only JSONL event logs with typed round-trip persistence
-- CLI: `run`, `replay`, `inspect`, `project`, `metrics`, `emergence`, `compare`, `scenarios list|show|run`, `serve`, `config`
+- CLI: `run`, `replay`, `inspect`, `project`, `metrics`, `emergence`, `compare`, `scenarios`, `campaign`, `serve`, `config`
 - Offline analytics and explicit emergence rules over persisted events
 - Read-only FastAPI research API and Jinja2 Observatory UI
 - Seed / run comparison for counterfactual research
@@ -180,9 +180,10 @@ FastAPI + Jinja2 + uvicorn via `.[observatory]` (included in `.[dev]`).
 
 ## Current milestone
 
-**Phase 22 Milestone 6: Deterministic world projector** — pure
-``events → ProjectedState`` API / ``civitas project`` (partial, labeled). See
-[`docs/PHASE_22_DESIGN.md`](docs/PHASE_22_DESIGN.md).
+**Phase 22 Milestone 7: Research campaigns** — TOML seed×preset sweeps via
+``civitas campaign list|show|run`` with aggregate compare reports. See
+[`docs/PHASE_22_DESIGN.md`](docs/PHASE_22_DESIGN.md) and
+[`campaigns/README.md`](campaigns/README.md).
 
 ### Completed (summary)
 
