@@ -200,8 +200,8 @@ mypy
 | M1 Design + gap inventory | Merged |
 | M2 World presets | Merged |
 | M3 Scenarios run | Merged |
-| M4 Stock census events | In progress |
-| M5 Stock metrics | Pending |
+| M4 Stock census events | Merged |
+| M5 Stock metrics | In progress |
 | M6 World projector | Pending |
 | M7 Research campaigns | Pending |
 | M8 Observatory campaigns | Pending |

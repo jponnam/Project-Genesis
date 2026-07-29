@@ -89,6 +89,7 @@ def observatory_run(
     metrics_by_name = metrics.by_name()
     event_freq = metrics_by_name.get("event_frequency_by_type")
     activity = metrics_by_name.get("agent_activity_distribution")
+    resource_inequality = metrics_by_name.get("resource_inequality")
     wealth = summary.wealth
 
     return templates.TemplateResponse(
@@ -116,6 +117,11 @@ def observatory_run(
             "wealth": wealth,
             "resource_holdings_available": summary.final_resource_holdings_available,
             "resource_holdings": summary.resource_holdings,
+            "resource_inequality": (
+                resource_inequality
+                if resource_inequality and resource_inequality.status == "ok"
+                else None
+            ),
         },
     )
 

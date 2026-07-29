@@ -12,13 +12,18 @@ from civitas.analytics.metrics import (
     agent_activity_distribution,
     birth_and_death_rates,
     event_frequency_by_type,
+    final_resource_holdings,
+    money_alive_series,
     repeated_behavior_entropy,
+    resource_holdings_series,
+    resource_inequality,
     wealth_gini_bps,
     wealth_volatility,
 )
 from civitas.domain import (
     ActionSelected,
     AgentId,
+    ResourcesObserved,
     SimulationCompleted,
     SimulationConfig,
     SimulationStarted,
@@ -129,6 +134,94 @@ def test_wealth_volatility_undefined_for_single_observation() -> None:
     assert result.value is None
 
 
+def test_final_resource_holdings_uses_last_census() -> None:
+    """final_resource_holdings primary value is last alive_totals."""
+    events = (
+        ResourcesObserved(
+            sequence=0,
+            tick=Tick(value=0),
+            alive_count=2,
+            alive_totals=(("food", 1),),
+            stack_count=1,
+            distinct_resources=1,
+        ),
+        ResourcesObserved(
+            sequence=1,
+            tick=Tick(value=1),
+            alive_count=2,
+            agent_holdings=((0, "food", 3), (1, "water", 1)),
+            alive_totals=(("food", 3), ("water", 1)),
+            escrow_totals=(("wood", 2),),
+            stack_count=2,
+            distinct_resources=2,
+        ),
+    )
+    result = final_resource_holdings(events)
+    assert result.status == "ok"
+    assert result.value == {"food": 3, "water": 1}
+    assert result.details["escrow_totals"] == {"wood": 2}
+    series = resource_holdings_series(events)
+    assert series.status == "ok"
+    assert series.value["1"]["food"] == 3
+
+
+def test_resource_inequality_from_agent_holdings() -> None:
+    """resource_inequality computes gini from per-agent stock totals."""
+    events = (
+        ResourcesObserved(
+            sequence=0,
+            tick=Tick(value=0),
+            alive_count=2,
+            agent_holdings=((0, "food", 9), (1, "food", 1)),
+            alive_totals=(("food", 10),),
+            stack_count=2,
+            distinct_resources=1,
+        ),
+    )
+    result = resource_inequality(events)
+    assert result.status == "ok"
+    assert result.value == 4000  # gini_bps for [1, 9]
+    assert result.details["top1_share_bps"] == 9000
+
+
+def test_money_alive_series_tracks_wealth_census() -> None:
+    """money_alive_series uses WealthObserved.alive_total."""
+    events = (
+        WealthObserved(
+            sequence=0,
+            tick=Tick(value=0),
+            total=4,
+            alive_total=4,
+            dead_total=0,
+            alive_count=2,
+            mean_alive=2.0,
+            gini_bps=0,
+        ),
+        WealthObserved(
+            sequence=1,
+            tick=Tick(value=2),
+            total=7,
+            alive_total=7,
+            dead_total=0,
+            alive_count=2,
+            mean_alive=3.5,
+            gini_bps=0,
+        ),
+    )
+    result = money_alive_series(events)
+    assert result.status == "ok"
+    assert result.value == 7
+    assert result.details["series"] == [(0, 4), (2, 7)]
+
+
+def test_stock_metrics_empty_without_resources_observed() -> None:
+    """Stock metrics are empty when ResourcesObserved is absent."""
+    assert final_resource_holdings(()).status == "empty"
+    assert resource_holdings_series(()).status == "empty"
+    assert resource_inequality(()).status == "empty"
+    assert money_alive_series(()).status == "empty"
+
+
 def test_repeated_behavior_entropy_low_for_repetition() -> None:
     """Repeated identical actions produce zero bigram entropy."""
     events = (
@@ -166,6 +259,10 @@ def test_compute_metrics_and_analyze_run(tmp_path: Path) -> None:
     assert "event_frequency_by_type" in names
     assert "wealth_gini_bps" in names
     assert "action_diversity_entropy" in names
+    assert "final_resource_holdings" in names
+    assert "resource_inequality" in names
+    assert "money_alive_series" in names
+    assert report.by_name()["final_resource_holdings"].status == "ok"
     assert report.to_dict()["event_count"] == report.event_count
     # Determinism
     assert analyze_run(path).to_dict() == report.to_dict()
